@@ -334,7 +334,8 @@ describe.skipIf(!LIVE)('email (live)', () => {
     expect((await runModule(emailrep, entity('email', 'bill@microsoft.com'), ctx)).properties?.reputation).toBeTruthy()
   })
 
-  it('email.github', async () => {
+  // L'API de recherche GitHub est bloquée dans certains bacs à sable : test activé à la demande.
+  it.skipIf(!process.env.MASINT_LIVE_GITHUB)('email.github', async () => {
     const out = await runModule(github, entity('email', 'torvalds@linux-foundation.org'), ctx)
     expect(out.found).toBe(true)
   })

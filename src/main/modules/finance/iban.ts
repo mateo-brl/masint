@@ -3,7 +3,7 @@
 // Pour l'Allemagne, le Benelux, l'Autriche, la Suisse et le Liechtenstein, voir `finance.openiban`.
 
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
-import { tr } from '../misc/_util'
+import { compact, tr } from '../misc/_util'
 import { analyzeIban, localBank } from './_iban'
 
 export function countryName(code: string, lang: 'fr' | 'en'): string {
@@ -41,7 +41,7 @@ export function ibanOutput(ctx: Pick<ModuleContext, 'lang'>, raw: string): Modul
       linkLabel: tr(ctx, 'banque', 'bank')
     })
   }
-  return { properties, entities, raw: info }
+  return { properties: compact(properties!), entities, raw: info }
 }
 
 export default defineModule({

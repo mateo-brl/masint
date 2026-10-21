@@ -1,7 +1,7 @@
 import { parsePhoneNumberFromString } from 'libphonenumber-js/max'
 import { carrier, geocoder, timezones } from 'libphonenumber-geo-carrier'
 import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
-import { findPlatformByName } from '@shared/platforms'
+import { carrierPlatform } from './_phone'
 
 const LINE_TYPES: Record<string, { fr: string; en: string }> = {
   MOBILE: { fr: 'Mobile', en: 'Mobile' },
@@ -42,12 +42,11 @@ export default defineModule({
 
     const entities: OutEntity[] = []
     if (carrierName) {
-      const platform = findPlatformByName(carrierName, 'carrier')
       entities.push({
         type: 'carrier',
         label: carrierName,
-        platform: platform?.id,
-        data: { country: countryName, network: region ?? undefined } as Record<string, string>,
+        platform: carrierPlatform(carrierName),
+        data: countryName ? { country: countryName } : {},
         linkLabel: ctx.lang === 'fr' ? 'opérateur d’origine' : 'original carrier'
       })
     }

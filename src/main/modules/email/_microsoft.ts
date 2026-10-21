@@ -57,6 +57,8 @@ export interface MsaResult {
 
 /** Interprète la réponse GetCredentialType de login.live.com. */
 export function interpretMsa(json: MsaResponse): MsaResult {
+  // 8004113F : identifiant au format refusé (numéro non attribuable, adresse invalide).
+  if (json.ErrorHR === '8004113F') throw new ModuleError('Microsoft : identifiant refusé comme invalide', 'invalid_input')
   if (json.ErrorHR) throw new ModuleError(`Microsoft : session refusée (code ${json.ErrorHR})`, 'blocked')
   if (json.ThrottleStatus === 1) throw new ModuleError('Microsoft : trop de requêtes, réessayez plus tard', 'rate_limited')
   const r = json.IfExistsResult

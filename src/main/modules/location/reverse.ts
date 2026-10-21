@@ -2,7 +2,7 @@
 // France : Base Adresse Nationale (IGN) ; ailleurs ou à défaut : Nominatim.
 
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput } from '@shared/modules'
-import { tr } from '../misc/_util'
+import { compact, tr } from '../misc/_util'
 import { distanceM, geopfReverse, inFrance, nominatimReverse, pointOf, type GeoPoint, type GeoResult } from './_geo'
 
 /** Au-delà, l'adresse BAN est trop éloignée : on interroge OpenStreetMap. */
@@ -11,7 +11,7 @@ const MAX_BAN_DISTANCE = 300
 export function reverseOutput(ctx: Pick<ModuleContext, 'lang'>, p: GeoPoint, r: GeoResult): ModuleOutput {
   const distance = r.distance ?? distanceM(p, r)
   return {
-    properties: {
+    properties: compact({
       lat: p.lat,
       lon: p.lon,
       address: r.label,
@@ -20,7 +20,7 @@ export function reverseOutput(ctx: Pick<ModuleContext, 'lang'>, p: GeoPoint, r: 
       country: r.country,
       region: r.region,
       osm_url: r.url
-    },
+    }),
     entities: [
       {
         type: 'address',

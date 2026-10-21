@@ -2,9 +2,8 @@
 // via deux fournisseurs payants à crédits. Formats tirés des exemples officiels.
 
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
-import { findPlatformByName } from '@shared/platforms'
 import { compact, fetchRetry, httpFailure, isoDay, readJson, tr } from '../email/_lib'
-import { toE164 } from './_phone'
+import { carrierPlatform, toE164 } from './_phone'
 
 interface Network {
   name?: string
@@ -42,7 +41,7 @@ function carrierEntity(n: Network, linkLabel: string, ref?: string): OutEntity |
     ...(ref ? { ref } : {}),
     type: 'carrier',
     label: n.name,
-    platform: findPlatformByName(n.name, 'carrier')?.id,
+    platform: carrierPlatform(n.name),
     data: compact({ country: n.country, mccmnc: n.mccmnc }),
     linkLabel
   }

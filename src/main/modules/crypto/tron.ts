@@ -2,7 +2,7 @@
 // et derniers transferts de jetons TRC20 (TronGrid). APIs publiques sans clé.
 
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
-import { coin, formatUnits, getJson, isoDate, serviceError, tr } from '../misc/_util'
+import { coin, compact, formatUnits, getJson, isoDate, serviceError, tr } from '../misc/_util'
 import { chainOf, explorerUrl, MAX_COUNTERPARTIES, MAX_TX, txUrl, walletAddress } from './_chain'
 
 const USDT = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
@@ -95,7 +95,7 @@ export function parseTron(
   })
 
   return {
-    properties,
+    properties: compact(properties!),
     entities,
     raw: {
       account: { ...pick(acc as Record<string, unknown>), tokens: tokens.slice(0, 20) },

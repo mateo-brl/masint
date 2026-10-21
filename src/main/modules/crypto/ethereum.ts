@@ -2,7 +2,7 @@
 // étiquettes publiques, dernières transactions et contreparties.
 
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
-import { coin, getJson, isoDate, num, tr, uniq } from '../misc/_util'
+import { coin, compact, getJson, isoDate, num, tr, uniq } from '../misc/_util'
 import { chainOf, explorerUrl, MAX_COUNTERPARTIES, MAX_TX, txUrl, walletAddress } from './_chain'
 
 const BASE = 'https://eth.blockscout.com/api/v2'
@@ -129,7 +129,7 @@ export function parseBlockscout(
   })
 
   return {
-    properties,
+    properties: compact(properties!),
     entities,
     raw: { address: info, counters, txs: txs.slice(0, MAX_TX).map((t) => t.hash) }
   }

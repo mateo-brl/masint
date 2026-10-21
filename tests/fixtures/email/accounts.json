@@ -156,5 +156,23 @@
   },
   "bitmoji_found": {
     "account_type": "bitmoji"
+  },
+  "deezer_found": {
+    "error": [],
+    "results": {
+      "availability": false,
+      "suggestion": "",
+      "domain_validity": true,
+      "domain": "gmail.com"
+    }
+  },
+  "deezer_notfound": {
+    "error": [],
+    "results": {
+      "availability": true,
+      "suggestion": "",
+      "domain_validity": true,
+      "domain": "gmail.com"
+    }
   }
 }

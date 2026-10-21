@@ -88,11 +88,15 @@ export function formatDateTime(ts: number | Date | null | undefined, lang: Lang,
   if (ts === null || ts === undefined) return ''
   const d = ts instanceof Date ? ts : new Date(ts)
   if (Number.isNaN(d.getTime())) return ''
+  // `dateStyle` ne se combine pas avec `timeZoneName` : composants explicites.
   return new Intl.DateTimeFormat(locale(lang), {
-    dateStyle: 'long',
-    timeStyle: 'short',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
     ...(withZone ? { timeZoneName: 'short' } : {})
-  } as Intl.DateTimeFormatOptions).format(d)
+  }).format(d)
 }
 
 export function formatShortDateTime(ts: number | null | undefined, lang: Lang): string {

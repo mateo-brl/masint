@@ -2,7 +2,7 @@
 // France : Base Adresse Nationale (Géoplateforme IGN) ; ailleurs ou à défaut : Nominatim.
 
 import { defineModule, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
-import { tr } from '../misc/_util'
+import { compact, tr } from '../misc/_util'
 import { geopfSearch, looksFrench, nominatimSearch, type GeoResult } from './_geo'
 
 const MIN_BAN_SCORE = 0.5
@@ -45,7 +45,7 @@ export function geocodeOutput(ctx: Pick<ModuleContext, 'lang'>, type: string, la
       linkLabel: tr(ctx, 'ville', 'city')
     })
   }
-  return { properties, entities, raw: r }
+  return { properties: compact(properties!), entities, raw: r }
 }
 
 export default defineModule({

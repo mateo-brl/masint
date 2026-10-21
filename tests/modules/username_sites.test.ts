@@ -1,0 +1,197 @@
+import { describe, expect, it } from 'vitest'
+import {
+  BLACKLIST,
+  allSites,
+  checkSite,
+  compileRegex,
+  evaluate,
+  interpolate,
+  isLegal,
+  profileUrlFor,
+  scanSites,
+  selectSites,
+  type SherlockSite
+} from '../../src/main/modules/username/_sherlock'
+import { accountEntity, modules, platformForSite } from '../../src/main/modules/username/sites'
+import { entity, LIVE, makeContext, runModule } from '../helpers/context'
+import { fakeContext } from './social_helpers'
+
+const site = (s: Partial<SherlockSite>): SherlockSite => ({
+  name: 'Test',
+  url: 'https://example.com/u/{}',
+  urlMain: 'https://example.com/',
+  errorType: 'status_code',
+  ...s
+})
+
+describe('base Sherlock', () => {
+  it('charge les sites et sépare les sites adultes', () => {
+    const all = allSites()
+    expect(all.length).toBeGreaterThan(400)
+    expect(all.some((s) => s.name.startsWith('$'))).toBe(false)
+    const sfw = selectSites({ nsfw: false })
+    const nsfw = selectSites({ nsfw: true })
+    expect(nsfw.length).toBeGreaterThan(10)
+    expect(sfw.every((s) => !s.isNSFW)).toBe(true)
+    expect(nsfw.every((s) => s.isNSFW)).toBe(true)
+    expect(sfw.length + nsfw.length).toBe(all.length - Object.keys(BLACKLIST).filter((n) => all.some((s) => s.name === n)).length)
+  })
+
+  it('écarte les sites de la liste noire, qui existent tous dans la base', () => {
+    const names = new Set(allSites().map((s) => s.name))
+    for (const n of Object.keys(BLACKLIST)) expect(names.has(n), n).toBe(true)
+    const sfw = selectSites({ nsfw: false }).map((s) => s.name)
+    expect(sfw).not.toContain('Spotify')
+    expect(sfw).not.toContain('HudsonRock')
+    expect(sfw).toContain('GitHub')
+  })
+
+  it('compile toutes les expressions regexCheck en JavaScript', () => {
+    for (const s of allSites()) if (s.regexCheck) expect(compileRegex(s.regexCheck), `${s.name}: ${s.regexCheck}`).not.toBeNull()
+    // Syntaxe Python {,n}
+    expect(compileRegex('^[\\w-]{,34}$')!.test('abc')).toBe(true)
+    expect(compileRegex('^[\\w-]{,3}$')!.test('abcd')).toBe(false)
+  })
+
+  it('applique regexCheck comme re.search (non ancré)', () => {
+    expect(isLegal(site({ regexCheck: '^[a-z]+$' }), 'abc')).toBe(true)
+    expect(isLegal(site({ regexCheck: '^[a-z]+$' }), 'ab.c')).toBe(false)
+    expect(isLegal(site({ regexCheck: '[a-z0-9]{4,16}' }), '..abcd..')).toBe(true)
+  })
+
+  it('interpole le pseudo dans les chaînes, objets et listes', () => {
+    expect(interpolate({ q: 'x', v: { name: '{}' }, l: ['{}', 1] }, 'bob')).toEqual({ q: 'x', v: { name: 'bob' }, l: ['bob', 1] })
+    expect(profileUrlFor(site({}), 'a b')).toBe('https://example.com/u/a%20b')
+  })
+})
+
+describe('règles de détection', () => {
+  it('status_code', () => {
+    const s = site({})
+    expect(evaluate(s, { status: 200, text: '' })).toBe('claimed')
+    expect(evaluate(s, { status: 404, text: '' })).toBe('available')
+    expect(evaluate(s, { status: 301, text: '' })).toBe('available')
+    expect(evaluate(site({ errorCode: 204 }), { status: 204, text: '' })).toBe('available')
+    expect(evaluate(site({ errorCode: [200, 410] }), { status: 200, text: '' })).toBe('available')
+    // Blocage ou quota : absence non démontrée
+    expect(evaluate(s, { status: 403, text: '' })).toBe('error')
+    expect(evaluate(s, { status: 429, text: '' })).toBe('error')
+  })
+
+  it('message (chaîne ou liste)', () => {
+    const s = site({ errorType: 'message', errorMsg: ['No such user', 'Sorry.'] })
+    expect(evaluate(s, { status: 200, text: '<p>No such user.</p>' })).toBe('available')
+    expect(evaluate(s, { status: 200, text: '<p>Sorry.</p>' })).toBe('available')
+    expect(evaluate(s, { status: 200, text: '<h1>bob</h1>' })).toBe('claimed')
+    expect(evaluate(site({ errorType: 'message', errorMsg: 'gone' }), { status: 200, text: 'gone' })).toBe('available')
+    // Page d'erreur HTTP sans le message attendu : pas un compte
+    expect(evaluate(s, { status: 503, text: 'maintenance' })).toBe('error')
+  })
+
+  it('response_url', () => {
+    const s = site({ errorType: 'response_url' })
+    expect(evaluate(s, { status: 200, text: '' })).toBe('claimed')
+    expect(evaluate(s, { status: 302, text: '' })).toBe('available')
+  })
+
+  it('reconnaît les pages de pare-feu', () => {
+    expect(evaluate(site({}), { status: 200, text: '<html><span id="challenge-error-text">x</span>' })).toBe('waf')
+  })
+})
+
+describe('requêtes', () => {
+  it('HEAD pour status_code, GET pour message, POST JSON avec en-têtes, redirections manuelles', async () => {
+    const ctx = fakeContext([
+      [/head\.test\/u\/bob/, { status: 200 }],
+      [/msg\.test\/u\/bob/, { status: 200, body: 'Profile of bob' }],
+      [/api\.test\/check/, (_u, init) => ({ status: 200, body: String(init.json && JSON.stringify(init.json)).includes('bob') ? '{"taken":true}' : '{"taken":false}' })],
+      [/redir\.test\/u\/bob/, { status: 302, headers: { location: '/' } }]
+    ])
+    const sites = [
+      site({ name: 'Head', url: 'https://head.test/u/{}' }),
+      site({ name: 'Msg', url: 'https://msg.test/u/{}', errorType: 'message', errorMsg: 'not found' }),
+      site({
+        name: 'Api',
+        url: 'https://api.test/u/{}',
+        urlProbe: 'https://api.test/check',
+        errorType: 'message',
+        errorMsg: '{"taken":false}',
+        request_method: 'POST',
+        request_payload: { username: '{}' },
+        headers: { 'X-Test': '1' }
+      }),
+      site({ name: 'Redir', url: 'https://redir.test/u/{}', errorType: 'response_url' }),
+      site({ name: 'Illegal', url: 'https://never.test/{}', regexCheck: '^\\d+$' })
+    ]
+    const res = await scanSites(sites, 'bob', ctx, { concurrency: 4 })
+    const by = Object.fromEntries(res.map((r) => [r.site, r.status]))
+    expect(by).toEqual({ Head: 'claimed', Msg: 'claimed', Api: 'claimed', Redir: 'available', Illegal: 'illegal' })
+    const call = (host: string) => ctx.calls.find((c) => c.url.includes(host))!
+    expect(call('head.test').method).toBe('HEAD')
+    expect(call('msg.test').method).toBe('GET')
+    expect(call('msg.test').headers['accept-language']).toMatch(/^en/)
+    expect(call('api.test').method).toBe('POST')
+    expect(call('api.test').body).toBe('{"username":"bob"}')
+    expect(call('api.test').headers['x-test']).toBe('1')
+    expect(ctx.calls.some((c) => c.url.includes('never.test'))).toBe(false)
+  })
+
+  it('rapporte les erreurs réseau sans lever', async () => {
+    const ctx = fakeContext([])
+    ctx.fetch = async () => {
+      throw Object.assign(new Error('fetch failed'), { cause: { code: 'ECONNRESET' } })
+    }
+    const r = await checkSite(site({}), 'bob', ctx)
+    expect(r).toMatchObject({ status: 'error', error: 'ECONNRESET' })
+  })
+})
+
+describe('entités produites', () => {
+  it('associe les sites aux plateformes du catalogue', () => {
+    expect(platformForSite('GitHub')).toBe('github')
+    expect(platformForSite('Twitter')).toBe('x')
+    expect(platformForSite('Steam Community (User)')).toBe('steam')
+    expect(platformForSite('mastodon.social')).toBe('mastodon')
+    expect(platformForSite('Polygon')).toBeUndefined()
+    expect(platformForSite('Gitee')).toBeUndefined()
+  })
+
+  it('crée un compte avec plateforme, ou avec le nom du site sinon', () => {
+    const gh = allSites().find((s) => s.name === 'GitHub')!
+    expect(accountEntity(gh, { site: 'GitHub', url: 'https://www.github.com/bob', status: 'claimed' }, 'bob', 'fr')).toMatchObject({
+      type: 'account',
+      label: 'bob',
+      platform: 'github',
+      data: { username: 'bob', url: 'https://www.github.com/bob', site: 'GitHub' }
+    })
+    const gitee = allSites().find((s) => s.name === 'Gitee')!
+    const e = accountEntity(gitee, { site: 'Gitee', url: 'https://gitee.com/bob', status: 'claimed' }, 'bob', 'fr')
+    expect(e.platform).toBeUndefined()
+    expect(e.label).toBe('bob (Gitee)')
+    const masto = allSites().find((s) => s.name === 'mastodon.social')!
+    expect(accountEntity(masto, { site: 'mastodon.social', url: 'https://mastodon.social/@bob', status: 'claimed' }, 'bob', 'fr').label).toBe('bob@mastodon.social')
+  })
+
+  it('module : refuse un pseudo avec espaces, trouve les comptes simulés', async () => {
+    const [sitesModule] = modules
+    await expect(runModule(sitesModule, entity('username', 'jean dupont'))).rejects.toThrow()
+    const ctx = fakeContext([[/github\.com\/bob$/, { status: 200 }], [/.*/, { status: 404, body: 'not found' }]])
+    const out = await sitesModule.run(entity('username', 'bob'), ctx)
+    expect(out.entities?.some((e) => e.platform === 'github')).toBe(true)
+    expect((out.raw as { tested: number }).tested).toBe(selectSites({ nsfw: false }).length)
+  }, 60000)
+})
+
+describe.skipIf(!LIVE)('live', () => {
+  it('aucun faux positif sur un pseudo aléatoire', async () => {
+    const out = await runModule(modules[0], entity('username', 'zq8x7v2kq9w1'), makeContext())
+    expect(out.entities?.map((e) => e.data?.site)).toEqual([])
+  }, 300000)
+
+  it('trouve de nombreux comptes pour un pseudo réel', async () => {
+    const out = await runModule(modules[0], entity('username', 'torvalds'), makeContext())
+    const sites = out.entities?.map((e) => e.data?.site) ?? []
+    expect(sites.length).toBeGreaterThan(40)
+    expect(sites).toEqual(expect.arrayContaining(['Telegram', 'Twitch', 'Docker Hub']))
+  }, 300000)
+})

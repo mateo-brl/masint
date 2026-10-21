@@ -1,11 +1,12 @@
 import { memo, useEffect, useRef } from 'react'
 import { NodeResizer, type NodeProps } from '@xyflow/react'
-import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, useMap, useMapEvents } from 'react-leaflet'
 import { useTranslation } from 'react-i18next'
 import { BASEMAPS, formatCoord, getBasemap } from '../../../lib/geo'
 import { Icon } from '../../../lib/icons'
 import { useApp } from '../../../store/app'
 import { useGraph, type FlowNode } from '../../../store/graph'
+import { BasemapLayers } from '../../views/MapView'
 import '../../views/geo.css'
 
 const num = (v: unknown, fallback: number): number => (typeof v === 'number' && Number.isFinite(v) ? v : fallback)
@@ -58,16 +59,10 @@ function MapNodeImpl({ id, data, selected }: NodeProps<FlowNode>): React.JSX.Ele
             zoom={zoom}
             scrollWheelZoom="center"
             doubleClickZoom="center"
+            attributionControl={false}
             worldCopyJump
           >
-            <TileLayer
-              key={base.id}
-              url={base.url}
-              attribution={base.attribution}
-              subdomains={base.subdomains ?? 'abc'}
-              maxZoom={base.maxZoom}
-              maxNativeZoom={base.maxNativeZoom}
-            />
+            <BasemapLayers base={base} />
             <MapSync id={id} lat={lat} lon={lon} zoom={zoom} />
           </MapContainer>
           {/* Le point d'intérêt est le centre de la carte. */}
