@@ -1,0 +1,99 @@
+MASINT
+Copyright 2026 Mateo Baril
+
+Ce produit est distribué sous la licence Apache, version 2.0 (voir le fichier LICENSE).
+
+MASINT intègre ou s'appuie sur les composants et données tiers suivants. Chacun reste
+soumis à sa propre licence ; les textes complets des licences des paquets npm sont
+conservés dans node_modules/<paquet>/ (et dans l'archive app.asar de l'application
+installée). Les licences de Chromium et d'Electron sont livrées avec l'application
+(LICENSES.chromium.html, LICENSE.electron.txt).
+
+-------------------------------------------------------------------------------
+Données embarquées
+-------------------------------------------------------------------------------
+
+Base de sites Sherlock (resources/data/sherlock-sites.json)
+  Copyright (c) 2019 Sherlock Project, licence MIT
+  https://github.com/sherlock-project/sherlock
+
+Métadonnées de numérotation libphonenumber (via libphonenumber-js et
+libphonenumber-geo-carrier : formats, zones géographiques, opérateurs d'origine,
+fuseaux horaires)
+  Copyright (C) 2009 The Libphonenumber Authors (Google), licence Apache 2.0
+  https://github.com/google/libphonenumber
+
+Liste des domaines d'email jetables (src/main/modules/email/_disposable-domains.json)
+  Projet disposable-email-domains, CC0 1.0 (domaine public)
+  https://github.com/disposable-email-domains/disposable-email-domains
+
+Nomenclature d'activités française NAF rév. 2 (src/main/modules/company/_naf.json)
+  Source : INSEE, Licence Ouverte / Open Licence (Etalab 2.0)
+  https://www.insee.fr/fr/information/2406147
+
+Codes banque (src/main/modules/finance/_banks.json)
+  Source : Banque centrale européenne, liste des institutions financières monétaires
+  https://www.ecb.europa.eu/stats/financial_corporations/list_of_financial_institutions/
+
+Logos de marques (simple-icons)
+  CC0 1.0 (domaine public) pour les tracés SVG ; les marques et logos restent la
+  propriété de leurs détenteurs et ne servent qu'à identifier les services cités.
+  https://github.com/simple-icons/simple-icons
+
+-------------------------------------------------------------------------------
+Polices
+-------------------------------------------------------------------------------
+
+Inter, Copyright 2016 The Inter Project Authors, SIL Open Font License 1.1
+  https://github.com/rsms/inter
+JetBrains Mono, Copyright 2020 The JetBrains Mono Project Authors,
+  SIL Open Font License 1.1
+  https://github.com/JetBrains/JetBrainsMono
+
+-------------------------------------------------------------------------------
+Bibliothèques
+-------------------------------------------------------------------------------
+
+Electron, Copyright (c) Electron contributors, Copyright (c) 2013-2020 GitHub Inc.,
+  licence MIT ; inclut Chromium (The Chromium Authors, licence BSD et licences
+  tierces listées dans LICENSES.chromium.html) et Node.js (licence MIT)
+better-sqlite3, Copyright (c) 2017 Joshua Wise, licence MIT ; inclut SQLite (domaine public)
+electron-updater, Copyright (c) 2015 Loopline Systems, licence MIT
+libphonenumber-js, Copyright (c) 2016 @catamphetamine, licence MIT
+libphonenumber-geo-carrier, Martin Mende, licence MIT
+bson, MongoDB, Inc., licence Apache 2.0
+undici, Copyright (c) Matteo Collina and Undici contributors, licence MIT
+fetch-socks, Copyright (c) 2022-2026 Kaciras, licence MIT
+exifr, Copyright (c) 2020 Mike Kovařík, Mutiny.cz, licence MIT
+JSZip, Copyright (c) 2009-2016 Stuart Knightley, David Duponchel, Franz Buchinger,
+  António Afonso, double licence MIT ou GPL-3.0 (utilisée ici sous licence MIT)
+React et React DOM, Copyright (c) Meta Platforms, Inc. and affiliates, licence MIT
+React Flow (@xyflow/react), Copyright (c) 2019-2025 webkid GmbH, licence MIT
+Leaflet, Copyright (c) 2010-2023 Volodymyr Agafonkin, Copyright (c) 2010-2011 CloudMade,
+  licence BSD à 2 clauses
+React Leaflet, Copyright 2020 Paul Le Cam and contributors, licence Hippocratic 2.1
+  (licence éthique qui interdit les usages contraires aux droits humains)
+  https://firstdonoharm.dev/version/2/1/license/
+Lucide (lucide-react), Copyright (c) Lucide Icons and Contributors, licence ISC ;
+  certaines icônes proviennent de Feather (Copyright (c) 2013-present Cole Bemis, licence MIT)
+dagre (@dagrejs/dagre), Copyright (c) 2012-2014 Chris Pettitt, licence MIT
+d3-force, Copyright 2010-2021 Mike Bostock, licence ISC
+perfect-freehand, Copyright (c) 2021 Stephen Ruiz Ltd, licence MIT
+html-to-image, Copyright (c) 2017-2025 W.Y., licence MIT
+i18next et react-i18next, Copyright (c) i18next, licence MIT
+Zustand, Copyright (c) 2019 Paul Henschel, licence MIT
+Tailwind CSS, Copyright (c) Tailwind Labs, Inc., licence MIT
+
+-------------------------------------------------------------------------------
+Services en ligne
+-------------------------------------------------------------------------------
+
+Les fonds de carte ne sont pas distribués avec l'application : ils sont téléchargés
+à l'affichage, avec l'attribution exigée par chaque fournisseur.
+  Données cartographiques (c) les contributeurs d'OpenStreetMap, licence ODbL 1.0
+  https://www.openstreetmap.org/copyright
+  Tuiles OpenStreetMap : politique d'usage https://operations.osmfoundation.org/policies/tiles/
+  Tuiles Esri (fonds gris, imagerie) : (c) Esri, HERE, Garmin, Maxar, Earthstar Geographics
+
+Les modules d'enrichissement interrogent des services tiers, chacun soumis à ses propres
+conditions d'utilisation. MASINT n'est affilié à aucun de ces services.

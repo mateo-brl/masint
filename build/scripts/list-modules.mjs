@@ -35,7 +35,17 @@ const CATEGORY_LABELS = {
   messaging: 'Messagerie',
   social: 'Réseaux sociaux',
   roso: 'roso.info',
-  forensic: 'Forensic / IOC'
+  forensic: 'Forensic / IOC',
+  misc: 'Divers'
+}
+
+// Libellés de l'interface (traduction française), prioritaires sur la table ci-dessus.
+try {
+  const locale = readFileSync(join(ROOT, 'src', 'renderer', 'src', 'locales', 'core.ts'), 'utf8')
+  const block = locale.match(/\bcat:\s*\{([^}]*)\}/)?.[1] ?? ''
+  for (const m of block.matchAll(/([\w$]+):\s*'((?:[^'\\]|\\.)*)'/g)) CATEGORY_LABELS[m[1]] = m[2]
+} catch {
+  /* traductions absentes : table interne */
 }
 
 // ---------------------------------------------------------------------------
