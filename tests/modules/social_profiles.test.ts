@@ -99,11 +99,10 @@ describe('GitLab', () => {
 })
 
 describe('Codeberg', () => {
-  it('profil sans plateforme du catalogue, email noreply ignoré', async () => {
+  it('profil rattaché à la plateforme Codeberg, email noreply ignoré', async () => {
     const out = await run(codeberg, [[/codeberg\.org\/api\/v1\/users\/forgejo/, json('codeberg_user.json')]], 'forgejo')
     const { account, children } = split(out)
-    expect(account).toMatchObject({ label: 'forgejo (Codeberg)', data: { site: 'Codeberg', website: 'https://forgejo.org', followers: expect.any(Number) } })
-    expect(account.platform).toBeUndefined()
+    expect(account).toMatchObject({ label: 'forgejo', platform: 'codeberg', data: { website: 'https://forgejo.org', followers: expect.any(Number) } })
     expect(children.map((c) => c.label)).toEqual(['https://forgejo.org'])
   })
 })

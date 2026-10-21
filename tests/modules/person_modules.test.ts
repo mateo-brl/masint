@@ -49,7 +49,7 @@ describe('liens de recherche', () => {
     const out = await runModule(searchLinks, person('DUPONT jean'))
     expect(out.entities!.every((e) => e.type === 'search_link' && typeof e.data?.url === 'string')).toBe(true)
     expect(out.entities![0].label).toBe('Google : Jean Dupont')
-    expect(JSON.stringify(out)).not.toMatch(/[–—]/)
+    expect(JSON.stringify(out)).not.toMatch(/[\u2013\u2014]/)
   })
 })
 

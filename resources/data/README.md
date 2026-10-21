@@ -81,8 +81,20 @@ délai 12 s par site.
 Avant exclusion, 35 sites (7,3 %) déclaraient systématiquement un compte pour un pseudo
 inexistant, et un (igromania) de façon intermittente. Ces 36 sites, plus HudsonRock (qui
 signale une présence dans des journaux d'infostealers et non un compte), sont exclus.
-Après exclusion : 0 faux positif sur les trois pseudos aléatoires, 80 comptes trouvés pour
-`torvalds`.
+
+Après exclusion, mesure avec les modules eux-mêmes (425 sites pour `username.sites`, 19
+pour `username.sites_nsfw`, environ 30 s et 8 s) :
+
+| Pseudo | Module | Trouvé | Absent | Pare-feu | Erreur ou blocage |
+| --- | --- | --- | --- | --- | --- |
+| hb3k9wq2zt8n | username.sites | 0 | 286 | 23 | 113 |
+| hb3k9wq2zt8n | username.sites_nsfw | 0 | 12 | 2 | 5 |
+| torvalds | username.sites | 73 | 213 | 23 | 115 |
+| torvalds | username.sites_nsfw | 6 | 6 | 2 | 5 |
+
+La colonne « erreur ou blocage » est plus élevée qu'avant exclusion parce que les réponses
+403, 429 et 5xx y sont désormais comptées (voir les écarts ci-dessus) ; ces sites ne
+produisent jamais de compte.
 
 Sites exclus : 7Cups, Apple Developer, Apple Discussions, Archive.org, Blipfoto,
 Championat, Clozemaster, Codolio, EyeEm, F3.cool, GaiaOnline, GeeksforGeeks, Hashnode,
@@ -91,7 +103,7 @@ module `social.reddit`), Scribd, Shelf, SlideShare, Splice, Spotify, Tweakers, V
 Weblate, authorSTREAM, mercadolivre, opennet, social.tchncs.de, svidbook, threads,
 igromania, HudsonRock.
 
-Une quarantaine de sites ne répondent pas ou bloquent les requêtes automatisées (pare-feu,
-HTTP 403/429) selon l'adresse IP de sortie : ils sont comptés dans `unreachable` du résultat
-brut du module et ne produisent jamais de compte. Refaire la mesure après chaque mise à
-jour de la base (`LIVE=1 npx vitest run tests/modules/username_sites.test.ts`).
+Selon l'adresse IP de sortie, une partie des sites ne répond pas ou bloque les requêtes
+automatisées (pare-feu, HTTP 403/429) : ils sont listés dans `unreachable` du résultat brut
+du module. Refaire la mesure après chaque mise à jour de la base
+(`LIVE=1 npx vitest run tests/modules/username_sites.test.ts`).

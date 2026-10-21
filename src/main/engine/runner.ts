@@ -183,7 +183,9 @@ export class Engine {
       if (count > 0 || output.found) job.progress.results += 1
     } catch (e) {
       const aborted = controller.signal.aborted
-      const message = e instanceof Error ? e.message : String(e)
+      const raw = e instanceof Error ? e.message : String(e)
+      const timedOut = (e instanceof Error && e.name === 'TimeoutError') || /aborted due to timeout|timed? ?out/i.test(raw)
+      const message = timedOut ? 'Délai dépassé : service trop lent ou injoignable' : raw
       this.repo.updateRun(run.id, {
         status: job.progress.cancelled ? 'cancelled' : 'error',
         error: aborted && !job.progress.cancelled ? 'Délai dépassé' : message.slice(0, 1000),
