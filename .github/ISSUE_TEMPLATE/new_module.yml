@@ -1,0 +1,75 @@
+name: Proposer un module
+description: Une nouvelle source d'enrichissement (service, base publique, vérification de compte).
+title: '[Module] '
+labels: [module]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Un module reçoit une entité (email, téléphone, pseudo, domaine...) et renvoie de nouvelles entités, des liens ou des propriétés.
+        Le guide est dans [docs/modules.md](../blob/main/docs/modules.md).
+        Seules les sources **légales et publiques**, ou accessibles avec la clé API de l'utilisateur, sont acceptées.
+  - type: input
+    id: service
+    attributes:
+      label: Service ou source
+      placeholder: https://exemple.org
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Catégorie
+      options:
+        - phone
+        - email
+        - username
+        - person
+        - domain
+        - ip
+        - web
+        - crypto
+        - finance
+        - company
+        - location
+        - image
+        - messaging
+        - social
+        - forensic
+        - misc
+        - autre
+    validations:
+      required: true
+  - type: input
+    id: inputs
+    attributes:
+      label: Types d'entités en entrée
+      placeholder: email, phone
+    validations:
+      required: true
+  - type: textarea
+    id: outputs
+    attributes:
+      label: Ce que le module produirait
+      description: Entités créées, liens, propriétés ajoutées à l'entité d'origine.
+    validations:
+      required: true
+  - type: dropdown
+    id: access
+    attributes:
+      label: Accès
+      options:
+        - Libre, sans clé
+        - Clé API gratuite
+        - Clé API payante ou à crédits (module « à la demande »)
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Vérifications
+      options:
+        - label: Le service autorise ce type d'usage (conditions d'utilisation lues).
+          required: true
+        - label: La requête n'alerte pas la personne recherchée, ou le module sera marqué « bruyant » (noisy).
+        - label: Je peux fournir une réponse d'exemple anonymisée pour les tests (fixture).

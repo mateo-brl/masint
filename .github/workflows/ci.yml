@@ -1,0 +1,52 @@
+# Intégration continue : types, tests et build sous Linux et Windows.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Le postinstall (electron-builder install-app-deps) recompile better-sqlite3
+      # pour l'ABI d'Electron (binaire précompilé si disponible, sinon node-gyp).
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Vérifier les types
+        run: npm run typecheck
+
+      # Tests sous Node : modules (fixtures enregistrées), détection, exports.
+      # Les tests réseau ne tournent qu'avec LIVE=1, jamais en CI.
+      - name: Tests unitaires
+        run: npm test
+
+      # Moteur et base SQLite : Electron en mode Node (ELECTRON_RUN_AS_NODE),
+      # car better-sqlite3 est compilé pour Electron. Aucun affichage requis.
+      - name: Tests du moteur
+        run: npm run test:core
+
+      - name: Build
+        run: npm run build

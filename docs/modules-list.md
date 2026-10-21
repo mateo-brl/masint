@@ -3,7 +3,7 @@
 <!-- Fichier généré : ne pas modifier à la main. -->
 <!-- Régénérer avec : node build/scripts/list-modules.mjs > docs/modules-list.md -->
 
-138 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
+139 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
 
 Légende des remarques : **à la demande** (lancé seulement sur demande explicite, service à crédits), **bruyant** (peut alerter la personne recherchée), **expérimental** (résultats à vérifier). Une clé suivie de « (facultative) » améliore les résultats sans être obligatoire.
 
@@ -12,7 +12,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | [Téléphone](#phone) | 7 |
 | [Email](#email) | 24 |
 | [Pseudo](#username) | 2 |
-| [Personne](#person) | 3 |
+| [Personne](#person) | 4 |
 | [Domaine](#domain) | 14 |
 | [Adresse IP](#ip) | 13 |
 | [Site web](#web) | 5 |
@@ -90,6 +90,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `person.fr_dirigeants` | Mandats de dirigeant (France) | `person` |  |  |
 | `person.search_links` | Liens de recherche manuelle | `person` |  |  |
 | `person.usernames` | Pseudos probables | `person` |  |  |
+| `person.wikidata` | Wikidata (personnalité publique) | `person` |  | expérimental |
 
 <a id="domain"></a>
 

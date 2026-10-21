@@ -9,6 +9,7 @@ import { openDatabase } from './db/database'
 import { Repo } from './db/repo'
 import { Engine } from './engine/runner'
 import { registerIpc } from './ipc'
+import { queueOpen } from './openQueue'
 import { SettingsService, type Cipher } from './settings'
 import { initUpdater } from './updater'
 
@@ -132,7 +133,10 @@ void app.whenReady().then(async () => {
   openFile = (path) => {
     void readFile(path)
       .then((buf) => importArchive(repo, buf))
-      .then((inv) => send('app:openInvestigation', { id: inv.id }))
+      .then((inv) => {
+        queueOpen(inv.id)
+        send('app:openInvestigation', { id: inv.id })
+      })
       .catch((e) => console.error('[archive]', e))
   }
   mainWindow.webContents.once('did-finish-load', () => {

@@ -1,0 +1,66 @@
+name: Signaler un bug
+description: Un comportement inattendu, un plantage ou un module qui ne renvoie plus rien.
+title: '[Bug] '
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de prendre le temps de signaler ce problème.
+        **Ne collez jamais de données personnelles réelles** (numéros, emails, noms de cibles) ni de clé API : remplacez-les par des valeurs fictives.
+  - type: input
+    id: version
+    attributes:
+      label: Version de MASINT
+      description: Visible dans Réglages, ou dans le nom de l'installeur.
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Système
+      options:
+        - Windows 11
+        - Windows 10
+        - Linux (AppImage)
+        - Linux (.deb)
+        - Version de développement (npm run dev)
+    validations:
+      required: true
+  - type: dropdown
+    id: network
+    attributes:
+      label: Connexion réseau
+      options:
+        - Directe
+        - Proxy HTTP ou SOCKS
+        - Tor
+        - Je ne sais pas
+  - type: input
+    id: module
+    attributes:
+      label: Module concerné
+      description: Identifiant affiché dans la vue Modules (ex. phone.info), si le problème vient d'un module.
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes pour reproduire
+      placeholder: |
+        1. Créer une enquête
+        2. Ajouter une entité de type ...
+        3. Lancer le module ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Résultat attendu et résultat obtenu
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Message d'erreur ou journal
+      description: Message affiché dans l'historique du module, ou sortie de la console en lançant l'application depuis un terminal.
+      render: text

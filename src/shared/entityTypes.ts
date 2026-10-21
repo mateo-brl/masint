@@ -629,7 +629,16 @@ export const ENTITY_TYPES: EntityTypeDef[] = [
       f('leak_fields', 'Données exposées', 'Exposed data', 'list'),
       f('infostealer_count', 'Infections infostealer', 'Infostealer infections', 'number'),
       f('m365_tenant', 'Tenant Microsoft 365', 'Microsoft 365 tenant'),
-      f('identity_provider', "Fournisseur d'identité", 'Identity provider')
+      f('identity_provider', "Fournisseur d'identité", 'Identity provider'),
+      f('infostealer_first_date', 'Première infection', 'First infection', 'date'),
+      f('infostealer_last_date', 'Dernière infection', 'Last infection', 'date'),
+      f('leak_count', 'Enregistrements fuités', 'Leaked records', 'number'),
+      f('hibp_breach_count', 'Fuites (HIBP)', 'Breaches (HIBP)', 'number'),
+      f('hibp_paste_count', 'Pastes (HIBP)', 'Pastes (HIBP)', 'number'),
+      f('github_commits', 'Commits GitHub', 'GitHub commits', 'number'),
+      f('github_commit_names', 'Noms dans les commits', 'Names in commits', 'list'),
+      f('github_last_commit_date', 'Dernier commit', 'Last commit', 'date'),
+      f('github_repos', 'Dépôts GitHub', 'GitHub repositories', 'list')
     ]
   },
 

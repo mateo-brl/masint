@@ -99,7 +99,17 @@ export const useApp = create<AppState>((set, get) => ({
     })
     onEvent('graph:changed', (change) => useGraph.getState().applyChange(change))
     onEvent('update:status', (update) => set({ update }))
-    onEvent('app:openInvestigation', ({ id }) => void get().openInvestigation(id))
+    // L'événement signale une enquête en attente ; on la récupère aussi au démarrage
+    // au cas où l'import a eu lieu avant que l'interface n'écoute.
+    const openPending = async (): Promise<void> => {
+      const ids = await api('app:takePendingOpen')
+      if (ids.length) {
+        await get().refreshInvestigations()
+        await get().openInvestigation(ids[ids.length - 1])
+      }
+    }
+    onEvent('app:openInvestigation', () => void openPending())
+    void openPending()
   },
 
   async refreshInvestigations() {
