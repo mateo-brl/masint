@@ -127,6 +127,8 @@ export type ModuleCategory =
   | 'image'
   | 'messaging'
   | 'social'
+  | 'forensic'
+  | 'misc'
   | 'roso'
 
 export interface KeyRequirement {

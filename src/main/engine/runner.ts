@@ -22,9 +22,14 @@ interface Job {
 }
 
 /** Modules applicables à un nœud. `explicit` inclut les modules « à la demande ». */
-export function applicableModules(node: GraphNode, settings: SettingsService, explicit?: string[]): OsintModule[] {
+export function applicableModules(
+  node: GraphNode,
+  settings: SettingsService,
+  explicit?: string[],
+  imageOrigin?: string | null
+): OsintModule[] {
   if (node.kind !== 'entity') return []
-  const input = toInput(node)
+  const input = toInput(node, imageOrigin)
   const disabled = new Set(settings.get().disabledModules)
   return allModules().filter((m) => {
     if (!m.inputTypes.includes(node.type) && !m.inputTypes.includes('*')) return false
@@ -34,8 +39,16 @@ export function applicableModules(node: GraphNode, settings: SettingsService, ex
   })
 }
 
-export function toInput(node: GraphNode): InputEntity {
-  return { id: node.id, type: node.type, label: node.label, platform: node.platform, data: node.data, imageId: node.imageId }
+export function toInput(node: GraphNode, imageOrigin?: string | null): InputEntity {
+  return {
+    id: node.id,
+    type: node.type,
+    label: node.label,
+    platform: node.platform,
+    data: node.data,
+    imageId: node.imageId,
+    imageOrigin: imageOrigin ?? null
+  }
 }
 
 function truncateRaw(raw: unknown): string | null {
@@ -71,7 +84,7 @@ export class Engine {
   enrich(investigationId: string, nodeId: string, moduleIds?: string[]): { jobId: string } {
     const node = this.repo.getNode(nodeId)
     if (!node || node.investigationId !== investigationId) throw new Error('Nœud introuvable')
-    const modules = applicableModules(node, this.settings, moduleIds)
+    const modules = applicableModules(node, this.settings, moduleIds, this.imageOrigin(node))
     const jobId = randomUUID()
     const job: Job = {
       controller: new AbortController(),
@@ -158,7 +171,7 @@ export class Engine {
       const ctx = this.createContext(m, controller.signal)
       // Relire le nœud : un module précédent a pu enrichir ses propriétés.
       const fresh = this.repo.getNode(node.id) ?? node
-      const output = await m.run(toInput(fresh), ctx)
+      const output = await m.run(toInput(fresh, this.imageOrigin(fresh)), ctx)
       const count = await this.applyOutput(fresh, m, output, ctx)
       this.repo.updateRun(run.id, {
         status: 'done',
@@ -186,6 +199,10 @@ export class Engine {
     }
   }
 
+  private imageOrigin(node: GraphNode): string | null {
+    return node.imageId ? (this.repo.getAttachment(node.imageId)?.origin ?? null) : null
+  }
+
   createContext(m: OsintModule, signal: AbortSignal): ModuleContext {
     const settings = this.settings.get()
     const fetchFn = createFetch({ settings, moduleId: m.id, signal })
@@ -200,7 +217,7 @@ export class Engine {
       attachment: async (id) => {
         const meta = this.repo.getAttachment(id)
         const blob = this.repo.getAttachmentData(id)
-        return meta && blob ? { mime: blob.mime, name: meta.name, data: blob.data } : null
+        return meta && blob ? { mime: blob.mime, name: meta.name, data: blob.data, origin: meta.origin } : null
       },
       signal,
       userAgent: settings.userAgent,

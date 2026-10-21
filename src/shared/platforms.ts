@@ -146,6 +146,9 @@ const SOCIAL: Row[] = [
   ['fiverr', 'Fiverr', 'fiverr', '#1DBF73', 'https://www.fiverr.com/{u}'],
   ['upwork', 'Upwork', 'upwork', '#6FDA44'],
   ['malt', 'Malt', 'malt', '#FC5757'],
+  ['freelancer', 'Freelancer', 'freelancer', '#29B2FE', 'https://www.freelancer.com/u/{u}'],
+  ['lastpass', 'LastPass', 'lastpass', '#D32D27'],
+  ['eventbrite', 'Eventbrite', null, '#F05537'],
   ['indeed', 'Indeed', 'indeed', '#003A9B'],
   ['glassdoor', 'Glassdoor', 'glassdoor', '#00A162'],
   ['trustpilot', 'Trustpilot', 'trustpilot', '#00B67A'],
@@ -326,6 +329,7 @@ const CHAINS: Array<[string, string, string | null, string, string]> = [
   ['ton', 'Toncoin', 'ton', '#0098EA', 'https://tonviewer.com/{a}'],
   ['arbitrum', 'Arbitrum', null, '#28A0F0', 'https://arbiscan.io/address/{a}'],
   ['base_chain', 'Base', null, '#0052FF', 'https://basescan.org/address/{a}'],
+  ['optimism', 'Optimism', 'optimism', '#FF0420', 'https://optimistic.etherscan.io/address/{a}'],
   ['coinbase', 'Coinbase', 'coinbase', '#0052FF', ''],
   ['binance', 'Binance', 'binance', '#F0B90B', ''],
   ['kraken', 'Kraken', null, '#5741D9', '']
@@ -368,7 +372,11 @@ const HOSTING: Row[] = [
   ['m247', 'M247', null, '#E30613'],
   ['choopa', 'Choopa', null, '#007BFC'],
   ['github_hosting', 'GitHub', 'github', '#FFFFFF'],
-  ['render', 'Render', 'render', '#FFFFFF']
+  ['render', 'Render', 'render', '#FFFFFF'],
+  ['ns1', 'NS1 (IBM)', null, '#5C4EE5'],
+  ['ultradns', 'UltraDNS (Vercara)', null, '#0072CE'],
+  ['bunny', 'Bunny.net', 'bunnydotnet', '#FF7854'],
+  ['oracle_dyn', 'Dyn (Oracle)', null, '#F80000']
 ]
 
 const HLR: Row[] = [

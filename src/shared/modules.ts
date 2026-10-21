@@ -13,6 +13,8 @@ export interface InputEntity {
   data: Record<string, PropValue>
   /** Pièce jointe servant d'image (photo importée, avatar). */
   imageId: string | null
+  /** URL d'origine de cette image quand elle a été téléchargée par un module. */
+  imageOrigin?: string | null
 }
 
 export interface OutEntity {
@@ -75,7 +77,7 @@ export interface ModuleContext {
   /** Clé API stockée dans le coffre. */
   key(id: string): string | undefined
   /** Contenu d'une pièce jointe de l'enquête (photo à analyser...). */
-  attachment(id: string): Promise<{ mime: string; name: string; data: Buffer } | null>
+  attachment(id: string): Promise<{ mime: string; name: string; data: Buffer; origin: string | null } | null>
   signal: AbortSignal
   userAgent: string
   lang: 'fr' | 'en'

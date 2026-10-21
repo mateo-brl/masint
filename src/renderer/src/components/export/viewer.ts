@@ -252,7 +252,7 @@ html,body{height:100%;margin:0}
 body{background:var(--app);color:var(--text);font:13px/1.4 'Inter','Inter Variable','Segoe UI',system-ui,-apple-system,Roboto,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden;display:flex;flex-direction:column}
 button{font:inherit;color:inherit}
 .glass{background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--border);backdrop-filter:blur(10px);box-shadow:0 10px 40px rgb(0 0 0/.35)}
-.top{height:54px;flex:none;display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:1px solid var(--border);background:var(--panel);position:relative;z-index:5}
+.top{height:54px;flex:none;display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:1px solid var(--border);background:var(--panel);position:relative;z-index:7}
 .brand{display:flex;align-items:center;gap:8px;font-weight:700;letter-spacing:.02em}
 .sep{width:1px;height:24px;background:var(--border)}
 .title{min-width:0}
@@ -296,9 +296,13 @@ button{font:inherit;color:inherit}
 .entity .sub{font-size:8.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .entity .bar{position:absolute;left:0;top:4px;bottom:4px;width:2px;border-radius:2px}
 .entity .deg{position:absolute;top:-6px;right:-6px;min-width:15px;height:15px;padding:0 4px;border-radius:999px;background:var(--accent);color:#fff;font-size:8.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
-.textnode{white-space:pre-wrap;padding:4px;color:var(--text);cursor:pointer;overflow:hidden}
-.imagenode{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--panel);cursor:pointer}
-.imagenode img{width:100%;height:100%;object-fit:cover;display:block}
+.textnode{white-space:pre-wrap;overflow-wrap:break-word;padding:4px 6px;border-radius:6px;color:var(--text);line-height:1.35;cursor:pointer;overflow:hidden}
+.textnode.postit{padding:12px 14px;border-radius:3px;color:#1c1917;box-shadow:0 1px 2px rgb(0 0 0/.18),0 8px 22px rgb(0 0 0/.22)}
+.imagenode{display:flex;flex-direction:column;padding:4px;border:1px solid var(--node-border);border-radius:10px;overflow:hidden;background:var(--node);box-shadow:0 4px 16px rgb(0 0 0/.22);cursor:pointer}
+.node.sel .imagenode,.node.sel .textnode{box-shadow:0 0 0 1px var(--accent),0 8px 26px rgb(0 0 0/.35)}
+.imagenode .frame{position:relative;flex:1;min-height:0;overflow:hidden;border-radius:7px;background:var(--panel-2)}
+.imagenode img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.imagenode .caption{flex:none;height:22px;line-height:22px;padding:0 4px;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mapnode{border:1px solid var(--border);border-radius:8px;background:var(--panel);padding:10px;display:flex;flex-direction:column;gap:4px;color:var(--muted);font-size:11px;cursor:pointer}
 .mapnode .m-title{display:flex;gap:6px;align-items:center;color:var(--text);font-weight:600;font-size:12px}
 .drawnode{pointer-events:none}
@@ -426,22 +430,27 @@ function viewerRuntime(): void {
       card.style.position = 'relative'
       wrap.appendChild(card)
     } else if (n.kind === 'text') {
-      const t = el('div', 'textnode', n.label)
+      // Texte libre ou post-it (fond coloré), comme sur le canevas.
+      const t = el('div', n.bg ? 'textnode postit' : 'textnode', n.label)
       t.style.fontSize = `${n.fontSize ?? 14}px`
+      if (n.bg) t.style.background = n.bg
       if (n.color) t.style.color = n.color
       if (n.w) t.style.width = `${n.w}px`
-      if (n.h) t.style.minHeight = `${n.h}px`
+      if (n.h) t.style.height = `${n.h}px`
       wrap.appendChild(t)
     } else if (n.kind === 'image') {
       const f = el('div', 'imagenode')
-      f.style.width = `${n.w ?? 240}px`
-      f.style.height = `${n.h ?? 180}px`
+      f.style.width = `${n.w ?? 260}px`
+      f.style.height = `${n.h ?? 200}px`
+      const frame = el('div', 'frame')
       if (n.image && D.images[n.image]) {
         const img = el('img')
         img.src = D.images[n.image]
         img.alt = n.label
-        f.appendChild(img)
+        frame.appendChild(img)
       }
+      f.appendChild(frame)
+      if (n.label.trim()) f.appendChild(el('div', 'caption', n.label.trim()))
       wrap.appendChild(f)
     } else if (n.kind === 'map') {
       const m = el('div', 'mapnode')
@@ -756,6 +765,8 @@ function viewerRuntime(): void {
     })
   }
   q.addEventListener('input', () => {
+    // La recherche remplace la sélection courante pour que les résultats restent visibles.
+    if (selected) select(null)
     const s = q.value.trim().toLowerCase()
     found = s ? D.nodes.filter((n) => n.kind !== 'drawing' && n.search.includes(s)) : []
     matches = s ? new Set(found.map((n) => n.id)) : null
@@ -773,6 +784,7 @@ function viewerRuntime(): void {
       focus(found[active].id)
       results.hidden = true
     } else if (ev.key === 'Escape') {
+      if (!q.value) select(null)
       q.value = ''
       q.dispatchEvent(new Event('input'))
       q.blur()
@@ -795,6 +807,7 @@ function viewerRuntime(): void {
       b.appendChild(el('span', 'l-label', l.label))
       b.appendChild(el('span', 'l-count', String(l.count)))
       b.onclick = () => {
+        if (selected) select(null)
         legendType = legendType === l.key ? null : l.key
         items.querySelectorAll('.l-item').forEach((x) => x.classList.remove('on'))
         if (legendType) b.classList.add('on')

@@ -37,6 +37,8 @@ export function isValidIban(raw: string): boolean {
 }
 
 export function detectCryptoChain(q: string): string | null {
+  if (/^(bitcoincash:)?[qp][02-9ac-hj-np-z]{41}$/.test(q)) return 'bitcoincash'
+  if (/^X[1-9A-HJ-NP-Za-km-z]{33}$/.test(q)) return 'dash'
   if (/^(bc1)[a-z0-9]{25,62}$/.test(q) || /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(q)) return 'bitcoin'
   if (/^0x[a-fA-F0-9]{40}$/.test(q)) return 'ethereum'
   if (/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(q)) return 'tron'
@@ -89,7 +91,7 @@ export function detectEntity(raw: string): Detection | null {
   const algo = hashAlgorithm(q)
   if (algo && algo !== 'SHA-1') return { type: 'hash', value: q.toLowerCase() }
 
-  if (!/\s/.test(q)) {
+  if (!/\s/.test(q) || /^bitcoincash:/.test(q)) {
     const chain = detectCryptoChain(q)
     if (chain && !(chain === 'solana' && /^[a-z]+$/i.test(q)))
       return { type: 'crypto_wallet', value: q, platform: chain }

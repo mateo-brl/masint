@@ -50,7 +50,7 @@ export async function buildReport(options: ReportOptions, onStep: (s: ReportStep
   if (options.sections.graph && nodes.length) {
     onStep('capture')
     try {
-      graphImage = await captureGraphPng({ pixelRatio: 2, maxSide: 2600 })
+      graphImage = await captureGraphPng({ pixelRatio: 2, maxSide: 2600, theme: 'light' })
     } catch {
       graphImage = null
     }

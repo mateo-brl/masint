@@ -117,6 +117,8 @@ export default defineModule({
     const domain = normalizeDomain(input.label)
     if (!isDomain(domain)) throw new ModuleError('Domaine invalide', 'invalid_input')
     const candidates = prioritize(generateCandidates(domain))
+    // IP du domaine d'origine : une variante sur la même IP appartient souvent au même propriétaire.
+    const own = new Set(await ctx.resolveDns(domain, 'A').catch(() => [] as string[]))
     let failures = 0
     const checked = await pool(candidates, 10, async (c) => {
       try {
@@ -135,8 +137,14 @@ export default defineModule({
     const entities: OutEntity[] = registered.slice(0, MAX_ENTITIES).map((c) => ({
       type: 'domain',
       label: c.domain,
-      data: { typosquat_kind: c.fuzzer, a: c.a.slice(0, 5) },
-      linkLabel: fr ? 'domaine similaire' : 'lookalike domain'
+      data: { typosquat_kind: c.fuzzer, a: c.a.slice(0, 5), same_ip_as_target: c.a.some((ip) => own.has(ip)) },
+      linkLabel: c.a.some((ip) => own.has(ip))
+        ? fr
+          ? 'domaine similaire (même IP)'
+          : 'lookalike domain (same IP)'
+        : fr
+          ? 'domaine similaire'
+          : 'lookalike domain'
     }))
     return {
       properties: {

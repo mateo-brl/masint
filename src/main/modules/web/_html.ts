@@ -255,9 +255,9 @@ export interface Technology {
 }
 
 const HTML_TECH: Array<{ name: string; re: RegExp; kind?: string; version?: RegExp }> = [
-  { name: 'WordPress', re: /\/wp-(content|includes)\//, kind: 'CMS', version: /ver=(\d+\.\d+(?:\.\d+)?)/ },
-  { name: 'WooCommerce', re: /woocommerce/i, kind: 'E-commerce' },
-  { name: 'Elementor', re: /elementor/i, kind: 'Page builder' },
+  { name: 'WordPress', re: /\/wp-(content|includes)\//, kind: 'CMS' },
+  { name: 'WooCommerce', re: /\/plugins\/woocommerce\/|woocommerce-(?:page|no-js|layout)|wc-block-/, kind: 'E-commerce' },
+  { name: 'Elementor', re: /\/plugins\/elementor\/|elementor-(?:kit|section|widget|element)-/, kind: 'Page builder' },
   { name: 'Divi', re: /et_pb_|\/Divi\//, kind: 'Page builder' },
   { name: 'Shopify', re: /cdn\.shopify\.com|Shopify\.theme/, kind: 'E-commerce' },
   { name: 'Wix', re: /static\.wixstatic\.com|wix-warmup-data|_wixCssImports/, kind: 'CMS' },
@@ -265,7 +265,7 @@ const HTML_TECH: Array<{ name: string; re: RegExp; kind?: string; version?: RegE
   { name: 'Webflow', re: /data-wf-site|webflow\.js|assets\.website-files\.com/, kind: 'CMS' },
   { name: 'Joomla', re: /\/media\/jui\/|\/components\/com_|Joomla!/, kind: 'CMS' },
   { name: 'Drupal', re: /Drupal\.settings|\/sites\/default\/files\/|drupal-settings-json/, kind: 'CMS' },
-  { name: 'PrestaShop', re: /prestashop/i, kind: 'E-commerce' },
+  { name: 'PrestaShop', re: /var prestashop\b|content="PrestaShop|\/modules\/ps_[a-z]+\//, kind: 'E-commerce' },
   { name: 'Magento', re: /Mage\.Cookies|\/static\/version\d+\/frontend\/|mage\/cookies/, kind: 'E-commerce' },
   { name: 'Ghost', re: /ghost-(?:portal|sdk)|content="Ghost/, kind: 'CMS' },
   { name: 'Jimdo', re: /jimdo(?:cdn)?\.com/, kind: 'CMS' },
@@ -280,7 +280,7 @@ const HTML_TECH: Array<{ name: string; re: RegExp; kind?: string; version?: RegE
   { name: 'Svelte', re: /svelte-[a-z0-9]{6}/, kind: 'Framework' },
   { name: 'jQuery', re: /jquery(?:[.-]\d[\d.]*)?(?:\.min)?\.js/i, kind: 'Library', version: /jquery[.-](\d+\.\d+(?:\.\d+)?)(?:\.min)?\.js/i },
   { name: 'Bootstrap', re: /bootstrap(?:\.bundle)?(?:\.min)?\.(?:css|js)/i, kind: 'Library' },
-  { name: 'Tailwind CSS', re: /tailwind(?:css)?/i, kind: 'Library' },
+  { name: 'Tailwind CSS', re: /cdn\.tailwindcss\.com|tailwindcss@|--tw-[a-z]/, kind: 'Library' },
   { name: 'Font Awesome', re: /font-?awesome/i, kind: 'Library' },
   { name: 'Google Fonts', re: /fonts\.googleapis\.com/, kind: 'Fonts' },
   { name: 'Adobe Fonts', re: /use\.typekit\.net/, kind: 'Fonts' },
@@ -352,15 +352,16 @@ export function technologies(html: string, headers: Record<string, string>, meta
     const v = headers[t.header]
     if (v !== undefined && (!t.re || t.re.test(v))) add({ name: t.name, kind: t.kind })
   }
+  // « WordPress 6.4.2 », « Joomla! - Open Source Content Management », « Hugo 0.120.4 ».
   const generator = meta.generator
   if (generator) {
-    const m = generator.match(/^([A-Za-z][\w .!-]*?)\s*v?(\d+(?:\.\d+)*)?(?:\s|$|;)/)
-    if (m) add({ name: m[1].trim(), version: m[2], kind: 'CMS' })
+    const m = generator.match(/^(.+?)\s+v?(\d+(?:\.\d+)+)(?:[-\s;,(].*)?$/)
+    const name = (m ? m[1] : generator.split(/\s+-\s+|;|,/)[0]).trim()
+    if (name.length <= 40) add({ name, version: m?.[2], kind: 'CMS' })
   }
   for (const t of HTML_TECH) {
     if (!t.re.test(html)) continue
-    const version = t.version ? html.match(t.version)?.[1] : undefined
-    add({ name: t.name, version: t.name === 'WordPress' && !generator?.startsWith('WordPress') ? undefined : version, kind: t.kind })
+    add({ name: t.name, version: t.version ? html.match(t.version)?.[1] : undefined, kind: t.kind })
   }
   return Array.from(out.values())
 }

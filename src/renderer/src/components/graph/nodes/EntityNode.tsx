@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { attachmentUrl } from '@shared/api'
 import { getEntityType } from '@shared/entityTypes'
 import { getPlatform } from '@shared/platforms'
-import type { GraphNode } from '@shared/types'
+import { nodeSubtitle } from '@shared/subtitle'
 import { useLang } from '../../../lib/i18n'
 import { EntityBadge } from '../../../lib/icons'
 import { useApp } from '../../../store/app'
@@ -15,42 +15,6 @@ const SIZES = { sm: 168, md: 196, lg: 240 }
 /** Nombre de liens sortants par nœud, fourni par le canevas (pastille rouge). */
 export const OutDegreeContext = createContext<Map<string, number>>(new Map())
 
-/** Sous-titre affiché sous le libellé : localisation, pseudo, valeur clé selon le type. */
-export function nodeSubtitle(n: GraphNode): string {
-  const d = n.data
-  const pick = (...keys: string[]): string =>
-    keys
-      .map((k) => d[k])
-      .filter((v) => v !== undefined && v !== null && v !== '' && !Array.isArray(v))
-      .map(String)
-      .slice(0, 2)
-      .join(' · ')
-  switch (n.type) {
-    case 'account':
-      return pick('location', 'username')
-    case 'phone':
-      return pick('carrier', 'country')
-    case 'ip':
-      return pick('city', 'country', 'isp')
-    case 'email':
-      return pick('provider')
-    case 'carrier':
-      return pick('country', 'network')
-    case 'company':
-      return pick('siren', 'activity')
-    case 'domain':
-      return pick('registrar')
-    case 'crypto_wallet':
-      return pick('balance')
-    case 'person':
-      return pick('birth_date', 'occupation')
-    case 'breach':
-    case 'infostealer':
-      return pick('breach_date', 'date_compromised', 'computer_name')
-    default:
-      return pick('location', 'country', 'city', 'date', 'description')
-  }
-}
 
 function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Element {
   const n = data.node

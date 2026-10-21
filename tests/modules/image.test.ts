@@ -9,7 +9,7 @@ import { entity, LIVE, makeContext, runModule } from '../helpers/context'
 const file = (name: string): Buffer => readFileSync(join(__dirname, '../fixtures/image', name))
 const withAttachment = (name: string, mime: string) => ({
   ...makeContext(),
-  attachment: async () => ({ mime, name, data: file(name) })
+  attachment: async () => ({ mime, name, data: file(name), origin: null })
 })
 const photo = (extra = {}) => entity('photo', 'photo.jpg', { imageId: 'att1', ...extra })
 

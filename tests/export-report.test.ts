@@ -144,7 +144,8 @@ describe('buildReportHtml', () => {
     expect(html).toContain('id="cat-annotations"')
     expect(html).toContain('Piste à vérifier')
     const order = entityOrder(nodes, 'fr').flatMap((g) => g.nodes.map((n) => n.id))
-    expect(order).toHaveLength(3)
+    // Ordre du catalogue : la personne avant le téléphone et les comptes.
+    expect(order).toEqual(['h1', 'p1', 'a1'])
     expect(html).toContain('<span class="ref big">E001</span>')
     expect(html).toContain('<span class="ref big">E003</span>')
     expect(html).toContain('Recherche Facebook')

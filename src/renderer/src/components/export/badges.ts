@@ -66,11 +66,13 @@ export function badgeKey(n: { type: string; platform: string | null; style?: { i
   return [n.type, n.platform ?? '', n.style?.icon ?? '', n.style?.color ?? ''].join('|')
 }
 
-/** Logo MASINT dessiné en CSS (carré rouge et initiale), comme dans la barre latérale. */
+/** Logo MASINT (même dessin que le composant Logo et l'icône de l'application). */
 export function logoHtml(size: number): string {
   return (
-    `<span class="mx-logo" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:${size}px;height:${size}px;` +
-    `border-radius:${round(size * 0.25)}px;background:#e5484d;color:#fff;font-weight:900;font-size:${round(size * 0.42)}px;letter-spacing:-0.02em;` +
-    `font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;line-height:1">M</span>`
+    `<svg class="mx-logo" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 1024 1024" aria-label="MASINT" style="flex-shrink:0">` +
+    '<rect x="32" y="32" width="960" height="960" rx="192" fill="#16161a" stroke="#2a2a2f" stroke-width="16"/>' +
+    '<path d="M264 760 L264 264 L512 600 L760 264 L760 760" fill="none" stroke="#e5484d" stroke-width="112" stroke-linejoin="round" stroke-linecap="round"/>' +
+    '<g fill="#f4f4f5"><circle cx="264" cy="264" r="100"/><circle cx="760" cy="264" r="100"/><circle cx="264" cy="760" r="100"/><circle cx="760" cy="760" r="100"/></g>' +
+    '<circle cx="512" cy="600" r="124" fill="#f4f4f5"/><circle cx="512" cy="600" r="64" fill="#e5484d"/></svg>'
   )
 }

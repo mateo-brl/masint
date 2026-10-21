@@ -115,6 +115,22 @@ export interface CaptureOptions {
   pixelRatio?: number
   /** Côté maximal de l'image en pixels CSS. */
   maxSide?: number
+  /** Thème du rendu (le rapport imprimé utilise le thème clair). Par défaut, le thème affiché. */
+  theme?: 'light' | 'dark'
+}
+
+/** Applique un thème le temps de la capture et renvoie la fonction de retour à l'état initial. */
+async function applyTheme(theme: 'light' | 'dark' | undefined): Promise<() => void> {
+  const root = document.documentElement
+  const previous = root.dataset.theme
+  if (!theme || (previous ?? 'dark') === theme) return () => undefined
+  root.dataset.theme = theme
+  await nextFrame()
+  await nextFrame()
+  return () => {
+    if (previous === undefined) delete root.dataset.theme
+    else root.dataset.theme = previous
+  }
 }
 
 async function capture(kind: 'png' | 'svg', opts: CaptureOptions = {}): Promise<string> {
@@ -135,6 +151,7 @@ async function capture(kind: 'png' | 'svg', opts: CaptureOptions = {}): Promise<
       await nextFrame()
     }
     const restore = await inlineAttachments(el)
+    const restoreTheme = await applyTheme(opts.theme)
     try {
       const nodes = useGraph.getState().nodes.filter((n) => !n.hidden)
       const bounds = getNodesBounds(nodes)
@@ -164,6 +181,7 @@ async function capture(kind: 'png' | 'svg', opts: CaptureOptions = {}): Promise<
       }
       return kind === 'png' ? await toPng(el, options) : await toSvg(el, options)
     } finally {
+      restoreTheme()
       restore()
       if (selected.length) useGraph.getState().select(selected)
     }

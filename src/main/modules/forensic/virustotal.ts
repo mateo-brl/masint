@@ -85,7 +85,7 @@ export default defineModule({
     fr: "Détections antivirus, famille de malware probable, type et noms du fichier, première soumission, à partir d'une empreinte MD5, SHA-1 ou SHA-256.",
     en: 'Antivirus detections, likely malware family, file type and names, first submission, from an MD5, SHA-1 or SHA-256 hash.'
   },
-  category: 'web',
+  category: 'forensic',
   inputTypes: ['hash'],
   keys: [{ id: 'virustotal', label: 'VirusTotal API key', url: 'https://www.virustotal.com/gui/my-apikey' }],
   homepage: 'https://www.virustotal.com',

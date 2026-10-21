@@ -79,7 +79,12 @@ const COMMON_ACCOUNT_FIELDS: FieldDef[] = [
   f('followers', 'Abonnés', 'Followers', 'number'),
   f('following', 'Abonnements', 'Following', 'number'),
   f('created_at', 'Date de création', 'Created at', 'date'),
-  f('last_seen', 'Dernière activité', 'Last seen', 'date')
+  f('last_seen', 'Dernière activité', 'Last seen', 'date'),
+  f('linked_logins', 'Connexions liées', 'Linked logins', 'list'),
+  f('login_methods', 'Moyens de connexion', 'Login methods', 'list'),
+  f('recovery_emails', 'Emails de récupération', 'Recovery emails', 'list'),
+  f('recovery_phones', 'Téléphones de récupération', 'Recovery phones', 'list'),
+  f('recovery_hints', 'Indices de récupération', 'Recovery hints', 'list')
 ]
 
 export const ENTITY_TYPES: EntityTypeDef[] = [
@@ -126,7 +131,12 @@ export const ENTITY_TYPES: EntityTypeDef[] = [
       f('carrier', 'Opérateur', 'Carrier'),
       f('region', 'Zone', 'Region'),
       f('timezones', 'Fuseaux horaires', 'Timezones', 'list'),
-      f('hlr_status', 'Statut HLR', 'HLR status')
+      f('hlr_status', 'Statut HLR', 'HLR status'),
+      f('current_carrier', 'Opérateur actuel', 'Current carrier'),
+      f('ported', 'Porté', 'Ported'),
+      f('roaming', 'Itinérance', 'Roaming'),
+      f('mccmnc', 'MCC/MNC', 'MCC/MNC'),
+      f('formats', 'Autres formats', 'Other formats', 'list')
     ]
   },
   {
@@ -254,7 +264,9 @@ export const ENTITY_TYPES: EntityTypeDef[] = [
       f('issuer', 'Émetteur', 'Issuer'),
       f('not_before', 'Valide depuis', 'Not before', 'date'),
       f('not_after', "Valide jusqu'au", 'Not after', 'date'),
-      f('serial', 'Numéro de série', 'Serial')
+      f('serial', 'Numéro de série', 'Serial'),
+      f('sha256', 'Empreinte SHA-256', 'SHA-256 fingerprint'),
+      f('dns_names', 'Noms couverts', 'Covered names', 'list')
     ]
   },
   {
@@ -281,7 +293,12 @@ export const ENTITY_TYPES: EntityTypeDef[] = [
     icon: 'Plug',
     color: '#99f6e4',
     placeholder: '443/https',
-    fields: [f('port', 'Port', 'Port', 'number'), f('product', 'Produit', 'Product'), f('banner', 'Bannière', 'Banner', 'textarea')]
+    fields: [
+      f('port', 'Port', 'Port', 'number'),
+      f('product', 'Produit', 'Product'),
+      f('title', 'Titre', 'Title'),
+      f('banner', 'Bannière', 'Banner', 'textarea')
+    ]
   },
 
   // Localisation
@@ -602,7 +619,17 @@ export const ENTITY_TYPES: EntityTypeDef[] = [
       f('domain', 'Domaine', 'Domain'),
       f('valid_mx', 'MX valide', 'Valid MX'),
       f('disposable', 'Jetable', 'Disposable'),
-      f('breaches', 'Fuites', 'Breaches', 'list')
+      f('canonical', 'Adresse canonique', 'Canonical address'),
+      f('mx', 'Serveurs MX', 'MX servers', 'list'),
+      f('mail_host', 'Hébergeur mail', 'Mail host'),
+      f('spf', 'SPF', 'SPF'),
+      f('dmarc_policy', 'Politique DMARC', 'DMARC policy'),
+      f('breaches', 'Fuites', 'Breaches', 'list'),
+      f('breach_count', 'Nombre de fuites', 'Breach count', 'number'),
+      f('leak_fields', 'Données exposées', 'Exposed data', 'list'),
+      f('infostealer_count', 'Infections infostealer', 'Infostealer infections', 'number'),
+      f('m365_tenant', 'Tenant Microsoft 365', 'Microsoft 365 tenant'),
+      f('identity_provider', "Fournisseur d'identité", 'Identity provider')
     ]
   },
 

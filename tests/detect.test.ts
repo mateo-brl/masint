@@ -33,3 +33,13 @@ describe('detectEntity', () => {
     expect(isValidIban('FR7630006000011234567890188')).toBe(false)
   })
 })
+
+describe('detectCryptoChain', () => {
+  it('reconnaît Dash et Bitcoin Cash avant Solana', async () => {
+    const { detectCryptoChain } = await import('@shared/detect')
+    expect(detectCryptoChain('XpESxaUmonkq8RaLLp46Brx2K39ggQe226')).toBe('dash')
+    expect(detectCryptoChain('qpm2qsznhks23z7629mms6s4cwef74vcwvy22gdx6a')).toBe('bitcoincash')
+    expect(detectCryptoChain('bitcoincash:qpm2qsznhks23z7629mms6s4cwef74vcwvy22gdx6a')).toBe('bitcoincash')
+    expect(detectCryptoChain('7EcDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV')).toBe('solana')
+  })
+})
