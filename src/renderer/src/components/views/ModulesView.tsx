@@ -63,7 +63,11 @@ function Catalog(): React.JSX.Element {
   const refresh = useApp((s) => s.refreshModules)
   const updateSettings = useApp((s) => s.updateSettings)
   const openSettings = useApp((s) => s.openSettings)
+  const secrets = useApp((s) => s.secrets)
   const [q, setQ] = useState('')
+  const savedKeys = useMemo(() => new Set(secrets.filter((s) => s.set).map((s) => s.id)), [secrets])
+  const keyState = (m: ModuleInfo): 'ok' | 'missing' | 'optional' =>
+    !m.configured ? 'missing' : m.keys.some((k) => savedKeys.has(k.id)) ? 'ok' : 'optional'
 
   const groups = useMemo(() => {
     const s = q.trim().toLowerCase()
@@ -106,8 +110,9 @@ function Catalog(): React.JSX.Element {
                     {m.noisy && <Badge tone="warning">{t('modules.noisy')}</Badge>}
                     {m.keys.length > 0 && (
                       <button onClick={() => openSettings('keys')}>
-                        <Badge tone={m.configured ? 'success' : 'muted'}>
-                          <Icon name="KeyRound" size={10} /> {m.configured ? t('modules.keyOk') : t('modules.needsKey')}
+                        <Badge tone={keyState(m) === 'ok' ? 'success' : 'muted'}>
+                          <Icon name="KeyRound" size={10} />{' '}
+                          {keyState(m) === 'ok' ? t('modules.keyOk') : keyState(m) === 'missing' ? t('modules.needsKey') : t('modules.keyOptional')}
                         </Badge>
                       </button>
                     )}

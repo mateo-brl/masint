@@ -31,9 +31,9 @@ export function Home(): React.JSX.Element {
     if (!detection) return
     const inv = await api('investigations:create', { name: detection.value })
     await open(inv.id)
-    const [node] = await useGraph.getState().addNodes([
-      { kind: 'entity', type: detection.type, label: detection.value, platform: detection.platform ?? null, x: 0, y: 0 }
-    ])
+    const [node] = await useGraph
+      .getState()
+      .addNodes([{ kind: 'entity', type: detection.type, label: detection.value, platform: detection.platform ?? null, x: 0, y: 0 }])
     if (enrich && node) await api('modules:enrich', inv.id, node.id)
   }
 
@@ -52,7 +52,10 @@ export function Home(): React.JSX.Element {
   const list = investigations.filter((i) => !filter || `${i.name} ${i.description}`.toLowerCase().includes(filter.toLowerCase()))
 
   return (
-    <div className="h-full overflow-auto bg-canvas" style={{ backgroundImage: 'radial-gradient(var(--canvas-dot) 1px, transparent 1px)', backgroundSize: '22px 22px' }}>
+    <div
+      className="h-full overflow-auto bg-canvas"
+      style={{ backgroundImage: 'radial-gradient(var(--canvas-dot) 1px, transparent 1px)', backgroundSize: '22px 22px' }}
+    >
       <div className="mx-auto max-w-5xl px-8 pt-16 pb-16">
         <div className="mb-10 text-center">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1 text-[11px] text-muted">
@@ -102,7 +105,12 @@ export function Home(): React.JSX.Element {
           <h2 className="text-[15px] font-semibold">{t('home.investigations')}</h2>
           <span className="text-[12px] text-faint">{investigations.length}</span>
           <div className="flex-1" />
-          <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder={t('common.filter')} className="field !h-8 !w-56 !py-1" />
+          <input
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder={t('common.filter')}
+            className="field !h-8 !w-56 !py-1"
+          />
           <Button icon="Upload" onClick={() => void importArchive()}>
             {t('home.import')}
           </Button>
@@ -138,8 +146,11 @@ function InvestigationCard({ inv, onEdit }: { inv: Investigation; onEdit: () => 
   const date = new Date(inv.updatedAt).toLocaleString(i18n.language, { dateStyle: 'medium', timeStyle: 'short' })
   return (
     <div
-      onDoubleClick={() => void open(inv.id)}
-      className="group relative cursor-default rounded-2xl border border-line bg-panel p-4 transition hover:border-line-strong"
+      role="button"
+      tabIndex={0}
+      onClick={() => void open(inv.id)}
+      onKeyDown={(e) => e.key === 'Enter' && void open(inv.id)}
+      className="group relative cursor-pointer rounded-2xl border border-line bg-panel p-4 transition hover:border-line-strong"
     >
       <div className="flex items-start gap-3">
         <div className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: inv.color }} />
@@ -147,41 +158,43 @@ function InvestigationCard({ inv, onEdit }: { inv: Investigation; onEdit: () => 
           <div className="truncate font-semibold">{inv.name}</div>
           <div className="mt-0.5 line-clamp-2 min-h-[18px] text-[12px] text-muted">{inv.description || t('home.noDescription')}</div>
         </div>
-        <Dropdown
-          align="right"
-          trigger={() => (
-            <button className="rounded-md p-1 text-muted opacity-0 transition group-hover:opacity-100 hover:bg-panel-3 hover:text-fg">
-              <Icon name="Ellipsis" size={16} />
-            </button>
-          )}
-          items={[
-            { label: t('common.open'), icon: 'FolderOpen', onClick: () => void open(inv.id) },
-            { label: t('home.edit'), icon: 'Pencil', onClick: onEdit },
-            {
-              label: t('home.duplicate'),
-              icon: 'Copy',
-              onClick: () => void api('investigations:duplicate', inv.id).then(() => refresh())
-            },
-            {
-              label: t('home.exportArchive'),
-              icon: 'Download',
-              onClick: () =>
-                void api('investigations:exportArchive', inv.id).then((p) => p && toast('success', t('home.exported', { path: p })))
-            },
-            { separator: true, label: '' },
-            {
-              label: t('common.delete'),
-              icon: 'Trash',
-              danger: true,
-              onClick: async () => {
-                if (await confirmDialog(t('home.deleteTitle', { name: inv.name }), t('home.deleteBody'))) {
-                  await api('investigations:delete', inv.id)
-                  await refresh()
+        <div onClick={(e) => e.stopPropagation()}>
+          <Dropdown
+            align="right"
+            trigger={() => (
+              <button className="rounded-md p-1 text-muted opacity-0 transition group-hover:opacity-100 hover:bg-panel-3 hover:text-fg">
+                <Icon name="Ellipsis" size={16} />
+              </button>
+            )}
+            items={[
+              { label: t('common.open'), icon: 'FolderOpen', onClick: () => void open(inv.id) },
+              { label: t('home.edit'), icon: 'Pencil', onClick: onEdit },
+              {
+                label: t('home.duplicate'),
+                icon: 'Copy',
+                onClick: () => void api('investigations:duplicate', inv.id).then(() => refresh())
+              },
+              {
+                label: t('home.exportArchive'),
+                icon: 'Download',
+                onClick: () =>
+                  void api('investigations:exportArchive', inv.id).then((p) => p && toast('success', t('home.exported', { path: p })))
+              },
+              { separator: true, label: '' },
+              {
+                label: t('common.delete'),
+                icon: 'Trash',
+                danger: true,
+                onClick: async () => {
+                  if (await confirmDialog(t('home.deleteTitle', { name: inv.name }), t('home.deleteBody'))) {
+                    await api('investigations:delete', inv.id)
+                    await refresh()
+                  }
                 }
               }
-            }
-          ]}
-        />
+            ]}
+          />
+        </div>
       </div>
       <div className="mt-4 flex items-center gap-3 text-[11.5px] text-faint">
         <span className="flex items-center gap-1">
@@ -193,7 +206,6 @@ function InvestigationCard({ inv, onEdit }: { inv: Investigation; onEdit: () => 
         <div className="flex-1" />
         <span>{date}</span>
       </div>
-      <button onClick={() => void open(inv.id)} className="absolute inset-x-4 bottom-0 top-14" aria-label={t('common.open')} />
     </div>
   )
 }
@@ -240,7 +252,13 @@ function InvestigationDialog({ value, onClose }: { value: Investigation | 'new';
       <div className="flex flex-col gap-4">
         <label className="flex flex-col gap-1.5">
           <span className="label-xs">{t('home.name')}</span>
-          <input autoFocus className="field" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void save()} />
+          <input
+            autoFocus
+            className="field"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && void save()}
+          />
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="label-xs">{t('home.description')}</span>
