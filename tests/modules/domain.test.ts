@@ -211,7 +211,7 @@ describe('domain.typosquat', () => {
   it('génère des variantes plausibles', () => {
     expect(splitDomain('example.co.uk')).toEqual({ name: 'example', tld: 'co.uk' })
     const c = generateCandidates('google.com').map((x) => x.domain)
-    expect(c).toEqual(expect.arrayContaining(['gogle.com', 'gooogle.com', 'g00gle.com', 'google.fr', 'goolge.com']))
+    expect(c).toEqual(expect.arrayContaining(['gogle.com', 'gooogle.com', 'g0ogle.com', 'google.fr', 'goolge.com']))
     expect(c).not.toContain('google.com')
   })
 

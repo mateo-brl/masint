@@ -2,7 +2,7 @@
 // profil, siège, codes SIC et dirigeants.
 
 import { defineModule, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
-import { getJson, tr } from '../misc/_util'
+import { compact, getJson, tr } from '../misc/_util'
 import { normName, titleCase } from './_fr'
 
 const API = 'https://api.company-information.service.gov.uk'
@@ -103,7 +103,7 @@ export function chOutput(ctx: Pick<ModuleContext, 'lang'>, p: ChProfile, officer
       linkLabel: o.resigned_on ? `${role(o.officer_role)} (${tr(ctx, 'ancien', 'former')})` : role(o.officer_role)
     })
   }
-  return { properties, entities, raw: { profile: p, officers: officers?.items?.slice(0, MAX_OFFICERS) ?? [] } }
+  return { properties: compact(properties!), entities, raw: { profile: p, officers: officers?.items?.slice(0, MAX_OFFICERS) ?? [] } }
 }
 
 export default defineModule({

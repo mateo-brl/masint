@@ -2,7 +2,7 @@
 // validité, raison sociale et adresse déclarées (selon les pays).
 
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
-import { serviceError, tr } from '../misc/_util'
+import { compact, serviceError, tr } from '../misc/_util'
 import { countryName } from '../finance/iban'
 
 const API = 'https://ec.europa.eu/taxation_customs/vies/rest-api/check-vat-number'
@@ -76,7 +76,7 @@ export function viesOutput(ctx: Pick<ModuleContext, 'lang'>, d: ViesResponse): M
     })
     if (address) entities.push({ type: 'address', label: address, from: 'company', linkLabel: tr(ctx, 'adresse déclarée', 'registered address') })
   }
-  return { properties, entities, raw: d }
+  return { properties: compact(properties!), entities, raw: d }
 }
 
 async function check(ctx: ModuleContext, country: string, number: string): Promise<ViesResponse> {

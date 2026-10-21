@@ -41,13 +41,16 @@ export function geoPoints(nodes: GraphNode[]): GeoPoint[] {
 }
 
 // ---------------------------------------------------------------------------
-// Fonds de carte (hôtes autorisés par la CSP de l'interface)
+// Fonds de carte (hôtes autorisés par la CSP de l'interface). Les fonds CARTO
+// exigent désormais une clé : les fonds gris d'Esri les remplacent.
 
-export type BasemapId = 'osm' | 'carto-dark' | 'carto-light' | 'satellite'
+export type BasemapId = 'dark' | 'light' | 'osm' | 'satellite'
 
 export interface Basemap {
   id: BasemapId
   url: string
+  /** Couche de libellés posée au-dessus du fond. */
+  overlay?: string
   attribution: string
   subdomains?: string
   maxZoom: number
@@ -56,36 +59,40 @@ export interface Basemap {
   raw: boolean
 }
 
-const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services'
+const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+const ESRI_CANVAS_ATTR = 'Tiles &copy; Esri, HERE, Garmin, ' + OSM_ATTR + ', and the GIS User Community'
 
 export const BASEMAPS: Basemap[] = [
   {
-    id: 'carto-dark',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: `${OSM_ATTR} &copy; <a href="https://carto.com/attributions">CARTO</a>`,
-    subdomains: 'abcd',
-    maxZoom: 20,
+    id: 'dark',
+    url: `${ESRI}/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
+    overlay: `${ESRI}/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`,
+    attribution: ESRI_CANVAS_ATTR,
+    maxZoom: 19,
+    maxNativeZoom: 16,
     raw: true
   },
   {
-    id: 'carto-light',
-    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-    attribution: `${OSM_ATTR} &copy; <a href="https://carto.com/attributions">CARTO</a>`,
-    subdomains: 'abcd',
-    maxZoom: 20,
+    id: 'light',
+    url: `${ESRI}/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
+    overlay: `${ESRI}/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}`,
+    attribution: ESRI_CANVAS_ATTR,
+    maxZoom: 19,
+    maxNativeZoom: 16,
     raw: true
   },
   {
     id: 'osm',
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: `${OSM_ATTR} contributors`,
+    attribution: OSM_ATTR,
     subdomains: 'abc',
     maxZoom: 19,
     raw: false
   },
   {
     id: 'satellite',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    url: `${ESRI}/World_Imagery/MapServer/tile/{z}/{y}/{x}`,
     attribution: 'Tiles &copy; Esri, Maxar, Earthstar Geographics, and the GIS User Community',
     maxZoom: 19,
     maxNativeZoom: 18,
@@ -94,7 +101,7 @@ export const BASEMAPS: Basemap[] = [
 ]
 
 export function getBasemap(id: unknown, theme: 'dark' | 'light' | undefined): Basemap {
-  return BASEMAPS.find((b) => b.id === id) ?? BASEMAPS.find((b) => b.id === (theme === 'light' ? 'carto-light' : 'carto-dark'))!
+  return BASEMAPS.find((b) => b.id === id) ?? BASEMAPS.find((b) => b.id === (theme === 'light' ? 'light' : 'dark'))!
 }
 
 const STORE_KEY = 'masint.map.basemap'

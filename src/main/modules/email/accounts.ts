@@ -382,6 +382,41 @@ const eventbrite = accountCheck({
 })
 
 // ---------------------------------------------------------------------------
+// Deezer
+
+interface DeezerCheck {
+  error?: unknown
+  results?: { availability?: boolean; domain_validity?: boolean }
+}
+
+export function parseDeezer(json: DeezerCheck): Parsed {
+  const r = json.results
+  if (typeof r?.availability !== 'boolean') throw new ModuleError('Deezer : réponse inattendue', 'other')
+  if (r.domain_validity === false) throw new ModuleError('Deezer : adresse refusée comme invalide', 'invalid_input')
+  return { found: !r.availability }
+}
+
+const deezer = accountCheck({
+  id: 'email.deezer',
+  service: 'Deezer',
+  platform: 'deezer',
+  description: {
+    fr: "Vérifie si l'adresse est déjà inscrite sur Deezer (contrôle du formulaire d'inscription).",
+    en: 'Checks whether the address is already registered on Deezer (sign-up form validation).'
+  },
+  homepage: 'https://www.deezer.com',
+  async check(email, ctx) {
+    const { status, json } = await getJson<DeezerCheck>(ctx, 'Deezer', 'https://www.deezer.com/ajax/gw-light.php', {
+      method: 'POST',
+      query: { method: 'deezer.emailCheck', input: 3, api_version: '1.0', api_token: '' },
+      json: { EMAIL: email }
+    })
+    if (status >= 400) throw httpFailure('Deezer', status)
+    return { ...parseDeezer(json), raw: json.results }
+  }
+})
+
+// ---------------------------------------------------------------------------
 // Mail.ru (existence de la boîte)
 
 const MAILRU_DOMAINS = ['mail.ru', 'bk.ru', 'inbox.ru', 'list.ru', 'internet.ru', 'mail.ua']
@@ -416,4 +451,17 @@ const mailru = defineModule({
   }
 })
 
-export const modules = [spotify, twitter, chess, wordpress, lastpass, freelancer, adobe, duolingo, snapchat, eventbrite, mailru]
+export const modules = [
+  spotify,
+  deezer,
+  twitter,
+  chess,
+  wordpress,
+  lastpass,
+  freelancer,
+  adobe,
+  duolingo,
+  snapchat,
+  eventbrite,
+  mailru
+]

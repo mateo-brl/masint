@@ -2,7 +2,7 @@
 // identité, siège géolocalisé, dirigeants, activité, effectif, chiffre d'affaires.
 
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
-import { getJson, num, tr } from '../misc/_util'
+import { compact, getJson, num, tr } from '../misc/_util'
 import { frenchVat, headcountLabel, legalFormLabel, nafLabel, normName, titleCase } from './_fr'
 
 const API = 'https://recherche-entreprises.api.gouv.fr/search'
@@ -166,7 +166,7 @@ export function companyOutput(ctx: Pick<ModuleContext, 'lang'>, r: ReResult): Mo
   }
 
   const { dirigeants, ...rest } = r
-  return { properties, entities, raw: { ...rest, dirigeants: (dirigeants ?? []).slice(0, MAX_DIRIGEANTS) } }
+  return { properties: compact(properties!), entities, raw: { ...rest, dirigeants: (dirigeants ?? []).slice(0, MAX_DIRIGEANTS) } }
 }
 
 /** Saisie ambiguë : les meilleurs candidats sont ajoutés comme entreprises distinctes. */

@@ -94,3 +94,14 @@ export function num(v: unknown): number | null {
   const n = typeof v === 'number' ? v : Number(v)
   return Number.isFinite(n) ? n : null
 }
+
+/** Retire les valeurs vides (null, chaîne vide, liste vide) d'un objet de propriétés. */
+export function compact<T extends Record<string, unknown>>(o: T): T {
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(o)) {
+    if (v === undefined || v === null || v === '') continue
+    if (Array.isArray(v) && v.length === 0) continue
+    out[k] = v
+  }
+  return out as T
+}

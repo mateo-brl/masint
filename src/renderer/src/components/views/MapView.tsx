@@ -14,6 +14,7 @@ import {
   getBasemap,
   loadBasemapPref,
   saveBasemapPref,
+  type Basemap,
   type BasemapId,
   type GeoCluster,
   type GeoPoint
@@ -28,7 +29,7 @@ import './geo.css'
 /** Hôte vide des marqueurs : le contenu est rendu par React dans l'élément créé par Leaflet. */
 const HOST_ICON = L.divIcon({ className: 'geo-marker-host', html: '', iconSize: [34, 40], iconAnchor: [17, 40], tooltipAnchor: [0, -40] })
 const CLUSTER_CELL = 46
-const BASEMAP_ICONS: Record<BasemapId, string> = { 'carto-dark': 'Moon', 'carto-light': 'Sun', osm: 'Map', satellite: 'Satellite' }
+const BASEMAP_ICONS: Record<BasemapId, string> = { dark: 'Moon', light: 'Sun', osm: 'Map', satellite: 'Satellite' }
 
 const clusterIcons = new Map<number, L.DivIcon>()
 function clusterIcon(count: number): L.DivIcon {
@@ -108,15 +109,7 @@ export function MapView(): React.JSX.Element {
           attributionControl={false}
           worldCopyJump
         >
-          <TileLayer
-            key={base.id}
-            url={base.url}
-            attribution={base.attribution}
-            subdomains={base.subdomains ?? 'abc'}
-            maxZoom={base.maxZoom}
-            maxNativeZoom={base.maxNativeZoom}
-          />
-          <AttributionControl position="bottomright" prefix={false} />
+          <BasemapLayers base={base} />
           {links.map((l) => (
             <LinkLine key={l.id} a={l.a} b={l.b} label={l.label} active={selected.has(l.a.id) || selected.has(l.b.id)} />
           ))}
@@ -161,6 +154,24 @@ export function MapView(): React.JSX.Element {
         <BarIcon icon="ScanSearch" title={t('map.fit')} onClick={() => fit()} disabled={!points.length} />
       </div>
     </div>
+  )
+}
+
+/** Fond de carte, couche de libellés éventuelle et attribution. */
+export function BasemapLayers({ base }: { base: Basemap }): React.JSX.Element {
+  return (
+    <>
+      <TileLayer
+        key={base.id}
+        url={base.url}
+        attribution={base.attribution}
+        subdomains={base.subdomains ?? 'abc'}
+        maxZoom={base.maxZoom}
+        maxNativeZoom={base.maxNativeZoom}
+      />
+      {base.overlay && <TileLayer key={`${base.id}-labels`} url={base.overlay} maxZoom={base.maxZoom} maxNativeZoom={base.maxNativeZoom} />}
+      <AttributionControl position="bottomright" prefix={false} />
+    </>
   )
 }
 

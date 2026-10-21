@@ -30,8 +30,8 @@ const fr = {
     backToGraph: 'Revenir au graphe',
     basemaps: {
       osm: 'Plan',
-      'carto-dark': 'Sombre',
-      'carto-light': 'Clair',
+      dark: 'Sombre',
+      light: 'Clair',
       satellite: 'Satellite'
     }
   },
@@ -90,8 +90,8 @@ const en: typeof fr = {
     backToGraph: 'Back to graph',
     basemaps: {
       osm: 'Streets',
-      'carto-dark': 'Dark',
-      'carto-light': 'Light',
+      dark: 'Dark',
+      light: 'Light',
       satellite: 'Satellite'
     }
   },
