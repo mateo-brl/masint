@@ -1,0 +1,11 @@
+{
+  "_source": "Réponses d'erreur. invalidKey et apiKeyRequired ont été OBSERVÉES le 2026-10-21 (requêtes non authentifiées) ; les autres sont construites d'après les messages du code client (apigate.js, page /email/).",
+  "invalidKey": { "success": false, "error": "Clé invalide" },
+  "apiKeyRequired": { "success": false, "error": "Clé API requise", "module": "email", "code": "api_key_required" },
+  "noCredits": { "success": false, "error": "Plus de crédits disponibles ce mois-ci", "credits": 0 },
+  "cooldown": { "success": false, "error": "Patientez 30 s avant de relancer", "code": "free_cooldown" },
+  "forbidden": { "success": false, "error": "Ta clé API n'a pas accès à Email Checker.", "code": "module_forbidden", "module": "email" },
+  "captcha": { "success": false, "error": "Captcha requis", "captcha": true, "code": "captcha_required" },
+  "maintenance": { "success": true, "maintenance": true, "message": "maintenance infra", "module": "global" },
+  "keyRevoked": { "success": false, "error": "Clé révoquée", "code": "key_revoked" }
+}

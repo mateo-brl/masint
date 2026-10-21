@@ -1,0 +1,13 @@
+{
+  "_source": "Construit d'après https://roso.info/name/ (doSearch, renderResults, export). Format non observé avec une vraie clé.",
+  "search": {
+    "success": true,
+    "credits": 12,
+    "query": { "fullName": "Jean Dupont", "firstName": "Jean", "lastName": "Dupont" },
+    "results": [
+      { "name": "Jean Dupont", "platform": "linkedin", "username": "jean-dupont-42", "profileUrl": "https://www.linkedin.com/in/jean-dupont-42", "avatar": "https://media.licdn.com/abc.jpg", "location": "Lyon", "matchSource": "linkedin", "matchScore": 0.92 },
+      { "name": "Jean Dupont", "platform": "local", "matchSource": "local", "email": "jdupont@laposte.net", "phone": "06 11 22 33 44", "location": "Marseille" },
+      { "platform": "unknown" }
+    ]
+  }
+}

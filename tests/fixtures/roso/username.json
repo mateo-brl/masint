@@ -1,0 +1,45 @@
+{
+  "_source": "Construit d'après le code client de https://roso.info/username/ (checkPlatform, displayGitHubProfile, displayHudsonRockProfile, displayWaybackResults, displaySimpleProfile). Formats non observés avec une vraie clé.",
+  "start": { "success": true, "credits": 15, "tier": "patreon" },
+  "found": {
+    "github": {
+      "success": true,
+      "exists": true,
+      "profile": { "username": "jdoe", "displayName": "John Doe", "userId": 583231, "profileUrl": "https://github.com/jdoe", "avatar": "https://avatars.githubusercontent.com/u/583231?v=4", "publicRepos": 8 },
+      "emails": [{ "email": "john.doe@example.org", "name": "John Doe", "commitUrl": "https://github.com/jdoe/repo/commit/abc123", "commitSha": "abc1234567" }],
+      "emailCount": 1
+    },
+    "twitter": {
+      "success": true,
+      "exists": true,
+      "profile": { "username": "jdoe", "displayName": "John Doe", "photo": "https://pbs.twimg.com/profile_images/1/abc_400x400.jpg", "followers": 321, "following": 12, "createdAt": "2012-05-01T08:00:00Z", "bio": "Hello <b>world</b>" }
+    },
+    "zhihu": { "success": true, "exists": true, "profile": { "username": "jdoe", "profileUrl": "https://www.zhihu.com/people/jdoe" } },
+    "hudsonrock": {
+      "success": true,
+      "exists": true,
+      "profile": {
+        "username": "jdoe",
+        "totalCorporateServices": 1,
+        "totalUserServices": 14,
+        "stealers": [
+          { "date_compromised": "2022-11-03T00:00:00.000Z", "stealer_family": "Raccoon", "computer_name": "LAPTOP-JD", "operating_system": "Windows 11", "ip": "203.0.113.7", "top_logins": ["discord.com"] }
+        ]
+      }
+    },
+    "wayback": {
+      "success": true,
+      "exists": true,
+      "profile": {
+        "username": "jdoe",
+        "totalPlatformsChecked": 21,
+        "totalSnapshots": 4,
+        "platforms": [
+          { "platform": "Twitter", "found": true, "waybackFound": true, "totalSnapshots": 4, "snapshots": [{ "date": "2019-01-02", "archiveUrl": "https://web.archive.org/web/20190102000000/https://twitter.com/jdoe" }], "archiveIs": { "found": false }, "searchUrls": [] },
+          { "platform": "GitHub", "found": false, "snapshots": [], "archiveIs": { "found": false }, "searchUrls": [] }
+        ]
+      }
+    },
+    "vinted": { "success": true, "exists": null }
+  }
+}

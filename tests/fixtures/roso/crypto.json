@@ -1,0 +1,12 @@
+{
+  "_source": "Construit d'après https://roso.info/crypto/ (checkOneModule, meta, export). Formats non observés avec une vraie clé.",
+  "meta": { "success": true, "enrichmentModules": ["ethereum", "opensea", "ens", "labels", "intelx", "zora"] },
+  "modules": {
+    "ethereum": { "success": true, "exists": true, "profile": { "balance": "1.23 ETH", "txCount": 42, "firstSeen": "2020-01-01T00:00:00Z" } },
+    "opensea": { "success": true, "exists": true, "profile": { "username": "cryptojean", "profileUrl": "https://opensea.io/cryptojean", "avatar": "https://i.seadn.io/abc.png", "email": "cryptojean@proton.me" } },
+    "ens": { "success": true, "exists": true, "profile": { "ens": "jean.eth" } },
+    "labels": { "success": true, "exists": true, "profile": { "labels": ["Binance 14", { "label": "Hot Wallet" }], "entity": "Binance" } },
+    "intelx": { "success": true, "exists": false },
+    "zora": { "success": false, "error": "unavailable" }
+  }
+}

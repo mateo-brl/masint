@@ -1,0 +1,93 @@
+{
+  "_source": "Construit d'après le code client de https://roso.info/email/ (handleSearch, checkOneModule, buildLocalModuleCard). Ce ne sont pas des réponses observées : formats à confirmer avec une vraie clé.",
+  "start": { "success": true, "sessionId": "sess_7f3a", "credits": 17, "allowedModules": null, "tier": "patreon" },
+  "meta": {
+    "success": true,
+    "enrichmentModules": ["github", "spotify", "hibp", "hudsonrock", "intelx", "whoxy", "apple", "gumroad", "tiktok", "duolingo", "bandlab", "googlemaps"],
+    "nonSilentModules": ["gumroad", "dragongroot", "programminghub", "uber"]
+  },
+  "modules": {
+    "googlemaps": {
+      "success": true,
+      "exists": true,
+      "profile": {
+        "gaiaId": "104455667788990011223",
+        "displayName": "Jean Dupont",
+        "firstName": "Jean",
+        "lastName": "Dupont",
+        "avatar": "https://lh3.googleusercontent.com/a-/AOh14Gabc",
+        "contribUrl": "https://www.google.com/maps/contrib/104455667788990011223",
+        "localGuideLevel": 3
+      }
+    },
+    "gmail": { "success": true, "exists": false },
+    "github": {
+      "success": true,
+      "exists": true,
+      "profile": {
+        "username": "jdupont",
+        "displayName": "Jean Dupont",
+        "profileUrl": "https://github.com/jdupont",
+        "avatar": "https://avatars.githubusercontent.com/u/1?v=4",
+        "location": "Paris, France",
+        "createdAt": "2015-03-02T10:00:00Z",
+        "followers": 12
+      }
+    },
+    "spotify": { "success": true, "exists": true, "profile": {} },
+    "hibp": {
+      "success": true,
+      "exists": true,
+      "profile": {
+        "totalBreaches": 2,
+        "breaches": [
+          { "Name": "Adobe", "Domain": "adobe.com", "BreachDate": "2013-10-04", "DataClasses": ["Email addresses", "Passwords"], "PwnCount": 152445165 },
+          { "Name": "Canva", "Domain": "canva.com", "BreachDate": "2019-05-24", "DataClasses": ["Email addresses", "Names"] }
+        ]
+      }
+    },
+    "hudsonrock": {
+      "success": true,
+      "exists": true,
+      "profile": {
+        "stealerCount": 1,
+        "stealers": [
+          {
+            "computer_name": "DESKTOP-ABC123",
+            "operating_system": "Windows 10 Pro",
+            "date_compromised": "2023-04-12T00:00:00.000Z",
+            "ip": "81.***.***.12",
+            "stealer_family": "RedLine",
+            "malware_path": "C:\\Users\\jean\\AppData\\Local\\Temp\\x.exe",
+            "antiviruses": ["Windows Defender"],
+            "top_logins": ["accounts.google.com", "facebook.com"]
+          }
+        ]
+      }
+    },
+    "intelx": {
+      "success": true,
+      "exists": true,
+      "profile": {
+        "totalRecords": 1,
+        "records": [{ "name": "combo_list_2021.txt", "date": "2021-06-01T00:00:00Z", "bucket": "leaks.private", "media": "Text file", "viewUrl": "https://intelx.io/?did=abc" }]
+      }
+    },
+    "whoxy": {
+      "success": true,
+      "exists": true,
+      "profile": {
+        "email": "jean.dupont@example.com",
+        "domain_count": 2,
+        "domains": [{ "domain_name": "dupont-jean.fr", "registrar": "OVH", "created": "2018-01-01" }, "jd-photo.com"]
+      }
+    },
+    "apple": { "success": true, "exists": true, "profile": { "masked_phones": ["+33 •• •• •• •• 42"], "masked_email": "j••••@g••••.com" } },
+    "tiktok": { "success": false, "exists": null, "error": "timeout" },
+    "duolingo": {
+      "success": true,
+      "exists": true,
+      "profile": { "username": "jeandup", "displayName": "Jean", "avatar": "//simg-ssl.duolingo.com/ssr-avatars/123/SSR-abc/large", "phoneNumber": "+33612345678" }
+    }
+  }
+}
