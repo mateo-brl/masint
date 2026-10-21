@@ -4,6 +4,7 @@ import type { KeyRequirement, ProxyMode, ProxyTestResult, Settings } from '@shar
 import { api, openExternal } from '../../lib/api'
 import { useLang } from '../../lib/i18n'
 import { Icon } from '../../lib/icons'
+import { Logo } from '../Logo'
 import { useApp } from '../../store/app'
 import { Button, Dialog, Spinner, Switch } from '../ui'
 
@@ -294,7 +295,7 @@ function AboutTab(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-[16px] font-black text-white">M</div>
+        <Logo size={44} />
         <div>
           <div className="text-[16px] font-semibold">MASINT</div>
           <div className="text-[12px] text-muted">

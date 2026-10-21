@@ -40,6 +40,64 @@ export function toFlowEdge(e: GraphEdge, prev?: FlowEdge): FlowEdge {
   }
 }
 
+// Historique d'annulation. Les opérations enregistrées dans la même tâche
+// (ex. suppression d'un nœud et de ses liens) forment une seule étape.
+interface HistoryEntry {
+  undo: () => Promise<void>
+  redo: () => Promise<void>
+}
+
+const past: HistoryEntry[] = []
+const future: HistoryEntry[] = []
+let pending: HistoryEntry[] = []
+let flushTimer: ReturnType<typeof setTimeout> | null = null
+let replaying = false
+const HISTORY_LIMIT = 100
+
+function flushHistory(): void {
+  if (flushTimer) clearTimeout(flushTimer)
+  flushTimer = null
+  if (!pending.length) return
+  const group = pending
+  pending = []
+  past.push(
+    group.length === 1
+      ? group[0]
+      : {
+          undo: async () => {
+            for (const g of [...group].reverse()) await g.undo()
+          },
+          redo: async () => {
+            for (const g of group) await g.redo()
+          }
+        }
+  )
+  if (past.length > HISTORY_LIMIT) past.shift()
+  future.length = 0
+  useGraph.setState({ canUndo: true, canRedo: false })
+}
+
+function record(entry: HistoryEntry): void {
+  if (replaying) return
+  pending.push(entry)
+  if (!flushTimer) flushTimer = setTimeout(flushHistory, 0)
+}
+
+function resetHistory(): void {
+  past.length = 0
+  future.length = 0
+  pending = []
+  if (flushTimer) clearTimeout(flushTimer)
+  flushTimer = null
+}
+
+/** Valeurs actuelles des champs qu'un patch va modifier, pour pouvoir l'annuler. */
+function previousOf<T extends object>(current: T, patch: object): Partial<T> {
+  const prev: Partial<T> = {}
+  for (const k of Object.keys(patch)) (prev as Record<string, unknown>)[k] = (current as Record<string, unknown>)[k]
+  return prev
+}
+
 interface GraphState {
   investigation: Investigation | null
   nodes: FlowNode[]
@@ -49,7 +107,11 @@ interface GraphState {
   tool: 'select' | 'draw'
   drawColor: string
   drawWidth: number
+  canUndo: boolean
+  canRedo: boolean
 
+  undo(): Promise<void>
+  redo(): Promise<void>
   load(id: string): Promise<void>
   close(): void
   setTool(tool: 'select' | 'draw'): void
@@ -79,9 +141,39 @@ export const useGraph = create<GraphState>((set, get) => ({
   tool: 'select',
   drawColor: '#e5484d',
   drawWidth: 4,
+  canUndo: false,
+  canRedo: false,
+
+  async undo() {
+    flushHistory()
+    const entry = past.pop()
+    if (!entry) return
+    replaying = true
+    try {
+      await entry.undo()
+    } finally {
+      replaying = false
+    }
+    future.push(entry)
+    set({ canUndo: past.length > 0, canRedo: true })
+  },
+
+  async redo() {
+    const entry = future.pop()
+    if (!entry) return
+    replaying = true
+    try {
+      await entry.redo()
+    } finally {
+      replaying = false
+    }
+    past.push(entry)
+    set({ canUndo: true, canRedo: future.length > 0 })
+  },
 
   async load(id) {
-    set({ loading: true })
+    resetHistory()
+    set({ loading: true, canUndo: false, canRedo: false })
     const bundle = await api('investigations:open', id)
     set({
       investigation: bundle.investigation,
@@ -93,7 +185,8 @@ export const useGraph = create<GraphState>((set, get) => ({
   },
 
   close() {
-    set({ investigation: null, nodes: [], edges: [] })
+    resetHistory()
+    set({ investigation: null, nodes: [], edges: [], canUndo: false, canRedo: false })
   },
 
   setTool(tool) {
@@ -126,10 +219,7 @@ export const useGraph = create<GraphState>((set, get) => ({
         const n = current.get(p.id!)
         return n && p.x === undefined ? { ...p, x: n.position.x, y: n.position.y } : p
       })
-      void api('graph:upsertNodes', inv.id, patches).then((saved) => {
-        const map = new Map(saved.map((s) => [s.id, s]))
-        set({ nodes: get().nodes.map((n) => (map.has(n.id) ? { ...n, data: { node: map.get(n.id)! } } : n)) })
-      })
+      void get().updateNodes(patches)
     }
   },
 
@@ -147,7 +237,10 @@ export const useGraph = create<GraphState>((set, get) => ({
   async addNodes(inputs, select = true) {
     const inv = get().investigation
     if (!inv) return []
-    const saved = await api('graph:upsertNodes', inv.id, inputs)
+    const withIds = inputs.map((i) => ({ ...i, id: i.id ?? crypto.randomUUID() }))
+    const ids0 = withIds.map((i) => i.id)
+    record({ undo: () => get().deleteNodes(ids0), redo: async () => void (await get().addNodes(withIds, false)) })
+    const saved = await api('graph:upsertNodes', inv.id, withIds)
     const ids = new Set(saved.map((s) => s.id))
     const existing = get().nodes.filter((n) => !ids.has(n.id)).map((n) => (select ? { ...n, selected: false } : n))
     set({ nodes: [...existing, ...saved.map((s) => ({ ...toFlowNode(s), selected: select }))] })
@@ -162,6 +255,11 @@ export const useGraph = create<GraphState>((set, get) => ({
     const inv = get().investigation
     if (!inv) return
     const byId = new Map(patches.map((p) => [p.id!, p]))
+    const currentById = new Map(get().nodes.map((n) => [n.id, n.data.node]))
+    const prev = patches
+      .filter((p) => currentById.has(p.id!))
+      .map((p) => ({ ...previousOf(currentById.get(p.id!)!, p), id: p.id }) as NodeInput)
+    record({ undo: () => get().updateNodes(prev), redo: () => get().updateNodes(patches) })
     // Mise à jour optimiste pour que la saisie reste fluide.
     set({
       nodes: get().nodes.map((n) => {
@@ -180,6 +278,17 @@ export const useGraph = create<GraphState>((set, get) => ({
     const inv = get().investigation
     if (!inv || !ids.length) return
     const set2 = new Set(ids)
+    const nodeSnap = get().nodes.filter((n) => set2.has(n.id)).map((n) => n.data.node)
+    const edgeSnap = get()
+      .edges.filter((e) => set2.has(e.source) || set2.has(e.target))
+      .map((e) => e.data!.edge)
+    record({
+      undo: async () => {
+        await get().addNodes(nodeSnap, false)
+        if (edgeSnap.length) await get().addEdges(edgeSnap)
+      },
+      redo: () => get().deleteNodes(ids)
+    })
     set({
       nodes: get().nodes.filter((n) => !set2.has(n.id)),
       edges: get().edges.filter((e) => !set2.has(e.source) && !set2.has(e.target))
@@ -190,7 +299,9 @@ export const useGraph = create<GraphState>((set, get) => ({
   async addEdges(inputs) {
     const inv = get().investigation
     if (!inv) return []
-    const saved = await api('graph:upsertEdges', inv.id, inputs)
+    const withIds = inputs.map((i) => ({ ...i, id: i.id ?? crypto.randomUUID() }))
+    record({ undo: () => get().deleteEdges(withIds.map((e) => e.id)), redo: async () => void (await get().addEdges(withIds)) })
+    const saved = await api('graph:upsertEdges', inv.id, withIds)
     const ids = new Set(saved.map((s) => s.id))
     set({ edges: [...get().edges.filter((e) => !ids.has(e.id)), ...saved.map((s) => toFlowEdge(s))] })
     return saved
@@ -201,6 +312,8 @@ export const useGraph = create<GraphState>((set, get) => ({
     const current = get().edges.find((e) => e.id === id)?.data?.edge
     if (!inv || !current) return
     const next = { ...current, ...patch, id }
+    const prev = previousOf(current, patch)
+    record({ undo: () => get().updateEdge(id, prev), redo: () => get().updateEdge(id, patch) })
     set({ edges: get().edges.map((e) => (e.id === id ? toFlowEdge(next as GraphEdge, e) : e)) })
     const [saved] = await api('graph:upsertEdges', inv.id, [next])
     set({ edges: get().edges.map((e) => (e.id === id ? toFlowEdge(saved, e) : e)) })
@@ -210,6 +323,11 @@ export const useGraph = create<GraphState>((set, get) => ({
     const inv = get().investigation
     if (!inv || !ids.length) return
     const s = new Set(ids)
+    const snap = get()
+      .edges.filter((e) => s.has(e.id))
+      .map((e) => e.data!.edge)
+    if (!snap.length) return
+    record({ undo: async () => void (await get().addEdges(snap)), redo: () => get().deleteEdges(ids) })
     set({ edges: get().edges.filter((e) => !s.has(e.id)) })
     await api('graph:deleteEdges', inv.id, ids)
   },

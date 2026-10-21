@@ -22,6 +22,8 @@ export function TopBar(): React.JSX.Element {
   const setReportOpen = useApp((s) => s.setReportOpen)
   const toast = useApp((s) => s.toast)
   const [searching, setSearching] = useState(false)
+  const canUndo = useGraph((s) => s.canUndo)
+  const canRedo = useGraph((s) => s.canRedo)
 
   const layout = (kind: LayoutKind): void => {
     const { nodes, edges, setPositions } = useGraph.getState()
@@ -59,6 +61,22 @@ export function TopBar(): React.JSX.Element {
           title={catalogOpen ? t('topbar.hideCatalog') : t('topbar.showCatalog')}
         >
           <Icon name={catalogOpen ? 'PanelLeftClose' : 'PanelLeftOpen'} size={15} />
+        </button>
+        <button
+          onClick={() => void useGraph.getState().undo()}
+          disabled={!canUndo}
+          className="rounded-lg p-1.5 text-muted hover:bg-panel-3 hover:text-fg disabled:opacity-30"
+          title={`${t('topbar.undo')} (Ctrl+Z)`}
+        >
+          <Icon name="Undo2" size={15} />
+        </button>
+        <button
+          onClick={() => void useGraph.getState().redo()}
+          disabled={!canRedo}
+          className="rounded-lg p-1.5 text-muted hover:bg-panel-3 hover:text-fg disabled:opacity-30"
+          title={`${t('topbar.redo')} (Ctrl+Y)`}
+        >
+          <Icon name="Redo2" size={15} />
         </button>
         <div className="mx-1 h-5 w-px bg-line" />
         <div className="max-w-56 truncate px-1.5 text-[12.5px] font-semibold" title={investigation?.name}>

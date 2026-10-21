@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { ReactFlowProvider } from '@xyflow/react'
+import { useGraph } from '../store/graph'
 import { useApp } from '../store/app'
 import { ReportDialog } from './export/ReportDialog'
 import { GraphCanvas } from './graph/GraphCanvas'
@@ -15,6 +17,13 @@ import { TimelineView } from './views/TimelineView'
 export function Workspace(): React.JSX.Element {
   const view = useApp((s) => s.view)
   const catalogOpen = useApp((s) => s.catalogOpen)
+  const name = useGraph((s) => s.investigation?.name)
+  useEffect(() => {
+    document.title = name ? `${name} · MASINT` : 'MASINT'
+    return () => {
+      document.title = 'MASINT'
+    }
+  }, [name])
   return (
     <ReactFlowProvider>
       <div className="absolute inset-0 overflow-hidden bg-canvas">

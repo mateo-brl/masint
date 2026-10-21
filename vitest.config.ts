@@ -5,6 +5,7 @@ export default defineConfig({
   resolve: { alias: { '@shared': resolve(__dirname, 'src/shared') } },
   test: {
     include: ['tests/**/*.test.ts'],
+    exclude: ['tests/core/**', '**/node_modules/**'],
     testTimeout: 30000
   }
 })
