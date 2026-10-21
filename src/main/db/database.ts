@@ -1,0 +1,119 @@
+import Database from 'better-sqlite3'
+
+export type DB = Database.Database
+
+// Chaque ligne porte un identifiant UUID, `updated_at` et `deleted_at` :
+// ce sont les briques nécessaires à une future synchronisation entre postes.
+const MIGRATIONS: string[] = [
+  `
+  CREATE TABLE investigations (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    color TEXT NOT NULL DEFAULT '#e5484d',
+    notes TEXT NOT NULL DEFAULT '',
+    viewport TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    deleted_at INTEGER
+  );
+
+  CREATE TABLE nodes (
+    id TEXT PRIMARY KEY,
+    investigation_id TEXT NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
+    kind TEXT NOT NULL DEFAULT 'entity',
+    type TEXT NOT NULL,
+    label TEXT NOT NULL DEFAULT '',
+    platform TEXT,
+    data TEXT NOT NULL DEFAULT '{}',
+    notes TEXT NOT NULL DEFAULT '',
+    image_id TEXT,
+    x REAL NOT NULL DEFAULT 0,
+    y REAL NOT NULL DEFAULT 0,
+    width REAL,
+    height REAL,
+    style TEXT NOT NULL DEFAULT '{}',
+    source TEXT NOT NULL DEFAULT 'manual',
+    dedup_key TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    deleted_at INTEGER
+  );
+  CREATE INDEX idx_nodes_inv ON nodes(investigation_id);
+  CREATE INDEX idx_nodes_dedup ON nodes(investigation_id, dedup_key);
+
+  CREATE TABLE edges (
+    id TEXT PRIMARY KEY,
+    investigation_id TEXT NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
+    source TEXT NOT NULL,
+    target TEXT NOT NULL,
+    label TEXT NOT NULL DEFAULT '',
+    data TEXT NOT NULL DEFAULT '{}',
+    style TEXT NOT NULL DEFAULT '{}',
+    source_module TEXT NOT NULL DEFAULT 'manual',
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    deleted_at INTEGER
+  );
+  CREATE INDEX idx_edges_inv ON edges(investigation_id);
+
+  CREATE TABLE attachments (
+    id TEXT PRIMARY KEY,
+    investigation_id TEXT NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    mime TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    sha256 TEXT NOT NULL,
+    origin TEXT,
+    data BLOB NOT NULL,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX idx_att_inv ON attachments(investigation_id);
+
+  CREATE TABLE module_runs (
+    id TEXT PRIMARY KEY,
+    investigation_id TEXT NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
+    node_id TEXT NOT NULL,
+    module_id TEXT NOT NULL,
+    job_id TEXT NOT NULL,
+    status TEXT NOT NULL,
+    found INTEGER,
+    result_count INTEGER NOT NULL DEFAULT 0,
+    error TEXT,
+    raw TEXT,
+    started_at INTEGER,
+    finished_at INTEGER
+  );
+  CREATE INDEX idx_runs_node ON module_runs(investigation_id, node_id);
+
+  CREATE TABLE settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
+
+  CREATE TABLE secrets (
+    id TEXT PRIMARY KEY,
+    value BLOB NOT NULL,
+    encrypted INTEGER NOT NULL DEFAULT 1,
+    updated_at INTEGER NOT NULL
+  );
+  `
+]
+
+export function openDatabase(file: string): DB {
+  const db = new Database(file)
+  db.pragma('journal_mode = WAL')
+  db.pragma('foreign_keys = ON')
+  migrate(db)
+  return db
+}
+
+function migrate(db: DB): void {
+  const version = db.pragma('user_version', { simple: true }) as number
+  for (let v = version; v < MIGRATIONS.length; v++) {
+    db.transaction(() => {
+      db.exec(MIGRATIONS[v])
+      db.pragma(`user_version = ${v + 1}`)
+    })()
+  }
+}
