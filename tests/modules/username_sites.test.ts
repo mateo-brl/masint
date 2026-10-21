@@ -153,7 +153,8 @@ describe('entités produites', () => {
     expect(platformForSite('Steam Community (User)')).toBe('steam')
     expect(platformForSite('mastodon.social')).toBe('mastodon')
     expect(platformForSite('Polygon')).toBeUndefined()
-    expect(platformForSite('Gitee')).toBeUndefined()
+    expect(platformForSite('Gitee')).toBe('gitee')
+    expect(platformForSite('Instructables')).toBeUndefined()
   })
 
   it('crée un compte avec plateforme, ou avec le nom du site sinon', () => {
@@ -164,10 +165,10 @@ describe('entités produites', () => {
       platform: 'github',
       data: { username: 'bob', url: 'https://www.github.com/bob', site: 'GitHub' }
     })
-    const gitee = allSites().find((s) => s.name === 'Gitee')!
-    const e = accountEntity(gitee, { site: 'Gitee', url: 'https://gitee.com/bob', status: 'claimed' }, 'bob', 'fr')
+    const site = allSites().find((s) => s.name === 'Instructables')!
+    const e = accountEntity(site, { site: 'Instructables', url: 'https://www.instructables.com/member/bob', status: 'claimed' }, 'bob', 'fr')
     expect(e.platform).toBeUndefined()
-    expect(e.label).toBe('bob (Gitee)')
+    expect(e.label).toBe('bob (Instructables)')
     const masto = allSites().find((s) => s.name === 'mastodon.social')!
     expect(accountEntity(masto, { site: 'mastodon.social', url: 'https://mastodon.social/@bob', status: 'claimed' }, 'bob', 'fr').label).toBe('bob@mastodon.social')
   })

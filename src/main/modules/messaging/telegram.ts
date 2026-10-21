@@ -1,4 +1,5 @@
 import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
+import type { PropValue } from '@shared/types'
 import { acceptsPlatform, compact, decodeHtml, htmlToText, linkedEntities, metaContent, toNumber, usernameOf, type Lang } from '../social/_lib'
 
 export type TelegramKind = 'user' | 'bot' | 'channel' | 'group'
@@ -56,7 +57,7 @@ const KIND_LABEL: Record<TelegramKind, { fr: string; en: string }> = {
   group: { fr: 'groupe', en: 'group' }
 }
 
-export function telegramOutput(username: string, page: TelegramPage, lang: Lang): { data: Record<string, ReturnType<typeof compact>[string]>; entity: OutEntity; children: OutEntity[] } {
+export function telegramOutput(username: string, page: TelegramPage, lang: Lang): { data: Record<string, PropValue>; entity: OutEntity; children: OutEntity[] } {
   const url = `https://t.me/${username}`
   const data = compact({
     username,

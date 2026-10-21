@@ -124,8 +124,8 @@ describe('sortie de profil', () => {
   })
 
   it('plateforme absente du catalogue : nom du site dans le libellé', () => {
-    const out = profileOutput(entity('username', 'bob'), 'codeberg', { ...profile, site: 'Codeberg' })
-    expect(out.entities?.[0]).toMatchObject({ label: 'bob (Codeberg)', data: { site: 'Codeberg' } })
+    const out = profileOutput(entity('username', 'bob'), 'sourcehut', { ...profile, site: 'SourceHut' })
+    expect(out.entities?.[0]).toMatchObject({ label: 'bob (SourceHut)', data: { site: 'SourceHut' } })
     expect(out.entities?.[0].platform).toBeUndefined()
   })
 })
