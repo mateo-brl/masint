@@ -1,5 +1,9 @@
-# Publication d'une version : poussez un tag vX.Y.Z correspondant à la version
-# de package.json. Le workflow
+# Publication d'une version, au choix :
+#   - poussez un tag vX.Y.Z correspondant à la version de package.json ;
+#   - ou lancez ce workflow à la main (onglet Actions, « Run workflow ») sur la
+#     branche à publier : le tag v<version de package.json> est alors créé par
+#     GitHub au moment de la publication, sur le commit construit.
+# Le workflow
 #   1. crée une GitHub Release en brouillon pour ce tag,
 #   2. construit l'installeur Windows et les paquets Linux, qu'electron-builder
 #      téléverse dans ce brouillon avec latest.yml / latest-linux.yml (lus par
@@ -11,6 +15,7 @@ name: Release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -26,26 +31,34 @@ jobs:
   draft:
     name: Préparer le brouillon
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Vérifier que le tag correspond à package.json
+      - name: Déterminer le tag à partir de package.json
+        id: tag
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          if [ "$GITHUB_REF_NAME" != "v$VERSION" ]; then
-            echo "::error::Le tag $GITHUB_REF_NAME ne correspond pas à la version v$VERSION de package.json."
+          TAG="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "$GITHUB_REF_NAME" != "$TAG" ]; then
+            echo "::error::Le tag $GITHUB_REF_NAME ne correspond pas à la version $TAG de package.json."
             exit 1
           fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Créer la release en brouillon
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
         run: |
-          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
-            echo "La release $GITHUB_REF_NAME existe déjà : les fichiers y seront ajoutés."
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "La release $TAG existe déjà : les fichiers y seront ajoutés."
+          elif [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            gh release create "$TAG" --draft --verify-tag --title "MASINT ${TAG#v}" --generate-notes
           else
-            gh release create "$GITHUB_REF_NAME" --draft --verify-tag \
-              --title "MASINT ${GITHUB_REF_NAME#v}" --generate-notes
+            # Lancement manuel : le tag n'existe pas encore, GitHub le crée sur
+            # ce commit quand la release sort du brouillon.
+            gh release create "$TAG" --draft --target "$GITHUB_SHA" --title "MASINT ${TAG#v}" --generate-notes
           fi
 
   build:
@@ -93,16 +106,17 @@ jobs:
 
   publish:
     name: Publier la release
-    needs: build
+    needs: [draft, build]
     runs-on: ubuntu-latest
     steps:
       - name: Sortir la release du brouillon
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.draft.outputs.tag }}
         run: |
           # Une version comme v1.2.0-beta.1 est publiée en préversion.
-          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
-            gh release edit "$GITHUB_REF_NAME" --draft=false --prerelease
+          if [[ "$TAG" == *-* ]]; then
+            gh release edit "$TAG" --draft=false --prerelease
           else
-            gh release edit "$GITHUB_REF_NAME" --draft=false --latest
+            gh release edit "$TAG" --draft=false --latest
           fi
