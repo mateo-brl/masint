@@ -1,0 +1,26 @@
+{
+  "Username": "zq8xk2vmw93pq7@microsoft.com",
+  "Display": "zq8xk2vmw93pq7@microsoft.com",
+  "IfExistsResult": 1,
+  "IsUnmanaged": false,
+  "ThrottleStatus": 0,
+  "Credentials": {
+    "PrefCredential": 1,
+    "HasPassword": true,
+    "RemoteNgcParams": null,
+    "FidoParams": null,
+    "QrCodePinParams": null,
+    "SasParams": null,
+    "CertAuthParams": null,
+    "GoogleParams": null,
+    "FacebookParams": null,
+    "OtcNotAutoSent": false
+  },
+  "DfpProperties": {},
+  "EstsProperties": {
+    "DesktopSsoEnabled": true,
+    "UserTenantBranding": null,
+    "DomainType": 3
+  },
+  "IsSignupDisallowed": true
+}

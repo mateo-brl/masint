@@ -1,0 +1,19 @@
+{
+  "countryCode" : "BE",
+  "vatNumber" : "0403170701",
+  "requestDate" : "2026-10-21T14:10:13.110Z",
+  "valid" : true,
+  "requestIdentifier" : "",
+  "name" : "SA ELECTRABEL",
+  "address" : "Boulevard Simon Bolivar 36\n1000 Bruxelles",
+  "traderName" : "---",
+  "traderStreet" : "---",
+  "traderPostalCode" : "---",
+  "traderCity" : "---",
+  "traderCompanyType" : "---",
+  "traderNameMatch" : "NOT_PROCESSED",
+  "traderStreetMatch" : "NOT_PROCESSED",
+  "traderPostalCodeMatch" : "NOT_PROCESSED",
+  "traderCityMatch" : "NOT_PROCESSED",
+  "traderCompanyTypeMatch" : "NOT_PROCESSED"
+}

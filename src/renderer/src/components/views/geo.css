@@ -1,0 +1,145 @@
+/* Carte (vue Carte et mini-cartes du canevas) et annotations dessinées. */
+
+/* Fonds déjà sombres ou photographiques : pas d'inversion en thème sombre. */
+[data-theme='dark'] .geo-raw .leaflet-tile-pane {
+  filter: none;
+}
+
+.geo-map {
+  background: var(--canvas);
+  outline: none;
+}
+.geo-map .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--panel) 82%, transparent);
+  color: var(--faint);
+  font-size: 9.5px;
+  line-height: 1.5;
+  padding: 1px 6px;
+  border-top-left-radius: 6px;
+}
+.geo-map .leaflet-control-attribution a {
+  color: var(--muted);
+  text-decoration: none;
+}
+.geo-map .leaflet-bar {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.25);
+  overflow: hidden;
+}
+.geo-map .leaflet-bar a {
+  width: 24px;
+  height: 24px;
+  line-height: 22px;
+  font-size: 15px;
+  background: var(--panel);
+  color: var(--text);
+  border-bottom-color: var(--border);
+}
+.geo-map .leaflet-bar a:hover {
+  background: var(--panel-3);
+}
+
+/* Marqueurs : l'hôte Leaflet est vide, le contenu est rendu par React. */
+.geo-marker-host {
+  background: none;
+  border: 0;
+}
+.geo-pin {
+  position: relative;
+  display: flex;
+  height: 34px;
+  width: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: var(--node);
+  border: 1px solid var(--node-border);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.35);
+  transition: transform 0.12s;
+  cursor: pointer;
+}
+.geo-pin::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 9px;
+  height: 9px;
+  background: var(--node);
+  border-right: 1px solid var(--node-border);
+  border-bottom: 1px solid var(--node-border);
+  transform: translateX(-50%) rotate(45deg);
+}
+.geo-pin:hover {
+  transform: translateY(-2px);
+}
+.geo-pin.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft), 0 6px 18px rgb(0 0 0 / 0.4);
+}
+.geo-pin.is-selected::after {
+  border-color: var(--accent);
+}
+
+.geo-cluster {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 88%, black);
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 28%, transparent), 0 6px 18px rgb(0 0 0 / 0.35);
+  cursor: pointer;
+}
+
+.geo-link {
+  stroke: var(--accent);
+  stroke-opacity: 0.55;
+}
+.geo-link.is-active {
+  stroke-opacity: 1;
+}
+
+/* Info-bulles et fenêtres */
+.geo-map .leaflet-tooltip.geo-tip {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.3);
+  padding: 5px 9px;
+  font-size: 12px;
+}
+.geo-map .leaflet-tooltip-top.geo-tip::before {
+  border-top-color: var(--border);
+}
+.geo-map .leaflet-popup-content-wrapper,
+.geo-map .leaflet-popup-tip {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+}
+.geo-map .leaflet-popup-content-wrapper {
+  border-radius: 12px;
+}
+.geo-map .leaflet-popup-content {
+  margin: 6px;
+  font-size: 12.5px;
+}
+.geo-map .leaflet-popup-close-button {
+  display: none;
+}
+
+/* Les dessins ne capturent les clics que sur leur trait (React Flow force pointer-events en ligne). */
+.react-flow__node-drawing {
+  pointer-events: none !important;
+}
+.react-flow__node-drawing .react-flow__resize-control {
+  pointer-events: all;
+}

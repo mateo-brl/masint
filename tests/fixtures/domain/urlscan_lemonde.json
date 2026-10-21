@@ -1,0 +1,365 @@
+{
+ "results": [
+  {
+   "canonical": {
+    "task": {
+     "url": "esclade.tjcr5782420.pro"
+    },
+    "page": {
+     "url": "lemonde.fr"
+    }
+   },
+   "task": {
+    "visibility": "public",
+    "method": "manual",
+    "domain": "esclade.tjcr5782420.pro",
+    "apexDomain": "tjcr5782420.pro",
+    "time": "2026-10-21T10:59:33.172Z",
+    "uuid": "01a15e1d-b151-7178-8e04-37ee233bbbbb",
+    "url": "https://esclade.tjcr5782420.pro/"
+   },
+   "page": {
+    "country": "US",
+    "redirected": "off-domain",
+    "ip": "151.101.66.217",
+    "apexDomainAgeDays": 4956,
+    "language": "fr",
+    "mimeType": "text/html",
+    "title": "Le Monde.fr - Actualit\u00e9s et Infos en France et dans le monde",
+    "url": "https://www.lemonde.fr/",
+    "tlsValidDays": 396,
+    "tlsAgeDays": 344,
+    "domainAgeDays": 4637,
+    "tlsValidFrom": "2025-11-10T21:03:01.000Z",
+    "domain": "www.lemonde.fr",
+    "umbrellaRank": 110150,
+    "apexDomain": "lemonde.fr",
+    "asnname": "FASTLY - Fastly, Inc., US",
+    "asn": "AS54113",
+    "tlsIssuer": "GlobalSign Atlas R3 DV TLS CA 2025 Q4",
+    "status": "200"
+   },
+   "labels": [],
+   "_id": "01a15e1d-b151-7178-8e04-37ee233bbbbb",
+   "result": "https://urlscan.io/api/v1/result/01a15e1d-b151-7178-8e04-37ee233bbbbb/",
+   "screenshot": "https://urlscan.io/screenshots/01a15e1d-b151-7178-8e04-37ee233bbbbb.png"
+  },
+  {
+   "submitter": {},
+   "canonical": {
+    "task": {
+     "url": "domici461700.pro"
+    },
+    "page": {
+     "url": "lemonde.fr"
+    }
+   },
+   "task": {
+    "visibility": "public",
+    "method": "api",
+    "domain": "domici461700.pro",
+    "apexDomain": "domici461700.pro",
+    "time": "2026-10-21T03:57:53.911Z",
+    "uuid": "01a15c9b-a896-743b-ae64-fa76b0d4f5a3",
+    "url": "http://domici461700.pro/"
+   },
+   "page": {
+    "country": "US",
+    "redirected": "off-domain",
+    "ip": "151.101.2.217",
+    "apexDomainAgeDays": 4956,
+    "language": "fr",
+    "mimeType": "text/html",
+    "title": "Le Monde.fr - Actualit\u00e9s et Infos en France et dans le monde",
+    "url": "https://www.lemonde.fr/",
+    "tlsValidDays": 396,
+    "tlsAgeDays": 344,
+    "domainAgeDays": 4637,
+    "tlsValidFrom": "2025-11-10T21:03:01.000Z",
+    "domain": "www.lemonde.fr",
+    "umbrellaRank": 110150,
+    "apexDomain": "lemonde.fr",
+    "asnname": "FASTLY - Fastly, Inc., US",
+    "asn": "AS54113",
+    "tlsIssuer": "GlobalSign Atlas R3 DV TLS CA 2025 Q4",
+    "status": "200"
+   },
+   "labels": [],
+   "_id": "01a15c9b-a896-743b-ae64-fa76b0d4f5a3",
+   "result": "https://urlscan.io/api/v1/result/01a15c9b-a896-743b-ae64-fa76b0d4f5a3/",
+   "screenshot": "https://urlscan.io/screenshots/01a15c9b-a896-743b-ae64-fa76b0d4f5a3.png"
+  },
+  {
+   "submitter": {},
+   "canonical": {
+    "task": {
+     "url": "peage-reglement-idf.com"
+    },
+    "page": {
+     "url": "lemonde.fr/en"
+    }
+   },
+   "task": {
+    "visibility": "public",
+    "method": "api",
+    "domain": "peage-reglement-idf.com",
+    "apexDomain": "peage-reglement-idf.com",
+    "time": "2026-10-20T18:41:58.679Z",
+    "uuid": "01a15a9e-52d0-77a3-94de-76f76f2800c6",
+    "url": "https://peage-reglement-idf.com/"
+   },
+   "page": {
+    "country": "US",
+    "redirected": "off-domain",
+    "ip": "151.101.194.217",
+    "apexDomainAgeDays": 4956,
+    "language": "en",
+    "mimeType": "text/html",
+    "title": "Le Monde in English \u2013 World news, culture and opinion",
+    "url": "https://www.lemonde.fr/en/",
+    "tlsValidDays": 396,
+    "tlsAgeDays": 343,
+    "domainAgeDays": 4637,
+    "tlsValidFrom": "2025-11-10T21:03:01.000Z",
+    "domain": "www.lemonde.fr",
+    "umbrellaRank": 110150,
+    "apexDomain": "lemonde.fr",
+    "asnname": "FASTLY - Fastly, Inc., US",
+    "asn": "AS54113",
+    "tlsIssuer": "GlobalSign Atlas R3 DV TLS CA 2025 Q4",
+    "status": "200"
+   },
+   "labels": [],
+   "_id": "01a15a9e-52d0-77a3-94de-76f76f2800c6",
+   "result": "https://urlscan.io/api/v1/result/01a15a9e-52d0-77a3-94de-76f76f2800c6/",
+   "screenshot": "https://urlscan.io/screenshots/01a15a9e-52d0-77a3-94de-76f76f2800c6.png"
+  },
+  {
+   "submitter": {},
+   "canonical": {
+    "task": {
+     "url": "bdll5782072.pro"
+    },
+    "page": {
+     "url": "lemonde.fr"
+    }
+   },
+   "task": {
+    "visibility": "public",
+    "method": "api",
+    "domain": "bdll5782072.pro",
+    "apexDomain": "bdll5782072.pro",
+    "time": "2026-10-20T18:04:17.015Z",
+    "uuid": "01a15a7c-0df8-7398-86e8-078f675ce62f",
+    "url": "https://bdll5782072.pro/"
+   },
+   "page": {
+    "country": "US",
+    "redirected": "off-domain",
+    "ip": "151.101.66.217",
+    "apexDomainAgeDays": 4956,
+    "language": "fr",
+    "mimeType": "text/html",
+    "title": "Le Monde.fr - Actualit\u00e9s et Infos en France et dans le monde",
+    "url": "https://www.lemonde.fr/",
+    "tlsValidDays": 396,
+    "tlsAgeDays": 343,
+    "domainAgeDays": 4637,
+    "tlsValidFrom": "2025-11-10T21:03:01.000Z",
+    "domain": "www.lemonde.fr",
+    "umbrellaRank": 110150,
+    "apexDomain": "lemonde.fr",
+    "asnname": "FASTLY - Fastly, Inc., US",
+    "asn": "AS54113",
+    "tlsIssuer": "GlobalSign Atlas R3 DV TLS CA 2025 Q4",
+    "status": "200"
+   },
+   "labels": [],
+   "_id": "01a15a7c-0df8-7398-86e8-078f675ce62f",
+   "result": "https://urlscan.io/api/v1/result/01a15a7c-0df8-7398-86e8-078f675ce62f/",
+   "screenshot": "https://urlscan.io/screenshots/01a15a7c-0df8-7398-86e8-078f675ce62f.png"
+  },
+  {
+   "canonical": {
+    "task": {
+     "url": "rosinski.oblg461938.pro"
+    },
+    "page": {
+     "url": "lemonde.fr"
+    }
+   },
+   "task": {
+    "visibility": "public",
+    "method": "manual",
+    "domain": "rosinski.oblg461938.pro",
+    "apexDomain": "oblg461938.pro",
+    "time": "2026-10-20T08:44:21.660Z",
+    "uuid": "01a1587b-7e6c-75f9-96e7-21490e3a4f9f",
+    "url": "https://rosinski.oblg461938.pro/"
+   },
+   "page": {
+    "country": "US",
+    "redirected": "off-domain",
+    "ip": "151.101.2.217",
+    "apexDomainAgeDays": 4955,
+    "language": "fr",
+    "mimeType": "text/html",
+    "title": "Le Monde.fr - Actualit\u00e9s et Infos en France et dans le monde",
+    "url": "https://www.lemonde.fr/",
+    "tlsValidDays": 396,
+    "tlsAgeDays": 343,
+    "domainAgeDays": 4636,
+    "tlsValidFrom": "2025-11-10T21:03:01.000Z",
+    "domain": "www.lemonde.fr",
+    "umbrellaRank": 131257,
+    "apexDomain": "lemonde.fr",
+    "asnname": "FASTLY - Fastly, Inc., US",
+    "asn": "AS54113",
+    "tlsIssuer": "GlobalSign Atlas R3 DV TLS CA 2025 Q4",
+    "status": "200"
+   },
+   "labels": [],
+   "_id": "01a1587b-7e6c-75f9-96e7-21490e3a4f9f",
+   "result": "https://urlscan.io/api/v1/result/01a1587b-7e6c-75f9-96e7-21490e3a4f9f/",
+   "screenshot": "https://urlscan.io/screenshots/01a1587b-7e6c-75f9-96e7-21490e3a4f9f.png"
+  },
+  {
+   "submitter": {},
+   "canonical": {
+    "task": {
+     "url": "deli3459065.pro"
+    },
+    "page": {
+     "url": "lemonde.fr"
+    }
+   },
+   "task": {
+    "visibility": "public",
+    "method": "api",
+    "domain": "deli3459065.pro",
+    "apexDomain": "deli3459065.pro",
+    "time": "2026-10-20T05:26:22.594Z",
+    "uuid": "01a157c6-4cca-77eb-ab5a-804f074454f2",
+    "url": "https://deli3459065.pro/"
+   },
+   "page": {
+    "country": "US",
+    "redirected": "off-domain",
+    "ip": "151.101.2.217",
+    "apexDomainAgeDays": 4955,
+    "language": "fr",
+    "mimeType": "text/html",
+    "title": "Le Monde.fr - Actualit\u00e9s et Infos en France et dans le monde",
+    "url": "https://www.lemonde.fr/",
+    "tlsValidDays": 396,
+    "tlsAgeDays": 343,
+    "domainAgeDays": 4636,
+    "tlsValidFrom": "2025-11-10T21:03:01.000Z",
+    "domain": "www.lemonde.fr",
+    "umbrellaRank": 131257,
+    "apexDomain": "lemonde.fr",
+    "asnname": "FASTLY - Fastly, Inc., US",
+    "asn": "AS54113",
+    "tlsIssuer": "GlobalSign Atlas R3 DV TLS CA 2025 Q4",
+    "status": "200"
+   },
+   "labels": [],
+   "_id": "01a157c6-4cca-77eb-ab5a-804f074454f2",
+   "result": "https://urlscan.io/api/v1/result/01a157c6-4cca-77eb-ab5a-804f074454f2/",
+   "screenshot": "https://urlscan.io/screenshots/01a157c6-4cca-77eb-ab5a-804f074454f2.png"
+  },
+  {
+   "submitter": {},
+   "canonical": {
+    "task": {
+     "url": "forecast.lemonde.fr"
+    },
+    "page": {
+     "url": "forecast.lemonde.fr"
+    }
+   },
+   "task": {
+    "visibility": "public",
+    "method": "api",
+    "domain": "forecast.lemonde.fr",
+    "apexDomain": "lemonde.fr",
+    "time": "2026-10-19T18:32:58.612Z",
+    "uuid": "01a15570-1940-734c-92d9-b07c42885690",
+    "url": "http://forecast.lemonde.fr/"
+   },
+   "page": {
+    "country": "US",
+    "server": "nginx/1.14.0 (Ubuntu)",
+    "redirected": "https-only",
+    "ip": "151.101.66.217",
+    "apexDomainAgeDays": 4955,
+    "language": "en",
+    "mimeType": "text/html",
+    "title": "forecast.lemonde.fr",
+    "url": "https://forecast.lemonde.fr/",
+    "tlsValidDays": 396,
+    "tlsAgeDays": 342,
+    "domainAgeDays": 2574,
+    "tlsValidFrom": "2025-11-10T21:03:01.000Z",
+    "domain": "forecast.lemonde.fr",
+    "umbrellaRank": 225804,
+    "apexDomain": "lemonde.fr",
+    "asnname": "FASTLY - Fastly, Inc., US",
+    "asn": "AS54113",
+    "tlsIssuer": "GlobalSign Atlas R3 DV TLS CA 2025 Q4",
+    "status": "404"
+   },
+   "labels": [],
+   "_id": "01a15570-1940-734c-92d9-b07c42885690",
+   "result": "https://urlscan.io/api/v1/result/01a15570-1940-734c-92d9-b07c42885690/",
+   "screenshot": "https://urlscan.io/screenshots/01a15570-1940-734c-92d9-b07c42885690.png"
+  },
+  {
+   "submitter": {},
+   "canonical": {
+    "task": {
+     "url": "cmp.lemonde.fr"
+    },
+    "page": {
+     "url": "cmp.lemonde.fr"
+    }
+   },
+   "task": {
+    "visibility": "public",
+    "method": "api",
+    "domain": "cmp.lemonde.fr",
+    "apexDomain": "lemonde.fr",
+    "time": "2026-10-19T18:32:45.125Z",
+    "uuid": "01a1556f-ea0a-76dd-a477-ae35be67de17",
+    "url": "http://cmp.lemonde.fr/"
+   },
+   "page": {
+    "country": "US",
+    "server": "fasthttp",
+    "redirected": "https-only",
+    "ip": "151.101.66.217",
+    "apexDomainAgeDays": 4955,
+    "mimeType": "text/plain",
+    "title": "cmp.lemonde.fr",
+    "url": "https://cmp.lemonde.fr/",
+    "tlsValidDays": 396,
+    "tlsAgeDays": 342,
+    "domainAgeDays": 2051,
+    "tlsValidFrom": "2025-11-10T21:03:01.000Z",
+    "domain": "cmp.lemonde.fr",
+    "umbrellaRank": 220924,
+    "apexDomain": "lemonde.fr",
+    "asnname": "FASTLY - Fastly, Inc., US",
+    "asn": "AS54113",
+    "tlsIssuer": "GlobalSign Atlas R3 DV TLS CA 2025 Q4",
+    "status": "404"
+   },
+   "labels": [],
+   "_id": "01a1556f-ea0a-76dd-a477-ae35be67de17",
+   "result": "https://urlscan.io/api/v1/result/01a1556f-ea0a-76dd-a477-ae35be67de17/",
+   "screenshot": "https://urlscan.io/screenshots/01a1556f-ea0a-76dd-a477-ae35be67de17.png"
+  }
+ ],
+ "total": 134,
+ "has_more": false
+}

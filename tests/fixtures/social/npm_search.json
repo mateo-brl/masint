@@ -1,0 +1,159 @@
+{
+ "objects": [
+  {
+   "package": {
+    "name": "ansi-styles",
+    "keywords": [
+     "ansi",
+     "styles",
+     "color",
+     "colour",
+     "colors",
+     "terminal",
+     "console",
+     "cli",
+     "string",
+     "tty",
+     "escape",
+     "formatting",
+     "rgb",
+     "256",
+     "shell",
+     "xterm",
+     "log",
+     "logging",
+     "command-line",
+     "text"
+    ],
+    "version": "7.0.0",
+    "description": "ANSI escape codes for styling strings in the terminal",
+    "sanitized_name": "ansi-styles",
+    "publisher": {
+     "email": "sindresorhus@gmail.com",
+     "username": "sindresorhus"
+    },
+    "maintainers": [
+     {
+      "email": "sindresorhus@gmail.com",
+      "username": "sindresorhus"
+     }
+    ],
+    "license": "MIT",
+    "date": "2026-07-26T14:57:36.835Z",
+    "links": {
+     "homepage": "https://github.com/chalk/ansi-styles#readme",
+     "repository": "git+https://github.com/chalk/ansi-styles.git",
+     "bugs": "https://github.com/chalk/ansi-styles/issues",
+     "npm": "https://www.npmjs.com/package/ansi-styles"
+    }
+   }
+  },
+  {
+   "package": {
+    "name": "wrap-ansi",
+    "keywords": [
+     "wrap",
+     "break",
+     "wordwrap",
+     "wordbreak",
+     "linewrap",
+     "ansi",
+     "styles",
+     "color",
+     "colour",
+     "colors",
+     "terminal",
+     "console",
+     "cli",
+     "string",
+     "tty",
+     "escape",
+     "formatting",
+     "rgb",
+     "256",
+     "shell",
+     "xterm",
+     "log",
+     "logging",
+     "command-line",
+     "text"
+    ],
+    "version": "10.0.2",
+    "description": "Wordwrap a string with ANSI escape codes",
+    "sanitized_name": "wrap-ansi",
+    "publisher": {
+     "email": "sindresorhus@gmail.com",
+     "username": "sindresorhus"
+    },
+    "maintainers": [
+     {
+      "email": "sindresorhus@gmail.com",
+      "username": "sindresorhus"
+     }
+    ],
+    "license": "MIT",
+    "date": "2026-09-21T04:09:32.260Z",
+    "links": {
+     "homepage": "https://github.com/chalk/wrap-ansi#readme",
+     "repository": "git+https://github.com/chalk/wrap-ansi.git",
+     "bugs": "https://github.com/chalk/wrap-ansi/issues",
+     "npm": "https://www.npmjs.com/package/wrap-ansi"
+    }
+   }
+  },
+  {
+   "package": {
+    "name": "string-width",
+    "keywords": [
+     "string",
+     "character",
+     "unicode",
+     "width",
+     "visual",
+     "column",
+     "columns",
+     "fullwidth",
+     "full-width",
+     "wcwidth",
+     "wcswidth",
+     "full",
+     "ansi",
+     "escape",
+     "codes",
+     "cli",
+     "command-line",
+     "terminal",
+     "console",
+     "cjk",
+     "chinese",
+     "japanese",
+     "korean",
+     "fixed-width",
+     "east-asian-width"
+    ],
+    "version": "8.3.0",
+    "description": "Get the visual width of a string - the number of columns required to display it",
+    "sanitized_name": "string-width",
+    "publisher": {
+     "email": "sindresorhus@gmail.com",
+     "username": "sindresorhus"
+    },
+    "maintainers": [
+     {
+      "email": "sindresorhus@gmail.com",
+      "username": "sindresorhus"
+     }
+    ],
+    "license": "MIT",
+    "date": "2026-09-24T14:37:52.226Z",
+    "links": {
+     "homepage": "https://github.com/sindresorhus/string-width#readme",
+     "repository": "git+https://github.com/sindresorhus/string-width.git",
+     "bugs": "https://github.com/sindresorhus/string-width/issues",
+     "npm": "https://www.npmjs.com/package/string-width"
+    }
+   }
+  }
+ ],
+ "total": 1069
+}

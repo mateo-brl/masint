@@ -1,0 +1,26 @@
+{
+  "Username": "zq8xk2vmw93pq7@okta.com",
+  "Display": "zq8xk2vmw93pq7@okta.com",
+  "IfExistsResult": 0,
+  "IsUnmanaged": false,
+  "ThrottleStatus": 1,
+  "Credentials": {
+    "PrefCredential": 4,
+    "HasPassword": true,
+    "RemoteNgcParams": null,
+    "FidoParams": null,
+    "QrCodePinParams": null,
+    "SasParams": null,
+    "CertAuthParams": null,
+    "GoogleParams": null,
+    "FacebookParams": null,
+    "FederationRedirectUrl": "https://okta.okta.com/app/office365/kw0h9qx8AJWYBILCHEZY/sso/wsfed/passive?username=zq8xk2vmw93pq7%40okta.com&wa=wsignin1.0&wtrealm=urn%3afederation%3aMicrosoftOnline&wctx=",
+    "OtcNotAutoSent": false
+  },
+  "DfpProperties": {},
+  "EstsProperties": {
+    "UserTenantBranding": null,
+    "DomainType": 4
+  },
+  "IsSignupDisallowed": true
+}

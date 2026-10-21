@@ -1,0 +1,7 @@
+{
+ "content-type": "text/html; charset=UTF-8",
+ "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+ "x-cache": "HIT, MISS",
+ "x-content-type-options": "nosniff",
+ "referrer-policy": "no-referrer-when-downgrade"
+}

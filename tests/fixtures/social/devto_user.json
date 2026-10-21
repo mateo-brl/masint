@@ -1,0 +1,13 @@
+{
+ "type_of": "user",
+ "id": 1,
+ "username": "ben",
+ "name": "Ben Halpern",
+ "twitter_username": "bendhalpern",
+ "github_username": "benhalpern",
+ "summary": "A Canadian software developer who thinks he’s funny.",
+ "location": "NY",
+ "website_url": "http://benhalpern.com",
+ "joined_at": "Dec 27, 2015",
+ "profile_image": "https://media2.dev.to/dynamic/image/width=320,height=320,fit=cover,gravity=auto,format=auto/https%3A%2F%2Fdev-to-uploads.s3.us-east-2.amazonaws.com%2Fuploads%2Fuser%2Fprofile_image%2F1%2Fbabb96d0-9cd2-49bc-a412-2dc4caf94c2a.png"
+}

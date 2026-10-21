@@ -1,0 +1,15 @@
+lemonde.fr,151.101.122.137
+30adressesapartager.lemonde.fr,213.186.33.16
+80ans.lemonde.fr,35.210.52.235
+abo.lemonde.fr,151.101.34.217
+aboapi.lemonde.fr,79.99.32.203
+abonnements.lemonde.fr,104.17.122.18
+abonnes.lemonde.fr,199.232.38.217
+abopodcast.lemonde.fr,199.232.38.217
+abosh.lemonde.fr,79.99.38.101
+aec.lemonde.fr,199.232.38.217
+afrique-cities.lemonde.fr,34.202.203.47
+aleph.lemonde.fr,35.244.217.59
+aleph-prod.lemonde.fr,34.149.52.110
+allemand.lemonde.fr,18.193.17.158
+alsace-lacher-prise.lemonde.fr,199.232.38.217

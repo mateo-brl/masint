@@ -1,0 +1,340 @@
+{
+ "objectClassName": "domain",
+ "handle": "DOM000000024309-FRNIC",
+ "ldhName": "lemonde.fr",
+ "status": [
+  "server update prohibited",
+  "server transfer prohibited",
+  "server delete prohibited",
+  "server recover prohibited"
+ ],
+ "whoisStatus": "ACTIVE",
+ "events": [
+  {
+   "eventAction": "registration",
+   "eventDate": "2005-08-02T14:16:36Z"
+  },
+  {
+   "eventAction": "expiration",
+   "eventDate": "2027-06-09T22:08:09Z"
+  },
+  {
+   "eventAction": "last changed",
+   "eventDate": "2026-06-12T22:48:47.579297Z"
+  },
+  {
+   "eventAction": "transfer",
+   "eventDate": "2022-06-09T22:08:09Z"
+  },
+  {
+   "eventAction": "last update of RDAP database",
+   "eventDate": "2026-10-21T13:46:31.182842524Z"
+  }
+ ],
+ "entities": [
+  {
+   "objectClassName": "entity",
+   "handle": "RAR24-FRNIC",
+   "publicIds": [
+    {
+     "type": "IANA Registrar ID",
+     "identifier": "1251"
+    }
+   ],
+   "status": [
+    "active"
+   ],
+   "port43": "whois.nameshield.net",
+   "vcardArray": [
+    "vcard",
+    [
+     [
+      "version",
+      {},
+      "text",
+      "4.0"
+     ],
+     [
+      "fn",
+      {},
+      "text",
+      "NAMESHIELD"
+     ],
+     [
+      "tel",
+      {
+       "type": "voice"
+      },
+      "uri",
+      "tel:+33.241182828"
+     ],
+     [
+      "tel",
+      {
+       "type": "fax"
+      },
+      "uri",
+      "tel:+33.241182829"
+     ],
+     [
+      "email",
+      {},
+      "text",
+      "registrar@nameshield.net"
+     ],
+     [
+      "url",
+      {},
+      "uri",
+      "https://www.nameshield.com/contact-nameshield/"
+     ],
+     [
+      "adr",
+      {
+       "cc": "FR"
+      },
+      "text",
+      [
+       "",
+       "",
+       "39 boulevard des Capucines",
+       "PARIS",
+       "",
+       "75002",
+       ""
+      ]
+     ]
+    ]
+   ],
+   "roles": [
+    "sponsor",
+    "registrar"
+   ]
+  },
+  {
+   "objectClassName": "entity",
+   "handle": "SEDM254-FRNIC",
+   "status": [
+    "server update prohibited",
+    "associated"
+   ],
+   "vcardArray": [
+    "vcard",
+    [
+     [
+      "version",
+      {},
+      "text",
+      "4.0"
+     ],
+     [
+      "fn",
+      {},
+      "text",
+      "SOCIETE EDITRICE du monde"
+     ],
+     [
+      "org",
+      {},
+      "text",
+      "SOCIETE EDITRICE DU MONDE"
+     ],
+     [
+      "adr",
+      {
+       "cc": "FR"
+      },
+      "text",
+      [
+       "",
+       "",
+       "67-69 avenue Pierre Mendes-France",
+       "PARIS",
+       "",
+       "75013",
+       ""
+      ]
+     ],
+     [
+      "email",
+      {},
+      "text",
+      "domain_names@lemonde.fr"
+     ],
+     [
+      "tel",
+      {
+       "type": "voice"
+      },
+      "uri",
+      "tel:+33.157282224"
+     ]
+    ]
+   ],
+   "roles": [
+    "registrant"
+   ]
+  },
+  {
+   "objectClassName": "entity",
+   "handle": "SEDM255-FRNIC",
+   "status": [
+    "associated",
+    "active"
+   ],
+   "vcardArray": [
+    "vcard",
+    [
+     [
+      "version",
+      {},
+      "text",
+      "4.0"
+     ],
+     [
+      "fn",
+      {},
+      "text",
+      "SOCIETE EDITRICE du monde"
+     ],
+     [
+      "org",
+      {},
+      "text",
+      "SOCIETE EDITRICE DU MONDE"
+     ],
+     [
+      "adr",
+      {
+       "cc": "FR"
+      },
+      "text",
+      [
+       "",
+       "",
+       "67-69 avenue Pierre Mendes-France",
+       "PARIS",
+       "",
+       "75013",
+       ""
+      ]
+     ],
+     [
+      "email",
+      {},
+      "text",
+      "domain_names@lemonde.fr"
+     ],
+     [
+      "tel",
+      {
+       "type": "voice"
+      },
+      "uri",
+      "tel:+33.157282224"
+     ]
+    ]
+   ],
+   "roles": [
+    "administrative"
+   ]
+  },
+  {
+   "objectClassName": "entity",
+   "handle": "N17024-FRNIC",
+   "status": [
+    "associated",
+    "active"
+   ],
+   "vcardArray": [
+    "vcard",
+    [
+     [
+      "version",
+      {},
+      "text",
+      "4.0"
+     ],
+     [
+      "fn",
+      {},
+      "text",
+      "NAMESHIELD"
+     ],
+     [
+      "org",
+      {},
+      "text",
+      "TECHNICAL department"
+     ],
+     [
+      "adr",
+      {
+       "cc": "FR"
+      },
+      "text",
+      [
+       "",
+       "",
+       "36 bis rue Delaage",
+       "ANGERS",
+       "",
+       "49100",
+       ""
+      ]
+     ],
+     [
+      "email",
+      {},
+      "text",
+      "technical@nameshield.net"
+     ],
+     [
+      "tel",
+      {
+       "type": "voice"
+      },
+      "uri",
+      "tel:+33.241182828"
+     ],
+     [
+      "tel",
+      {
+       "type": "fax"
+      },
+      "uri",
+      "tel:+33.241182829"
+     ]
+    ]
+   ],
+   "roles": [
+    "technical"
+   ]
+  }
+ ],
+ "nameservers": [
+  {
+   "objectClassName": "nameserver",
+   "ldhName": "ns-cloud-b1.googledomains.com"
+  },
+  {
+   "objectClassName": "nameserver",
+   "ldhName": "ns-cloud-b2.googledomains.com"
+  },
+  {
+   "objectClassName": "nameserver",
+   "ldhName": "ns-cloud-b3.googledomains.com"
+  },
+  {
+   "objectClassName": "nameserver",
+   "ldhName": "ns-cloud-b4.googledomains.com"
+  }
+ ],
+ "links": [
+  {
+   "href": "https://rdap.nic.fr/domain/lemonde.fr",
+   "value": "https://rdap.nic.fr/domain/lemonde.fr",
+   "rel": "self"
+  }
+ ]
+}

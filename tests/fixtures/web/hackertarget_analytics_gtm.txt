@@ -1,0 +1,10 @@
+af.wordpress.org	gtm
+az-tr.wordpress.org	gtm
+az.wordpress.org	gtm
+bbpress.org	gtm
+bbpress.trac.wordpress.org	gtm
+bg.wordpress.org	gtm
+br.wordpress.org	gtm
+browsehappy.com	gtm
+buddypress.org	gtm
+co.wordpress.org	gtm

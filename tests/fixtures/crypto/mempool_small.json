@@ -1,0 +1,73 @@
+{
+ "address": {
+  "address": "bc1qvfj0wzl2tl9df6ra2027ux9earhjrpg5eef00n",
+  "chain_stats": {
+   "funded_txo_count": 1,
+   "funded_txo_sum": 11906,
+   "spent_txo_count": 1,
+   "spent_txo_sum": 11906,
+   "tx_count": 2
+  },
+  "mempool_stats": {
+   "funded_txo_count": 0,
+   "funded_txo_sum": 0,
+   "spent_txo_count": 0,
+   "spent_txo_sum": 0,
+   "tx_count": 0
+  }
+ },
+ "txs": [
+  {
+   "txid": "c31d20940b733ab302c1b6107bc5ee0635722528880fc764ba790edcf76339df",
+   "fee": 288,
+   "vin": [
+    {
+     "is_coinbase": false,
+     "prevout": {
+      "scriptpubkey_address": "bc1qvfj0wzl2tl9df6ra2027ux9earhjrpg5eef00n",
+      "value": 11906
+     }
+    }
+   ],
+   "vout": [
+    {
+     "scriptpubkey_address": "bc1qa5wkgaew2dkv56kfvj49j0av5nml45x9ek9hz6",
+     "value": 2566
+    },
+    {
+     "scriptpubkey_address": "bc1qfm40ctg4nkqe680ncu4cma06g737prpnmfmj5p",
+     "value": 9052
+    }
+   ],
+   "status": {
+    "confirmed": true,
+    "block_height": 965307,
+    "block_time": 1788437602
+   }
+  },
+  {
+   "txid": "3cd4b072ea8222e93e7d1d17fef0a601b2633827e59c448af7563492e30beead",
+   "fee": 330,
+   "vin": [
+    {
+     "is_coinbase": false,
+     "prevout": {
+      "scriptpubkey_address": "bc1qcdqquff73tpcxrzvn88cf3k4a3tra6suadqjt3",
+      "value": 12236
+     }
+    }
+   ],
+   "vout": [
+    {
+     "scriptpubkey_address": "bc1qvfj0wzl2tl9df6ra2027ux9earhjrpg5eef00n",
+     "value": 11906
+    }
+   ],
+   "status": {
+    "confirmed": true,
+    "block_height": 961572,
+    "block_time": 1786188731
+   }
+  }
+ ]
+}

@@ -1,0 +1,272 @@
+{
+ "total": 31379,
+ "totalStealers": 36980719,
+ "employees": 562,
+ "users": 30007,
+ "third_parties": 810,
+ "logo": "https://cdn.brandfetch.io/tesla.com/fallback/lettermark?c=1exidTF12cOoUB9NSWxlN",
+ "data": {
+  "employees_urls": [
+   {
+    "occurrence": 258,
+    "type": "Employee",
+    "url": "https://sso.tesla.com/adfs/ls"
+   },
+   {
+    "occurrence": 166,
+    "type": "Employee",
+    "url": "https://sso.tesla.com/adfs/oauth2/authorize"
+   },
+   {
+    "occurrence": 160,
+    "type": "Employee",
+    "url": "https://sso.tesla.com"
+   },
+   {
+    "occurrence": 73,
+    "type": "Employee",
+    "url": "https://auth.tesla.com/oauth2/v1/authorize"
+   },
+   {
+    "occurrence": 62,
+    "type": "Employee",
+    "url": "https://sso.tesla.com/adfs/ls/idpinitiatedsignon.aspx"
+   }
+  ],
+  "clients_urls": [
+   {
+    "occurrence": 9538,
+    "type": "User",
+    "url": "https://auth.tesla.com/oauth2/v1/authorize"
+   },
+   {
+    "occurrence": 6346,
+    "type": "User",
+    "url": "https://auth.tesla.com/oauth2/v1/register"
+   },
+   {
+    "occurrence": 6209,
+    "type": "User",
+    "url": "https://auth.tesla.com"
+   },
+   {
+    "occurrence": 3285,
+    "type": "User",
+    "url": "https://auth.tesla.com/login"
+   },
+   {
+    "occurrence": 3109,
+    "type": "User",
+    "url": "https://auth.tesla.com/register"
+   }
+  ],
+  "all_urls": [
+   {
+    "url": "https://sso.tesla.com/adfs/ls",
+    "type": "Employee",
+    "occurrence": 258
+   },
+   {
+    "url": "https://sso.tesla.com/adfs/oauth2/authorize",
+    "type": "Employee",
+    "occurrence": 166
+   },
+   {
+    "url": "https://sso.tesla.com",
+    "type": "Employee",
+    "occurrence": 160
+   },
+   {
+    "url": "https://auth.tesla.com/oauth2/v1/authorize",
+    "type": "Employee",
+    "occurrence": 73
+   },
+   {
+    "url": "https://sso.tesla.com/adfs/ls/idpinitiatedsignon.aspx",
+    "type": "Employee",
+    "occurrence": 62
+   }
+  ]
+ },
+ "totalUrls": 2827,
+ "stats": {
+  "totalEmployees": 59,
+  "totalUsers": 100,
+  "employees_urls": [
+   "https://sso.tesla.com/adfs/ls",
+   "https://sso.tesla.com/adfs/oauth2/authorize",
+   "https://sso.tesla.com",
+   "https://auth.tesla.com/oauth2/v1/authorize",
+   "https://sso.tesla.com/adfs/ls/idpinitiatedsignon.aspx",
+   "https://sso.tesla.com/adfs/ls/",
+   "https://auth.tesla.com",
+   "https://sso-dev.tesla.com/adfs/oauth2/authorize",
+   "https://auth.tesla.com/oauth2/v1/register",
+   "https://auth.tesla.com/register"
+  ],
+  "clients_urls": [
+   "https://auth.tesla.com/oauth2/v1/authorize",
+   "https://auth.tesla.com/oauth2/v1/register",
+   "https://auth.tesla.com",
+   "https://auth.tesla.com/login",
+   "https://auth.tesla.com/register",
+   "https://auth.tesla.com/en_us/oauth2/v1/authorize",
+   "https://auth.tesla.com/oauth2/v1/onboard",
+   "https://auth.tesla.com/en_us/oauth2/v1/register",
+   "https://auth.tesla.com/oauth2/v3/authorize",
+   "https://auth.tesla.com/"
+  ],
+  "employees_count": [
+   258,
+   166,
+   160,
+   73,
+   62,
+   42,
+   31,
+   23,
+   21,
+   19
+  ],
+  "clients_count": [
+   9538,
+   6346,
+   6209,
+   3285,
+   3109,
+   917,
+   608,
+   563,
+   454,
+   418
+  ]
+ },
+ "is_shopify": true,
+ "last_employee_compromised": "2026-10-18T00:00:00.000Z",
+ "last_user_compromised": "2026-10-19T12:17:44.000Z",
+ "antiviruses": {
+  "total": 346,
+  "found": 12.4,
+  "not_found": 45.7,
+  "free": 41.9,
+  "list": [
+   {
+    "count": 1,
+    "name": "Kaspersky"
+   },
+   {
+    "count": 4,
+    "name": "Windows Defender [ON]"
+   },
+   {
+    "count": 2,
+    "name": "Norton Security Ultra"
+   },
+   {
+    "count": 2,
+    "name": "-"
+   },
+   {
+    "count": 3,
+    "name": "McAfee Firewall"
+   }
+  ]
+ },
+ "applications": [
+  {
+   "keyword": "adfs"
+  },
+  {
+   "keyword": "auth"
+  },
+  {
+   "keyword": "github"
+  },
+  {
+   "keyword": "sso"
+  }
+ ],
+ "employeePasswords": {
+  "totalPass": 751,
+  "has_stats": true,
+  "too_weak": {
+   "qty": 207,
+   "perc": 27.6
+  },
+  "weak": {
+   "qty": 159,
+   "perc": 21.2
+  },
+  "medium": {
+   "qty": 166,
+   "perc": 22.1
+  },
+  "strong": {
+   "qty": 219,
+   "perc": 29.2
+  }
+ },
+ "userPasswords": {
+  "totalPass": 10000,
+  "has_stats": true,
+  "too_weak": {
+   "qty": 383,
+   "perc": 3.8
+  },
+  "weak": {
+   "qty": 6319,
+   "perc": 63.2
+  },
+  "medium": {
+   "qty": 1232,
+   "perc": 12.3
+  },
+  "strong": {
+   "qty": 2066,
+   "perc": 20.7
+  }
+ },
+ "thirdPartyDomains": [
+  {
+   "occurrence": 511,
+   "domain": "microsoftonline.com"
+  },
+  {
+   "occurrence": 119,
+   "domain": "teslamotors.com"
+  },
+  {
+   "occurrence": 99,
+   "domain": "uptimerobot.com"
+  },
+  {
+   "occurrence": 73,
+   "domain": "perksatwork.com"
+  },
+  {
+   "occurrence": 70,
+   "domain": "e-ujian.com"
+  }
+ ],
+ "stealerFamilies": {
+  "total": 29047,
+  "UNKNOWN": 255,
+  "Generic Stealer": 9384,
+  "Raccoon": 1855,
+  "StealC": 1019,
+  "Atomic": 104,
+  "Vidar": 957,
+  "Acreed": 1483,
+  "Warden Stealer": 7,
+  "Predator": 9,
+  "CRYPTBOT": 33,
+  "Lumma": 5958,
+  "RedLine": 6918,
+  "Azorult": 559,
+  "Remus": 434,
+  "Ficker": 8,
+  "Taurus": 8,
+  "DarkCrystal": 29,
+  "Mystic": 27
+ }
+}

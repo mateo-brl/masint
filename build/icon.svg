@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- MASINT : un « M » tracé par un graphe de cinq nœuds reliés, sur fond sombre. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="64" x2="0" y2="960" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1d1d22"/>
+      <stop offset="1" stop-color="#09090b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="512" cy="600" r="460" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e5484d" stop-opacity="0.30"/>
+      <stop offset="0.55" stop-color="#e5484d" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#e5484d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="edge" x1="0" y1="300" x2="0" y2="740" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff6b70"/>
+      <stop offset="1" stop-color="#d93036"/>
+    </linearGradient>
+    <linearGradient id="node" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#d9d9de"/>
+    </linearGradient>
+    <clipPath id="tile">
+      <rect x="64" y="64" width="896" height="896" rx="200"/>
+    </clipPath>
+  </defs>
+
+  <!-- Fond -->
+  <rect x="64" y="64" width="896" height="896" rx="200" fill="url(#bg)"/>
+  <g clip-path="url(#tile)">
+    <rect x="64" y="64" width="896" height="896" fill="url(#glow)"/>
+    <!-- Trame de points discrète, comme le canevas de l'application -->
+    <g fill="#ffffff" fill-opacity="0.05">
+      <circle cx="176" cy="176" r="6"/><circle cx="288" cy="176" r="6"/><circle cx="400" cy="176" r="6"/>
+      <circle cx="624" cy="176" r="6"/><circle cx="736" cy="176" r="6"/><circle cx="848" cy="176" r="6"/>
+      <circle cx="176" cy="848" r="6"/><circle cx="400" cy="848" r="6"/><circle cx="512" cy="848" r="6"/>
+      <circle cx="624" cy="848" r="6"/><circle cx="848" cy="848" r="6"/>
+      <circle cx="176" cy="400" r="6"/><circle cx="176" cy="624" r="6"/>
+      <circle cx="848" cy="400" r="6"/><circle cx="848" cy="624" r="6"/>
+    </g>
+  </g>
+  <rect x="67" y="67" width="890" height="890" rx="197" fill="none" stroke="#ffffff" stroke-opacity="0.09" stroke-width="6"/>
+
+  <!-- Liens secondaires : le « M » fait partie d'un graphe plus large -->
+  <g stroke="#ededef" stroke-opacity="0.22" stroke-width="12" stroke-linecap="round" fill="none">
+    <path d="M300 300 L512 196 L724 300"/>
+  </g>
+  <circle cx="512" cy="196" r="30" fill="#2c2c32" stroke="#ededef" stroke-opacity="0.35" stroke-width="10"/>
+
+  <!-- Le « M » : quatre liens rouges -->
+  <path d="M300 724 L300 300 L512 592 L724 300 L724 724" fill="none" stroke="url(#edge)" stroke-width="56" stroke-linejoin="round" stroke-linecap="round"/>
+
+  <!-- Nœuds -->
+  <g fill="url(#node)" stroke="#111114" stroke-width="16">
+    <circle cx="300" cy="300" r="62"/>
+    <circle cx="724" cy="300" r="62"/>
+    <circle cx="300" cy="724" r="62"/>
+    <circle cx="724" cy="724" r="62"/>
+  </g>
+  <!-- Nœud central : la cible de l'enquête -->
+  <circle cx="512" cy="592" r="118" fill="none" stroke="#e5484d" stroke-opacity="0.45" stroke-width="12"/>
+  <circle cx="512" cy="592" r="82" fill="#e5484d" stroke="#111114" stroke-width="16"/>
+  <circle cx="512" cy="592" r="30" fill="#ffffff"/>
+</svg>

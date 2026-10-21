@@ -1,0 +1,83 @@
+{
+  "message": "This email address is associated with a computer that was infected by an info-stealer, all the credentials saved on this computer are at risk of being accessed by cybercriminals. Visit https://www.hudsonrock.com/free-tools to discover additional free tools and Infostealers related data.",
+  "stealers": [
+    {
+      "total_corporate_services": 4,
+      "total_user_services": 235,
+      "date_compromised": "2026-10-19T12:18:06.000Z",
+      "computer_name": "XyMw7Q",
+      "operating_system": "Windows 10 (Build 19045)",
+      "malware_path": "C:\\Users\\ASUS-TUF\\Downloads\\Glacier\\galcier.exe",
+      "antiviruses": [
+        "Windows Defender"
+      ],
+      "ip": "197.14.***.**",
+      "top_passwords": [
+        "0*********4",
+        "0**********@",
+        "m**************",
+        "t******4",
+        "1******8"
+      ],
+      "top_logins": [
+        "h***************@gmail.com",
+        "h*************@polytechnicien.tn",
+        "",
+        "2******2",
+        "a***n"
+      ]
+    },
+    {
+      "total_corporate_services": 1,
+      "total_user_services": 317,
+      "date_compromised": "2026-10-19T12:17:16.000Z",
+      "computer_name": "b7vdKD",
+      "operating_system": "Windows 11 (Build 26100)",
+      "malware_path": "C:\\Users\\jdoe\\Downloads\\Online Installer\\glacier.exe",
+      "antiviruses": [
+        "Windows Defender"
+      ],
+      "ip": "92.208.***.**",
+      "top_passwords": [
+        "s*******7",
+        "S**********.",
+        "S********.",
+        "S*******7",
+        "s********."
+      ],
+      "top_logins": [
+        "s*******@msn.com",
+        "t*************@gmail.com",
+        "s*************@gmail.com",
+        "s********************@gmail.com",
+        ""
+      ]
+    },
+    {
+      "total_corporate_services": 1159,
+      "total_user_services": 25200,
+      "date_compromised": "2026-10-18T00:00:00.000Z",
+      "computer_name": "Not Found",
+      "operating_system": "Not Found",
+      "malware_path": "Not Found",
+      "antiviruses": [],
+      "ip": "Not Found",
+      "top_passwords": [
+        "******",
+        "A*******@",
+        "",
+        "A*******@",
+        "O*******@"
+      ],
+      "top_logins": [
+        "7***********@gmail.com",
+        "7***********@gmail.com",
+        "a****@gmail.com",
+        "b************@gmail.com",
+        ""
+      ]
+    }
+  ],
+  "total_corporate_services": 4,
+  "total_user_services": 235
+}

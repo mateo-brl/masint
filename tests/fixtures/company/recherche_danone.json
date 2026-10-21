@@ -1,0 +1,347 @@
+{
+ "results": [
+  {
+   "siren": "552032534",
+   "siren_conserve": null,
+   "nom_complet": "DANONE",
+   "nom_raison_sociale": "DANONE",
+   "sigle": null,
+   "nombre_etablissements": 19,
+   "nombre_etablissements_ouverts": 3,
+   "siege": {
+    "siret": "55203253400703",
+    "adresse": "59-61 RUE LA FAYETTE 75009 PARIS",
+    "numero_voie": "59",
+    "indice_repetition": null,
+    "type_voie": "RUE",
+    "libelle_voie": "LA FAYETTE",
+    "complement_adresse": null,
+    "code_postal": "75009",
+    "libelle_commune": "PARIS",
+    "libelle_pays_etranger": null,
+    "latitude": "48.8763540066087",
+    "longitude": "2.34353640229216",
+    "date_creation": "2025-08-19",
+    "est_siege": true,
+    "etat_administratif": "A",
+    "activite_principale": "70.10Z"
+   },
+   "activite_principale": "70.10Z",
+   "activite_principale_naf25": "70.10Y",
+   "categorie_entreprise": "GE",
+   "caractere_employeur": null,
+   "annee_categorie_entreprise": "2024",
+   "date_creation": "1955-01-01",
+   "date_fermeture": null,
+   "date_mise_a_jour": "2026-10-21T08:14:44",
+   "date_mise_a_jour_insee": "2026-10-20T13:15:04.002",
+   "date_mise_a_jour_rne": "2026-10-20T00:41:03",
+   "dirigeants": [
+    {
+     "nom": "BERNARD DE SAINT AFFRIQUE",
+     "prenoms": "ANTOINE",
+     "annee_de_naissance": "1964",
+     "date_de_naissance": "1964-12",
+     "qualite": "Directeur Général",
+     "nationalite": null,
+     "type_dirigeant": "personne physique"
+    },
+    {
+     "nom": "BOUTEBBA",
+     "prenoms": "FREDERIC",
+     "annee_de_naissance": "1967",
+     "date_de_naissance": "1967-08",
+     "qualite": "Administrateur",
+     "nationalite": null,
+     "type_dirigeant": "personne physique"
+    },
+    {
+     "nom": "CHAPOULAUD-FLOQUET",
+     "prenoms": "VALERIE",
+     "annee_de_naissance": "1962",
+     "date_de_naissance": "1962-11",
+     "qualite": "Administrateur",
+     "nationalite": null,
+     "type_dirigeant": "personne physique"
+    },
+    {
+     "nom": "GHOSTINE",
+     "prenoms": "GILBERT",
+     "annee_de_naissance": "1960",
+     "date_de_naissance": "1960-02",
+     "qualite": "Administrateur",
+     "nationalite": null,
+     "type_dirigeant": "personne physique"
+    },
+    {
+     "nom": "KINGO",
+     "prenoms": "LISE",
+     "annee_de_naissance": "1961",
+     "date_de_naissance": "1961-08",
+     "qualite": "Administrateur",
+     "nationalite": null,
+     "type_dirigeant": "personne physique"
+    },
+    {
+     "nom": "LOUVET",
+     "prenoms": "PATRICE",
+     "annee_de_naissance": "1964",
+     "date_de_naissance": "1964-09",
+     "qualite": "Administrateur",
+     "nationalite": null,
+     "type_dirigeant": "personne physique"
+    },
+    {
+     "siren": "344366315",
+     "denomination": "ERNST & YOUNG AUDIT",
+     "qualite": "Commissaire aux comptes titulaire",
+     "type_dirigeant": "personne morale"
+    }
+   ],
+   "etat_administratif": "A",
+   "nature_juridique": "5599",
+   "section_activite_principale": "M",
+   "tranche_effectif_salarie": "42",
+   "annee_tranche_effectif_salarie": "2024",
+   "statut_diffusion": "O",
+   "finances": {
+    "2025": {
+     "ca": 27376000000,
+     "resultat_net": 2100000000
+    }
+   },
+   "complements": {
+    "est_association": false,
+    "est_entrepreneur_individuel": false,
+    "identifiant_association": null
+   },
+   "tva": [
+    "FR27552032534"
+   ]
+  },
+  {
+   "siren": "672039971",
+   "siren_conserve": null,
+   "nom_complet": "DANONE PRODUITS FRAIS FRANCE (D.P.F.F.)",
+   "nom_raison_sociale": "DANONE PRODUITS FRAIS FRANCE",
+   "sigle": "D.P.F.F.",
+   "nombre_etablissements": 43,
+   "nombre_etablissements_ouverts": 16,
+   "siege": {
+    "siret": "67203997101944",
+    "adresse": "17 RUE DES DEUX GARES 92500 RUEIL MALMAISON",
+    "numero_voie": "17",
+    "indice_repetition": null,
+    "type_voie": "RUE",
+    "libelle_voie": "DES DEUX GARES",
+    "complement_adresse": null,
+    "code_postal": "92500",
+    "libelle_commune": "RUEIL MALMAISON",
+    "libelle_pays_etranger": null,
+    "latitude": "48.887909283",
+    "longitude": "2.1713500137",
+    "date_creation": "2020-03-15",
+    "est_siege": true,
+    "etat_administratif": "A",
+    "activite_principale": "70.10Z"
+   },
+   "activite_principale": "10.51A",
+   "activite_principale_naf25": "10.51G",
+   "categorie_entreprise": "GE",
+   "caractere_employeur": null,
+   "annee_categorie_entreprise": "2024",
+   "date_creation": "1900-01-01",
+   "date_fermeture": null,
+   "date_mise_a_jour": "2026-10-21T08:18:15",
+   "date_mise_a_jour_insee": "2026-02-10T12:31:32",
+   "date_mise_a_jour_rne": "2026-08-25T16:33:03",
+   "dirigeants": [
+    {
+     "nom": "PECHEREAU",
+     "prenoms": "OLIVIER",
+     "annee_de_naissance": "1976",
+     "date_de_naissance": "1976-11",
+     "qualite": "Directeur Général",
+     "nationalite": null,
+     "type_dirigeant": "personne physique"
+    },
+    {
+     "nom": "PERVERSI",
+     "prenoms": "PABLO",
+     "annee_de_naissance": "1970",
+     "date_de_naissance": "1970-10",
+     "qualite": "Président de SAS",
+     "nationalite": null,
+     "type_dirigeant": "personne physique"
+    },
+    {
+     "nom": "WOOD",
+     "prenoms": "JEREMY MCKINLEY",
+     "annee_de_naissance": "1983",
+     "date_de_naissance": "1983-11",
+     "qualite": "Personne ayant le pouvoir d’engager l'établissement",
+     "nationalite": null,
+     "type_dirigeant": "personne physique"
+    },
+    {
+     "siren": "344366315",
+     "denomination": "ERNST & YOUNG AUDIT",
+     "qualite": "Commissaire aux comptes titulaire",
+     "type_dirigeant": "personne morale"
+    },
+    {
+     "siren": "344366315",
+     "denomination": "ERNST & YOUNG AUDIT",
+     "qualite": "Commissaire aux comptes titulaire",
+     "type_dirigeant": "personne morale"
+    }
+   ],
+   "etat_administratif": "A",
+   "nature_juridique": "5710",
+   "section_activite_principale": "C",
+   "tranche_effectif_salarie": "51",
+   "annee_tranche_effectif_salarie": "2024",
+   "statut_diffusion": "O",
+   "finances": {
+    "2025": {
+     "ca": 1534905654,
+     "resultat_net": 27691324
+    }
+   },
+   "complements": {
+    "est_association": false,
+    "est_entrepreneur_individuel": false,
+    "identifiant_association": null
+   },
+   "tva": [
+    "FR48672039971"
+   ]
+  },
+  {
+   "siren": "531722742",
+   "siren_conserve": null,
+   "nom_complet": "OLIVIA DANON",
+   "nom_raison_sociale": null,
+   "sigle": null,
+   "nombre_etablissements": 2,
+   "nombre_etablissements_ouverts": 2,
+   "siege": {
+    "siret": "53172274200016",
+    "adresse": "2 RUE SAINT COME 34000 MONTPELLIER",
+    "numero_voie": "2",
+    "indice_repetition": null,
+    "type_voie": "RUE",
+    "libelle_voie": "SAINT COME",
+    "complement_adresse": null,
+    "code_postal": "34000",
+    "libelle_commune": "MONTPELLIER",
+    "libelle_pays_etranger": null,
+    "latitude": "43.6084091132799",
+    "longitude": "3.87622141891406",
+    "date_creation": "2011-04-07",
+    "est_siege": true,
+    "etat_administratif": "A",
+    "activite_principale": "32.13Z"
+   },
+   "activite_principale": "32.13Z",
+   "activite_principale_naf25": "32.13Y",
+   "categorie_entreprise": "PME",
+   "caractere_employeur": null,
+   "annee_categorie_entreprise": "2024",
+   "date_creation": "2011-04-07",
+   "date_fermeture": null,
+   "date_mise_a_jour": "2026-10-21T08:06:03",
+   "date_mise_a_jour_insee": "2025-12-06T08:11:14",
+   "date_mise_a_jour_rne": "2026-09-09T11:02:04",
+   "dirigeants": [
+    {
+     "nom": "DANON (DANON)",
+     "prenoms": "OLIVIA",
+     "annee_de_naissance": "1985",
+     "date_de_naissance": "1985-08",
+     "qualite": null,
+     "nationalite": null,
+     "type_dirigeant": "personne physique"
+    }
+   ],
+   "etat_administratif": "A",
+   "nature_juridique": "1000",
+   "section_activite_principale": "C",
+   "tranche_effectif_salarie": "NN",
+   "annee_tranche_effectif_salarie": null,
+   "statut_diffusion": "O",
+   "finances": null,
+   "complements": {
+    "est_association": false,
+    "est_entrepreneur_individuel": true,
+    "identifiant_association": null
+   },
+   "tva": null
+  },
+  {
+   "siren": "388346348",
+   "siren_conserve": null,
+   "nom_complet": "OLIVIER DANON",
+   "nom_raison_sociale": null,
+   "sigle": null,
+   "nombre_etablissements": 4,
+   "nombre_etablissements_ouverts": 2,
+   "siege": {
+    "siret": "38834634800047",
+    "adresse": "145 T AVENUE JACQUES CHIRAC 91200 ATHIS-MONS",
+    "numero_voie": "145",
+    "indice_repetition": "T",
+    "type_voie": "AVENUE",
+    "libelle_voie": "JACQUES CHIRAC",
+    "complement_adresse": null,
+    "code_postal": "91200",
+    "libelle_commune": "ATHIS-MONS",
+    "libelle_pays_etranger": null,
+    "latitude": "48.70556579",
+    "longitude": "2.3584174534",
+    "date_creation": "2003-10-01",
+    "est_siege": true,
+    "etat_administratif": "A",
+    "activite_principale": "86.22A"
+   },
+   "activite_principale": "86.22A",
+   "activite_principale_naf25": "86.22Y",
+   "categorie_entreprise": "PME",
+   "caractere_employeur": null,
+   "annee_categorie_entreprise": "2024",
+   "date_creation": "1991-07-01",
+   "date_fermeture": null,
+   "date_mise_a_jour": "2026-10-21T09:30:42",
+   "date_mise_a_jour_insee": "2025-12-06T07:34:52",
+   "date_mise_a_jour_rne": "2026-08-31T15:16:47",
+   "dirigeants": [
+    {
+     "nom": "DANON",
+     "prenoms": "OLIVIER",
+     "annee_de_naissance": null,
+     "date_de_naissance": null,
+     "qualite": null,
+     "nationalite": null,
+     "type_dirigeant": "personne physique"
+    }
+   ],
+   "etat_administratif": "A",
+   "nature_juridique": "1000",
+   "section_activite_principale": "Q",
+   "tranche_effectif_salarie": "NN",
+   "annee_tranche_effectif_salarie": null,
+   "statut_diffusion": "O",
+   "finances": null,
+   "complements": {
+    "est_association": false,
+    "est_entrepreneur_individuel": true,
+    "identifiant_association": null
+   },
+   "tva": null
+  }
+ ],
+ "total_results": 447,
+ "page": 1,
+ "per_page": 10,
+ "total_pages": 45
+}

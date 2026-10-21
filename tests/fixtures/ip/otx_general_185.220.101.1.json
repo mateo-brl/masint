@@ -1,0 +1,115 @@
+{
+ "reputation": 0,
+ "indicator": "185.220.101.1",
+ "type": "IPv4",
+ "type_title": "IPv4",
+ "base_indicator": {
+  "id": 210990729,
+  "indicator": "185.220.101.1",
+  "type": "IPv4",
+  "title": "",
+  "description": "",
+  "content": "",
+  "access_type": "public",
+  "access_reason": ""
+ },
+ "pulse_info": {
+  "count": 50,
+  "pulses": [
+   {
+    "id": "5a7e3e70c44e7b48947593a7",
+    "name": "Webscanners 2018-02-09  thru current day",
+    "created": "2018-02-10T00:36:00.396000",
+    "tags": [
+     "webscanner, bruteforce, web app attack",
+     "probing",
+     "webscan",
+     "scanning"
+    ],
+    "adversary": "",
+    "malware_families": []
+   },
+   {
+    "id": "63456c2a30b92337ea1670e0",
+    "name": "IOC Records Provided by @NextRayAI",
+    "created": "2022-10-11T13:14:18.676000",
+    "tags": [
+     "Nextray",
+     "cyber security",
+     "ioc",
+     "phishing",
+     "malicious"
+    ],
+    "adversary": "",
+    "malware_families": []
+   },
+   {
+    "id": "6ad781109bc33434e440a5a6",
+    "name": "Anonymization_Network | Oct 21, 2026 | Part 1/4",
+    "created": "2026-10-20T14:56:16.535000",
+    "tags": [
+     "anonymization_network"
+    ],
+    "adversary": "",
+    "malware_families": []
+   }
+  ],
+  "references": [
+   "https://ltna.com.au/cyber"
+  ],
+  "related": {
+   "alienvault": {
+    "adversary": [],
+    "malware_families": [],
+    "industries": []
+   },
+   "other": {
+    "adversary": [],
+    "malware_families": [],
+    "industries": [
+     "Government",
+     "Industrial",
+     "Finance",
+     "Defense"
+    ]
+   }
+  }
+ },
+ "false_positive": [],
+ "validation": [
+  {
+   "source": "tor_exits",
+   "message": "IP Associated with Tor Exit Nodes",
+   "name": "IP Assosciated with Tor Exit Nodes"
+  }
+ ],
+ "asn": "AS208294 cia triad security llc",
+ "city_data": true,
+ "city": null,
+ "region": null,
+ "continent_code": "EU",
+ "country_code3": "DEU",
+ "country_code2": "DE",
+ "subdivision": null,
+ "latitude": 51.2993,
+ "postal_code": null,
+ "longitude": 9.491,
+ "accuracy_radius": 200,
+ "country_code": "DE",
+ "country_name": "Germany",
+ "dma_code": 0,
+ "charset": 0,
+ "area_code": 0,
+ "flag_url": "/assets/images/flags/de.png",
+ "flag_title": "Germany",
+ "sections": [
+  "general",
+  "geo",
+  "reputation",
+  "url_list",
+  "passive_dns",
+  "malware",
+  "nids_list",
+  "http_scans"
+ ]
+}

@@ -1,0 +1,54 @@
+{
+  "hash": "27205e5c51cb03f862138b22bcb5dc20f94a342e744ff6df1b8dc8af3c865109",
+  "display_name": "Beau Lebens",
+  "profile_url": "https://gravatar.com/beau",
+  "avatar_url": "https://0.gravatar.com/avatar/27205e5c51cb03f862138b22bcb5dc20f94a342e744ff6df1b8dc8af3c865109",
+  "avatar_alt_text": "",
+  "location": "Golden, CO",
+  "description": "Lead of WooCommerce, at Automattic. Previously Jetpack, WordPress.com and more. I've been building the web for over 20 years.",
+  "job_title": "Lead, WooCommerce",
+  "company": "Automattic",
+  "verified_accounts": [
+    {
+      "service_type": "twitter",
+      "service_label": "X",
+      "service_icon": "https://gravatar.com/icons/x.svg",
+      "url": "https://x.com/beaulebens",
+      "is_hidden": false
+    },
+    {
+      "service_type": "linkedin",
+      "service_label": "LinkedIn",
+      "service_icon": "https://gravatar.com/icons/linkedin.svg",
+      "url": "https://www.linkedin.com/in/beaulebens",
+      "is_hidden": false
+    },
+    {
+      "service_type": "github",
+      "service_label": "GitHub",
+      "service_icon": "https://gravatar.com/icons/github.svg",
+      "url": "https://github.com/beaulebens",
+      "is_hidden": false
+    },
+    {
+      "service_type": "instagram",
+      "service_label": "Instagram",
+      "service_icon": "https://gravatar.com/icons/instagram.svg",
+      "url": "https://instagram.com/beaulebens",
+      "is_hidden": false
+    }
+  ],
+  "pronunciation": "",
+  "pronouns": "he/him",
+  "hide_default_header_image": false,
+  "background_color": "#7a866a",
+  "section_visibility": {
+    "hidden_contact_info": false,
+    "hidden_feeds": false,
+    "hidden_links": false,
+    "hidden_interests": false,
+    "hidden_wallet": false,
+    "hidden_photos": false,
+    "hidden_verified_accounts": false
+  }
+}
