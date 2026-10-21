@@ -103,7 +103,7 @@ function TextNodeImpl({ id, data, selected }: NodeProps<FlowNode>): React.JSX.El
           setDraft(n.label)
           setEditing(true)
         }}
-        className={`group relative h-full w-full ${postit ? 'rounded-[3px] px-3.5 py-3' : 'rounded-md px-1.5 py-1'} ${
+        className={`group relative w-full ${editing ? 'min-h-full' : 'h-full'} ${postit ? 'rounded-[3px] px-3.5 py-3' : 'rounded-md px-1.5 py-1'} ${
           !postit && !selected ? 'hover:outline hover:outline-1 hover:outline-dashed hover:outline-line-strong' : ''
         }`}
         style={

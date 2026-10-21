@@ -77,13 +77,15 @@ export default defineModule({
   id: 'social.kick',
   name: { fr: 'Chaîne Kick', en: 'Kick channel' },
   description: {
-    fr: 'Chaîne Kick : bio, abonnés, vérification, catégories récentes, date de création et comptes Instagram, X, YouTube, TikTok, Discord renseignés.',
-    en: 'Kick channel: bio, followers, verification, recent categories, creation date and the Instagram, X, YouTube, TikTok, Discord accounts filled in.'
+    fr: 'Chaîne Kick : bio, abonnés, vérification, catégories récentes, date de création et comptes Instagram, X, YouTube, TikTok, Discord renseignés. Cloudflare bloque parfois la requête.',
+    en: 'Kick channel: bio, followers, verification, recent categories, creation date and the Instagram, X, YouTube, TikTok, Discord accounts filled in. Cloudflare sometimes blocks the request.'
   },
   category: 'social',
   inputTypes: ['username', 'account'],
   accepts: acceptsPlatform('kick'),
   homepage: 'https://kick.com',
+  // Cloudflare bloque par intermittence les clients non navigateurs (HTTP 403).
+  experimental: true,
   async run(input, ctx) {
     const slug = requireUsername(input, /^[\w-]{1,30}$/).toLowerCase()
     let channel: KickChannel

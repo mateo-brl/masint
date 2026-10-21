@@ -61,7 +61,7 @@ export interface Basemap {
 
 const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services'
 const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-const ESRI_CANVAS_ATTR = 'Tiles &copy; Esri, HERE, Garmin, ' + OSM_ATTR + ', and the GIS User Community'
+const ESRI_CANVAS_ATTR = `Tiles &copy; Esri, HERE, Garmin, ${OSM_ATTR}`
 
 export const BASEMAPS: Basemap[] = [
   {
@@ -93,7 +93,7 @@ export const BASEMAPS: Basemap[] = [
   {
     id: 'satellite',
     url: `${ESRI}/World_Imagery/MapServer/tile/{z}/{y}/{x}`,
-    attribution: 'Tiles &copy; Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+    attribution: 'Tiles &copy; Esri, Maxar, Earthstar Geographics',
     maxZoom: 19,
     maxNativeZoom: 18,
     raw: true
@@ -104,20 +104,21 @@ export function getBasemap(id: unknown, theme: 'dark' | 'light' | undefined): Ba
   return BASEMAPS.find((b) => b.id === id) ?? BASEMAPS.find((b) => b.id === (theme === 'light' ? 'light' : 'dark'))!
 }
 
-const STORE_KEY = 'masint.map.basemap'
+// Préférence de fond mémorisée par thème (purement locale).
+const storeKey = (theme: 'dark' | 'light' | undefined): string => `masint.map.basemap.${theme ?? 'dark'}`
 
-export function loadBasemapPref(): BasemapId | null {
+export function loadBasemapPref(theme: 'dark' | 'light' | undefined): BasemapId | null {
   try {
-    const v = localStorage.getItem(STORE_KEY)
+    const v = localStorage.getItem(storeKey(theme))
     return BASEMAPS.some((b) => b.id === v) ? (v as BasemapId) : null
   } catch {
     return null
   }
 }
 
-export function saveBasemapPref(id: BasemapId): void {
+export function saveBasemapPref(theme: 'dark' | 'light' | undefined, id: BasemapId): void {
   try {
-    localStorage.setItem(STORE_KEY, id)
+    localStorage.setItem(storeKey(theme), id)
   } catch {
     // Préférence purement locale : on ignore l'échec.
   }

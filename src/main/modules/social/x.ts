@@ -1,6 +1,9 @@
 import { defineModule } from '@shared/modules'
 import { acceptsPlatform, httpStatus, linkedEntities, notFound, profileOutput, requireUsername, rethrow, toIso, type Lang, type Parsed } from './_lib'
 
+const FX_ATTEMPTS = 5
+export const FX_DELAY_MS = 700
+
 export interface FxUser {
   screen_name: string
   url?: string
@@ -67,14 +70,18 @@ export default defineModule({
   homepage: 'https://github.com/FxEmbed/FxEmbed',
   async run(input, ctx) {
     const username = requireUsername(input, /^\w{1,15}$/)
-    let res: { code: number; user?: FxUser }
-    try {
-      res = await ctx.fetchJson(`https://api.fxtwitter.com/${encodeURIComponent(username)}`)
-    } catch (e) {
-      if (httpStatus(e) === 404) return notFound()
-      rethrow(e, 'FxTwitter')
+    // FxTwitter répond parfois 404 pour un compte existant (environ une fois sur deux) :
+    // on ne conclut à l'absence qu'après plusieurs réponses 404 consécutives.
+    let res: { code: number; user?: FxUser } | null = null
+    for (let attempt = 0; attempt < FX_ATTEMPTS && !res; attempt++) {
+      try {
+        res = await ctx.fetchJson(`https://api.fxtwitter.com/${encodeURIComponent(username)}`)
+      } catch (e) {
+        if (httpStatus(e) !== 404) rethrow(e, 'FxTwitter')
+        if (attempt < FX_ATTEMPTS - 1) await new Promise((r) => setTimeout(r, FX_DELAY_MS))
+      }
     }
-    if (!res.user) return notFound(res)
+    if (!res?.user) return notFound(res ?? { attempts: FX_ATTEMPTS })
     const parsed = parseFx(res.user, ctx.lang)
     return profileOutput(input, 'x', parsed.profile, parsed.children, res.user, ctx.lang)
   }

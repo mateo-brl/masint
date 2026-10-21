@@ -1,5 +1,8 @@
-import { defineModule } from '@shared/modules'
+import { defineModule, ModuleError } from '@shared/modules'
 import { acceptsPlatform, linkedEntities, notFound, profileOutput, requireUsername, rethrow, toIso, type Lang, type Parsed } from './_lib'
+
+/** Compte public connu (cofondateur), utilisé pour détecter les réponses vides de limitation. */
+const CANARY = 'Luis'
 
 export interface DuoUser {
   id: number
@@ -72,7 +75,12 @@ export default defineModule({
       rethrow(e, 'Duolingo')
     }
     const user = res.users?.find((u) => u.username.toLowerCase() === username.toLowerCase()) ?? res.users?.[0]
-    if (!user) return notFound()
+    if (!user) {
+      // Duolingo renvoie aussi une liste vide quand il limite une adresse IP : contrôle sur un compte témoin.
+      const canary = await ctx.fetchJson<{ users?: DuoUser[] }>('https://www.duolingo.com/2017-06-30/users', { query: { username: CANARY } }).catch(() => null)
+      if (!canary?.users?.length) throw new ModuleError('Duolingo : réponses vides, adresse IP probablement limitée', 'blocked')
+      return notFound()
+    }
     const parsed = parseDuolingo(user, ctx.lang)
     const { courses, ...raw } = user
     return profileOutput(input, 'duolingo', parsed.profile, parsed.children, { ...raw, courses: courses?.length }, ctx.lang)

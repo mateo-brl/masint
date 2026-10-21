@@ -48,7 +48,10 @@ export function MapView(): React.JSX.Element {
   const nodes = useGraph((s) => s.nodes)
   const edges = useGraph((s) => s.edges)
   const theme = useApp((s) => s.settings?.theme)
-  const [pref, setPref] = useState<BasemapId | null>(() => loadBasemapPref())
+  const themeKey = theme ?? 'dark'
+  const [prefs, setPrefs] = useState<Record<string, BasemapId>>({})
+  const stored = useMemo(() => loadBasemapPref(theme), [theme])
+  const pref = prefs[themeKey] ?? stored
   const base = getBasemap(pref, theme)
   const [map, setMap] = useState<L.Map | null>(null)
   const [listOpen, setListOpen] = useState(true)
@@ -92,8 +95,8 @@ export function MapView(): React.JSX.Element {
   }
 
   const chooseBasemap = (id: BasemapId): void => {
-    setPref(id)
-    saveBasemapPref(id)
+    setPrefs({ ...prefs, [themeKey]: id })
+    saveBasemapPref(theme, id)
   }
 
   return (
@@ -101,7 +104,7 @@ export function MapView(): React.JSX.Element {
       <div className="absolute inset-0 isolate">
         <MapContainer
           ref={setMap}
-          className={`geo-map h-full w-full ${base.raw ? 'geo-raw' : ''}`}
+          className="geo-map h-full w-full"
           center={[30, 10]}
           zoom={3}
           minZoom={2}
@@ -159,8 +162,15 @@ export function MapView(): React.JSX.Element {
 
 /** Fond de carte, couche de libellés éventuelle et attribution. */
 export function BasemapLayers({ base }: { base: Basemap }): React.JSX.Element {
+  const map = useMap()
+  // react-leaflet ne met pas à jour la classe du conteneur : on bascule le filtre ici.
+  useEffect(() => {
+    map.getContainer().classList.toggle('geo-raw', base.raw)
+  }, [map, base.raw])
   return (
     <>
+      {/* Contrôle ajouté avant les couches pour qu'il suive aussi leur retrait. */}
+      <AttributionControl position="bottomright" prefix={false} />
       <TileLayer
         key={base.id}
         url={base.url}
@@ -170,7 +180,6 @@ export function BasemapLayers({ base }: { base: Basemap }): React.JSX.Element {
         maxNativeZoom={base.maxNativeZoom}
       />
       {base.overlay && <TileLayer key={`${base.id}-labels`} url={base.overlay} maxZoom={base.maxZoom} maxNativeZoom={base.maxNativeZoom} />}
-      <AttributionControl position="bottomright" prefix={false} />
     </>
   )
 }
@@ -323,10 +332,12 @@ const LinkLine = memo(function LinkLine({ a, b, label, active }: { a: GeoPoint; 
   const positions = useMemo<L.LatLngTuple[]>(() => [[a.lat, a.lon], [b.lat, b.lon]], [a.lat, a.lon, b.lat, b.lon])
   return (
     <Polyline
-      // La classe n'est appliquée qu'à la création : on recrée la ligne quand elle change.
+      // Les options (dont la classe) ne sont lues qu'à la création : on recrée la ligne quand elle change.
       key={active ? 'on' : 'off'}
       positions={positions}
-      pathOptions={{ className: active ? 'geo-link is-active' : 'geo-link', weight: active ? 2.4 : 1.5, dashArray: active ? undefined : '5 6' }}
+      className={active ? 'geo-link is-active' : 'geo-link'}
+      weight={active ? 2.4 : 1.5}
+      dashArray={active ? undefined : '5 6'}
     >
       {label && (
         <Tooltip sticky opacity={1} className="geo-tip">

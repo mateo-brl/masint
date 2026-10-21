@@ -54,7 +54,7 @@ function MapNodeImpl({ id, data, selected }: NodeProps<FlowNode>): React.JSX.Ele
         </div>
         <div className="nodrag nowheel relative isolate min-h-0 flex-1">
           <MapContainer
-            className={`geo-map h-full w-full ${base.raw ? 'geo-raw' : ''}`}
+            className="geo-map h-full w-full"
             center={[lat, lon]}
             zoom={zoom}
             scrollWheelZoom="center"
