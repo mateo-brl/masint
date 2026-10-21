@@ -198,6 +198,10 @@ Les contributions sont décrites dans [CONTRIBUTING.md](CONTRIBUTING.md).
    (Ou à la main : modifier `version` dans `package.json`, committer, puis
    `git tag v0.2.0 && git push origin v0.2.0`.)
 
+   Sans tag : onglet **Actions** du dépôt, workflow **Release**, bouton **Run workflow** sur la
+   branche à publier. Le tag `v<version de package.json>` est alors créé par GitHub sur le
+   commit construit, au moment où la release est publiée.
+
 2. Le workflow [Release](.github/workflows/release.yml) se déclenche sur le tag `v*` : il
    vérifie que le tag correspond à `package.json`, crée une release GitHub en brouillon,
    construit l'installeur Windows et les paquets Linux, les téléverse avec `latest.yml` et
