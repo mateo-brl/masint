@@ -1,12 +1,12 @@
 import { memo, useEffect, useRef } from 'react'
+import type L from 'leaflet'
 import { NodeResizer, type NodeProps } from '@xyflow/react'
-import { MapContainer, useMap, useMapEvents } from 'react-leaflet'
 import { useTranslation } from 'react-i18next'
 import { BASEMAPS, formatCoord, getBasemap } from '../../../lib/geo'
 import { Icon } from '../../../lib/icons'
 import { useApp } from '../../../store/app'
 import { useGraph, type FlowNode } from '../../../store/graph'
-import { BasemapLayers } from '../../views/MapView'
+import { useBasemap, useLeafletMap } from '../../views/MapView'
 import '../../views/geo.css'
 
 const num = (v: unknown, fallback: number): number => (typeof v === 'number' && Number.isFinite(v) ? v : fallback)
@@ -22,6 +22,16 @@ function MapNodeImpl({ id, data, selected }: NodeProps<FlowNode>): React.JSX.Ele
   const zoom = num(n.data.zoom, 11)
   const base = getBasemap(n.data.basemap, theme)
   const next = BASEMAPS[(BASEMAPS.findIndex((b) => b.id === base.id) + 1) % BASEMAPS.length]
+  const container = useRef<HTMLDivElement>(null)
+  const map = useLeafletMap(container, () => ({
+    center: [lat, lon],
+    zoom,
+    scrollWheelZoom: 'center',
+    doubleClickZoom: 'center',
+    worldCopyJump: true
+  }))
+  useBasemap(map, base)
+  useMapSync(map, id, lat, lon, zoom)
 
   const cycleBasemap = (): void => {
     const latest = useGraph.getState().nodes.find((x) => x.id === id)?.data.node ?? n
@@ -53,18 +63,7 @@ function MapNodeImpl({ id, data, selected }: NodeProps<FlowNode>): React.JSX.Ele
           </button>
         </div>
         <div className="nodrag nowheel relative isolate min-h-0 flex-1">
-          <MapContainer
-            className="geo-map h-full w-full"
-            center={[lat, lon]}
-            zoom={zoom}
-            scrollWheelZoom="center"
-            doubleClickZoom="center"
-            attributionControl={false}
-            worldCopyJump
-          >
-            <BasemapLayers base={base} />
-            <MapSync id={id} lat={lat} lon={lon} zoom={zoom} />
-          </MapContainer>
+          <div ref={container} className="geo-map h-full w-full" />
           {/* Le point d'intérêt est le centre de la carte. */}
           <div className="pointer-events-none absolute top-1/2 left-1/2 z-[450] -translate-x-1/2 -translate-y-1/2">
             <span className="absolute top-1/2 left-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent opacity-20" />
@@ -78,12 +77,12 @@ function MapNodeImpl({ id, data, selected }: NodeProps<FlowNode>): React.JSX.Ele
 }
 
 /** Enregistre le centre et le zoom après un déplacement, et suit les changements externes. */
-function MapSync({ id, lat, lon, zoom }: { id: string; lat: number; lon: number; zoom: number }): null {
-  const map = useMap()
+function useMapSync(map: L.Map | null, id: string, lat: number, lon: number, zoom: number): void {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useMapEvents({
-    moveend: () => {
+  useEffect(() => {
+    if (!map) return
+    const onMoveEnd = (): void => {
       if (timer.current) clearTimeout(timer.current)
       timer.current = setTimeout(() => {
         const node = useGraph.getState().nodes.find((x) => x.id === id)?.data.node
@@ -94,25 +93,23 @@ function MapSync({ id, lat, lon, zoom }: { id: string; lat: number; lon: number;
         void useGraph.getState().updateNode(id, { data: { ...node.data, ...next } })
       }, 600)
     }
-  })
-
-  // Coordonnées modifiées ailleurs (fiche) : on recentre.
-  useEffect(() => {
-    const c = map.getCenter()
-    if (Math.abs(c.lat - lat) > 1e-6 || Math.abs(c.lng - lon) > 1e-6 || map.getZoom() !== zoom) map.setView([lat, lon], zoom, { animate: false })
-  }, [map, lat, lon, zoom])
-
-  // Redimensionnement du nœud : Leaflet doit recalculer sa taille en gardant le centre.
-  useEffect(() => {
+    map.on('moveend', onMoveEnd)
+    // Redimensionnement du nœud : Leaflet doit recalculer sa taille en gardant le centre.
     const ro = new ResizeObserver(() => map.invalidateSize({ animate: false }))
     ro.observe(map.getContainer())
     return () => {
+      map.off('moveend', onMoveEnd)
       ro.disconnect()
       if (timer.current) clearTimeout(timer.current)
     }
-  }, [map])
+  }, [map, id])
 
-  return null
+  // Coordonnées modifiées ailleurs (fiche) : on recentre.
+  useEffect(() => {
+    if (!map) return
+    const c = map.getCenter()
+    if (Math.abs(c.lat - lat) > 1e-6 || Math.abs(c.lng - lon) > 1e-6 || map.getZoom() !== zoom) map.setView([lat, lon], zoom, { animate: false })
+  }, [map, lat, lon, zoom])
 }
 
 export const MapNode = memo(MapNodeImpl)
