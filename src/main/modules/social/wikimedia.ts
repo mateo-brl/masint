@@ -57,6 +57,8 @@ export default defineModule({
     let res: { query?: { globaluserinfo?: GlobalUserInfo } }
     try {
       res = await ctx.fetchJson('https://meta.wikimedia.org/w/api.php', {
+        // Politique Wikimedia : User-Agent identifiant l'outil, sinon limitation rapide.
+        headers: { 'user-agent': 'MASINT/0.1 (https://github.com/mateo-brl/masint)' },
         query: { action: 'query', meta: 'globaluserinfo', guiuser: username, guiprop: 'merged|groups|editcount', format: 'json', formatversion: 1 }
       })
     } catch (e) {

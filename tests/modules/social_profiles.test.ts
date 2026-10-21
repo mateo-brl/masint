@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { OsintModule, OutEntity } from '@shared/modules'
+import { ModuleError, type OsintModule, type OutEntity } from '@shared/modules'
 import bluesky, { bskyHandle } from '../../src/main/modules/social/bluesky'
 import chesscom from '../../src/main/modules/social/chesscom'
 import codeberg from '../../src/main/modules/social/codeberg'
@@ -185,7 +185,7 @@ describe('Bluesky et Mastodon', () => {
     const routes: Route[] = [
       [/mastodon\.social\/api\/v1\/accounts\/lookup/, json('mastodon_account.json')],
       // Compte distant connu de l'instance : ignoré
-      [/mas\.to\/api/, { body: { ...fixtureJson('social/mastodon_account.json'), acct: 'Gargron@mastodon.social' } }],
+      [/mas\.to\/api/, { body: { ...fixtureJson<Record<string, unknown>>('social/mastodon_account.json'), acct: 'Gargron@mastodon.social' } }],
       [/api\/v1\/accounts\/lookup/, { status: 404, body: '{"error":"Record not found"}' }]
     ]
     const out = await run(mastodon, routes, 'Gargron')
@@ -212,6 +212,12 @@ describe('X, Twitch, Kick', () => {
     expect(account.image).toMatch(/_400x400\.jpg$/)
     expect(children.map((c) => c.label)).toEqual(['http://terafab.ai'])
     expect((await run(x, routes, 'nobody')).found).toBe(false)
+  })
+  it('X : un 404 isolé de FxTwitter ne conclut pas à l’absence', async () => {
+    let n = 0
+    const flaky: Route[] = [[/fxtwitter\.com\/elonmusk/, () => (n++ < 2 ? { status: 404, body: '{"code":404,"message":"User not found"}' } : json('fxtwitter_user.json'))]]
+    expect((await run(x, flaky, 'elonmusk')).found).toBe(true)
+    expect(n).toBe(3)
   })
   it('Twitch', async () => {
     const routes: Route[] = [[/gql\.twitch\.tv/, (_u, init) => (JSON.stringify(init.json).includes('"xqc"') ? json('twitch_gql.json') : { body: '{"data":{"user":null}}' })]]
@@ -286,6 +292,8 @@ describe('Duolingo, Docker Hub, npm, Hugging Face, DEV', () => {
     const { account } = split(await run(duolingo, routes, 'Luis'))
     expect(account.data).toMatchObject({ user_id: '14', location: 'Guatemala', linked_logins: ['Facebook', 'Google'], created_at: '2011-11-30T02:43:57.000Z' })
     expect((await run(duolingo, routes, 'nobody')).found).toBe(false)
+    // Limitation : liste vide y compris pour le compte témoin
+    await expect(run(duolingo, [[/users/, { body: '{"users":[]}' }]], 'nobody')).rejects.toThrow(/limitée/)
   })
   it('Docker Hub', async () => {
     const routes: Route[] = [[/v2\/users\/bitnami/, json('dockerhub_user.json')], [/v2\/users\//, { status: 404, body: '{"message":"User not found"}' }]]
@@ -362,41 +370,55 @@ describe('Gravatar, Linktree, Roblox, Minecraft, Wikimedia', () => {
 
 describe.skipIf(!LIVE)('live', () => {
   const ctx = makeContext()
-  const cases: Array<[OsintModule, string, string]> = [
-    [gitlab, 'dzaporozhets', 'Dmytro'],
-    [codeberg, 'forgejo', 'Forgejo'],
-    [keybase, 'chris', 'Chris Coyne'],
-    [hackernews, 'pg', 'Bug fixer.'],
-    [lichess, 'thibault', 'Thibault'],
-    [chesscom, 'hikaru', 'Hikaru Nakamura'],
-    [bluesky, 'jay.bsky.team', 'Jay'],
-    [mastodon, 'Gargron', 'Eugen Rochko'],
-    [x, 'jack', 'jack'],
-    [twitch, 'xqc', 'xQc'],
-    [kick, 'xqc', 'THE BEST'],
-    [youtube, 'mkbhd', 'Marques Brownlee'],
-    [tiktok, 'khaby.lame', 'Khabane'],
-    [snapchat, 'djkhaled305', 'DJ Khaled'],
-    [steam, 'robinwalker', 'Robin Walker'],
-    [strava, 'kipchoge', 'Eddie Fuller'],
-    [duolingo, 'luis', 'Luis'],
-    [dockerhub, 'bitnami', 'Bitnami'],
-    [npm, 'sindresorhus', 'sindresorhus'],
-    [huggingface, 'julien-c', 'Julien Chaumond'],
-    [devto, 'ben', 'Ben Halpern'],
-    [gravatar, 'beau', 'Beau Lebens'],
-    [linktree, 'selenagomez', 'selenagomez'],
-    [roblox, 'builderman', 'builderman'],
-    [minecraft, 'Notch', 'Notch'],
-    [wikimedia, 'Jimbo Wales', 'enwiki']
-  ]
-  it.each(cases)('%s trouve le compte', async (m, username, expected) => {
-    const out = await runModule(m, entity('username', username), ctx)
+  const cases: Array<[string, OsintModule, string, string]> = (
+    [
+      [gitlab, 'dzaporozhets', 'Dmytro'],
+      [codeberg, 'forgejo', 'Forgejo'],
+      [keybase, 'chris', 'Chris Coyne'],
+      [hackernews, 'pg', 'Bug fixer.'],
+      [lichess, 'thibault', 'Thibault'],
+      [chesscom, 'hikaru', 'Hikaru Nakamura'],
+      [bluesky, 'jay.bsky.team', 'Jay'],
+      [mastodon, 'Gargron', 'Eugen Rochko'],
+      [x, 'jack', 'jack'],
+      [twitch, 'xqc', 'xQc'],
+      [kick, 'xqc', 'THE BEST'],
+      [youtube, 'mkbhd', 'Marques Brownlee'],
+      [tiktok, 'khaby.lame', 'Khabane'],
+      [snapchat, 'djkhaled305', 'DJ Khaled'],
+      [steam, 'robinwalker', 'Robin Walker'],
+      [strava, 'kipchoge', 'Eddie Fuller'],
+      [duolingo, 'luis', 'Luis'],
+      [dockerhub, 'bitnami', 'Bitnami'],
+      [npm, 'sindresorhus', 'sindresorhus'],
+      [huggingface, 'julien-c', 'Julien Chaumond'],
+      [devto, 'ben', 'Ben Halpern'],
+      [gravatar, 'beau', 'Beau Lebens'],
+      [linktree, 'selenagomez', 'selenagomez'],
+      [roblox, 'builderman', 'builderman'],
+      [minecraft, 'Notch', 'Notch'],
+      [wikimedia, 'Jimbo Wales', 'enwiki']
+    ] as Array<[OsintModule, string, string]>
+  ).map(([m, u, e]) => [m.id, m, u, e])
+
+  /** Un blocage du service depuis l'adresse IP de test (pare-feu, quota) n'est pas un échec du module. */
+  async function attempt(m: OsintModule, username: string, skip: (note?: string) => void) {
+    try {
+      return await runModule(m, entity('username', username), ctx)
+    } catch (e) {
+      if (e instanceof ModuleError && ['blocked', 'rate_limited', 'unavailable'].includes(e.code)) skip(e.message)
+      throw e
+    }
+  }
+
+  it.for(cases)('%s trouve le compte', async ([, m, username, expected], { skip }) => {
+    const out = (await attempt(m, username, skip))!
     expect(out.found).toBe(true)
     expect(JSON.stringify(out.entities)).toContain(expected)
   }, 60000)
-  it.each(cases.map(([m]) => [m.id, m] as const))('%s : pseudo inexistant', async (_id, m) => {
-    const out = await runModule(m, entity('username', 'zq8x7v2kq9w1'), ctx)
+
+  it.for(cases)('%s : pseudo inexistant', async ([, m], { skip }) => {
+    const out = (await attempt(m, 'zq8x7v2kq9w1', skip))!
     expect(out.found).toBe(false)
   }, 60000)
 })

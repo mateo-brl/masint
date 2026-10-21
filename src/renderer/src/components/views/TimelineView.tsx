@@ -179,6 +179,13 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   )
 }
 
+/** Libellé du champ d'un événement : catalogue du type, clé courante traduite, sinon clé lisible. */
+function useFieldLabel(): (e: TimelineEvent) => string {
+  const { t, i18n } = useTranslation()
+  const { tx } = useLang()
+  return (e) => (e.field ? tx(e.field) : i18n.exists(`timeline.keys.${e.key}`) ? t(`timeline.keys.${e.key}`) : humanizeKey(e.key))
+}
+
 // ---------------------------------------------------------------------------
 // Frise
 
@@ -313,6 +320,19 @@ function Frise({
   const now = Date.now()
   const nowX = xOf(now)
   const showNow = nowX >= 0 && nowX <= plotW
+  // Libellé « Aujourd'hui » à gauche ou à droite du trait, masqué s'il chevauche une graduation.
+  const nowSide = useMemo(() => {
+    if (!showNow) return null
+    const w = t('timeline.today').length * 6.3 + 6
+    const spans = tickList.map((tk) => {
+      const x = ((tk - domain[0]) / span) * plotW + 6
+      return [x, x + tickLabel(tk, unit, lang).text.length * 7]
+    })
+    const free = (a: number, b: number): boolean => a >= 0 && b <= plotW && spans.every(([x0, x1]) => x1 < a || x0 > b)
+    if (free(nowX - 6 - w, nowX - 6)) return 'left'
+    if (free(nowX + 6, nowX + 6 + w)) return 'right'
+    return null
+  }, [showNow, tickList, domain, span, plotW, unit, lang, nowX, t])
 
   const onPointerDown = (e: React.PointerEvent): void => {
     if (e.button !== 0) return
@@ -397,7 +417,11 @@ function Frise({
             {showNow && (
               <div className="absolute top-0 bottom-0" style={{ left: nowX }}>
                 <div className="absolute bottom-0 h-full w-px bg-accent" />
-                <div className="absolute top-2 right-1.5 text-[10.5px] font-semibold whitespace-nowrap text-accent">{t('timeline.today')}</div>
+                {nowSide && (
+                  <div className={`absolute top-2 text-[10.5px] font-semibold whitespace-nowrap text-accent ${nowSide === 'left' ? 'right-1.5' : 'left-1.5'}`}>
+                    {t('timeline.today')}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -504,7 +528,7 @@ const Marker = memo(function Marker({
 
 function HoverCard({ hover, lang }: { hover: Hover; lang: Lang }): React.JSX.Element {
   const { t } = useTranslation()
-  const { tx } = useLang()
+  const fieldLabel = useFieldLabel()
   const shown = hover.events.slice(0, 6)
   const left = Math.min(Math.max(hover.rect.left + hover.rect.width / 2, 150), window.innerWidth - 150)
   const below = hover.rect.bottom + 230 < window.innerHeight
@@ -519,7 +543,7 @@ function HoverCard({ hover, lang }: { hover: Hover; lang: Lang }): React.JSX.Ele
           <div className="min-w-0 flex-1 leading-tight">
             <div className="truncate text-[12.5px] font-medium">{e.node.label || t('node.untitled')}</div>
             <div className="truncate text-[11px] text-muted">
-              {e.field ? tx(e.field) : humanizeKey(e.key)} · <span className="text-fg">{formatEventDate(e.t, e.precision, lang)}</span>
+              {fieldLabel(e)} · <span className="text-fg">{formatEventDate(e.t, e.precision, lang)}</span>
             </div>
           </div>
         </div>
@@ -547,6 +571,7 @@ function EventList({
 }): React.JSX.Element {
   const { t } = useTranslation()
   const { tx } = useLang()
+  const fieldLabel = useFieldLabel()
   if (!events.length) return <div className="px-4 py-8 text-center text-[12.5px] text-muted">{t('timeline.noneInView')}</div>
   const rows: React.JSX.Element[] = []
   let year: number | null = null
@@ -579,7 +604,7 @@ function EventList({
           icon={n.style.icon}
         />
         <span className={`min-w-0 flex-1 truncate text-[12.5px] font-medium ${n.label ? 'text-fg' : 'italic text-faint'}`}>{n.label || t('node.untitled')}</span>
-        <span className="w-[170px] shrink-0 truncate text-[12px] text-muted">{e.field ? tx(e.field) : humanizeKey(e.key)}</span>
+        <span className="w-[170px] shrink-0 truncate text-[12px] text-muted">{fieldLabel(e)}</span>
         <span className="hidden w-[150px] shrink-0 truncate text-right text-[11.5px] text-faint xl:block">
           {getPlatform(n.platform)?.name ?? tx(getEntityType(n.type).label)}
         </span>

@@ -56,7 +56,28 @@ const fr = {
     emptyTitle: 'Aucun événement daté',
     emptyBody:
       'Les dates présentes dans les fiches des entités (création d’un compte, naissance, fuite de données, transaction…) apparaissent ici. Renseignez une date dans une fiche ou lancez des modules d’enrichissement.',
-    backToGraph: 'Revenir au graphe'
+    backToGraph: 'Revenir au graphe',
+    keys: {
+      created_at: 'Date de création',
+      updated_at: 'Mis à jour le',
+      modified_at: 'Modifié le',
+      published_at: 'Publié le',
+      registered_at: 'Enregistré le',
+      first_seen: 'Première activité',
+      last_seen: 'Dernière activité',
+      seen_at: 'Vu le',
+      date: 'Date',
+      start_date: 'Début',
+      end_date: 'Fin',
+      birth_date: 'Date de naissance',
+      expires_at: 'Expire le',
+      issued_at: 'Émis le',
+      closed_at: 'Fermé le',
+      taken_at: 'Prise le',
+      breach_date: 'Date de la fuite',
+      date_compromised: 'Date de compromission',
+      timestamp: 'Horodatage'
+    }
   }
 }
 
@@ -116,7 +137,28 @@ const en: typeof fr = {
     emptyTitle: 'No dated event',
     emptyBody:
       'Dates found in entity sheets (account creation, birth, data breach, transaction…) show up here. Fill in a date in a sheet or run enrichment modules.',
-    backToGraph: 'Back to graph'
+    backToGraph: 'Back to graph',
+    keys: {
+      created_at: 'Created at',
+      updated_at: 'Updated at',
+      modified_at: 'Modified at',
+      published_at: 'Published at',
+      registered_at: 'Registered at',
+      first_seen: 'First seen',
+      last_seen: 'Last seen',
+      seen_at: 'Seen at',
+      date: 'Date',
+      start_date: 'Start',
+      end_date: 'End',
+      birth_date: 'Birth date',
+      expires_at: 'Expires at',
+      issued_at: 'Issued at',
+      closed_at: 'Closed at',
+      taken_at: 'Taken at',
+      breach_date: 'Breach date',
+      date_compromised: 'Compromised at',
+      timestamp: 'Timestamp'
+    }
   }
 }
 
