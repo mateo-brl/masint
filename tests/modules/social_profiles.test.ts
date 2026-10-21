@@ -411,14 +411,14 @@ describe.skipIf(!LIVE)('live', () => {
     }
   }
 
-  it.for(cases)('%s trouve le compte', async ([, m, username, expected], { skip }) => {
+  it.for(cases)('%s trouve le compte', { timeout: 60000 }, async ([, m, username, expected], { skip }) => {
     const out = (await attempt(m, username, skip))!
     expect(out.found).toBe(true)
     expect(JSON.stringify(out.entities)).toContain(expected)
-  }, 60000)
+  })
 
-  it.for(cases)('%s : pseudo inexistant', async ([, m], { skip }) => {
+  it.for(cases)('%s : pseudo inexistant', { timeout: 60000 }, async ([, m], { skip }) => {
     const out = (await attempt(m, 'zq8x7v2kq9w1', skip))!
     expect(out.found).toBe(false)
-  }, 60000)
+  })
 })

@@ -428,5 +428,7 @@ export function rethrow(e: unknown, service: string): never {
   if (status === 429) throw new ModuleError(`${service} : trop de requêtes, réessayer plus tard`, 'rate_limited')
   if (status === 401 || status === 403) throw new ModuleError(`${service} : accès refusé (HTTP ${status})`, 'blocked')
   if (status && status >= 500) throw new ModuleError(`${service} : service indisponible (HTTP ${status})`, 'unavailable')
+  if (e instanceof Error && (e.name === 'TimeoutError' || e.message === 'fetch failed'))
+    throw new ModuleError(`${service} : pas de réponse (${e.name === 'TimeoutError' ? 'délai dépassé' : 'connexion impossible'})`, 'unavailable')
   throw e instanceof Error ? e : new ModuleError(String(e))
 }
