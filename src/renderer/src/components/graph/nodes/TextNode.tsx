@@ -53,7 +53,9 @@ function TextNodeImpl({ id, data, selected }: NodeProps<FlowNode>): React.JSX.El
     if (el && b) {
       const cs = getComputedStyle(b)
       const needed = Math.ceil(el.scrollHeight + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom))
-      if (needed > b.offsetHeight + 1) patch.height = needed
+      // Hauteur du nœud (le fond, lui, suit déjà le texte pendant l'édition).
+      const current = b.parentElement?.offsetHeight ?? b.offsetHeight
+      if (needed > current + 1) patch.height = needed
     }
     if (Object.keys(patch).length) void useGraph.getState().updateNode(id, patch)
   }
@@ -62,10 +64,8 @@ function TextNodeImpl({ id, data, selected }: NodeProps<FlowNode>): React.JSX.El
     void useGraph.getState().updateNode(id, { style: { ...n.style, ...patch } })
   }
   const stepFont = (dir: 1 | -1): void => {
-    const i = FONT_SIZES.findIndex((s) => s >= fontSize)
-    const cur = i === -1 ? FONT_SIZES.length - 1 : i
-    const next = FONT_SIZES[Math.min(FONT_SIZES.length - 1, Math.max(0, cur + dir))]
-    if (next !== fontSize) setStyle({ fontSize: next })
+    const next = dir > 0 ? FONT_SIZES.find((s) => s > fontSize) : FONT_SIZES.findLast((s) => s < fontSize)
+    if (next) setStyle({ fontSize: next })
   }
 
   const textStyle: React.CSSProperties = { color, fontSize, lineHeight: 1.35 }
@@ -100,6 +100,8 @@ function TextNodeImpl({ id, data, selected }: NodeProps<FlowNode>): React.JSX.El
         ref={box}
         onDoubleClick={(e) => {
           e.stopPropagation()
+          // Double-clic dans la zone de saisie : sélection d'un mot, pas une nouvelle édition.
+          if (editing) return
           setDraft(n.label)
           setEditing(true)
         }}

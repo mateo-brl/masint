@@ -7,7 +7,7 @@ export type I18nText = { fr: string; en: string }
 export type NodeKind = 'entity' | 'text' | 'image' | 'drawing' | 'map'
 
 /** Valeur d'une propriété d'entité. Les listes servent pour les champs multiples. */
-export type PropValue = string | number | boolean | null | string[] | Record<string, unknown>
+export type PropValue = string | number | boolean | null | string[] | number[][] | Record<string, unknown>
 
 export interface Investigation {
   id: string

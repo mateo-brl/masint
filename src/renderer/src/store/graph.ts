@@ -25,7 +25,7 @@ export function toFlowNode(n: GraphNode, prev?: FlowNode): FlowNode {
     data: { node: n },
     selected: prev?.selected ?? false,
     ...(sized ? { width: n.width!, height: n.height! } : {}),
-    zIndex: n.kind === 'drawing' ? 0 : n.kind === 'entity' ? 2 : 1
+    zIndex: n.kind === 'drawing' ? 3 : n.kind === 'entity' ? 2 : 1
   }
 }
 
