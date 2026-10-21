@@ -11,6 +11,7 @@ import { createFetch, resetDispatchers } from './engine/http'
 import { allModules, knownKeyIds, moduleInfo } from './engine/registry'
 import type { Engine } from './engine/runner'
 import type { SettingsService } from './settings'
+import { takePendingOpen } from './openQueue'
 import { checkForUpdates, installUpdate } from './updater'
 
 type Handler<C extends ApiChannel> = (...args: Parameters<ApiMap[C]>) => ReturnType<ApiMap[C]> | Promise<ReturnType<ApiMap[C]>>
@@ -234,6 +235,7 @@ export function registerIpc(deps: IpcDeps): void {
     if (/^https?:\/\//i.test(url)) void shell.openExternal(url)
   })
   handle('app:showInFolder', (path) => shell.showItemInFolder(path))
+  handle('app:takePendingOpen', () => takePendingOpen())
   handle('update:check', () => checkForUpdates())
   handle('update:install', () => installUpdate())
 }

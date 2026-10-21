@@ -1,0 +1,108 @@
+# Publication d'une version : poussez un tag vX.Y.Z correspondant à la version
+# de package.json. Le workflow
+#   1. crée une GitHub Release en brouillon pour ce tag,
+#   2. construit l'installeur Windows et les paquets Linux, qu'electron-builder
+#      téléverse dans ce brouillon avec latest.yml / latest-linux.yml (lus par
+#      electron-updater pour les mises à jour automatiques),
+#   3. publie la release une fois tous les fichiers en place.
+# Les utilisateurs ne voient donc jamais une release incomplète.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  GH_REPO: ${{ github.repository }}
+
+jobs:
+  draft:
+    name: Préparer le brouillon
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Vérifier que le tag correspond à package.json
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "$GITHUB_REF_NAME" != "v$VERSION" ]; then
+            echo "::error::Le tag $GITHUB_REF_NAME ne correspond pas à la version v$VERSION de package.json."
+            exit 1
+          fi
+
+      - name: Créer la release en brouillon
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            echo "La release $GITHUB_REF_NAME existe déjà : les fichiers y seront ajoutés."
+          else
+            gh release create "$GITHUB_REF_NAME" --draft --verify-tag \
+              --title "MASINT ${GITHUB_REF_NAME#v}" --generate-notes
+          fi
+
+  build:
+    name: Paquets ${{ matrix.name }}
+    needs: draft
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            targets: --win nsis --x64
+          - name: Linux
+            os: ubuntu-latest
+            targets: --linux AppImage deb --x64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      # Une commande par étape : sous Windows (PowerShell), seule la dernière
+      # commande d'un bloc fait échouer l'étape.
+      - name: Tests unitaires
+        run: npm test
+
+      - name: Tests du moteur
+        run: npm run test:core
+
+      - name: Build
+        run: npm run build
+
+      # electron-builder retrouve le brouillon par son tag (v + version) et y
+      # téléverse les installeurs, les blockmaps et latest*.yml.
+      - name: Construire et téléverser les paquets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder ${{ matrix.targets }} --publish always
+
+  publish:
+    name: Publier la release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sortir la release du brouillon
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Une version comme v1.2.0-beta.1 est publiée en préversion.
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+            gh release edit "$GITHUB_REF_NAME" --draft=false --prerelease
+          else
+            gh release edit "$GITHUB_REF_NAME" --draft=false --latest
+          fi

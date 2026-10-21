@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { attachmentUrl } from '@shared/api'
 import { ENTITY_TYPES, getEntityType, type CategoryId } from '@shared/entityTypes'
-import { getPlatform, PLATFORMS } from '@shared/platforms'
+import { emailProvider, getPlatform, PLATFORMS } from '@shared/platforms'
 import type { GraphEdge, GraphNode, ModuleRun, PropValue } from '@shared/types'
 import { enrichNode, fileToBase64, modulesForNode } from '../../lib/actions'
 import { api, openExternal } from '../../lib/api'
@@ -110,7 +110,11 @@ function EntitySheet({ node }: { node: GraphNode }): React.JSX.Element {
   const updateNode = useGraph((s) => s.updateNode)
   const def = getEntityType(node.type)
   const [label, setLabel] = useState(node.label)
-  useDebouncedSave(label, (v) => v !== node.label && void updateNode(node.id, { label: v.trim() }))
+  useDebouncedSave(label, (v) => {
+    if (v === node.label) return
+    const provider = node.type === 'email' && !node.platform ? emailProvider(v.trim())?.id : undefined
+    void updateNode(node.id, { label: v.trim(), ...(provider ? { platform: provider } : {}) })
+  })
 
   const platformCats = PLATFORM_CATEGORIES[node.type]
   const platformOptions = platformCats ? PLATFORMS.filter((p) => platformCats.includes(p.category)) : []

@@ -1,5 +1,7 @@
 // Détection du type d'entité à partir d'une saisie libre.
 
+import { emailProvider } from './platforms'
+
 export interface Detection {
   type: string
   /** Valeur normalisée (téléphone en E.164, domaine sans schéma...). */
@@ -73,7 +75,7 @@ export function detectEntity(raw: string): Detection | null {
   const q = raw.trim()
   if (!q) return null
 
-  if (EMAIL.test(q)) return { type: 'email', value: q.toLowerCase() }
+  if (EMAIL.test(q)) return { type: 'email', value: q.toLowerCase(), platform: emailProvider(q)?.id }
   if (CVE.test(q)) return { type: 'cve', value: q.toUpperCase() }
   if (ASN.test(q)) return { type: 'asn', value: q.toUpperCase() }
   if (CIDR.test(q)) return { type: 'cidr', value: q }

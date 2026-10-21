@@ -89,6 +89,8 @@ export interface ApiMap {
   'app:info': () => { version: string; platform: string; dataPath: string }
   'app:openExternal': (url: string) => void
   'app:showInFolder': (path: string) => void
+  /** Enquêtes importées depuis l'explorateur et pas encore ouvertes. */
+  'app:takePendingOpen': () => string[]
   'update:check': () => UpdateStatus
   'update:install': () => void
 }
