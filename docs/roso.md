@@ -10,6 +10,10 @@ Tous les modules `roso.*` sont **à la demande uniquement** (`ondemand: true`) :
 jamais automatiquement à la création d'un nœud, pour ne pas consommer de crédits par surprise.
 Ils sont tous marqués `experimental` tant qu'une vraie réponse authentifiée n'a pas été observée.
 
+Pour contrôler une clé sans dépenser de crédit : **Paramètres > Clés API > roso.info > Vérifier**
+(route `GET /api/auth/status`). La réponse affiche les crédits, le quota du jour et le niveau, ou
+l'erreur renvoyée par roso.info. Une clé invalide donne bien un 401 côté serveur (observé).
+
 Ce document est issu de la lecture du code client public du site (pages HTML avec JS en ligne,
 `/_overrides/apigate.js`, `/_overrides/inject.js`, `/_shared/auth-gate.js`,
 `/_shared/module-acl-gate.js`, `/_shared/roso-summary.js`, `/ip/ip-enrich-v2.js`,

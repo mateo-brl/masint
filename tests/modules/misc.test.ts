@@ -18,7 +18,7 @@ describe('misc.mac_vendor', () => {
 
   it('constructeur trouvé', () => {
     const out = macOutput(fr, parseMac('FC:FB:FB:01:FA:21')!, json('macvendorlookup_cisco.json')[0])
-    expect(out.properties).toMatchObject({ vendor: 'Cisco Systems, Inc', vendor_country: 'US', oui_block: 'MA-L', locally_administered: false })
+    expect(out.properties).toMatchObject({ vendor: 'Cisco Systems, Inc', vendor_country: 'États-Unis', oui_block: 'MA-L', locally_administered: false })
     expect(out.entities?.[0]).toMatchObject({ type: 'organization', label: 'Cisco Systems, Inc' })
   })
 

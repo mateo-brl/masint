@@ -337,7 +337,7 @@ describe('roso.ip', () => {
     const out = await rosoIp.run(entity('ip', '1.1.1.1'), ctx)
     expect(calls.find((c) => c.url.pathname === '/api/gateway/ip/start')?.body).toEqual({ ip: '1.1.1.1' })
     expect(calls.filter((c) => c.url.pathname.startsWith('/api/ip-preprod/lookup/')).length).toBe(13)
-    expect(out.properties).toMatchObject({ country: 'Australia', city: 'Brisbane', asn: 'AS13335', reverse: 'one.one.one.one', lat: -27.4679, lon: 153.0281, roso_credits_left: 13 })
+    expect(out.properties).toMatchObject({ country: 'Australie', city: 'Brisbane', asn: 'AS13335', reverse: 'one.one.one.one', lat: -27.4679, lon: 153.0281, roso_credits_left: 13 })
     expect(out.properties?.flags).toEqual(['hosting', 'anycast'])
     expect(out.properties?.roso_sources).toEqual(['virustotal', 'otx'])
     expect(out.properties?.roso_virustotal).toEqual({ Malveillant: 0, Réputation: 120 })

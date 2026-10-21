@@ -1,6 +1,22 @@
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
-import { compact, isDomain, isIPv4, isIPv6, isoDate, normalizeDomain, normalizeHost, requireKey, serviceError, uniq } from '../domain/_util'
+import { sharedInfrastructure, sharedLabel } from '../domain/_hosting'
+import {
+  cappedList,
+  compact,
+  isDomain,
+  isIPv4,
+  isIPv6,
+  isoDate,
+  localizeCountry,
+  MAX_LIST_ENTITIES,
+  MAX_LIST_PROPERTY,
+  normalizeDomain,
+  normalizeHost,
+  requireKey,
+  serviceError,
+  uniq
+} from '../domain/_util'
 
 const KEY = { id: 'shodan', label: 'Shodan API key', url: 'https://account.shodan.io' }
 
@@ -29,6 +45,7 @@ export interface ShodanHost {
   asn?: string
   os?: string | null
   country_name?: string
+  country_code?: string
   city?: string
   latitude?: number
   longitude?: number
@@ -72,7 +89,11 @@ export function parseShodanHost(h: ShodanHost | null, lang: 'fr' | 'en'): Module
       data: compact({ cvss: cveDetails[cve]?.cvss ?? null, summary: cveDetails[cve]?.summary?.slice(0, 1000) ?? null }) as Record<string, PropValue>,
       linkLabel: fr ? 'vulnérable à' : 'vulnerable to'
     })
-  for (const d of uniq([...(h.hostnames ?? []), ...(h.domains ?? [])]).slice(0, 15)) entities.push({ type: 'domain', label: d, linkLabel: 'hostname' })
+  const hostnames = uniq([...(h.hostnames ?? []), ...(h.domains ?? [])])
+  // IP de CDN : les noms vus dessus (certificats, SNI) sont ceux d'autres clients, sans lien avec la cible.
+  const shared = h.ip_str ? sharedInfrastructure(h.ip_str, { asn: h.asn, org: h.org }) : null
+  if (shared?.kind !== 'cdn')
+    for (const d of hostnames.slice(0, MAX_LIST_ENTITIES)) entities.push({ type: 'domain', label: d, linkLabel: 'hostname' })
 
   return {
     properties: compact({
@@ -81,12 +102,14 @@ export function parseShodanHost(h: ShodanHost | null, lang: 'fr' | 'en'): Module
       isp: h.isp ?? null,
       asn: h.asn ?? null,
       os: h.os ?? null,
-      country: h.country_name ?? null,
+      country: localizeCountry(h.country_name, h.country_code, lang),
       city: h.city ?? null,
       lat: h.latitude ?? null,
       lon: h.longitude ?? null,
       shodan_tags: h.tags ?? [],
-      vulns: vulns.slice(0, 200),
+      ...cappedList('vulns', vulns),
+      ...(hostnames.length > MAX_LIST_ENTITIES || shared?.kind === 'cdn' ? cappedList('hostnames', hostnames) : {}),
+      shared_infrastructure: shared ? sharedLabel(shared, lang) : null,
       shodan_last_update: isoDate(h.last_update),
       shodan_link: h.ip_str ? `https://www.shodan.io/host/${h.ip_str}` : null
     }),
@@ -115,7 +138,7 @@ export function parseShodanDns(domain: string, d: ShodanDns | null, lang: 'fr' |
   return {
     properties: compact({
       subdomain_count: subdomains.length,
-      subdomains: subdomains.slice(0, 1000),
+      subdomains: subdomains.slice(0, MAX_LIST_PROPERTY),
       shodan_dns_tags: d.tags ?? []
     }),
     entities,

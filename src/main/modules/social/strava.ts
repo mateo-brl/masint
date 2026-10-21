@@ -1,5 +1,6 @@
 import { defineModule, ModuleError } from '@shared/modules'
-import { acceptsPlatform, notFound, profileOutput, requireUsername, scriptJson, type Parsed } from './_lib'
+import { localizeCountry } from '../domain/_util'
+import { acceptsPlatform, notFound, profileOutput, requireUsername, scriptJson, statusError, type Lang, type Parsed } from './_lib'
 
 interface StravaAthlete {
   id: string
@@ -12,11 +13,12 @@ interface StravaAthlete {
   location?: { city?: string; state?: string; country?: string }
 }
 
-export function parseStrava(html: string, requested: string): Parsed | null {
+export function parseStrava(html: string, requested: string, lang: Lang = 'fr'): Parsed | null {
   const next = scriptJson<{ props?: { pageProps?: { athlete?: StravaAthlete } } }>(html, '__NEXT_DATA__')
   const a = next?.props?.pageProps?.athlete
   if (!a?.id) return null
   const loc = a.location ?? {}
+  const country = localizeCountry(loc.country, null, lang)
   const vanity = /^\d+$/.test(requested) ? undefined : requested
   return {
     profile: {
@@ -28,8 +30,8 @@ export function parseStrava(html: string, requested: string): Parsed | null {
         display_name: [a.firstName, a.lastName].filter(Boolean).join(' ') || undefined,
         first_name: a.firstName,
         last_name: a.lastName,
-        location: [loc.city, loc.state, loc.country].filter(Boolean).join(', ') || undefined,
-        country: loc.country,
+        location: [loc.city, loc.state, country].filter(Boolean).join(', ') || undefined,
+        country: country ?? undefined,
         subscription: a.badge?.badgeType,
         visibility: a.profileVisibilitySetting
       }
@@ -54,8 +56,8 @@ export default defineModule({
     const res = await ctx.fetch(`https://www.strava.com/athletes/${encodeURIComponent(username)}`, { headers: { 'accept-language': 'en-US,en;q=0.9' } })
     if (res.status === 404) return notFound()
     const html = await res.text()
-    if (!res.ok) throw new ModuleError(`Strava : HTTP ${res.status}`, res.status === 429 ? 'rate_limited' : 'blocked')
-    const parsed = parseStrava(html, username)
+    if (!res.ok) throw statusError('Strava', res.status, html)
+    const parsed = parseStrava(html, username, ctx.lang)
     if (!parsed) throw new ModuleError('Strava : page de profil illisible', 'other')
     return profileOutput(input, 'strava', parsed.profile, parsed.children, parsed.profile.data, ctx.lang)
   }

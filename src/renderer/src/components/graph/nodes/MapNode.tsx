@@ -44,7 +44,8 @@ function MapNodeImpl({ id, data, selected }: NodeProps<FlowNode>): React.JSX.Ele
         className="flex h-full w-full flex-col overflow-hidden rounded-[10px] border transition-shadow"
         style={{
           background: 'var(--node)',
-          borderColor: selected ? 'var(--accent)' : 'var(--node-border)',
+          borderColor: selected ? 'var(--accent)' : (n.style.color ?? 'var(--node-border)'),
+          borderWidth: n.style.color && !selected ? 2 : 1,
           boxShadow: selected ? '0 0 0 1px var(--accent), 0 8px 26px rgb(0 0 0 / .35)' : '0 4px 16px rgb(0 0 0 / .22)'
         }}
       >

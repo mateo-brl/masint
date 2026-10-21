@@ -76,10 +76,19 @@ export interface GeopfFeature {
     postcode?: string
     city?: string
     citycode?: string
+    district?: string | null
     context?: string
     distance?: number
     population?: number
   }
+}
+
+/** Le libellé BAN colle l'arrondissement à la ville (« 75007 Paris,Paris 7e Arrondissement »). */
+export function cleanBanLabel(label: string): string {
+  return label
+    .replace(/\s*,\s*/g, ', ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
 }
 
 export function parseGeopf(f: GeopfFeature): GeoResult {
@@ -89,7 +98,7 @@ export function parseGeopf(f: GeopfFeature): GeoResult {
   return {
     lat: f.geometry.coordinates[1],
     lon: f.geometry.coordinates[0],
-    label: p.label,
+    label: cleanBanLabel(p.label),
     street,
     postcode: p.postcode ?? null,
     city: p.city ?? null,
@@ -103,6 +112,7 @@ export function parseGeopf(f: GeopfFeature): GeoResult {
     distance: p.distance ?? null,
     extra: {
       citycode: p.citycode ?? null,
+      district: p.district ?? null,
       department: ctx[1] ? `${ctx[1]} (${ctx[0]})` : null,
       population: p.type === 'municipality' ? (p.population ?? null) : null
     }

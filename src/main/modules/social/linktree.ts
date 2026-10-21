@@ -1,5 +1,6 @@
-import { defineModule, ModuleError } from '@shared/modules'
-import { acceptsPlatform, linkedEntities, notFound, profileOutput, requireUsername, scriptJson, toIso, type Lang, type Parsed } from './_lib'
+import { defineModule } from '@shared/modules'
+import { localizeCountry } from '../domain/_util'
+import { acceptsPlatform, linkedEntities, notFound, profileOutput, requireUsername, scriptJson, statusError, toIso, type Lang, type Parsed } from './_lib'
 
 interface LinktreeProps {
   account?: {
@@ -35,7 +36,7 @@ export function parseLinktree(html: string, lang: Lang): Parsed | null {
         user_id: a.id !== undefined ? String(a.id) : undefined,
         display_name: a.pageTitle,
         bio: a.description ?? undefined,
-        country: a.country ?? undefined,
+        country: localizeCountry(a.country, null, lang) ?? undefined,
         timezone: a.timezone ?? undefined,
         tier: a.tier,
         verified: pp?.isProfileVerified || undefined,
@@ -69,7 +70,7 @@ export default defineModule({
     const res = await ctx.fetch(`https://linktr.ee/${encodeURIComponent(username)}`, { headers: { 'accept-language': 'en-US,en;q=0.9' } })
     if (res.status === 404) return notFound()
     const html = await res.text()
-    if (!res.ok) throw new ModuleError(`Linktree : HTTP ${res.status}`, res.status === 429 ? 'rate_limited' : 'blocked')
+    if (!res.ok) throw statusError('Linktree', res.status, html)
     const parsed = parseLinktree(html, ctx.lang)
     if (!parsed) return notFound()
     return profileOutput(input, 'linktree', parsed.profile, parsed.children, parsed.profile.data, ctx.lang)

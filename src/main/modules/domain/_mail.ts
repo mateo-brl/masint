@@ -156,15 +156,42 @@ export interface MailAnalysis {
   verifications: TxtVerification[]
 }
 
-/** `10 aspmx.l.google.com` → `aspmx.l.google.com` */
+export interface MxRecord {
+  priority: number
+  host: string
+}
+
+/** Un enregistrement MX brut (`10 aspmx.l.google.com.`) : priorité et hôte, hôte vide pour un null MX. */
+export function parseMxRecord(record: string): MxRecord {
+  const parts = record.trim().split(/\s+/).filter(Boolean)
+  const numeric = parts.length > 0 && /^\d+$/.test(parts[0])
+  // Le résolveur retire le point final : « 0 . » arrive sous la forme « 0 » ou « 0 ».
+  const rawHost = numeric ? (parts[1] ?? '') : (parts[0] ?? '')
+  return { priority: numeric ? Number(parts[0]) : 0, host: rawHost.replace(/\.$/, '').toLowerCase() }
+}
+
+/**
+ * Enregistrements MX triés par priorité. `nullMx` signale le « null MX » de la RFC 7505
+ * (« 0 . ») : le domaine déclare explicitement ne recevoir aucun email.
+ */
+export function parseMx(records: string[]): { hosts: MxRecord[]; nullMx: boolean } {
+  const parsed = records.map(parseMxRecord)
+  const hosts = parsed.filter((r) => r.host).sort((a, b) => a.priority - b.priority)
+  const seen = new Set<string>()
+  return {
+    hosts: hosts.filter((r) => !seen.has(r.host) && !!seen.add(r.host)),
+    nullMx: parsed.some((r) => !r.host)
+  }
+}
+
+/** `10 aspmx.l.google.com` → `aspmx.l.google.com` ; chaîne vide pour un null MX. */
 export function mxHost(record: string): string {
-  const parts = record.trim().split(/\s+/)
-  return (parts.length > 1 ? parts[1] : parts[0]).replace(/\.$/, '').toLowerCase()
+  return parseMxRecord(record).host
 }
 
 export function analyzeMail(mx: string[], txt: string[]): MailAnalysis {
   const mailProviders = new Set<string>()
-  for (const host of mx.map(mxHost)) {
+  for (const host of mx.map(mxHost).filter(Boolean)) {
     for (const [re, name] of MX_RULES) {
       if (re.test(host)) {
         mailProviders.add(name)

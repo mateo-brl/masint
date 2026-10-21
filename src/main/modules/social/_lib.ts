@@ -422,11 +422,45 @@ export function httpStatus(e: unknown): number | undefined {
     : undefined
 }
 
+/**
+ * Refus d'un pare-feu anti-robot (Cloudflare, Akamai, « blocked by network security »...) :
+ * ces services rejettent les adresses de centres de données et parfois des connexions résidentielles.
+ */
+export function blockedError(service: string, status = 403): ModuleError {
+  return new ModuleError(
+    `${service} bloque la requête (HTTP ${status}) : son pare-feu anti-robot refuse cette adresse IP. Passer par un proxy (de préférence résidentiel) ou par Tor peut aider.`,
+    'blocked'
+  )
+}
+
+/** Page de blocage anti-robot reconnue dans un corps de réponse. */
+export function looksBlocked(body: string): boolean {
+  return /blocked by network security|just a moment\.\.\.|attention required!? \| cloudflare|cf-chl-|cf_chl_opt|access denied.{0,80}(akamai|reference #)|request unsuccessful\. incapsula|perimeterx|px-captcha|datadome/i.test(
+    body.slice(0, 20000)
+  )
+}
+
+/** Erreur explicite pour une réponse en échec lue à la main (`ctx.fetch`). */
+export function statusError(service: string, status: number, body = ''): ModuleError {
+  if (status === 429 || (status === 403 && /rate.?limit|too many requests/i.test(body)))
+    return new ModuleError(`${service} : trop de requêtes, réessayer plus tard`, 'rate_limited')
+  if (status === 403 || looksBlocked(body)) return blockedError(service, status)
+  if (status === 401) return new ModuleError(`${service} : accès refusé (HTTP ${status})`, 'blocked')
+  if (status >= 500) return new ModuleError(`${service} : service indisponible (HTTP ${status})`, 'unavailable')
+  return new ModuleError(`${service} : réponse inattendue (HTTP ${status})`, 'other')
+}
+
 /** Transforme une erreur HTTP en ModuleError explicite (quota, blocage). */
 export function rethrow(e: unknown, service: string): never {
   const status = httpStatus(e)
-  if (status === 429) throw new ModuleError(`${service} : trop de requêtes, réessayer plus tard`, 'rate_limited')
-  if (status === 401 || status === 403) throw new ModuleError(`${service} : accès refusé (HTTP ${status})`, 'blocked')
+  const body = String((e as { body?: unknown })?.body ?? '')
+  // GitHub et d'autres API signalent un quota dépassé par un 403.
+  if (status === 429 || (status === 403 && /rate.?limit|too many requests/i.test(body)))
+    throw new ModuleError(`${service} : trop de requêtes, réessayer plus tard`, 'rate_limited')
+  if (status === 403) throw blockedError(service, status)
+  if (status === 401) throw new ModuleError(`${service} : accès refusé (HTTP ${status})`, 'blocked')
+  // Défi anti-robot servi avec un 503 (mode « under attack » de Cloudflare).
+  if (status && status >= 500 && looksBlocked(body)) throw blockedError(service, status)
   if (status && status >= 500) throw new ModuleError(`${service} : service indisponible (HTTP ${status})`, 'unavailable')
   if (e instanceof Error && (e.name === 'TimeoutError' || e.message === 'fetch failed'))
     throw new ModuleError(`${service} : pas de réponse (${e.name === 'TimeoutError' ? 'délai dépassé' : 'connexion impossible'})`, 'unavailable')

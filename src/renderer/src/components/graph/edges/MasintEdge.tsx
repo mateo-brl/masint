@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useContext } from 'react'
 import {
   BaseEdge,
   EdgeLabelRenderer,
@@ -9,10 +9,17 @@ import {
 } from '@xyflow/react'
 import { useApp } from '../../../store/app'
 import type { FlowEdge } from '../../../store/graph'
+import { OutDegreeContext, SelectedNodesContext } from '../nodes/EntityNode'
+
+/** Au-delà de ce nombre de liens sortants, les libellés ne s'affichent que pour la sélection. */
+const LABEL_MAX_SIBLINGS = 6
 
 function MasintEdgeImpl(props: EdgeProps<FlowEdge>): React.JSX.Element {
-  const { id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data, selected, markerEnd } = props
+  const { id, source, target, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data, selected, markerEnd } = props
   const style = useApp((s) => s.settings?.edgeStyle ?? 'bezier')
+  const allLabels = useApp((s) => s.settings?.edgeLabels === 'always')
+  const siblings = useContext(OutDegreeContext).get(source) ?? 0
+  const selectedNodes = useContext(SelectedNodesContext)
   const edge = data?.edge
   const params = { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }
   const [path, labelX, labelY] =
@@ -32,7 +39,7 @@ function MasintEdgeImpl(props: EdgeProps<FlowEdge>): React.JSX.Element {
         }}
         className={edge?.style.animated ? 'animated' : undefined}
       />
-      {edge?.label && (
+      {edge?.label && (allLabels || selected || siblings <= LABEL_MAX_SIBLINGS || selectedNodes.has(source) || selectedNodes.has(target)) && (
         <EdgeLabelRenderer>
           <div
             className="nodrag nopan pointer-events-auto absolute rounded-md border border-line bg-panel px-1.5 py-0.5 text-[9px] text-muted"

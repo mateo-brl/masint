@@ -10,6 +10,8 @@ import { exportStrings } from './format'
 import { currentLang } from '../../lib/i18n'
 
 const PADDING = 48
+// PNG transparent de 1 pixel.
+const BLANK_PIXEL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
 /** Côté maximal de l'image en pixels CSS (avant le facteur de résolution). */
 const MAX_SIDE = 8000
 /** Surface maximale du canevas final, en pixels. */
@@ -177,7 +179,9 @@ async function capture(kind: 'png' | 'svg', opts: CaptureOptions = {}): Promise<
           height: `${height}px`,
           transform: `translate(${vp.x}px, ${vp.y}px) scale(${vp.zoom})`
         },
-        filter: (node: HTMLElement) => !node.classList || !EXCLUDED.some((c) => node.classList.contains(c))
+        filter: (node: HTMLElement) => !node.classList || !EXCLUDED.some((c) => node.classList.contains(c)),
+        // Une image injoignable (tuile de carte hors ligne...) est remplacée au lieu de faire échouer la capture.
+        imagePlaceholder: BLANK_PIXEL
       }
       return kind === 'png' ? await toPng(el, options) : await toSvg(el, options)
     } finally {

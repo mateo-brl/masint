@@ -2,6 +2,7 @@
 
 import type { GraphEdge, GraphNode, Lang, ModuleInfo } from '@shared/types'
 import { exportStrings, formatValue, isoLocal, platformName, typeLabel } from './format'
+import { propertyLabel } from '@shared/propertyLabels'
 
 export const CSV_SEPARATOR = ';'
 const BOM = '\uFEFF'
@@ -34,18 +35,13 @@ export function csvNodes(nodes: GraphNode[]): GraphNode[] {
 export function buildNodesCsv(nodes: GraphNode[], lang: Lang): string {
   const h = exportStrings(lang).exportx.csv
   const list = csvNodes(nodes)
-  // Une colonne par clé de propriété, dans l'ordre de première apparition.
-  const keys: string[] = []
-  const seen = new Set<string>()
-  for (const n of list) {
-    for (const k of Object.keys(n.data ?? {})) {
-      if (!seen.has(k)) {
-        seen.add(k)
-        keys.push(k)
-      }
-    }
-  }
-  const header = [h.id, h.type, h.typeLabel, h.label, h.platform, h.source, h.createdAt, h.updatedAt, h.notes, ...keys]
+  // Une colonne par clé de propriété : les plus renseignées d'abord (à égalité, ordre de
+  // première apparition), pour que les colonnes presque vides partent à droite.
+  const filled = new Map<string, number>()
+  for (const n of list)
+    for (const [k, v] of Object.entries(n.data ?? {})) if (v !== null && v !== '') filled.set(k, (filled.get(k) ?? 0) + 1)
+  const keys = Array.from(filled.keys()).sort((a, b) => filled.get(b)! - filled.get(a)!)
+  const header = [h.id, h.type, h.typeLabel, h.label, h.platform, h.source, h.createdAt, h.updatedAt, h.notes, ...keys.map((k) => propertyLabel(k, lang))]
   const rows = list.map((n) => [
     n.id,
     n.type,

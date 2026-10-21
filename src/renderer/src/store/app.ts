@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Investigation, JobProgress, ModuleInfo, SecretStatus, Settings, UpdateStatus } from '@shared/types'
 import { api, onEvent } from '../lib/api'
+import { loadPref, savePref } from '../lib/prefs'
 import { setLanguage } from '../lib/i18n'
 import { useGraph } from './graph'
 
@@ -56,7 +57,7 @@ export const useApp = create<AppState>((set, get) => ({
   investigations: [],
   currentId: null,
   view: 'graph',
-  catalogOpen: true,
+  catalogOpen: loadPref('catalogOpen', true),
   settingsOpen: false,
   settingsTab: 'general',
   reportOpen: false,
@@ -81,22 +82,22 @@ export const useApp = create<AppState>((set, get) => ({
       jobs: Object.fromEntries(jobs.map((j) => [j.jobId, j])),
       ready: true
     })
+    // La pastille de fin reste visible quelques secondes. Un événement arrivé en retard
+    // pour une tâche déjà terminée est ignoré, sinon la pastille reviendrait sans fin.
+    const finishedAt = new Map<string, number>()
     onEvent('job:progress', (p) => {
-      const jobs = { ...get().jobs }
-      if (p.finished) {
-        jobs[p.jobId] = p
-        set({ jobs })
-        // On laisse la pastille de fin visible quelques secondes.
-        setTimeout(() => {
-          const next = { ...get().jobs }
-          delete next[p.jobId]
-          set({ jobs: next })
-        }, 4000)
-      } else {
-        jobs[p.jobId] = p
-        set({ jobs })
-      }
+      if (finishedAt.has(p.jobId)) return
+      if (p.finished) finishedAt.set(p.jobId, Date.now())
+      set({ jobs: { ...get().jobs, [p.jobId]: p } })
     })
+    setInterval(() => {
+      const now = Date.now()
+      const stale = Object.keys(get().jobs).filter((id) => now - (finishedAt.get(id) ?? now) >= 4000)
+      if (!stale.length) return
+      const next = { ...get().jobs }
+      for (const id of stale) delete next[id]
+      set({ jobs: next })
+    }, 1000)
     onEvent('graph:changed', (change) => useGraph.getState().applyChange(change))
     onEvent('update:status', (update) => set({ update }))
     // L'événement signale une enquête en attente ; on la récupère aussi au démarrage
@@ -148,7 +149,9 @@ export const useApp = create<AppState>((set, get) => ({
   },
 
   toggleCatalog(open) {
-    set({ catalogOpen: open ?? !get().catalogOpen })
+    const catalogOpen = open ?? !get().catalogOpen
+    savePref('catalogOpen', catalogOpen)
+    set({ catalogOpen })
   },
 
   openSettings(tab = 'general') {

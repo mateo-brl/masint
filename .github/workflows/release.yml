@@ -51,14 +51,18 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.tag.outputs.tag }}
         run: |
+          # Notes rédigées dans .github/release-notes/<tag>.md si le fichier existe,
+          # sinon notes générées à partir des commits.
+          NOTES=(--generate-notes)
+          if [ -f ".github/release-notes/$TAG.md" ]; then NOTES=(--notes-file ".github/release-notes/$TAG.md"); fi
           if gh release view "$TAG" > /dev/null 2>&1; then
             echo "La release $TAG existe déjà : les fichiers y seront ajoutés."
           elif [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            gh release create "$TAG" --draft --verify-tag --title "MASINT ${TAG#v}" --generate-notes
+            gh release create "$TAG" --draft --verify-tag --title "MASINT ${TAG#v}" "${NOTES[@]}"
           else
             # Lancement manuel : le tag n'existe pas encore, GitHub le crée sur
             # ce commit quand la release sort du brouillon.
-            gh release create "$TAG" --draft --target "$GITHUB_SHA" --title "MASINT ${TAG#v}" --generate-notes
+            gh release create "$TAG" --draft --target "$GITHUB_SHA" --title "MASINT ${TAG#v}" "${NOTES[@]}"
           fi
 
   build:

@@ -1,10 +1,11 @@
 import { randomUUID } from 'node:crypto'
 import { emailProvider } from '@shared/platforms'
+import { childSlot, nodeBox } from '@shared/placement'
 import type { InputEntity, ModuleContext, ModuleOutput, OsintModule } from '@shared/modules'
 import type { GraphChange, GraphEdge, GraphNode, JobProgress, ModuleRun, PropValue } from '@shared/types'
 import { dedupKey, type Repo } from '../db/repo'
 import type { SettingsService } from '../settings'
-import { createDohResolver, createFetch, jsonHelpers } from './http'
+import { createDohResolver, createFetch, jsonHelpers, type FetchFn } from './http'
 import { allModules, isConfigured } from './registry'
 
 const MAX_RAW = 200_000
@@ -15,6 +16,41 @@ export type Emit = <E extends 'graph:changed' | 'job:progress'>(
   event: E,
   payload: E extends 'graph:changed' ? GraphChange : JobProgress
 ) => void
+
+/** Réponse HTTP en échec gardée pour le diagnostic d'un module en erreur. */
+interface HttpTrace {
+  url: string
+  status?: number
+  contentType?: string | null
+  body?: string
+  error?: string
+}
+
+const MAX_TRACE = 8
+
+/** Masque les clés d'API éventuellement passées dans l'URL. */
+function redactUrl(url: string): string {
+  return url.replace(/([?&](?:key|api_?key|apikey|token|access_token|secret)=)[^&]+/gi, '$1***')
+}
+
+function traceFetch(fetchFn: FetchFn, trace: HttpTrace[]): FetchFn {
+  return async (url, init) => {
+    try {
+      const res = await fetchFn(url, init)
+      if (!res.ok && trace.length < MAX_TRACE) {
+        const body = await res
+          .clone()
+          .text()
+          .catch(() => '')
+        trace.push({ url: redactUrl(url), status: res.status, contentType: res.headers.get('content-type'), body: body.slice(0, 1500) })
+      }
+      return res
+    } catch (e) {
+      if (trace.length < MAX_TRACE) trace.push({ url: redactUrl(url), error: e instanceof Error ? e.message : String(e) })
+      throw e
+    }
+  }
+}
 
 interface Job {
   progress: JobProgress
@@ -69,6 +105,20 @@ export class Engine {
     private readonly settings: SettingsService,
     private readonly emit: Emit
   ) {}
+
+  /**
+   * Modules qui tourneraient pour ce nœud (`auto`) et modules dont le filtre accepte sa valeur
+   * (`accepted`, quel que soit leur état), pour annoncer le bon nombre avant de lancer.
+   */
+  applicable(node: GraphNode): { auto: string[]; accepted: string[] } {
+    if (node.kind !== 'entity') return { auto: [], accepted: [] }
+    const origin = this.imageOrigin(node)
+    const input = toInput(node, origin)
+    const accepted = allModules()
+      .filter((m) => (m.inputTypes.includes(node.type) || m.inputTypes.includes('*')) && (!m.accepts || m.accepts(input)))
+      .map((m) => m.id)
+    return { auto: applicableModules(node, this.settings, undefined, origin).map((m) => m.id), accepted }
+  }
 
   listJobs(): JobProgress[] {
     return Array.from(this.jobs.values()).map((j) => j.progress)
@@ -163,12 +213,13 @@ export class Engine {
     this.emit('job:progress', { ...job.progress, running: [...job.progress.running] })
 
     const controller = new AbortController()
+    const trace: HttpTrace[] = []
     const onAbort = (): void => controller.abort()
     job.controller.signal.addEventListener('abort', onAbort)
     const hardTimeout = setTimeout(() => controller.abort(), Math.max(m.timeoutMs ?? 0, MODULE_HARD_TIMEOUT))
 
     try {
-      const ctx = this.createContext(m, controller.signal)
+      const ctx = this.createContext(m, controller.signal, trace)
       // Relire le nœud : un module précédent a pu enrichir ses propriétés.
       const fresh = this.repo.getNode(node.id) ?? node
       const output = await m.run(toInput(fresh, this.imageOrigin(fresh)), ctx)
@@ -186,10 +237,12 @@ export class Engine {
       const raw = e instanceof Error ? e.message : String(e)
       const timedOut = (e instanceof Error && e.name === 'TimeoutError') || /aborted due to timeout|timed? ?out/i.test(raw)
       const message = timedOut ? 'Délai dépassé : service trop lent ou injoignable' : raw
+      const err = e as { code?: string; status?: number; body?: string }
       this.repo.updateRun(run.id, {
         status: job.progress.cancelled ? 'cancelled' : 'error',
         error: aborted && !job.progress.cancelled ? 'Délai dépassé' : message.slice(0, 1000),
-        finishedAt: Date.now()
+        finishedAt: Date.now(),
+        raw: truncateRaw({ error: raw, code: err.code, status: err.status, body: err.body, http: trace })
       })
       if (!job.progress.cancelled) job.progress.errors += 1
     } finally {
@@ -205,11 +258,12 @@ export class Engine {
     return node.imageId ? (this.repo.getAttachment(node.imageId)?.origin ?? null) : null
   }
 
-  createContext(m: OsintModule, signal: AbortSignal): ModuleContext {
+  createContext(m: OsintModule, signal: AbortSignal, trace: HttpTrace[] = []): ModuleContext {
     const settings = this.settings.get()
-    const fetchFn = createFetch({ settings, moduleId: m.id, signal })
+    const baseFetch = createFetch({ settings, moduleId: m.id, signal })
+    const fetchFn = traceFetch(baseFetch, trace)
     const helpers = jsonHelpers(fetchFn)
-    const resolve = createDohResolver(fetchFn)
+    const resolve = createDohResolver(baseFetch)
     return {
       fetch: fetchFn,
       fetchJson: helpers.fetchJson,
@@ -323,16 +377,13 @@ export class Engine {
     return this.repo.upsertNodes(node.investigationId, [{ id: node.id, imageId: att.id }])[0]
   }
 
-  /** Position d'un nouvel enfant : rangées centrées sous le parent (0, +1, -1, +2, -2...). */
+  /** Position d'un nouvel enfant : rangées centrées sous le parent, sur des cases libres. */
   private placeChild(parent: GraphNode): { x: number; y: number } {
-    const count = this.repo.db
-      .prepare('SELECT COUNT(*) AS c FROM edges WHERE investigation_id = ? AND source = ?')
-      .get(parent.investigationId, parent.id) as { c: number }
-    const perRow = 7
-    const i = count.c % perRow
-    const row = Math.floor(count.c / perRow)
-    const offset = i === 0 ? 0 : i % 2 === 1 ? (i + 1) / 2 : -i / 2
-    return { x: parent.x + offset * 220, y: parent.y + 130 + row * 70 }
+    const occupied = this.repo
+      .listNodeBoxes(parent.investigationId)
+      .filter((n) => n.id !== parent.id)
+      .map(nodeBox)
+    return childSlot(nodeBox(parent), occupied)
   }
 }
 

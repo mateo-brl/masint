@@ -1,5 +1,5 @@
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
-import { isDomain, normalizeDomain, serviceError, sleep } from './_util'
+import { isDomain, MAX_LIST_PROPERTY, normalizeDomain, serviceError, sleep } from './_util'
 
 const MAX_ENTITIES = 50
 const MAX_LISTED = 1000
@@ -119,7 +119,7 @@ export function buildSubdomainOutput(
   return {
     properties: {
       subdomain_count: names.length,
-      subdomains: names.slice(0, MAX_LISTED),
+      subdomains: names.slice(0, MAX_LIST_PROPERTY),
       subdomain_source: source
     },
     entities,
@@ -131,8 +131,8 @@ export default defineModule({
   id: 'domain.subdomains',
   name: { fr: 'Sous-domaines', en: 'Subdomains' },
   description: {
-    fr: 'Sous-domaines connus d’après les journaux Certificate Transparency (crt.sh, repli sur Cert Spotter) puis HackerTarget. Les 50 premiers deviennent des entités, la liste complète reste dans les propriétés.',
-    en: 'Known subdomains from Certificate Transparency logs (crt.sh, falling back to Cert Spotter) then HackerTarget. The first 50 become entities, the full list stays in the properties.'
+    fr: 'Sous-domaines connus d’après les journaux Certificate Transparency (crt.sh, repli sur Cert Spotter) puis HackerTarget. Les 50 premiers deviennent des entités ; la fiche en liste 50 avec le total, la liste complète reste dans la réponse brute.',
+    en: 'Known subdomains from Certificate Transparency logs (crt.sh, falling back to Cert Spotter) then HackerTarget. The first 50 become entities; the record lists 50 with the total, the full list stays in the raw response.'
   },
   category: 'domain',
   inputTypes: ['domain'],

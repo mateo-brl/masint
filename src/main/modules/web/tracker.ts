@@ -1,7 +1,5 @@
 import { defineModule, ModuleError, type ModuleOutput, type OutEntity } from '@shared/modules'
-import { compact, isDomain, serviceError } from '../domain/_util'
-
-const MAX_ENTITIES = 30
+import { compact, isDomain, MAX_LIST_ENTITIES, MAX_LIST_PROPERTY, serviceError } from '../domain/_util'
 
 /** Normalise un identifiant de traçage et en déduit le service. */
 export function normalizeTracker(raw: string): { id: string; kind: string | null; account: string | null } | null {
@@ -35,7 +33,7 @@ export function buildTrackerOutput(id: string, kind: string | null, account: str
     ['Google', `https://www.google.com/search?q=%22${q}%22`]
   ]
   const entities: OutEntity[] = [
-    ...(domains ?? []).slice(0, MAX_ENTITIES).map((d) => ({
+    ...(domains ?? []).slice(0, MAX_LIST_ENTITIES).map((d) => ({
       type: 'domain',
       label: d,
       linkLabel: fr ? 'même identifiant' : 'same tracker ID'
@@ -52,7 +50,7 @@ export function buildTrackerOutput(id: string, kind: string | null, account: str
       kind,
       account_id: account,
       shared_domains_count: domains?.length ?? null,
-      shared_domains: domains?.slice(0, 500) ?? []
+      shared_domains: domains?.slice(0, MAX_LIST_PROPERTY) ?? []
     }),
     entities,
     raw: { id, domains: domains?.slice(0, 500) }

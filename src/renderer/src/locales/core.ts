@@ -23,6 +23,10 @@ const fr = {
     settings: 'Paramètres'
   },
   update: { ready: 'Mise à jour {{version}} prête' },
+  errors: {
+    resource: 'Une ressource n’a pas pu être chargée{{url}}.',
+    unknown: 'Erreur inconnue.'
+  },
   home: {
     tagline: 'Enquête OSINT par graphe',
     subtitle: 'Partez d’un email, d’un numéro, d’un pseudo ou d’un domaine et laissez les modules tisser la toile.',
@@ -84,14 +88,16 @@ const fr = {
     selection_other: 'Enrichir {{count}} nœuds',
     none: 'Aucun module disponible pour ce nœud.',
     none_: 'Tout décocher',
-    noneForType: 'Aucun module pour ce type d’entité.'
+    noneForType: 'Aucun module pour ce type d’entité.',
+    notApplicable: 'Ne s’applique pas à cette valeur (voir la description).'
   },
-  jobs: { finished: 'terminé · {{results}} résultats · {{errors}} erreurs' },
+  jobs: { finished: 'terminé · {{results}} · {{errors}}' },
   topbar: {
     layout: 'Disposition',
     export: 'Exporter',
     report: 'Rapport',
     links: 'Liens',
+    nodes: 'Entités',
     search: 'Rechercher dans le graphe',
     searchPlaceholder: 'Rechercher un nœud…',
     undo: 'Annuler',
@@ -140,6 +146,7 @@ const fr = {
     edgeBezier: 'Liens courbes',
     edgeStep: 'Liens à angles',
     edgeStraight: 'Liens droits',
+    edgeLabelsAll: 'Tous les libellés de liens',
     minimap: 'Mini-carte',
     lightTheme: 'Thème clair',
     postit: 'Fond post-it'
@@ -181,7 +188,13 @@ const fr = {
     drawing: 'Dessin libre : la couleur et l’épaisseur se règlent dans l’onglet Style.'
   },
   runs: {
-    summary: 'Modules : {{done}} terminés · {{results}} résultats · {{errors}} erreurs',
+    summaryLine: 'Modules : {{done}} · {{results}} · {{errors}}',
+    nDone_one: '{{count}} terminé',
+    nDone_other: '{{count}} terminés',
+    nResults_one: '{{count}} résultat',
+    nResults_other: '{{count}} résultats',
+    nErrors_one: '{{count}} erreur',
+    nErrors_other: '{{count}} erreurs',
     error: 'erreur',
     found: 'trouvé',
     notFound: 'non trouvé',
@@ -218,6 +231,7 @@ const fr = {
     routeDirect: 'Direct',
     onlyErrors: 'Erreurs uniquement',
     noRuns: 'Aucune exécution pour le moment.',
+    noErrors: 'Aucune erreur : tous les modules exécutés ont répondu.',
     cat: {
       phone: 'Téléphone',
       email: 'Email',
@@ -269,6 +283,16 @@ const fr = {
     proxyNote: 'Le routage peut être ajusté module par module dans la vue Modules.',
     keysIntro: 'Les clés sont chiffrées avec le coffre du système (DPAPI sous Windows, trousseau GNOME ou KWallet sous Linux) et ne quittent jamais votre machine, sauf vers le service concerné.',
     noKeys: 'Aucun module ne demande de clé.',
+    rosoCheck: 'Vérifier',
+    rosoValid: 'Clé valide',
+    rosoCredits_one: '{{count}} crédit',
+    rosoCredits_other: '{{count}} crédits',
+    rosoBonus_one: '+{{count}} bonus',
+    rosoBonus_other: '+{{count}} bonus',
+    rosoDaily: "{{used}}/{{max}} utilisés aujourd'hui",
+    rosoTier: 'niveau {{tier}}',
+    rosoCaptcha: 'Ce niveau de clé impose un captcha pour lancer un scan : MASINT ne pourra pas lancer les modules roso.info.',
+    keyringMissing: 'Aucun trousseau système disponible (stockage : {{backend}}). Les clés sont enregistrées avec un chiffrement faible. Sous Linux, installez et ouvrez GNOME Keyring ou KWallet, puis relancez MASINT.',
     optional: 'facultative',
     getKey: 'Obtenir une clé',
     usedBy: 'Utilisée par : {{list}}',
@@ -292,6 +316,7 @@ const fr = {
       ready: 'Version {{version}} prête à être installée.',
       error: 'Échec de la vérification.'
     },
+    checkedAt: 'vérifié à {{time}}',
     legal: 'MASINT est un outil de renseignement en sources ouvertes. Utilisez-le dans le respect de la loi (RGPD, droit au respect de la vie privée) et des conditions d’utilisation des services interrogés. Vous êtes responsable de vos recherches.'
   }
 }
@@ -319,6 +344,10 @@ const en: typeof fr = {
     settings: 'Settings'
   },
   update: { ready: 'Update {{version}} ready' },
+  errors: {
+    resource: 'A resource could not be loaded{{url}}.',
+    unknown: 'Unknown error.'
+  },
   home: {
     tagline: 'Graph-based OSINT investigation',
     subtitle: 'Start from an email, a phone number, a username or a domain and let the modules weave the web.',
@@ -380,14 +409,16 @@ const en: typeof fr = {
     selection_other: 'Enrich {{count}} nodes',
     none: 'No module available for this node.',
     none_: 'Uncheck all',
-    noneForType: 'No module for this entity type.'
+    noneForType: 'No module for this entity type.',
+    notApplicable: 'Does not apply to this value (see the description).'
   },
-  jobs: { finished: 'done · {{results}} results · {{errors}} errors' },
+  jobs: { finished: 'done · {{results}} · {{errors}}' },
   topbar: {
     layout: 'Layout',
     export: 'Export',
     report: 'Report',
     links: 'Links',
+    nodes: 'Entities',
     search: 'Search the graph',
     searchPlaceholder: 'Find a node…',
     undo: 'Undo',
@@ -436,6 +467,7 @@ const en: typeof fr = {
     edgeBezier: 'Curved links',
     edgeStep: 'Stepped links',
     edgeStraight: 'Straight links',
+    edgeLabelsAll: 'All link labels',
     minimap: 'Minimap',
     lightTheme: 'Light theme',
     postit: 'Sticky note background'
@@ -477,7 +509,13 @@ const en: typeof fr = {
     drawing: 'Freehand drawing: color and width are set in the Style tab.'
   },
   runs: {
-    summary: 'Modules: {{done}} done · {{results}} results · {{errors}} errors',
+    summaryLine: 'Modules: {{done}} · {{results}} · {{errors}}',
+    nDone_one: '{{count}} done',
+    nDone_other: '{{count}} done',
+    nResults_one: '{{count}} result',
+    nResults_other: '{{count}} results',
+    nErrors_one: '{{count}} error',
+    nErrors_other: '{{count}} errors',
     error: 'error',
     found: 'found',
     notFound: 'not found',
@@ -514,6 +552,7 @@ const en: typeof fr = {
     routeDirect: 'Direct',
     onlyErrors: 'Errors only',
     noRuns: 'No run yet.',
+    noErrors: 'No error: every module that ran answered.',
     cat: {
       phone: 'Phone',
       email: 'Email',
@@ -565,6 +604,16 @@ const en: typeof fr = {
     proxyNote: 'Routing can be adjusted per module in the Modules view.',
     keysIntro: 'Keys are encrypted with the system vault (DPAPI on Windows, GNOME keyring or KWallet on Linux) and never leave your machine except to the matching service.',
     noKeys: 'No module requires a key.',
+    rosoCheck: 'Check',
+    rosoValid: 'Valid key',
+    rosoCredits_one: '{{count}} credit',
+    rosoCredits_other: '{{count}} credits',
+    rosoBonus_one: '+{{count}} bonus',
+    rosoBonus_other: '+{{count}} bonus',
+    rosoDaily: '{{used}}/{{max}} used today',
+    rosoTier: '{{tier}} tier',
+    rosoCaptcha: 'This key tier requires a captcha to start a scan: MASINT will not be able to run the roso.info modules.',
+    keyringMissing: 'No system keyring available (storage: {{backend}}). Keys are saved with weak encryption. On Linux, install and unlock GNOME Keyring or KWallet, then restart MASINT.',
     optional: 'optional',
     getKey: 'Get a key',
     usedBy: 'Used by: {{list}}',
@@ -588,6 +637,7 @@ const en: typeof fr = {
       ready: 'Version {{version}} ready to install.',
       error: 'Update check failed.'
     },
+    checkedAt: 'checked at {{time}}',
     legal: 'MASINT is an open source intelligence tool. Use it lawfully (GDPR, privacy rights) and in line with the terms of the services it queries. You are responsible for your searches.'
   }
 }

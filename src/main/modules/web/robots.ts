@@ -1,5 +1,5 @@
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
-import { compact, isoDate, toUrl, uniq } from '../domain/_util'
+import { cappedList, compact, isoDate, toUrl, uniq } from '../domain/_util'
 
 export interface RobotsInfo {
   disallow: string[]
@@ -95,7 +95,7 @@ export function buildRobotsOutput(robots: RobotsInfo | null, sec: SecurityTxt | 
   if (sec?.hiring) entities.push({ type: 'url', label: sec.hiring, linkLabel: fr ? 'recrutement' : 'hiring' })
   if (sec?.policy) entities.push({ type: 'url', label: sec.policy, linkLabel: fr ? 'politique de divulgation' : 'disclosure policy' })
   const properties = compact({
-    robots_disallow: robots?.disallow.slice(0, 100) ?? [],
+    ...cappedList('robots_disallow', robots?.disallow ?? []),
     robots_interesting_paths: robots?.disallow.filter((d) => INTERESTING.test(d)).slice(0, 50) ?? [],
     robots_user_agents: robots?.userAgents.filter((u) => u !== '*').slice(0, 30) ?? [],
     sitemaps: robots?.sitemaps.slice(0, 20) ?? [],

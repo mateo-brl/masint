@@ -132,11 +132,121 @@ export async function pool<T, R>(items: T[], size: number, fn: (item: T) => Prom
 /** Nom de pays (selon la langue) à partir d'un code ISO à deux lettres. */
 export function countryName(code: string | null | undefined, lang: 'fr' | 'en'): string | null {
   if (!code || !/^[a-z]{2}$/i.test(code)) return null
+  const c = code.toUpperCase()
   try {
-    return new Intl.DisplayNames([lang], { type: 'region' }).of(code.toUpperCase()) ?? code.toUpperCase()
+    // Forme courte pour les territoires au nom officiel long (« Hong Kong » plutôt que « R.A.S. chinoise de Hong Kong »).
+    const style = c === 'HK' || c === 'MO' || c === 'PS' ? 'short' : 'long'
+    return new Intl.DisplayNames([lang], { type: 'region', style }).of(c) ?? c
   } catch {
-    return code.toUpperCase()
+    return c
   }
+}
+
+// Noms anglais renvoyés par certaines API qui diffèrent de ceux d'Intl.DisplayNames.
+const COUNTRY_ALIASES: Record<string, string> = {
+  usa: 'US',
+  'united states of america': 'US',
+  uk: 'GB',
+  'great britain': 'GB',
+  'united kingdom of great britain and northern ireland': 'GB',
+  'russian federation': 'RU',
+  'korea, republic of': 'KR',
+  'republic of korea': 'KR',
+  korea: 'KR',
+  "korea, democratic people's republic of": 'KP',
+  'viet nam': 'VN',
+  'iran, islamic republic of': 'IR',
+  'czech republic': 'CZ',
+  'the netherlands': 'NL',
+  holland: 'NL',
+  turkey: 'TR',
+  'hong kong': 'HK',
+  macau: 'MO',
+  macao: 'MO',
+  'taiwan, province of china': 'TW',
+  'moldova, republic of': 'MD',
+  'syrian arab republic': 'SY',
+  "lao people's democratic republic": 'LA',
+  'tanzania, united republic of': 'TZ',
+  'bolivia, plurinational state of': 'BO',
+  'venezuela, bolivarian republic of': 'VE',
+  macedonia: 'MK',
+  'republic of north macedonia': 'MK',
+  palestine: 'PS',
+  'palestine, state of': 'PS',
+  'ivory coast': 'CI',
+  "cote d'ivoire": 'CI',
+  swaziland: 'SZ',
+  burma: 'MM',
+  'cape verde': 'CV',
+  'brunei darussalam': 'BN',
+  'congo, the democratic republic of the': 'CD',
+  'democratic republic of the congo': 'CD',
+  'republic of the congo': 'CG',
+  'vatican city': 'VA',
+  'holy see (vatican city state)': 'VA'
+}
+
+const foldCountry = (s: string): string =>
+  s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[’`]/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim()
+
+let englishCountries: Map<string, string> | null = null
+
+/** Code ISO à deux lettres à partir d'un nom de pays en anglais (« United States » → `US`). */
+export function countryCodeFromName(name: string | null | undefined): string | null {
+  if (!name) return null
+  if (!englishCountries) {
+    englishCountries = new Map(Object.entries(COUNTRY_ALIASES))
+    try {
+      const styles = [new Intl.DisplayNames(['en'], { type: 'region' }), new Intl.DisplayNames(['en'], { type: 'region', style: 'short' })]
+      for (let i = 0; i < 26; i++) {
+        for (let j = 0; j < 26; j++) {
+          const code = String.fromCharCode(65 + i, 65 + j)
+          // Codes périmés (DD, VD...) : ICU les ramène au code actuel, qu'on garde seul.
+          if (Intl.getCanonicalLocales(`und-${code}`)[0] !== `und-${code}`) continue
+          for (const names of styles) {
+            const n = names.of(code)
+            if (n && n !== code && !englishCountries.has(foldCountry(n))) englishCountries.set(foldCountry(n), code)
+          }
+        }
+      }
+    } catch {
+      /* Intl incomplet : seuls les alias restent connus */
+    }
+  }
+  const key = foldCountry(name).replace(/^the /, '')
+  return englishCountries.get(key) ?? englishCountries.get(`the ${key}`) ?? null
+}
+
+/**
+ * Nom de pays dans la langue de l'interface. Part du code ISO quand il est connu,
+ * sinon reconnaît un code ou un nom anglais renvoyé par une API ; garde la valeur d'origine à défaut.
+ */
+export function localizeCountry(value: string | null | undefined, code: string | null | undefined, lang: 'fr' | 'en'): string | null {
+  const v = typeof value === 'string' ? value.trim() : ''
+  const c = code && /^[a-z]{2}$/i.test(code.trim()) ? code.trim() : /^[a-z]{2}$/i.test(v) ? v : countryCodeFromName(v)
+  if (c) {
+    const name = countryName(c, lang)
+    if (name && name.toUpperCase() !== c.toUpperCase()) return name
+  }
+  return v || (c ? c.toUpperCase() : null)
+}
+
+/** Plafond des entités tirées de listes passives (DNS passif, co-hébergement, scans tiers). */
+export const MAX_LIST_ENTITIES = 10
+/** Plafond des listes affichées dans la fiche (le reste reste dans `raw`). */
+export const MAX_LIST_PROPERTY = 50
+
+/** Liste lisible dans la fiche : les premiers éléments et, à côté, le total (`<clé>_count`). */
+export function cappedList(key: string, list: readonly string[], max = MAX_LIST_PROPERTY): Record<string, PropValue> {
+  if (!list.length) return {}
+  return { [key]: list.slice(0, max), [`${key}_count`]: list.length }
 }
 
 /** Retire les propriétés vides (null, chaîne vide, liste vide). */

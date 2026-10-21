@@ -1,4 +1,5 @@
 import { defineModule, ModuleError, type ModuleContext } from '@shared/modules'
+import { localizeCountry } from '../domain/_util'
 import { acceptsPlatform, linkedEntities, notFound, parseCompactNumber, profileOutput, rethrow, toIso, toNumber, usernameOf, type Lang, type Parsed } from './_lib'
 
 // Page de chaîne en anglais (nombres « 21.4M subscribers ») et sans bandeau de consentement européen.
@@ -125,7 +126,7 @@ export function parseYoutube(page: YtPage, about: YtAbout | null, lang: Lang): P
         user_id: page.channelId,
         display_name: page.title,
         bio: description,
-        location: about?.country,
+        location: localizeCountry(about?.country, null, lang) ?? undefined,
         followers: about?.subscribers ?? page.subscribers,
         videos: about?.videos ?? page.videos,
         views: about?.views,

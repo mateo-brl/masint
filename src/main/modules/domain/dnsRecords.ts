@@ -1,7 +1,7 @@
 import { defineModule, ModuleError, type ModuleOutput, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
 import { detectDnsProvider } from './_hosting'
-import { analyzeMail, dmarcPolicy, mxHost } from './_mail'
+import { analyzeMail, dmarcPolicy, parseMx } from './_mail'
 import { normalizeHost, uniq } from './_util'
 
 export const RECORD_TYPES = ['A', 'AAAA', 'MX', 'NS', 'TXT', 'CNAME', 'SOA', 'CAA'] as const
@@ -25,7 +25,8 @@ export function buildDnsOutput(domain: string, rec: DnsRecords, lang: 'fr' | 'en
   const fr = lang === 'fr'
   const a = uniq(rec.A ?? [])
   const aaaa = uniq(rec.AAAA ?? [])
-  const mx = uniq(rec.MX ?? [])
+  const { hosts: mxRecords, nullMx } = parseMx(rec.MX ?? [])
+  const mx = mxRecords.map((r) => r.host)
   const ns = uniq((rec.NS ?? []).map((n) => n.toLowerCase().replace(/\.$/, '')))
   const txt = uniq(rec.TXT ?? [])
   const cname = uniq((rec.CNAME ?? []).map((c) => c.toLowerCase().replace(/\.$/, '')))
@@ -33,7 +34,7 @@ export function buildDnsOutput(domain: string, rec: DnsRecords, lang: 'fr' | 'en
   const soa = rec.SOA?.[0]
   const dmarc = (rec.DMARC ?? []).find((t) => /^v=DMARC1/i.test(t))
 
-  const total = a.length + aaaa.length + mx.length + ns.length + txt.length + cname.length + caa.length + (soa ? 1 : 0)
+  const total = a.length + aaaa.length + mx.length + (nullMx ? 1 : 0) + ns.length + txt.length + cname.length + caa.length + (soa ? 1 : 0)
   if (!total) return {}
 
   const mail = analyzeMail(mx, txt)
@@ -43,12 +44,7 @@ export function buildDnsOutput(domain: string, rec: DnsRecords, lang: 'fr' | 'en
   for (const ip of a.slice(0, MAX_IPS)) entities.push({ type: 'ip', label: ip, data: { version: 'IPv4' }, linkLabel: 'A' })
   for (const ip of aaaa.slice(0, MAX_IPS)) entities.push({ type: 'ip', label: ip, data: { version: 'IPv6' }, linkLabel: 'AAAA' })
   for (const target of cname.slice(0, 3)) entities.push({ type: 'domain', label: target, linkLabel: 'CNAME' })
-  const mxHosts = uniq(
-    [...mx]
-      .sort((x, y) => Number(x.split(/\s+/)[0]) - Number(y.split(/\s+/)[0]))
-      .map(mxHost)
-      .filter((h) => h && h !== '.' && h !== domain)
-  )
+  const mxHosts = mx.filter((h) => h !== domain)
   for (const host of mxHosts.slice(0, MAX_HOSTS)) entities.push({ type: 'domain', label: host, linkLabel: 'MX' })
   for (const host of ns.slice(0, MAX_HOSTS)) entities.push({ type: 'domain', label: host, linkLabel: 'NS' })
 
@@ -64,6 +60,7 @@ export function buildDnsOutput(domain: string, rec: DnsRecords, lang: 'fr' | 'en
     a,
     aaaa,
     mx,
+    mx_null: nullMx && !mx.length ? true : null,
     nameservers: ns,
     txt,
     cname,

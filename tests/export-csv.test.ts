@@ -112,19 +112,19 @@ describe('buildNodesCsv', () => {
   it('a les colonnes fixes puis une colonne par propriété', () => {
     const rows = parse(csv)
     expect(rows[0]).toEqual([
-      'id',
-      'type',
-      'libellé du type',
-      'libellé',
-      'plateforme',
-      'source',
-      'créé le',
-      'modifié le',
-      'notes',
-      'country',
-      'carrier',
-      'username',
-      'aliases'
+      'ID',
+      'Type',
+      'Libellé du type',
+      'Libellé',
+      'Plateforme',
+      'Source',
+      'Créé le',
+      'Modifié le',
+      'Notes',
+      'Pays',
+      'Opérateur',
+      'Identifiant',
+      'Alias'
     ])
     expect(rows).toHaveLength(3)
   })
@@ -141,7 +141,7 @@ describe('buildNodesCsv', () => {
   })
 
   it('traduit les en-têtes en anglais', () => {
-    expect(parse(buildNodesCsv(nodes, 'en'))[0].slice(0, 3)).toEqual(['id', 'type', 'type label'])
+    expect(parse(buildNodesCsv(nodes, 'en'))[0].slice(0, 3)).toEqual(['ID', 'Type', 'Type label'])
   })
 })
 
@@ -164,7 +164,7 @@ describe('buildEdgesCsv', () => {
       }
     ])
     const rows = parse(csv)
-    expect(rows[0]).toEqual(['id', 'source', 'libellé source', 'cible', 'libellé cible', 'libellé du lien', 'module', 'créé le'])
+    expect(rows[0]).toEqual(['ID', 'Source', 'Libellé source', 'Cible', 'Libellé cible', 'Libellé du lien', 'Module', 'Créé le'])
     expect(rows[1].slice(0, 7)).toEqual(['e1', 'a', 'Alice', 'b', 'Bob; le frère', 'frère de', 'Infos téléphone'])
   })
 })

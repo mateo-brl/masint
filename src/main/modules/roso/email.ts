@@ -2,6 +2,7 @@
 // start -> meta -> modules en parallèle -> complete).
 
 import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
+import { MAX_LIST_ENTITIES } from '../domain/_util'
 import { creditsOf, isFatal, pool, redact, ROSO_COMMON, RosoClient, toRosoError, type Json } from './_client'
 import {
   accountEntities,
@@ -93,7 +94,8 @@ function foundEntities(found: Found[], email: string, lang: 'fr' | 'en'): { enti
       continue
     }
     if (m === 'whoxy' || m === 'whoisxml' || m === 'reversewhois') {
-      for (const d of asArr(p.domains ?? p.otherDomains).slice(0, 100)) {
+      // WHOIS inversé : 10 domaines en entités, la liste complète reste dans la réponse brute.
+      for (const d of asArr(p.domains ?? p.otherDomains).slice(0, MAX_LIST_ENTITIES)) {
         const o = asObj(d)
         const name = (isObj(d) ? pick(o, 'domain_name', 'domain') : str(d)).toLowerCase()
         if (!name) continue

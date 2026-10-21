@@ -2,6 +2,7 @@
 // France : Base Adresse Nationale (Géoplateforme IGN) ; ailleurs ou à défaut : Nominatim.
 
 import { defineModule, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
+import { localizeCountry } from '../domain/_util'
 import { compact, tr } from '../misc/_util'
 import { geopfSearch, looksFrench, nominatimSearch, type GeoResult } from './_geo'
 
@@ -16,11 +17,12 @@ const simplify = (s: string): string =>
     .trim()
 
 export function geocodeOutput(ctx: Pick<ModuleContext, 'lang'>, type: string, label: string, r: GeoResult): ModuleOutput {
+  const country = localizeCountry(r.country, r.countryCode, ctx.lang)
   const properties: ModuleOutput['properties'] = {
     lat: r.lat,
     lon: r.lon,
     normalized: r.label,
-    country: r.country,
+    country,
     country_code: r.countryCode,
     region: r.region,
     geocoder: r.source === 'ign' ? 'Base Adresse Nationale (IGN)' : 'Nominatim (OpenStreetMap)',
@@ -41,7 +43,7 @@ export function geocodeOutput(ctx: Pick<ModuleContext, 'lang'>, type: string, la
     entities.push({
       type: 'city',
       label: r.city,
-      data: { country: r.country, postcode: r.postcode },
+      data: { country, postcode: r.postcode },
       linkLabel: tr(ctx, 'ville', 'city')
     })
   }

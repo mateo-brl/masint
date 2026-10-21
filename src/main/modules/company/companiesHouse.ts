@@ -2,6 +2,7 @@
 // profil, siège, codes SIC et dirigeants.
 
 import { defineModule, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
+import { localizeCountry } from '../domain/_util'
 import { compact, getJson, tr } from '../misc/_util'
 import { normName, titleCase } from './_fr'
 
@@ -80,7 +81,7 @@ export function chOutput(ctx: Pick<ModuleContext, 'lang'>, p: ChProfile, officer
     entities.push({
       type: 'address',
       label: address,
-      data: { street: [a.premises, a.address_line_1].filter(Boolean).join(' ') || null, postcode: a.postal_code ?? null, city: a.locality ?? null, country: a.country ?? null },
+      data: { street: [a.premises, a.address_line_1].filter(Boolean).join(' ') || null, postcode: a.postal_code ?? null, city: a.locality ?? null, country: localizeCountry(a.country, null, ctx.lang) },
       linkLabel: tr(ctx, 'siège', 'registered office')
     })
   }
@@ -96,7 +97,7 @@ export function chOutput(ctx: Pick<ModuleContext, 'lang'>, p: ChProfile, officer
             birth_date: dob,
             nationality: o.nationality ?? null,
             occupation: o.occupation ?? null,
-            country_of_residence: o.country_of_residence ?? null,
+            country_of_residence: localizeCountry(o.country_of_residence, null, ctx.lang),
             appointed_on: o.appointed_on ?? null,
             resigned_on: o.resigned_on ?? null
           },

@@ -124,7 +124,7 @@ export function buildCidrOutput(
       city: top?.city || null,
       lat: typeof top?.latitude === 'number' ? top.latitude : null,
       lon: typeof top?.longitude === 'number' ? top.longitude : null,
-      geo_coverage: locations.slice(0, 5).map((l) => `${l.country ?? '?'}${l.city ? ' ' + l.city : ''} : ${l.covered_percentage ?? '?'} %`),
+      geo_coverage: locations.slice(0, 5).map((l) => `${countryName(l.country, lang) ?? l.country ?? '?'}${l.city ? ' ' + l.city : ''} : ${l.covered_percentage ?? '?'} %`),
       abuse_email: abuse?.abuse_contacts?.[0] ?? null
     }),
     entities,

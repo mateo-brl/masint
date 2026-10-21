@@ -1,5 +1,6 @@
 import { defineModule, ModuleError, type ModuleOutput, type OutEntity } from '@shared/modules'
-import { compact, getJsonOrNull, isIPv4, normalizeHost } from '../domain/_util'
+import { sharedInfrastructure } from '../domain/_hosting'
+import { cappedList, compact, getJsonOrNull, isIPv4, MAX_LIST_ENTITIES, normalizeHost } from '../domain/_util'
 
 const MAX_CVE = 20
 
@@ -63,7 +64,11 @@ export function parseInternetDb(d: InternetDb | null, lang: 'fr' | 'en'): Module
   if (!d || !d.ip) return {}
   const fr = lang === 'fr'
   const entities: OutEntity[] = []
-  for (const host of (d.hostnames ?? []).slice(0, 15)) entities.push({ type: 'domain', label: host, linkLabel: 'hostname' })
+  // IP de CDN : noms d'autres clients du CDN, gardés en propriété seulement.
+  const shared = sharedInfrastructure(d.ip)
+  const hostnames = d.hostnames ?? []
+  if (shared?.kind !== 'cdn')
+    for (const host of hostnames.slice(0, MAX_LIST_ENTITIES)) entities.push({ type: 'domain', label: host, linkLabel: 'hostname' })
   for (const cpe of d.cpes ?? []) {
     const t = cpeToTechnology(cpe)
     if (t) entities.push({ type: 'technology', label: t.name, data: compact({ version: t.version, kind: t.kind, cpe }), linkLabel: fr ? 'exécute' : 'runs' })
@@ -76,6 +81,7 @@ export function parseInternetDb(d: InternetDb | null, lang: 'fr' | 'en'): Module
       shodan_tags: d.tags ?? [],
       vulns,
       cpes: d.cpes ?? [],
+      ...(hostnames.length > MAX_LIST_ENTITIES || shared?.kind === 'cdn' ? cappedList('hostnames', hostnames) : {}),
       shodan_link: `https://www.shodan.io/host/${d.ip}`
     }),
     entities,

@@ -3,19 +3,22 @@ import { useReactFlow } from '@xyflow/react'
 import { useTranslation } from 'react-i18next'
 import { getEntityType } from '@shared/entityTypes'
 import { api } from '../../lib/api'
+import { errorMessage } from '../../lib/errors'
 import { useLang } from '../../lib/i18n'
 import { EntityBadge, Icon } from '../../lib/icons'
 import { computeLayout, type LayoutKind } from '../../lib/layout'
 import { useApp } from '../../store/app'
-import { useGraph } from '../../store/graph'
+import { useGraph, type FlowEdge, type FlowNode } from '../../store/graph'
+import { fitGraph } from '../../lib/viewport'
 import { exportGraph, type ExportFormat } from '../export/exporters'
 import { Dropdown, Spinner } from '../ui'
 
 /** Barre flottante du haut : disposition, export, rapport, nombre de liens, recherche. */
 export function TopBar(): React.JSX.Element {
   const { t } = useTranslation()
-  const rf = useReactFlow()
+  const rf = useReactFlow<FlowNode, FlowEdge>()
   const edgesCount = useGraph((s) => s.edges.length)
+  const nodesCount = useGraph((s) => s.nodes.filter((n) => n.data.node.kind === 'entity').length)
   const investigation = useGraph((s) => s.investigation)
   const catalogOpen = useApp((s) => s.catalogOpen)
   const toggleCatalog = useApp((s) => s.toggleCatalog)
@@ -40,7 +43,7 @@ export function TopBar(): React.JSX.Element {
       })),
       edges.map((e) => ({ source: e.source, target: e.target }))
     )
-    void setPositions(pos).then(() => setTimeout(() => void rf.fitView({ padding: 0.2, duration: 400 }), 50))
+    void setPositions(pos).then(() => setTimeout(() => fitGraph(rf, 400), 50))
   }
 
   const doExport = async (format: ExportFormat): Promise<void> => {
@@ -48,7 +51,7 @@ export function TopBar(): React.JSX.Element {
       const path = await exportGraph(format)
       if (path) toast('success', t('export.saved', { path }))
     } catch (e) {
-      toast('error', e instanceof Error ? e.message : String(e))
+      toast('error', errorMessage(e))
     }
   }
 
@@ -94,7 +97,7 @@ export function TopBar(): React.JSX.Element {
             { label: t('layout.circle'), icon: 'CircleDot', onClick: () => layout('circle') },
             { label: t('layout.grid'), icon: 'Grid3x3', onClick: () => layout('grid') },
             { separator: true, label: '' },
-            { label: t('canvas.fitView'), icon: 'ScanSearch', hint: 'F', onClick: () => void rf.fitView({ padding: 0.2, duration: 300 }) }
+            { label: t('canvas.fitView'), icon: 'ScanSearch', hint: 'F', onClick: () => fitGraph(rf) }
           ]}
         />
         <Dropdown
@@ -121,6 +124,9 @@ export function TopBar(): React.JSX.Element {
         />
         <ToolbarButton icon="FileText" label={t('topbar.report')} onClick={() => setReportOpen(true)} />
         <div className="mx-1 h-5 w-px bg-line" />
+        <div className="flex items-center gap-1.5 pl-2 text-[12.5px] font-semibold text-muted" title={t('topbar.nodes')}>
+          <Icon name="Waypoints" size={14} /> <span className="text-fg">{nodesCount}</span>
+        </div>
         <div className="flex items-center gap-1.5 px-2 text-[12.5px] font-semibold text-muted" title={t('topbar.links')}>
           <Icon name="Link" size={14} /> <span className="text-fg">{edgesCount}</span>
         </div>
@@ -164,6 +170,7 @@ function GraphSearch({ onClose }: { onClose: () => void }): React.JSX.Element {
     if (!n) return
     useGraph.getState().select([id])
     void rf.setCenter(n.position.x + 98, n.position.y + 20, { zoom: 1.3, duration: 400 })
+    onClose()
   }
   return (
     <div className="glass w-96 rounded-xl p-1.5">
@@ -219,7 +226,7 @@ function JobPills(): React.JSX.Element | null {
               {type} · {j.done}/{j.total}
             </span>
             {j.finished ? (
-              <span className="text-muted">{t('jobs.finished', { results: j.results, errors: j.errors })}</span>
+              <span className="text-muted">{t('jobs.finished', { results: t('runs.nResults', { count: j.results }), errors: t('runs.nErrors', { count: j.errors }) })}</span>
             ) : (
               current && <span className="max-w-40 truncate text-muted">· {tx(current)}</span>
             )}

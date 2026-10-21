@@ -1,6 +1,7 @@
 import { defineModule, ModuleError, type ModuleOutput, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
-import { compact, isDomain, isIPv4, isIPv6, normalizeDomain, normalizeHost, serviceError, uniq } from './_util'
+import { sharedInfrastructure, sharedLabel } from './_hosting'
+import { cappedList, compact, isDomain, isIPv4, isIPv6, MAX_LIST_ENTITIES, normalizeDomain, normalizeHost, serviceError, uniq } from './_util'
 
 const KEY = { id: 'urlscan', label: 'URLScan API key', url: 'https://urlscan.io/user/profile/', optional: true }
 
@@ -25,33 +26,45 @@ export interface UrlscanResult {
   _id?: string
 }
 
+/** Le nom appartient-il à la cible (domaine lui-même ou sous-domaine) ? */
+const onTarget = (host: string | undefined, target: string): boolean => !!host && (host === target || host.endsWith(`.${target}`))
+
 export function parseUrlscan(
   target: string,
   results: UrlscanResult[],
   total: number | undefined,
   lang: 'fr' | 'en',
-  isIp = false
+  isIp = false,
+  hint: { asn?: unknown; org?: unknown } = {}
 ): ModuleOutput {
   if (!results.length) return {}
   const fr = lang === 'fr'
   const sorted = [...results].sort((a, b) => (b.task?.time ?? '').localeCompare(a.task?.time ?? ''))
-  const latest = sorted.find((r) => r.page?.domain?.endsWith(target)) ?? sorted[0]
   const entities: OutEntity[] = []
   if (isIp) {
-    const domains = uniq(sorted.map((r) => r.page?.domain).filter((v): v is string => !!v && v !== target))
-    for (const d of domains.slice(0, 20)) entities.push({ type: 'domain', label: d, linkLabel: fr ? 'site observé sur l’IP' : 'site seen on IP' })
+    const latest = sorted[0]
+    const domains = uniq(sorted.map((r) => r.page?.domain?.toLowerCase()).filter((v): v is string => !!v && v !== target && isDomain(v)))
+    // IP de CDN : les sites qui y sont servis n'ont pas de lien entre eux, ils restent en propriété.
+    const shared = sharedInfrastructure(target, { asn: hint.asn ?? latest.page?.asn, org: hint.org ?? latest.page?.asnname })
+    if (!shared)
+      for (const d of domains.slice(0, MAX_LIST_ENTITIES)) entities.push({ type: 'domain', label: d, linkLabel: fr ? 'site observé sur l’IP' : 'site seen on IP' })
     return {
       properties: compact({
         urlscan_scans: total ?? results.length,
         urlscan_last_scan_at: latest.task?.time ?? null,
-        urlscan_domains: domains.slice(0, 100),
+        ...cappedList('urlscan_domains', domains),
+        shared_infrastructure: shared ? sharedLabel(shared, lang) : null,
         urlscan_search: `https://urlscan.io/search/#${encodeURIComponent(`page.ip:"${target}"`)}`
       }),
       entities,
       raw: sorted.slice(0, 30).map((r) => ({ task: r.task, page: r.page, result: r.result }))
     }
   }
-  if (latest.page?.url) {
+  // La recherche `domain:` remonte aussi les pages tierces qui ont simplement chargé une
+  // ressource de la cible : seules les pages servies par la cible renseignent sur elle.
+  const own = sorted.filter((r) => onTarget(r.page?.domain?.toLowerCase(), target))
+  const latest = own[0] ?? sorted[0]
+  if (own.length && latest.page?.url) {
     entities.push({
       type: 'url',
       label: latest.page.url,
@@ -65,26 +78,36 @@ export function parseUrlscan(
       linkLabel: fr ? 'dernière capture urlscan' : 'latest urlscan capture'
     })
   }
-  const ips = uniq(sorted.map((r) => r.page?.ip).filter((v): v is string => !!v && v !== target))
-  for (const ip of ips.slice(0, 10)) entities.push({ type: 'ip', label: ip, linkLabel: fr ? 'IP observée' : 'observed IP' })
+  const ips = uniq(own.map((r) => r.page?.ip).filter((v): v is string => !!v && v !== target))
+  for (const ip of ips.slice(0, MAX_LIST_ENTITIES)) {
+    const shared = sharedInfrastructure(ip)
+    entities.push({
+      type: 'ip',
+      label: ip,
+      data: shared ? { shared_infrastructure: sharedLabel(shared, lang) } : undefined,
+      linkLabel: fr ? 'IP observée' : 'observed IP'
+    })
+  }
   // Sites tiers qui redirigent vers la cible (souvent des pages de phishing ou de spam).
   const referrers = uniq(
-    sorted
-      .filter((r) => r.task?.domain && r.page?.domain && r.task.domain !== r.page.domain && !r.task.domain.endsWith(target))
-      .map((r) => r.task!.domain!)
+    own
+      .map((r) => r.task?.domain?.toLowerCase())
+      .filter((d): d is string => !!d && !onTarget(d, target) && isDomain(d))
   )
-  for (const d of referrers.slice(0, 10)) entities.push({ type: 'domain', label: d, linkLabel: fr ? 'redirige vers la cible' : 'redirects to target' })
+  for (const d of referrers.slice(0, MAX_LIST_ENTITIES))
+    entities.push({ type: 'domain', label: d, linkLabel: fr ? 'redirige vers la cible' : 'redirects to target' })
+  const page = own.length ? latest.page : undefined
 
   return {
     properties: compact({
       urlscan_scans: total ?? results.length,
-      urlscan_last_scan_at: latest.task?.time ?? null,
-      urlscan_title: latest.page?.title ?? null,
-      urlscan_server: latest.page?.server ?? null,
-      urlscan_asn: latest.page?.asn ?? null,
-      urlscan_tls_issuer: latest.page?.tlsIssuer ?? null,
-      urlscan_ips: ips.slice(0, 50),
-      urlscan_redirecting_domains: referrers.slice(0, 50),
+      urlscan_last_scan_at: own[0]?.task?.time ?? null,
+      urlscan_title: page?.title ?? null,
+      urlscan_server: page?.server ?? null,
+      urlscan_asn: page?.asn ?? null,
+      urlscan_tls_issuer: page?.tlsIssuer ?? null,
+      ...cappedList('urlscan_ips', ips),
+      ...cappedList('urlscan_redirecting_domains', referrers),
       urlscan_search: `https://urlscan.io/search/#${encodeURIComponent(`page.domain:${target}`)}`
     }),
     entities,
@@ -107,7 +130,8 @@ export default defineModule({
     const host = input.type === 'ip' ? normalizeHost(input.label) : normalizeDomain(input.label)
     const isIp = isIPv4(host) || isIPv6(host)
     if (!isIp && !isDomain(host)) throw new ModuleError('Domaine ou IP invalide', 'invalid_input')
-    const q = isIp ? `page.ip:"${host}"` : `domain:${host}`
+    // `domain:` couvrirait aussi les pages tierces qui chargent une ressource de la cible.
+    const q = isIp ? `page.ip:"${host}"` : `page.domain:${host} OR page.apexDomain:${host}`
     const key = ctx.key(KEY.id)
     let res: { results?: UrlscanResult[]; total?: number }
     try {
@@ -118,6 +142,6 @@ export default defineModule({
     } catch (e) {
       throw serviceError(e, 'urlscan.io', !!key)
     }
-    return parseUrlscan(host, res.results ?? [], res.total, ctx.lang, isIp)
+    return parseUrlscan(host, res.results ?? [], res.total, ctx.lang, isIp, { asn: input.data.asn, org: input.data.org ?? input.data.isp })
   }
 })

@@ -1,5 +1,5 @@
 import { defineModule, ModuleError, type ModuleOutput, type OutEntity } from '@shared/modules'
-import { compact, isIPv4, isIPv6, isoDate, normalizeHost, requireKey, serviceError, uniq } from '../domain/_util'
+import { compact, isIPv4, isIPv6, isoDate, localizeCountry, normalizeHost, requireKey, serviceError, uniq } from '../domain/_util'
 
 const KEY = { id: 'abuseipdb', label: 'AbuseIPDB API key', url: 'https://www.abuseipdb.com/account/api' }
 
@@ -69,8 +69,8 @@ export function parseAbuseIpDb(d: AbuseIpDbCheck | null, lang: 'fr' | 'en'): Mod
         .map((c) => c.slice(0, 300)),
       usage_type: d.usageType ?? null,
       isp: d.isp ?? null,
-      country: d.countryName ?? d.countryCode ?? null,
-      is_tor: d.isTor ?? null,
+      country: localizeCountry(d.countryName, d.countryCode, lang),
+      tor_exit: d.isTor ?? null,
       is_whitelisted: d.isWhitelisted ?? null,
       abuseipdb_link: `https://www.abuseipdb.com/check/${d.ipAddress}`
     }),

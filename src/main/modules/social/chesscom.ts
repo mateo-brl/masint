@@ -1,4 +1,5 @@
 import { defineModule } from '@shared/modules'
+import { localizeCountry } from '../domain/_util'
 import { acceptsPlatform, httpStatus, linkedEntities, notFound, profileOutput, requireUsername, rethrow, toIso, type Lang, type Parsed } from './_lib'
 
 export interface ChessComPlayer {
@@ -32,7 +33,7 @@ export function parseChessCom(p: ChessComPlayer, lang: Lang): Parsed {
         user_id: String(p.player_id),
         display_name: p.name,
         location: p.location,
-        country: p.country?.split('/').pop(),
+        country: localizeCountry(null, p.country?.split('/').pop(), lang) ?? undefined,
         title: p.title,
         followers: p.followers,
         membership: p.status,

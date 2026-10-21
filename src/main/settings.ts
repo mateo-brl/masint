@@ -15,12 +15,15 @@ export const DEFAULT_SETTINGS: Settings = {
   autoEnrich: false,
   autoUpdate: true,
   edgeStyle: 'bezier',
+  edgeLabels: 'auto',
   showMinimap: true
 }
 
 /** Chiffrement des secrets. En production : `safeStorage` d'Electron (DPAPI, trousseau GNOME/KWallet). */
 export interface Cipher {
   available(): boolean
+  /** Sous Linux : trousseau utilisé (`basic_text` = aucun trousseau, chiffrement faible). */
+  backend?(): string
   encrypt(plain: string): Buffer
   decrypt(data: Buffer): string
 }
@@ -92,6 +95,13 @@ export class SettingsService {
   deleteSecret(id: string): void {
     this.repo.deleteSecret(id)
     this.secretCache.delete(id)
+  }
+
+  /** Les secrets sont-ils protégés par le trousseau du système ? */
+  security(): { encrypted: boolean; backend: string } {
+    const available = this.cipher.available()
+    const backend = available ? (this.cipher.backend?.() ?? 'system') : 'none'
+    return { encrypted: available && backend !== 'basic_text', backend }
   }
 
   listSecrets(knownIds: string[]): SecretStatus[] {

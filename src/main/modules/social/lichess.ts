@@ -1,4 +1,5 @@
 import { defineModule } from '@shared/modules'
+import { localizeCountry } from '../domain/_util'
 import { acceptsPlatform, httpStatus, linkedEntities, notFound, profileOutput, requireUsername, rethrow, toIso, type Lang, type Parsed } from './_lib'
 
 export interface LichessUser {
@@ -45,7 +46,7 @@ export function parseLichess(u: LichessUser, lang: Lang): Parsed {
         display_name: realName,
         bio: p.bio,
         location: p.location,
-        country: p.flag ?? p.country,
+        country: localizeCountry(p.flag ?? p.country, null, lang) ?? undefined,
         title: u.title,
         fide_rating: p.fideRating,
         ratings,

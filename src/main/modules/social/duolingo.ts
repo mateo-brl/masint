@@ -1,4 +1,5 @@
 import { defineModule, ModuleError } from '@shared/modules'
+import { localizeCountry } from '../domain/_util'
 import { acceptsPlatform, linkedEntities, notFound, profileOutput, requireUsername, rethrow, toIso, type Lang, type Parsed } from './_lib'
 
 /** Compte public connu (cofondateur), utilisé pour détecter les réponses vides de limitation. */
@@ -40,7 +41,7 @@ export function parseDuolingo(u: DuoUser, lang: Lang): Parsed {
         display_name: u.name,
         bio: u.bio || undefined,
         location: u.location || undefined,
-        country: u.profileCountry ?? undefined,
+        country: localizeCountry(u.profileCountry, null, lang) ?? undefined,
         streak: u.streak,
         total_xp: u.totalXp,
         plus: u.hasPlus,

@@ -1,0 +1,1129 @@
+{
+ "results": [
+  {
+   "task": {
+    "time": "2026-10-21T20:33:42.373Z",
+    "url": "https://jkjhzdfgh.icu/",
+    "domain": "jkjhzdfgh.icu",
+    "uuid": "01a1602b-5c58-76ab-ae06-4ed3ba2c762c",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a1602b-5c58-76ab-ae06-4ed3ba2c762c.png",
+   "result": "https://urlscan.io/api/v1/result/01a1602b-5c58-76ab-ae06-4ed3ba2c762c/",
+   "_id": "01a1602b-5c58-76ab-ae06-4ed3ba2c762c"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T20:31:09.083Z",
+    "url": "https://www.yahoo.net/",
+    "domain": "www.yahoo.net",
+    "uuid": "01a16028-5b91-767f-9e0a-be20e21ecebd",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://www.yahoo.com/",
+    "domain": "www.yahoo.com",
+    "ip": "69.147.82.61",
+    "asn": "AS14779",
+    "asnname": "YAHOO - Yahoo Holdings Inc., US",
+    "country": "US",
+    "server": "ATS",
+    "title": "Yahoo | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+    "status": "200",
+    "tlsIssuer": "DigiCert Global G2 TLS RSA SHA256 2020 CA1",
+    "apexDomain": "yahoo.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a16028-5b91-767f-9e0a-be20e21ecebd.png",
+   "result": "https://urlscan.io/api/v1/result/01a16028-5b91-767f-9e0a-be20e21ecebd/",
+   "_id": "01a16028-5b91-767f-9e0a-be20e21ecebd"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T20:30:46.349Z",
+    "url": "https://nccgwppk.org/",
+    "domain": "nccgwppk.org",
+    "uuid": "01a16028-a8c9-75f4-a613-757c315e1457",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "104.20.23.154",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a16028-a8c9-75f4-a613-757c315e1457.png",
+   "result": "https://urlscan.io/api/v1/result/01a16028-a8c9-75f4-a613-757c315e1457/",
+   "_id": "01a16028-a8c9-75f4-a613-757c315e1457"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T20:12:14.495Z",
+    "url": "https://nodedns-whatsapp.com/",
+    "domain": "nodedns-whatsapp.com",
+    "uuid": "01a16017-08a8-7079-966c-d29d5f567a31",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://ca.yahoo.com/?p=us",
+    "domain": "ca.yahoo.com",
+    "ip": "69.147.92.11",
+    "asn": "AS14777",
+    "asnname": "YAHOO - Yahoo Holdings Inc., US",
+    "country": "US",
+    "server": "ATS",
+    "title": "Yahoo! Canada | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+    "status": "200",
+    "tlsIssuer": "DigiCert Global G2 TLS RSA SHA256 2020 CA1",
+    "apexDomain": "yahoo.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a16017-08a8-7079-966c-d29d5f567a31.png",
+   "result": "https://urlscan.io/api/v1/result/01a16017-08a8-7079-966c-d29d5f567a31/",
+   "_id": "01a16017-08a8-7079-966c-d29d5f567a31"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T20:04:49.534Z",
+    "url": "https://airbnbportugal.com/",
+    "domain": "airbnbportugal.com",
+    "uuid": "01a16010-e0bd-72db-9f1d-d762e0387681",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "2606:4700:10::ac42:93f3",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a16010-e0bd-72db-9f1d-d762e0387681.png",
+   "result": "https://urlscan.io/api/v1/result/01a16010-e0bd-72db-9f1d-d762e0387681/",
+   "_id": "01a16010-e0bd-72db-9f1d-d762e0387681"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T19:48:31.189Z",
+    "url": "http://projecthome.sbs/",
+    "domain": "projecthome.sbs",
+    "uuid": "01a16000-fc3b-710f-a54e-ed01c21bdb1d",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://www.britannica.com/",
+    "domain": "www.britannica.com",
+    "ip": "104.18.5.110",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Encyclopedia Britannica | Britannica",
+    "status": "200",
+    "tlsIssuer": "WE1",
+    "apexDomain": "britannica.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a16000-fc3b-710f-a54e-ed01c21bdb1d.png",
+   "result": "https://urlscan.io/api/v1/result/01a16000-fc3b-710f-a54e-ed01c21bdb1d/",
+   "_id": "01a16000-fc3b-710f-a54e-ed01c21bdb1d"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T19:47:01.797Z",
+    "url": "https://advancaelarms.com/",
+    "domain": "advancaelarms.com",
+    "uuid": "01a16000-9dcc-7154-808c-cae8aacdc066",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "104.20.23.154",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a16000-9dcc-7154-808c-cae8aacdc066.png",
+   "result": "https://urlscan.io/api/v1/result/01a16000-9dcc-7154-808c-cae8aacdc066/",
+   "_id": "01a16000-9dcc-7154-808c-cae8aacdc066"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T19:46:44.840Z",
+    "url": "http://map.ti-whatsapp.com/",
+    "domain": "map.ti-whatsapp.com",
+    "uuid": "01a15fff-d1fd-71ff-88be-ccf7f3f881c5",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://www.yahoo.com/",
+    "domain": "www.yahoo.com",
+    "ip": "69.147.82.60",
+    "asn": "AS14779",
+    "asnname": "YAHOO - Yahoo Holdings Inc., US",
+    "country": "US",
+    "server": "ATS",
+    "title": "Yahoo | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+    "status": "200",
+    "tlsIssuer": "DigiCert Global G2 TLS RSA SHA256 2020 CA1",
+    "apexDomain": "yahoo.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15fff-d1fd-71ff-88be-ccf7f3f881c5.png",
+   "result": "https://urlscan.io/api/v1/result/01a15fff-d1fd-71ff-88be-ccf7f3f881c5/",
+   "_id": "01a15fff-d1fd-71ff-88be-ccf7f3f881c5"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T19:45:21.456Z",
+    "url": "https://billinvvv.com/",
+    "domain": "billinvvv.com",
+    "uuid": "01a15fff-1319-7308-83cd-53e9298257db",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15fff-1319-7308-83cd-53e9298257db.png",
+   "result": "https://urlscan.io/api/v1/result/01a15fff-1319-7308-83cd-53e9298257db/",
+   "_id": "01a15fff-1319-7308-83cd-53e9298257db"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T19:44:46.956Z",
+    "url": "https://fishandfishermenmag.wordpress.com/",
+    "domain": "fishandfishermenmag.wordpress.com",
+    "uuid": "01a15ffe-3c3b-731e-a04d-261d46c03555",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://fishandfishermenmag.wordpress.com/",
+    "domain": "fishandfishermenmag.wordpress.com",
+    "ip": "192.0.78.13",
+    "asn": "AS2635",
+    "asnname": "AUTOMATTIC - Automattic, Inc, US",
+    "country": "US",
+    "server": "nginx",
+    "title": "Fish and Fishermen Magazine \u2013 The stream where the fish and the men both go",
+    "status": "200",
+    "tlsIssuer": "YE1",
+    "apexDomain": "wordpress.com"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15ffe-3c3b-731e-a04d-261d46c03555.png",
+   "result": "https://urlscan.io/api/v1/result/01a15ffe-3c3b-731e-a04d-261d46c03555/",
+   "_id": "01a15ffe-3c3b-731e-a04d-261d46c03555"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T19:36:18.686Z",
+    "url": "https://kgkmall.com/",
+    "domain": "kgkmall.com",
+    "uuid": "01a15ff6-cd90-7299-bb40-fb108698cda9",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15ff6-cd90-7299-bb40-fb108698cda9.png",
+   "result": "https://urlscan.io/api/v1/result/01a15ff6-cd90-7299-bb40-fb108698cda9/",
+   "_id": "01a15ff6-cd90-7299-bb40-fb108698cda9"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T19:31:42.498Z",
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "uuid": "01a15ff2-94ec-77c9-b138-247e868968f9",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "2606:4700:10::6814:179a",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15ff2-94ec-77c9-b138-247e868968f9.png",
+   "result": "https://urlscan.io/api/v1/result/01a15ff2-94ec-77c9-b138-247e868968f9/",
+   "_id": "01a15ff2-94ec-77c9-b138-247e868968f9"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T19:17:25.643Z",
+    "url": "http://retractersite.space/",
+    "domain": "retractersite.space",
+    "uuid": "01a15fe5-7baf-749f-a74b-136b50f1acac",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15fe5-7baf-749f-a74b-136b50f1acac.png",
+   "result": "https://urlscan.io/api/v1/result/01a15fe5-7baf-749f-a74b-136b50f1acac/",
+   "_id": "01a15fe5-7baf-749f-a74b-136b50f1acac"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T19:07:04.272Z",
+    "url": "https://pendlefin.icu/",
+    "domain": "pendlefin.icu",
+    "uuid": "01a15fdb-ff3e-77df-a7e1-7e2b773810bb",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "104.20.23.154",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15fdb-ff3e-77df-a7e1-7e2b773810bb.png",
+   "result": "https://urlscan.io/api/v1/result/01a15fdb-ff3e-77df-a7e1-7e2b773810bb/",
+   "_id": "01a15fdb-ff3e-77df-a7e1-7e2b773810bb"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T18:46:05.333Z",
+    "url": "https://esooz.site/",
+    "domain": "esooz.site",
+    "uuid": "01a15fc8-bad7-74fc-a979-085e11edbd7a",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "2606:4700:10::6814:179a",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15fc8-bad7-74fc-a979-085e11edbd7a.png",
+   "result": "https://urlscan.io/api/v1/result/01a15fc8-bad7-74fc-a979-085e11edbd7a/",
+   "_id": "01a15fc8-bad7-74fc-a979-085e11edbd7a"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T18:40:54.060Z",
+    "url": "https://htx-en-wallet.pages.dev/",
+    "domain": "htx-en-wallet.pages.dev",
+    "uuid": "01a15fc4-10f8-7204-b42e-f3f2c0a39283",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://htx-en-wallet.pages.dev/",
+    "domain": "htx-en-wallet.pages.dev",
+    "ip": "2606:4700:310c::ac42:2c46",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "HTX Wallet | Official Site & Homepage of the Secure Crypto Wallet",
+    "status": "200",
+    "tlsIssuer": "WE1",
+    "apexDomain": "htx-en-wallet.pages.dev"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15fc4-10f8-7204-b42e-f3f2c0a39283.png",
+   "result": "https://urlscan.io/api/v1/result/01a15fc4-10f8-7204-b42e-f3f2c0a39283/",
+   "_id": "01a15fc4-10f8-7204-b42e-f3f2c0a39283"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T18:23:58.169Z",
+    "url": "https://unitedpowerprojects.com/",
+    "domain": "unitedpowerprojects.com",
+    "uuid": "01a15fb4-67d9-77ce-b0b8-c6f7c677efef",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://unitedpowerprojects.com/",
+    "domain": "unitedpowerprojects.com",
+    "ip": "82.25.127.247",
+    "asn": "AS47583",
+    "asnname": "AS-HOSTINGER Hostinger International Limited, CY",
+    "country": "IN",
+    "server": "LiteSpeed",
+    "title": "United Power Projects \u2013 Empowering Energy, Shaping Tomorrow",
+    "status": "200",
+    "tlsIssuer": "YE2",
+    "apexDomain": "unitedpowerprojects.com"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15fb4-67d9-77ce-b0b8-c6f7c677efef.png",
+   "result": "https://urlscan.io/api/v1/result/01a15fb4-67d9-77ce-b0b8-c6f7c677efef/",
+   "_id": "01a15fb4-67d9-77ce-b0b8-c6f7c677efef"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T18:21:35.773Z",
+    "url": "https://trumpexcel.com/learn-excel/",
+    "domain": "trumpexcel.com",
+    "uuid": "01a15fb1-e478-76db-8c2d-3b468f99f649",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://trumpexcel.com/learn-excel/",
+    "domain": "trumpexcel.com",
+    "ip": "162.159.135.42",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "country": "US",
+    "server": "cloudflare",
+    "title": "FREE Online Excel Training (12+ Hours) | Learn Excel (Basic/Advanced)",
+    "status": "200",
+    "tlsIssuer": "WE1",
+    "apexDomain": "trumpexcel.com"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15fb1-e478-76db-8c2d-3b468f99f649.png",
+   "result": "https://urlscan.io/api/v1/result/01a15fb1-e478-76db-8c2d-3b468f99f649/",
+   "_id": "01a15fb1-e478-76db-8c2d-3b468f99f649"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T18:14:20.192Z",
+    "url": "https://tcblounge.com/wp-content/plugins/elementskit-lite/assets/libs/magnific-popup/jquery.magnific",
+    "domain": "tcblounge.com",
+    "uuid": "01a15fab-58bc-72ad-bb13-5abc4a7531c9",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://tcblounge.com/wp-content/plugins/elementskit-lite/assets/libs/magnific-popup/jquery.magnific",
+    "domain": "tcblounge.com",
+    "ip": "193.141.3.68",
+    "asn": "AS6724",
+    "asnname": "STRATO Strato GmbH, DE",
+    "country": "DE",
+    "server": "Apache/2.4.68 (Unix)",
+    "title": "Pagina niet gevonden \u2013 TCBLOUNGE",
+    "status": "404",
+    "tlsIssuer": "Sectigo Public Server Authentication CA DV R36",
+    "apexDomain": "tcblounge.com"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15fab-58bc-72ad-bb13-5abc4a7531c9.png",
+   "result": "https://urlscan.io/api/v1/result/01a15fab-58bc-72ad-bb13-5abc4a7531c9/",
+   "_id": "01a15fab-58bc-72ad-bb13-5abc4a7531c9"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T18:07:58.311Z",
+    "url": "https://newsdig.tbs.co.jp/articles/-/3027403?display=1",
+    "domain": "newsdig.tbs.co.jp",
+    "uuid": "01a15fa5-ce46-7253-91b1-ca1296bbc934",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://newsdig.tbs.co.jp/articles/-/3027403?display=1",
+    "domain": "newsdig.tbs.co.jp",
+    "ip": "163.49.35.137",
+    "asn": "AS2497",
+    "asnname": "IIJ - Internet Initiative Japan Inc., JP",
+    "country": "JP",
+    "title": "\u3010\u5012\u7523\u60c5\u5831\u3011\u6d77\u5916\u4e0d\u52d5\u7523\u5411\u3051\u30d5\u30a1\u30f3\u30c9\u5c55\u958b\u306e\u4f01\u696d\u304c\u7834\u7523\u958b\u59cb\u6c7a\u5b9a \u4e00\u6642 \u7d044\u5104\u5186\u306e\u58f2\u4e0a\u9ad8\u3092\u8a08\u4e0a\u3082\u5229\u6255\u3044\u9045\u5ef6\u306e\u5f71\u97ff\u3067\u4fe1\u7528\u304c\u5927\u5e45\u306b\u4f4e\u4e0b\u3000\u6771\u4eac\u30fb\u6e2f\u533a\u3010\u6771\u4eac\u5546\u5de5\u30ea\u30b5\u30fc\u30c1\u3011 | TBS NEWS DIG (1\u30da\u30fc\u30b8)",
+    "status": "200",
+    "tlsIssuer": "GlobalSign GCC R3 DV TLS CA 2020",
+    "apexDomain": "tbs.co.jp"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15fa5-ce46-7253-91b1-ca1296bbc934.png",
+   "result": "https://urlscan.io/api/v1/result/01a15fa5-ce46-7253-91b1-ca1296bbc934/",
+   "_id": "01a15fa5-ce46-7253-91b1-ca1296bbc934"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:54:28.366Z",
+    "url": "http://smetfrumain.de/",
+    "domain": "smetfrumain.de",
+    "uuid": "01a15f99-8e11-7379-b344-59bd40906906",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f99-8e11-7379-b344-59bd40906906.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f99-8e11-7379-b344-59bd40906906/",
+   "_id": "01a15f99-8e11-7379-b344-59bd40906906"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:46:36.594Z",
+    "url": "https://audreymelbourne.com/",
+    "domain": "audreymelbourne.com",
+    "uuid": "01a15f92-580b-7738-a689-6c3bebf1480d",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://audreymelbourne.com/",
+    "domain": "audreymelbourne.com",
+    "ip": "23.227.38.65",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "country": "CA",
+    "server": "cloudflare",
+    "title": "Audrey Melbourne",
+    "status": "200",
+    "tlsIssuer": "YE1",
+    "apexDomain": "audreymelbourne.com"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f92-580b-7738-a689-6c3bebf1480d.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f92-580b-7738-a689-6c3bebf1480d/",
+   "_id": "01a15f92-580b-7738-a689-6c3bebf1480d"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:46:11.947Z",
+    "url": "https://newsdig.tbs.co.jp/articles/-/3028685?display=1",
+    "domain": "newsdig.tbs.co.jp",
+    "uuid": "01a15f91-d896-7158-a9f1-e4ebbbfdc7dc",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://newsdig.tbs.co.jp/articles/-/3028685?display=1",
+    "domain": "newsdig.tbs.co.jp",
+    "ip": "163.49.35.137",
+    "asn": "AS2497",
+    "asnname": "IIJ - Internet Initiative Japan Inc., JP",
+    "country": "JP",
+    "title": "\u3046\u306a\u304e\u306e\u7523\u5730\u201c\u507d\u88c5\u201d\u7591\u3044\u3000\u76f4\u55b62\u5e97\u8217\u306e\u58f2\u4e0a\u306e99\uff05\u4ee5\u4e0a\u306f\u300c\u4e2d\u56fd\u7523\u3046\u306a\u304e\u300d\u304b\u3010\u571f\u4e95\u6d3b\u9c3b\u3000\u4f0f\u898b\u7a32\u8377\u5e97\u3011 | TBS NEWS DIG (1\u30da\u30fc\u30b8)",
+    "status": "200",
+    "tlsIssuer": "GlobalSign GCC R3 DV TLS CA 2020",
+    "apexDomain": "tbs.co.jp"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f91-d896-7158-a9f1-e4ebbbfdc7dc.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f91-d896-7158-a9f1-e4ebbbfdc7dc/",
+   "_id": "01a15f91-d896-7158-a9f1-e4ebbbfdc7dc"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:42:59.962Z",
+    "url": "https://newsdig.tbs.co.jp/articles/-/3029193?display=1",
+    "domain": "newsdig.tbs.co.jp",
+    "uuid": "01a15f8e-d871-733c-b714-3b982a0ae5c4",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://newsdig.tbs.co.jp/articles/-/3029193?display=1",
+    "domain": "newsdig.tbs.co.jp",
+    "ip": "163.49.35.137",
+    "asn": "AS2497",
+    "asnname": "IIJ - Internet Initiative Japan Inc., JP",
+    "country": "JP",
+    "title": "\u300e\u8eab\u4f53\u62d8\u675f\u306e\u5fc5\u8981\u6027\u3068\u5224\u65ad\u306e\u6839\u62e0\u3092\u660e\u3089\u304b\u306b\u300f16\u6b73\u5973\u6027\u306e\u907a\u65cf\u304c\u8a34\u3048\u3000\u8650\u5f85\u306e\u5bb9\u7591\u3067\u902e\u6355\u30fb\u52fe\u7559\u5f8c\u306bPTSD\u306a\u3069\u3092\u767a\u75c7\u3057\u6b7b\u4ea1\u3000\u56fd\u30fb\u770c\u306b\u640d\u5bb3\u8ce0\u511f\u6c42\u3081\u308b\u88c1\u5224 | TBS NEWS DIG (1\u30da\u30fc\u30b8)",
+    "status": "200",
+    "tlsIssuer": "GlobalSign GCC R3 DV TLS CA 2020",
+    "apexDomain": "tbs.co.jp"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f8e-d871-733c-b714-3b982a0ae5c4.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f8e-d871-733c-b714-3b982a0ae5c4/",
+   "_id": "01a15f8e-d871-733c-b714-3b982a0ae5c4"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:39:54.664Z",
+    "url": "https://newsdig.tbs.co.jp/articles/-/3029325?display=1",
+    "domain": "newsdig.tbs.co.jp",
+    "uuid": "01a15f8c-1ed6-716f-8970-fb58efd3e832",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://newsdig.tbs.co.jp/articles/-/3029325?display=1",
+    "domain": "newsdig.tbs.co.jp",
+    "ip": "163.49.35.137",
+    "asn": "AS2497",
+    "asnname": "IIJ - Internet Initiative Japan Inc., JP",
+    "country": "JP",
+    "title": "\u300c\u72d9\u3063\u3066\u64ae\u3063\u305f\u308f\u3051\u3067\u306f\u306a\u3044\u300d\u770c\u7acb\u9ad8\u6821\u306e\u6559\u8aed\u306e\u7537\u3092\u902e\u6355 10\u4ee3\u5973\u6027\u3092\u76d7\u64ae\u3057\u305f\u7591\u3044 \u52e4\u52d9\u3059\u308b\u5b66\u6821\u306e\u95a2\u4fc2\u8005\u304c\u8b66\u5bdf\u306b\u60c5\u5831\u5bc4\u305b\u308b\uff1d\u9759\u5ca1\u770c\u8b66 | TBS NEWS DIG (1\u30da\u30fc\u30b8)",
+    "status": "200",
+    "tlsIssuer": "GlobalSign GCC R3 DV TLS CA 2020",
+    "apexDomain": "tbs.co.jp"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f8c-1ed6-716f-8970-fb58efd3e832.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f8c-1ed6-716f-8970-fb58efd3e832/",
+   "_id": "01a15f8c-1ed6-716f-8970-fb58efd3e832"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:34:06.108Z",
+    "url": "https://detectappro.com/",
+    "domain": "detectappro.com",
+    "uuid": "01a15f86-e6e6-776d-99d6-d48f6fae3734",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "2606:4700:10::6814:179a",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f86-e6e6-776d-99d6-d48f6fae3734.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f86-e6e6-776d-99d6-d48f6fae3734/",
+   "_id": "01a15f86-e6e6-776d-99d6-d48f6fae3734"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:31:27.954Z",
+    "url": "https://www.yahoo.net/",
+    "domain": "www.yahoo.net",
+    "uuid": "01a15f84-06c4-70dd-84b0-3faaa27033df",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://www.yahoo.com/",
+    "domain": "www.yahoo.com",
+    "ip": "69.147.82.61",
+    "asn": "AS14779",
+    "asnname": "YAHOO - Yahoo Holdings Inc., US",
+    "country": "US",
+    "server": "ATS",
+    "title": "Yahoo | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+    "status": "200",
+    "tlsIssuer": "DigiCert Global G2 TLS RSA SHA256 2020 CA1",
+    "apexDomain": "yahoo.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f84-06c4-70dd-84b0-3faaa27033df.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f84-06c4-70dd-84b0-3faaa27033df/",
+   "_id": "01a15f84-06c4-70dd-84b0-3faaa27033df"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:27:50.875Z",
+    "url": "http://withered-shadow-af71.wp0xfuiu.workers.dev/redirect?redirectUrl=https://example.com/",
+    "domain": "withered-shadow-af71.wp0xfuiu.workers.dev",
+    "uuid": "01a15f81-103c-74fb-9c52-12abb6312bc5",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f81-103c-74fb-9c52-12abb6312bc5.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f81-103c-74fb-9c52-12abb6312bc5/",
+   "_id": "01a15f81-103c-74fb-9c52-12abb6312bc5"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:27:25.848Z",
+    "url": "https://bindfencings.site/",
+    "domain": "bindfencings.site",
+    "uuid": "01a15f80-cb7c-730f-8ba5-12b958cb3b21",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f80-cb7c-730f-8ba5-12b958cb3b21.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f80-cb7c-730f-8ba5-12b958cb3b21/",
+   "_id": "01a15f80-cb7c-730f-8ba5-12b958cb3b21"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:27:24.227Z",
+    "url": "http://9de.site/",
+    "domain": "9de.site",
+    "uuid": "01a15f80-c442-70ba-9b2e-c5baf021ae42",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f80-c442-70ba-9b2e-c5baf021ae42.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f80-c442-70ba-9b2e-c5baf021ae42/",
+   "_id": "01a15f80-c442-70ba-9b2e-c5baf021ae42"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:26:26.424Z",
+    "url": "http://tight-cherry-694d.jrld1tac.workers.dev/redirect?redirectUrl=https://example.com/",
+    "domain": "tight-cherry-694d.jrld1tac.workers.dev",
+    "uuid": "01a15f7f-e661-73ac-b052-a6612f80cace",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f7f-e661-73ac-b052-a6612f80cace.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f7f-e661-73ac-b052-a6612f80cace/",
+   "_id": "01a15f7f-e661-73ac-b052-a6612f80cace"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:25:43.064Z",
+    "url": "https://plain-tooth-661f.fu4yenw1.workers.dev/redirect?redirectUrl=https://example.com/",
+    "domain": "plain-tooth-661f.fu4yenw1.workers.dev",
+    "uuid": "01a15f7f-3cbf-740d-8830-cd9d9c464fe5",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "104.20.23.154",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f7f-3cbf-740d-8830-cd9d9c464fe5.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f7f-3cbf-740d-8830-cd9d9c464fe5/",
+   "_id": "01a15f7f-3cbf-740d-8830-cd9d9c464fe5"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:25:41.778Z",
+    "url": "https://shrill-breeze-8594.akij4o0m.workers.dev/redirect?redirectUrl=https://example.com/",
+    "domain": "shrill-breeze-8594.akij4o0m.workers.dev",
+    "uuid": "01a15f7f-39c2-71cb-86bc-1a7a58e04bbb",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f7f-39c2-71cb-86bc-1a7a58e04bbb.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f7f-39c2-71cb-86bc-1a7a58e04bbb/",
+   "_id": "01a15f7f-39c2-71cb-86bc-1a7a58e04bbb"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:24:02.891Z",
+    "url": "http://square-grass-5df2.lij1d594.workers.dev/redirect?redirectUrl=https://example.com/",
+    "domain": "square-grass-5df2.lij1d594.workers.dev",
+    "uuid": "01a15f7d-b597-717b-9b52-effb72e995c1",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f7d-b597-717b-9b52-effb72e995c1.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f7d-b597-717b-9b52-effb72e995c1/",
+   "_id": "01a15f7d-b597-717b-9b52-effb72e995c1"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:23:58.956Z",
+    "url": "http://restless-salad-0419.mkwmkfy9.workers.dev/redirect?redirectUrl=https://example.com/",
+    "domain": "restless-salad-0419.mkwmkfy9.workers.dev",
+    "uuid": "01a15f7d-a57a-726e-9440-908ff486b8ab",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f7d-a57a-726e-9440-908ff486b8ab.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f7d-a57a-726e-9440-908ff486b8ab/",
+   "_id": "01a15f7d-a57a-726e-9440-908ff486b8ab"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:23:58.487Z",
+    "url": "http://red-wildflower-2532.b25ejzzl.workers.dev/redirect?redirectUrl=https://example.com/",
+    "domain": "red-wildflower-2532.b25ejzzl.workers.dev",
+    "uuid": "01a15f7d-a322-7612-8207-27ed11ecee59",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f7d-a322-7612-8207-27ed11ecee59.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f7d-a322-7612-8207-27ed11ecee59/",
+   "_id": "01a15f7d-a322-7612-8207-27ed11ecee59"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:23:52.143Z",
+    "url": "http://sparkling-moon-2adf.3kahb421.workers.dev/redirect?redirectUrl=https://example.com/",
+    "domain": "sparkling-moon-2adf.3kahb421.workers.dev",
+    "uuid": "01a15f7d-8858-73d9-84c9-3a17948410a2",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f7d-8858-73d9-84c9-3a17948410a2.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f7d-8858-73d9-84c9-3a17948410a2/",
+   "_id": "01a15f7d-8858-73d9-84c9-3a17948410a2"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:20:43.639Z",
+    "url": "http://fragrant-voice-d0b6.e323pnpv.workers.dev/redirect?redirectUrl=https://example.com/",
+    "domain": "fragrant-voice-d0b6.e323pnpv.workers.dev",
+    "uuid": "01a15f7a-a115-719a-a61c-953c6e7a24f9",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f7a-a115-719a-a61c-953c6e7a24f9.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f7a-a115-719a-a61c-953c6e7a24f9/",
+   "_id": "01a15f7a-a115-719a-a61c-953c6e7a24f9"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:19:46.438Z",
+    "url": "http://square-breeze-eb0c.xp230lks.workers.dev/redirect?redirectUrl=https://example.com/",
+    "domain": "square-breeze-eb0c.xp230lks.workers.dev",
+    "uuid": "01a15f79-a8f5-7268-a3f4-62bf8b37f9ae",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f79-a8f5-7268-a3f4-62bf8b37f9ae.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f79-a8f5-7268-a3f4-62bf8b37f9ae/",
+   "_id": "01a15f79-a8f5-7268-a3f4-62bf8b37f9ae"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:19:11.108Z",
+    "url": "https://bnx-whatsapp.com/",
+    "domain": "bnx-whatsapp.com",
+    "uuid": "01a15f78-5973-77ac-b032-7632312172b9",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://www.yahoo.com/",
+    "domain": "www.yahoo.com",
+    "ip": "69.147.92.12",
+    "asn": "AS14777",
+    "asnname": "YAHOO - Yahoo Holdings Inc., US",
+    "country": "US",
+    "server": "ATS",
+    "title": "Yahoo | Mail, Weather, Search, Politics, News, Finance, Sports & Videos",
+    "status": "200",
+    "tlsIssuer": "DigiCert Global G2 TLS RSA SHA256 2020 CA1",
+    "apexDomain": "yahoo.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f78-5973-77ac-b032-7632312172b9.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f78-5973-77ac-b032-7632312172b9/",
+   "_id": "01a15f78-5973-77ac-b032-7632312172b9"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:18:48.834Z",
+    "url": "http://fragrant-feather-79c6.4xqqbspv.workers.dev/redirect?redirectUrl=https://example.com/",
+    "domain": "fragrant-feather-79c6.4xqqbspv.workers.dev",
+    "uuid": "01a15f78-e8cf-76cc-a508-466626cd4a7a",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "104.20.23.154",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f78-e8cf-76cc-a508-466626cd4a7a.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f78-e8cf-76cc-a508-466626cd4a7a/",
+   "_id": "01a15f78-e8cf-76cc-a508-466626cd4a7a"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:18:31.283Z",
+    "url": "http://restless-frost-4a90.fkbrmg1k.workers.dev/redirect?redirectUrl=https://example.com/",
+    "domain": "restless-frost-4a90.fkbrmg1k.workers.dev",
+    "uuid": "01a15f78-a9ae-76b7-a774-4a914320fb0f",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f78-a9ae-76b7-a774-4a914320fb0f.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f78-a9ae-76b7-a774-4a914320fb0f/",
+   "_id": "01a15f78-a9ae-76b7-a774-4a914320fb0f"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:17:57.536Z",
+    "url": "https://still-smoke-7ce5.zg9v0m9d.workers.dev/redirect?redirectUrl=https://example.com/",
+    "domain": "still-smoke-7ce5.zg9v0m9d.workers.dev",
+    "uuid": "01a15f78-2248-7148-b5fc-fcea9a233683",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "104.20.23.154",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f78-2248-7148-b5fc-fcea9a233683.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f78-2248-7148-b5fc-fcea9a233683/",
+   "_id": "01a15f78-2248-7148-b5fc-fcea9a233683"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:17:41.232Z",
+    "url": "https://jolly-flower-3f9d.a8xupy6k.workers.dev/redirect?redirectUrl=https://example.com/",
+    "domain": "jolly-flower-3f9d.a8xupy6k.workers.dev",
+    "uuid": "01a15f77-e775-7068-8b63-f29636467561",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f77-e775-7068-8b63-f29636467561.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f77-e775-7068-8b63-f29636467561/",
+   "_id": "01a15f77-e775-7068-8b63-f29636467561"
+  },
+  {
+   "task": {
+    "time": "2026-10-21T17:16:41.308Z",
+    "url": "https://crimson-feather-469c.4w8r1iw1.workers.dev/redirect?redirectUrl=https://example.com/",
+    "domain": "crimson-feather-469c.4w8r1iw1.workers.dev",
+    "uuid": "01a15f76-f57a-750a-9143-1f33c4a92da7",
+    "visibility": "public"
+   },
+   "page": {
+    "url": "https://example.com/",
+    "domain": "example.com",
+    "ip": "172.66.147.243",
+    "asn": "AS13335",
+    "asnname": "CLOUDFLARENET - Cloudflare, Inc., US",
+    "server": "cloudflare",
+    "title": "Example Domain",
+    "status": "200",
+    "tlsIssuer": "Cloudflare TLS Issuing ECC CA 3",
+    "apexDomain": "example.com",
+    "redirected": "off-domain"
+   },
+   "screenshot": "https://urlscan.io/screenshots/01a15f76-f57a-750a-9143-1f33c4a92da7.png",
+   "result": "https://urlscan.io/api/v1/result/01a15f76-f57a-750a-9143-1f33c4a92da7/",
+   "_id": "01a15f76-f57a-750a-9143-1f33c4a92da7"
+  }
+ ],
+ "total": 6554
+}

@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { defineModule, type ModuleContext } from '@shared/modules'
 import type { GraphChange } from '@shared/types'
-import { buildArchive, importArchive } from '../../src/main/archive'
+import { buildArchive, duplicateInvestigation, importArchive, openArchiveOnce } from '../../src/main/archive'
 import { openDatabase, type DB } from '../../src/main/db/database'
 import { dedupKey, Repo } from '../../src/main/db/repo'
 import { Engine } from '../../src/main/engine/runner'
@@ -112,6 +112,27 @@ describe('Engine.applyOutput', () => {
     expect(repo.listEdges(inv.id)).toHaveLength(1)
   })
 
+  it('pose les nouveaux enfants sur des cases libres, sans recouvrir le graphe', async () => {
+    const inv = repo.createInvestigation({ name: 'Placement' })
+    const [input] = repo.upsertNodes(inv.id, [{ type: 'email', label: 'jane@gmail.com', x: 0, y: 0 }])
+    // Un nœud étranger occupe la première case sous le parent.
+    const [blocker] = repo.upsertNodes(inv.id, [{ type: 'keyword', label: 'déjà là', x: 0, y: 130 }])
+    await engine.applyOutput(
+      input,
+      mod,
+      { entities: ['a', 'b', 'c'].map((u) => ({ type: 'username', label: u })) },
+      fakeCtx
+    )
+    const boxes = repo.listNodes(inv.id).map((n) => ({ id: n.id, x: n.x, y: n.y, w: 196, h: 52 }))
+    for (let i = 0; i < boxes.length; i++)
+      for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i]
+        const b = boxes[j]
+        expect(a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h, `${a.id} / ${b.id}`).toBe(false)
+      }
+    expect(repo.getNode(blocker.id)!.y).toBe(130)
+  })
+
   it('déduit le fournisseur des emails trouvés', async () => {
     const inv = repo.createInvestigation({ name: 'Test' })
     const [input] = repo.upsertNodes(inv.id, [{ type: 'username', label: 'john' }])
@@ -162,5 +183,29 @@ describe('Paramètres et coffre', () => {
       { id: 'hibp', set: true },
       { id: 'shodan', set: false }
     ])
+  })
+})
+
+describe('Import des archives', () => {
+  it('donne un nom distinct à une copie importée', async () => {
+    const inv = repo.createInvestigation({ name: 'Affaire' })
+    const buf = await buildArchive(repo, inv.id)
+    expect((await importArchive(repo, buf)).name).toBe('Affaire (2)')
+    expect((await importArchive(repo, buf)).name).toBe('Affaire (3)')
+  })
+
+  it('rouvre l’enquête déjà importée depuis le même fichier', async () => {
+    const inv = repo.createInvestigation({ name: 'Dossier' })
+    const buf = await buildArchive(repo, inv.id)
+    const first = await openArchiveOnce(repo, buf)
+    const again = await openArchiveOnce(repo, buf)
+    expect(again.id).toBe(first.id)
+    repo.deleteInvestigation(first.id)
+    expect((await openArchiveOnce(repo, buf)).id).not.toBe(first.id)
+  })
+
+  it('nomme une copie « (copie) »', async () => {
+    const inv = repo.createInvestigation({ name: 'Source' })
+    expect((await duplicateInvestigation(repo, inv.id)).name).toBe('Source (copie)')
   })
 })

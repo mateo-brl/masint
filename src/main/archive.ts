@@ -1,7 +1,7 @@
 // Archive `.masint` : un zip contenant l'enquête, ses nœuds, liens et pièces jointes.
 // À l'import, tous les identifiants sont régénérés pour éviter les collisions.
 
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import JSZip from 'jszip'
 import type { Attachment, GraphEdge, GraphNode, Investigation } from '@shared/types'
 import type { Repo } from './db/repo'
@@ -40,6 +40,29 @@ export async function buildArchive(repo: Repo, investigationId: string): Promise
   return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE', compressionOptions: { level: 6 } })
 }
 
+/** Nom libre : « Enquête », sinon « Enquête (2) », « Enquête (3) »... */
+function uniqueName(repo: Repo, name: string): string {
+  const taken = new Set(repo.listInvestigations().map((i) => i.name))
+  if (!taken.has(name)) return name
+  let n = 2
+  while (taken.has(`${name} (${n})`)) n++
+  return `${name} (${n})`
+}
+
+/**
+ * Ouvre une archive reçue de l'explorateur : si ce fichier exact a déjà été importé
+ * et que l'enquête existe encore, on la réutilise au lieu de créer un doublon.
+ */
+export async function openArchiveOnce(repo: Repo, buf: Buffer): Promise<Investigation> {
+  const hash = createHash('sha256').update(buf).digest('hex')
+  const seen = repo.getSetting<Record<string, string>>('importedArchives', {})
+  const existing = seen[hash] ? repo.getInvestigation(seen[hash]) : null
+  if (existing) return existing
+  const inv = await importArchive(repo, buf)
+  repo.setSetting('importedArchives', { ...seen, [hash]: inv.id })
+  return inv
+}
+
 export async function importArchive(repo: Repo, buf: Buffer): Promise<Investigation> {
   const zip = await JSZip.loadAsync(buf)
   const file = zip.file('manifest.json')
@@ -49,7 +72,7 @@ export async function importArchive(repo: Repo, buf: Buffer): Promise<Investigat
   if (manifest.version > ARCHIVE_VERSION) throw new Error('Archive créée par une version plus récente de MASINT')
 
   const inv = repo.createInvestigation({
-    name: manifest.investigation.name,
+    name: uniqueName(repo, manifest.investigation.name),
     description: manifest.investigation.description,
     color: manifest.investigation.color,
     notes: manifest.investigation.notes
@@ -88,5 +111,6 @@ export async function importArchive(repo: Repo, buf: Buffer): Promise<Investigat
 export async function duplicateInvestigation(repo: Repo, id: string): Promise<Investigation> {
   const buf = await buildArchive(repo, id)
   const copy = await importArchive(repo, buf)
-  return repo.updateInvestigation(copy.id, { name: `${copy.name} (copie)` })
+  const source = repo.getInvestigation(id)
+  return repo.updateInvestigation(copy.id, { name: uniqueName(repo, `${source?.name ?? copy.name} (copie)`) })
 }

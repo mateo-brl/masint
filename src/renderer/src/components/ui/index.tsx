@@ -138,7 +138,10 @@ export interface MenuItem {
   separator?: boolean
 }
 
-/** Menu déroulant ancré sous son déclencheur. */
+/**
+ * Menu déroulant ancré sous (ou au-dessus de) son déclencheur. Rendu au premier plan de la
+ * fenêtre (portail) pour ne jamais passer sous un bloc du canevas ni être coupé par un panneau.
+ */
 export function Dropdown({
   trigger,
   items,
@@ -153,48 +156,74 @@ export function Dropdown({
   up?: boolean
 }): React.JSX.Element {
   const [open, setOpen] = useState(false)
+  const [anchor, setAnchor] = useState<DOMRect | null>(null)
   const ref = useRef<HTMLDivElement>(null)
+  const menu = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!open) return
     const onDown = (e: MouseEvent): void => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      const target = e.target as Node
+      if (!ref.current?.contains(target) && !menu.current?.contains(target)) setOpen(false)
     }
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    const onResize = (): void => setOpen(false)
     window.addEventListener('mousedown', onDown)
-    return () => window.removeEventListener('mousedown', onDown)
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('mousedown', onDown)
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('resize', onResize)
+    }
   }, [open])
+  const toggle = (): void => {
+    if (!open && ref.current) setAnchor(ref.current.getBoundingClientRect())
+    setOpen(!open)
+  }
   const list = typeof items === 'function' ? (open ? items() : []) : items
-  const pos = align === 'right' ? 'right-0' : align === 'center' ? 'left-1/2 -translate-x-1/2' : 'left-0'
+  let style: React.CSSProperties = { width }
+  if (anchor) {
+    const x = align === 'right' ? anchor.right - width : align === 'center' ? anchor.left + anchor.width / 2 - width / 2 : anchor.left
+    style = {
+      width,
+      left: Math.max(8, Math.min(x, window.innerWidth - width - 8)),
+      ...(up ? { bottom: window.innerHeight - anchor.top + 8 } : { top: anchor.bottom + 8 }),
+      maxHeight: up ? anchor.top - 16 : window.innerHeight - anchor.bottom - 16
+    }
+  }
   return (
     <div className="relative" ref={ref}>
-      <div onClick={() => setOpen(!open)}>{trigger(open)}</div>
-      {open && (
-        <div
-          className={`glass absolute z-40 rounded-xl p-1 ${pos} ${up ? 'bottom-full mb-2' : 'top-full mt-2'}`}
-          style={{ width }}
-        >
-          {list.map((it, i) =>
-            it.separator ? (
-              <div key={i} className="my-1 border-t border-line" />
-            ) : (
-              <button
-                key={i}
-                disabled={it.disabled}
-                onClick={() => {
-                  setOpen(false)
-                  it.onClick?.()
-                }}
-                className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[12.5px] transition disabled:opacity-40 ${
-                  it.danger ? 'text-accent hover:bg-accent-soft' : 'text-fg hover:bg-panel-3'
-                }`}
-              >
-                {it.icon && <Icon name={it.icon} size={14} className="shrink-0 text-muted" />}
-                <span className="min-w-0 flex-1 truncate">{it.label}</span>
-                {it.hint && <span className="text-[11px] text-faint">{it.hint}</span>}
-              </button>
-            )
-          )}
-        </div>
-      )}
+      <div onClick={toggle}>{trigger(open)}</div>
+      {open &&
+        anchor &&
+        createPortal(
+          <div ref={menu} className="glass fixed z-[70] overflow-y-auto rounded-xl p-1" style={style}>
+            {list.map((it, i) =>
+              it.separator ? (
+                <div key={i} className="my-1 border-t border-line" />
+              ) : (
+                <button
+                  key={i}
+                  disabled={it.disabled}
+                  onClick={() => {
+                    setOpen(false)
+                    it.onClick?.()
+                  }}
+                  className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[12.5px] transition disabled:opacity-40 ${
+                    it.danger ? 'text-accent hover:bg-accent-soft' : 'text-fg hover:bg-panel-3'
+                  }`}
+                >
+                  {it.icon && <Icon name={it.icon} size={14} className="shrink-0 text-muted" />}
+                  <span className="min-w-0 flex-1 truncate">{it.label}</span>
+                  {it.hint && <span className="text-[11px] text-faint">{it.hint}</span>}
+                </button>
+              )
+            )}
+          </div>,
+          document.body
+        )}
     </div>
   )
 }
@@ -292,7 +321,7 @@ export function ConfirmHost({ okLabel, cancelLabel }: { okLabel: string; cancelL
         </>
       }
     >
-      <div className="text-[13px] text-muted">{state?.body}</div>
+      <div className="text-[13px] [overflow-wrap:anywhere] text-muted">{state?.body}</div>
     </Dialog>
   )
 }

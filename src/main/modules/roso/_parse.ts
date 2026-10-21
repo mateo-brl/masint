@@ -5,6 +5,7 @@ import type { OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
 import { findPlatformByName, getPlatform, profileUrl } from '@shared/platforms'
 import { normalizePhone } from '@shared/detect'
+import { localizeCountry } from '../domain/_util'
 import { ROSO_BASE } from './_client'
 import { MASTODON_SITES, SITE_NAMES } from './_sites'
 
@@ -360,7 +361,7 @@ export function accountEntities(profile: unknown, opts: AccountOpts): OutEntity[
   const emails = emailsOf(p)
   const phones = phonesOf(p)
   const city = pick(p, 'city', 'locality', 'town', 'homeCity')
-  const country = pick(p, 'country', 'countryCode', 'country_code')
+  const country = localizeCountry(pick(p, 'country'), pick(p, 'countryCode', 'country_code'), opts.lang) ?? ''
   const location = pick(p, 'location', 'locationText') || [city, country].filter(Boolean).join(', ')
   const lat = pickNum(p, 'lat', 'latitude')
   const lon = pickNum(p, 'lon', 'lng', 'longitude')
@@ -436,7 +437,7 @@ export function addressEntity(p: Obj, from: string, lang: 'fr' | 'en'): OutEntit
       street,
       postcode: postcode || undefined,
       city: city || undefined,
-      country: pick(p, 'country') || undefined,
+      country: localizeCountry(pick(p, 'country'), pick(p, 'countryCode', 'country_code'), lang) || undefined,
       lat: pickNum(p, 'lat', 'latitude'),
       lon: pickNum(p, 'lon', 'lng', 'longitude'),
       source: 'roso.info'

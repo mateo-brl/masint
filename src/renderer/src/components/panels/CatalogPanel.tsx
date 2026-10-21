@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CATEGORIES, type CategoryId } from '@shared/entityTypes'
-import { addEntityAt, useViewportCenter } from '../../lib/actions'
+import { addEntityAt, useVisibleCenter } from '../../lib/actions'
 import { CATALOG, CATALOG_BY_CATEGORY, DRAG_MIME, type CatalogItem } from '../../lib/catalog'
 import { useLang } from '../../lib/i18n'
 import { EntityBadge, Icon } from '../../lib/icons'
@@ -14,7 +14,7 @@ export function CatalogPanel(): React.JSX.Element {
   const toggle = useApp((s) => s.toggleCatalog)
   const [query, setQuery] = useState('')
   const [openCat, setOpenCat] = useState<CategoryId | null>('identity')
-  const center = useViewportCenter()
+  const center = useVisibleCenter()
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -45,7 +45,7 @@ export function CatalogPanel(): React.JSX.Element {
   )
 
   return (
-    <aside className="glass absolute top-4 bottom-4 left-4 z-20 flex w-[272px] flex-col rounded-2xl">
+    <aside data-panel="catalog" className="glass absolute top-4 bottom-4 left-4 z-20 flex w-[272px] flex-col rounded-2xl">
       <div className="flex items-center gap-2 px-4 pt-4 pb-3">
         <Icon name="Layers" size={15} className="text-muted" />
         <span className="font-semibold">{t('catalog.title')}</span>
