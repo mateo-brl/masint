@@ -1,0 +1,206 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+@import '@xyflow/react/dist/style.css';
+@import 'leaflet/dist/leaflet.css';
+@import 'tailwindcss';
+
+/* Jetons de thème : toutes les couleurs de l'interface passent par ces variables. */
+:root,
+[data-theme='dark'] {
+  --app: #050505;
+  --canvas: #0a0a0b;
+  --canvas-dot: #1e1e21;
+  --panel: #0e0e10;
+  --panel-2: #141417;
+  --panel-3: #1b1b1f;
+  --border: #232327;
+  --border-strong: #303036;
+  --text: #ededef;
+  --muted: #8d8d93;
+  --faint: #5c5c63;
+  --accent: #e5484d;
+  --accent-strong: #dc2626;
+  --accent-soft: #e5484d22;
+  --success: #30a46c;
+  --warning: #f5a524;
+  --edge: #6b6b72;
+  --node: #121215;
+  --node-border: #2a2a2f;
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  --app: #f4f4f5;
+  --canvas: #fafafa;
+  --canvas-dot: #d4d4d8;
+  --panel: #ffffff;
+  --panel-2: #f4f4f5;
+  --panel-3: #e9e9ec;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --text: #18181b;
+  --muted: #63636b;
+  --faint: #a1a1aa;
+  --accent: #dc2626;
+  --accent-strong: #b91c1c;
+  --accent-soft: #dc262618;
+  --success: #15803d;
+  --warning: #b45309;
+  --edge: #9a9aa2;
+  --node: #ffffff;
+  --node-border: #dcdce0;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-app: var(--app);
+  --color-canvas: var(--canvas);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-panel-3: var(--panel-3);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-fg: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-node: var(--node);
+  --color-node-line: var(--node-border);
+  --font-sans: 'Inter Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--app);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  overflow: hidden;
+}
+
+input,
+textarea,
+select,
+[contenteditable='true'] {
+  user-select: text;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+/* Panneaux flottants */
+.glass {
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 40px rgb(0 0 0 / 0.35);
+}
+
+.field {
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 10px;
+  color: var(--text);
+  outline: none;
+  font-size: 13px;
+}
+.field:focus {
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.field::placeholder {
+  color: var(--faint);
+}
+
+.label-xs {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* React Flow */
+.react-flow {
+  --xy-background-color: var(--canvas);
+  --xy-edge-stroke: var(--edge);
+  --xy-edge-stroke-selected: var(--accent);
+  --xy-connectionline-stroke: var(--accent);
+  --xy-attribution-background-color: transparent;
+  --xy-minimap-background-color: var(--panel);
+  --xy-minimap-mask-background-color: rgb(0 0 0 / 0.55);
+  --xy-selection-background-color: var(--accent-soft);
+  --xy-selection-border: 1px dashed var(--accent);
+  --xy-handle-background-color: var(--panel-3);
+  --xy-handle-border-color: var(--border-strong);
+  --xy-resize-background-color: var(--accent);
+}
+.react-flow__attribution {
+  display: none;
+}
+.react-flow__handle {
+  width: 7px;
+  height: 7px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.react-flow__node:hover .react-flow__handle,
+.react-flow__node.selected .react-flow__handle,
+.react-flow.connecting .react-flow__handle {
+  opacity: 1;
+}
+.react-flow__edge-path {
+  stroke-width: 1.1;
+}
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke-width: 1.8;
+}
+.react-flow__minimap {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.react-flow__node-drawing {
+  pointer-events: none;
+}
+.react-flow__node-drawing path {
+  pointer-events: stroke;
+}
+
+/* Leaflet en thème sombre */
+[data-theme='dark'] .leaflet-tile-pane {
+  filter: brightness(0.75) invert(1) contrast(0.9) hue-rotate(200deg) saturate(0.35) brightness(0.8);
+}
+.leaflet-container {
+  background: var(--canvas);
+  font-family: var(--font-sans);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin {
+  animation: spin 0.9s linear infinite;
+}
