@@ -71,6 +71,25 @@ export function parseHudsonRockDomain(domain: string, d: HudsonRockDomain, lang:
   }
 }
 
+const SEARCH_BY_DOMAIN = 'https://cavalier.hudsonrock.com/api/json/v2/osint-tools/search-by-domain'
+// Mesuré en octobre 2026 : 5 s pour tesla.com, mais erreur 500 après 110 s pour example.com.
+const REQUEST_TIMEOUT = 45_000
+
+/** Erreurs propres à search-by-domain (domaine refusé, échec du service sur les très gros domaines). */
+export function hudsonRockDomainError(e: unknown): ModuleError {
+  const err = e as { status?: number; name?: string; message?: string }
+  if (err?.status === 400)
+    return new ModuleError('Hudson Rock refuse ce domaine (messagerie grand public ou domaine trop générique)', 'invalid_input')
+  if (err?.status === 500)
+    return new ModuleError('Hudson Rock : erreur interne du service, fréquente pour les domaines très répandus (ex. example.com). Réessayer plus tard.', 'unavailable')
+  if (err?.name === 'TimeoutError' || /aborted due to timeout|timed? ?out/i.test(err?.message ?? ''))
+    return new ModuleError(
+      `Hudson Rock n'a pas répondu en ${REQUEST_TIMEOUT / 1000} s : le service est très lent sur les domaines répandus et finit souvent en erreur. Réessayer plus tard.`,
+      'unavailable'
+    )
+  return serviceError(e, 'Hudson Rock')
+}
+
 export default defineModule({
   id: 'domain.hudsonrock',
   name: { fr: 'Infostealers (Hudson Rock)', en: 'Infostealers (Hudson Rock)' },
@@ -81,16 +100,15 @@ export default defineModule({
   category: 'domain',
   inputTypes: ['domain'],
   homepage: 'https://www.hudsonrock.com/free-tools',
+  timeoutMs: 60_000,
   async run(input, ctx) {
     const domain = normalizeDomain(input.label)
     if (!isDomain(domain)) throw new ModuleError('Domaine invalide', 'invalid_input')
     let data: HudsonRockDomain
     try {
-      data = await ctx.fetchJson<HudsonRockDomain>('https://cavalier.hudsonrock.com/api/json/v2/osint-tools/search-by-domain', {
-        query: { domain }
-      })
+      data = await ctx.fetchJson<HudsonRockDomain>(SEARCH_BY_DOMAIN, { query: { domain }, timeoutMs: REQUEST_TIMEOUT })
     } catch (e) {
-      throw serviceError(e, 'Hudson Rock')
+      throw hudsonRockDomainError(e)
     }
     return parseHudsonRockDomain(domain, data, ctx.lang)
   }

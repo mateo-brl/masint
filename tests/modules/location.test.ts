@@ -70,7 +70,8 @@ describe('location.reverse (hors ligne)', () => {
     const r = parseNominatim(json('nominatim_reverse.json'))
     const out = reverseOutput(fr, { lat: 52.5163, lon: 13.3777 }, r)
     expect(out.entities?.[0].data?.distance_m).toBeLessThan(20)
-    expect(out.properties?.country).toBe('Deutschland')
+    // Nom traduit depuis le code pays, quelle que soit la langue de la réponse Nominatim.
+    expect(out.properties?.country).toBe('Allemagne')
   })
 })
 

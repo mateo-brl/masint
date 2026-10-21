@@ -110,7 +110,7 @@ describe('Codeberg', () => {
 describe('Reddit (fixture construite d’après la documentation)', () => {
   it('profil', async () => {
     const { account, children } = split(await run(reddit, [[/reddit\.com\/user\/spez\/about\.json/, json('reddit_about.json')]], 'spez'))
-    expect(account.data).toMatchObject({ user_id: 't2_1w72', total_karma: 935461, created_at: '2005-06-06T04:00:00.000Z', verified_email: true, moderator: true })
+    expect(account.data).toMatchObject({ user_id: 't2_1w72', total_karma: 935461, created_at: '2005-06-06T04:00:00.000Z', email_verified: true, moderator: true })
     expect(account.image).toBe('https://styles.redditmedia.com/t5_3k30p/styles/profileIcon_snoo.png')
     expect(children.map((c) => c.label)).toEqual(['hello@example.com'])
   })
@@ -161,7 +161,7 @@ describe('Hacker News, Lichess, Chess.com', () => {
   it('Chess.com', async () => {
     const routes: Route[] = [[/pub\/player\/hikaru/, json('chesscom_player.json')], [/pub\/player\/nobody/, NOT_FOUND]]
     const { account, children } = split(await run(chesscom, routes, 'hikaru'))
-    expect(account).toMatchObject({ label: 'Hikaru', data: { display_name: 'Hikaru Nakamura', country: 'US', title: 'GM', location: 'Florida' } })
+    expect(account).toMatchObject({ label: 'Hikaru', data: { display_name: 'Hikaru Nakamura', country: 'États-Unis', title: 'GM', location: 'Florida' } })
     expect(children.map((c) => `${c.platform}:${c.label}`)).toEqual(['twitch:gmhikaru'])
     expect((await run(chesscom, routes, 'nobody')).found).toBe(false)
   })
@@ -247,7 +247,7 @@ describe('YouTube', () => {
     ])
     const out = await youtube.run(entity('username', 'mkbhd'), ctx)
     const { account, children } = split(out)
-    expect(account.data).toMatchObject({ user_id: 'UCBJycsmduvYEL83R_U4JriQ', location: 'United States', created_at: '2008-03-21T12:00:00.000Z' })
+    expect(account.data).toMatchObject({ user_id: 'UCBJycsmduvYEL83R_U4JriQ', location: 'États-Unis', created_at: '2008-03-21T12:00:00.000Z' })
     expect(children.map((c) => `${c.platform ?? c.type}:${c.label}`)).toEqual(expect.arrayContaining(['email:business@mkbhd.com', 'x:MKBHD']))
     expect(ctx.calls[0].headers['accept-language']).toMatch(/^en/)
   })
@@ -262,6 +262,9 @@ describe('TikTok, Snapchat, Steam, Strava', () => {
     const { account } = split(await run(tiktok, routes, 'khaby.lame'))
     expect(account.data).toMatchObject({ user_id: '127905465618821121', display_name: 'Khabane lame', followers: 162979497, videos: 1359, created_at: '2016-08-10T22:02:34.000Z' })
     expect((await run(tiktok, routes, 'nobody')).found).toBe(false)
+    // Compte privé : TikTok répond le code 10222 mais fournit le profil de base.
+    const priv = split(await run(tiktok, [[/@khaby\.lame/, html('tiktok_private.html')]], 'khaby.lame'))
+    expect(priv.account).toMatchObject({ platform: 'tiktok', data: { private: true } })
   })
   it('Snapchat (profil public)', async () => {
     const routes: Route[] = [[/snapchat\.com\/@john/, html('snapchat_public.html')], [/snapchat/, { status: 404, body: '' }]]
@@ -280,7 +283,7 @@ describe('TikTok, Snapchat, Steam, Strava', () => {
   it('Strava', async () => {
     const routes: Route[] = [[/athletes\/kipchoge/, html('strava_athlete.html')], [/athletes\//, { status: 404, body: '' }]]
     const { account } = split(await run(strava, routes, 'kipchoge'))
-    expect(account.data).toMatchObject({ user_id: '114546588', display_name: 'Eddie Fuller', country: 'Jamaica' })
+    expect(account.data).toMatchObject({ user_id: '114546588', display_name: 'Eddie Fuller', country: 'Jamaïque' })
     expect((await run(strava, routes, 'nobody')).found).toBe(false)
   })
 })
@@ -335,7 +338,7 @@ describe('Gravatar, Linktree, Roblox, Minecraft, Wikimedia', () => {
   it('Linktree', async () => {
     const routes: Route[] = [[/linktr\.ee\/selenagomez/, html('linktree_page.html')], [/linktr\.ee/, { status: 404, body: '' }]]
     const { account, children } = split(await run(linktree, routes, 'selenagomez'))
-    expect(account.data).toMatchObject({ country: 'US', timezone: 'America/Los_Angeles', created_at: '2020-01-24T10:15:25.000Z' })
+    expect(account.data).toMatchObject({ country: 'États-Unis', timezone: 'America/Los_Angeles', created_at: '2020-01-24T10:15:25.000Z' })
     expect(children.map((c) => `${c.platform ?? c.type}:${c.label}`)).toEqual(expect.arrayContaining(['instagram:selenagomez', 'tiktok:selenagomez', 'x:selenagomez']))
     expect((await run(linktree, routes, 'nobody')).found).toBe(false)
   })

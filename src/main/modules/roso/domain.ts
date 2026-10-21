@@ -4,6 +4,7 @@
 
 import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
+import { localizeCountry, MAX_LIST_ENTITIES } from '../domain/_util'
 import { creditsOf, redact, ROSO_COMMON, RosoClient, toRosoError, type Json, type RosoResponse } from './_client'
 import {
   asArr,
@@ -316,7 +317,12 @@ export default defineModule({
       entities.push({
         type: 'ip',
         label: ip,
-        data: dropEmpty({ abuse_score: pickNum(o, 'score'), abuse_reports: pickNum(o, 'reports'), isp: str(o.isp) || undefined, country: str(o.country) || undefined }),
+        data: dropEmpty({
+          abuse_score: pickNum(o, 'score'),
+          abuse_reports: pickNum(o, 'reports'),
+          isp: str(o.isp) || undefined,
+          country: localizeCountry(str(o.country), str(o.countryCode), lang) || undefined
+        }),
         linkLabel: ll(lang, 'IP (AbuseIPDB)', 'IP (AbuseIPDB)')
       })
     }
@@ -335,7 +341,8 @@ export default defineModule({
       }
     }
 
-    for (const ip of Array.from(ips).slice(0, 30)) entities.push({ type: 'ip', label: ip, linkLabel: ll(lang, 'résolution DNS', 'DNS resolution') })
+    // Enregistrements actuels d'abord (VirusTotal), puis DNS passif : 10 au plus.
+    for (const ip of Array.from(ips).slice(0, MAX_LIST_ENTITIES)) entities.push({ type: 'ip', label: ip, linkLabel: ll(lang, 'résolution DNS', 'DNS resolution') })
     subdomains.delete(domain)
     const subs = Array.from(subdomains).filter((s) => isDomain(s) && s.endsWith(domain))
     props.roso_subdomains_count = subs.length || undefined

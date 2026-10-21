@@ -88,6 +88,8 @@ export function EntityBadge({
       />
     )
   if (icon?.startsWith('brand:')) return <PlatformBadge platform={icon.slice(6)} size={size} />
-  if (platform && getPlatform(platform) && !icon) return <PlatformBadge platform={platform} size={size} />
+  const p = platform ? getPlatform(platform) : undefined
+  if (p && getEntityType(type).keepTypeIcon) return <TypeBadge type={type} size={size} color={color ?? p.color} icon={icon} />
+  if (p && !icon) return <PlatformBadge platform={platform!} size={size} />
   return <TypeBadge type={type} size={size} color={color} icon={icon} />
 }

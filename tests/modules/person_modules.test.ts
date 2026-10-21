@@ -61,9 +61,16 @@ describe('dirigeants (recherche-entreprises)', () => {
     expect(matchesPerson({ nom: 'NIEL', prenoms: 'XAVIER', type_dirigeant: 'personne physique' }, name)).toBe(true)
     expect(matchesPerson({ nom: 'NIEL', prenoms: 'JULES', type_dirigeant: 'personne physique' }, name)).toBe(false)
     expect(matchesPerson({ nom: 'NIEL (NIEL)', prenoms: 'ALEXANDRE NICOLAS XAVIER', type_dirigeant: 'personne physique' }, name)).toBe(true)
+    // Sans date de naissance connue, rien n'écarte l'homonymie.
     const companies = companiesFor(res.results, name)
     const freebox = companies.find((c) => c.label === 'FREEBOX')!
-    expect(freebox).toMatchObject({ type: 'company', linkLabel: 'Président de SAS · né(e) 08/1967', data: { siren: '433910619', legal_form: 'SAS', status: 'active' } })
+    expect(freebox).toMatchObject({
+      type: 'company',
+      linkLabel: 'Président de SAS · né(e) 08/1967 · homonyme possible',
+      data: { siren: '433910619', legal_form: 'SAS', status: 'active' }
+    })
+    const confirmed = companiesFor(res.results, name, { birth: { year: 1967, month: 8, day: 25 } })
+    expect(confirmed.find((c) => c.label === 'FREEBOX')!.linkLabel).toBe('Président de SAS · né(e) 08/1967')
     expect(typeof freebox.data?.lat).toBe('number')
     expect(companies.find((c) => c.label === 'SNDM')!.data).toMatchObject({ status: 'cessée' })
   })

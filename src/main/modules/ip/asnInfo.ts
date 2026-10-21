@@ -1,7 +1,7 @@
 import { defineModule, ModuleError, type ModuleOutput, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
 import { cleanOrg, detectHosting, parseAsn } from '../domain/_hosting'
-import { compact, countryName } from '../domain/_util'
+import { compact, countryName, MAX_LIST_PROPERTY } from '../domain/_util'
 import {
   abuseContacts,
   announcedPrefixes,
@@ -15,7 +15,6 @@ import {
 } from './_ripestat'
 
 const MAX_PREFIX_ENTITIES = 30
-const MAX_PREFIX_LISTED = 500
 
 /** Tri des préfixes : IPv4 d'abord, puis les plus larges. */
 function byImportance(a: string, b: string): number {
@@ -73,7 +72,7 @@ export function buildAsnOutput(
       prefixes_v4: v4.length,
       prefixes_v6: v6.length,
       ipv4_addresses: ipv4Count || null,
-      prefixes: list.slice(0, MAX_PREFIX_LISTED),
+      prefixes: list.slice(0, MAX_LIST_PROPERTY),
       bgp_link: `https://bgp.he.net/AS${asn}`
     }),
     entities,
@@ -85,8 +84,8 @@ export default defineModule({
   id: 'asn.info',
   name: { fr: 'Informations ASN (RIPEstat)', en: 'ASN information (RIPEstat)' },
   description: {
-    fr: 'Nom du détenteur, pays, registre, contact abus et préfixes IP annoncés par le système autonome (30 premiers en entités, liste complète en propriétés). Hébergeur reconnu quand c’est le cas.',
-    en: 'Holder name, country, registry, abuse contact and IP prefixes announced by the autonomous system (first 30 as entities, full list in properties). Recognised host when applicable.'
+    fr: 'Nom du détenteur, pays, registre, contact abus et préfixes IP annoncés par le système autonome (30 premiers en entités, 50 dans la fiche, liste complète dans la réponse brute). Hébergeur reconnu quand c’est le cas.',
+    en: 'Holder name, country, registry, abuse contact and IP prefixes announced by the autonomous system (first 30 as entities, 50 in the record, full list in the raw response). Recognised host when applicable.'
   },
   category: 'ip',
   inputTypes: ['asn'],

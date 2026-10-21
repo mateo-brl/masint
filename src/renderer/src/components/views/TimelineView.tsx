@@ -12,7 +12,6 @@ import {
   fitDomain,
   formatEventDate,
   formatRangeDate,
-  humanizeKey,
   MAX_SPAN,
   MIN_SPAN,
   tickLabel,
@@ -22,6 +21,7 @@ import {
 import { useApp } from '../../store/app'
 import { useGraph } from '../../store/graph'
 import { Button, IconButton, Switch } from '../ui'
+import { propertyLabel } from '@shared/propertyLabels'
 
 const GUTTER = 184
 const LANE_H = 48
@@ -182,8 +182,8 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 /** Libellé du champ d'un événement : catalogue du type, clé courante traduite, sinon clé lisible. */
 function useFieldLabel(): (e: TimelineEvent) => string {
   const { t, i18n } = useTranslation()
-  const { tx } = useLang()
-  return (e) => (e.field ? tx(e.field) : i18n.exists(`timeline.keys.${e.key}`) ? t(`timeline.keys.${e.key}`) : humanizeKey(e.key))
+  const { tx, lang } = useLang()
+  return (e) => (e.field ? tx(e.field) : i18n.exists(`timeline.keys.${e.key}`) ? t(`timeline.keys.${e.key}`) : propertyLabel(e.key, lang))
 }
 
 // ---------------------------------------------------------------------------
@@ -428,7 +428,15 @@ function Frise({
         </div>
 
         {/* Pistes */}
-        <div className="overflow-x-hidden overflow-y-auto" style={{ maxHeight: maxH }}>
+        {/* Le focus d'un marqueur proche du bord ferait défiler la zone horizontalement et
+            masquerait la colonne des libellés : on annule ce défilement. */}
+        <div
+          className="overflow-x-hidden overflow-y-auto"
+          style={{ maxHeight: maxH }}
+          onScroll={(e) => {
+            if (e.currentTarget.scrollLeft) e.currentTarget.scrollLeft = 0
+          }}
+        >
           <div className="relative" style={{ height: lanesH }}>
             <div className="pointer-events-none absolute inset-y-0 right-0 overflow-hidden" style={{ left: GUTTER }}>
               {tickList.map((tk) => (
@@ -454,7 +462,7 @@ function Frise({
                   <span className="min-w-0 flex-1 truncate text-[12px] font-medium">{tx(getEntityType(lane).label)}</span>
                   <span className="text-[11px] text-faint tabular-nums">{byLane.get(lane)?.length ?? 0}</span>
                 </div>
-                <div className="absolute inset-y-0 right-0" style={{ left: GUTTER }}>
+                <div className="absolute inset-y-0 right-0 overflow-hidden" style={{ left: GUTTER }}>
                   {(groups.get(lane) ?? []).map((g) => (
                     <Marker
                       key={g.key}
@@ -502,9 +510,9 @@ const Marker = memo(function Marker({
           many ? 'gap-1 px-1' : ''
         }`}
         style={{
-          background: 'var(--node)',
+          background: selected ? 'color-mix(in srgb, var(--accent) 18%, var(--node))' : 'var(--node)',
           borderColor: selected ? 'var(--accent)' : 'var(--node-border)',
-          boxShadow: selected ? '0 0 0 2px var(--accent-soft)' : '0 2px 8px rgb(0 0 0 / .18)'
+          boxShadow: selected ? '0 0 0 2px var(--accent), 0 4px 14px rgb(0 0 0 / .3)' : '0 2px 8px rgb(0 0 0 / .18)'
         }}
       >
         <EntityBadge
@@ -518,9 +526,14 @@ const Marker = memo(function Marker({
         {many && <span className="pr-0.5 text-[11px] font-semibold tabular-nums text-fg">{group.events.length}</span>}
       </button>
       {showLabel && (
-        <span className="pointer-events-none ml-1.5 truncate text-[11.5px] text-muted" style={{ maxWidth: group.room - 40 }}>
-          <span className="text-fg">{n.label || t('node.untitled')}</span>
-        </span>
+        <button
+          onPointerDown={(ev) => ev.stopPropagation()}
+          onClick={() => onPick(group)}
+          className="ml-1.5 cursor-pointer truncate text-left text-[11.5px] text-fg hover:underline"
+          style={{ maxWidth: group.room - 40 }}
+        >
+          {n.label || t('node.untitled')}
+        </button>
       )}
     </div>
   )

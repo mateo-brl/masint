@@ -120,6 +120,10 @@ l'obtenir et la liste des modules qui l'utilisent. Les clés sont chiffrées par
 système (DPAPI sous Windows, trousseau GNOME ou KWallet sous Linux) et ne sont envoyées qu'au
 service concerné. Un module dont la clé obligatoire manque n'est simplement pas proposé.
 
+Pour roso.info, le bouton **Vérifier** contrôle la clé et affiche les crédits restants sans en
+consommer. Sous Linux, un avertissement apparaît si aucun trousseau (GNOME Keyring, KWallet)
+n'est disponible : les clés sont alors stockées avec un chiffrement faible.
+
 ### Réseau, proxy et Tor
 
 Dans **Paramètres > Réseau et Tor**, choisissez Direct, Proxy HTTP, SOCKS5 ou Tor, puis

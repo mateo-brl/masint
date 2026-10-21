@@ -5,6 +5,7 @@ import { getEntityType } from '@shared/entityTypes'
 import { getPlatform } from '@shared/platforms'
 import type { GraphNode, Lang, PropValue } from '@shared/types'
 import strings from '../../locales/export'
+import { propertyLabel } from '@shared/propertyLabels'
 
 export type ExportStrings = (typeof strings)['fr']
 
@@ -141,7 +142,7 @@ export function humanizeKey(key: string): string {
 
 export function fieldLabel(type: string, key: string, lang: Lang): string {
   const f = getEntityType(type).fields.find((x) => x.key === key)
-  return f ? f.label[lang] : humanizeKey(key)
+  return f ? f.label[lang] : propertyLabel(key, lang)
 }
 
 export interface PropRow {

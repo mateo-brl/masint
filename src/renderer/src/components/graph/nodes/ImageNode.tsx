@@ -36,7 +36,8 @@ function ImageNodeImpl({ id, data, selected, width }: NodeProps<FlowNode>): Reac
         style={{
           padding: PAD,
           background: 'var(--node)',
-          borderColor: selected ? 'var(--accent)' : 'var(--node-border)',
+          borderColor: selected ? 'var(--accent)' : (n.style.color ?? 'var(--node-border)'),
+          borderWidth: n.style.color && !selected ? 2 : 1,
           boxShadow: selected ? '0 0 0 1px var(--accent), 0 8px 26px rgb(0 0 0 / .35)' : '0 4px 16px rgb(0 0 0 / .22)'
         }}
       >

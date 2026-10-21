@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { ENTITY_TYPES } from '@shared/entityTypes'
-import { addEntityAt, useViewportCenter } from '../../lib/actions'
+import { addEntityAt, usePlacement, useVisibleCenter } from '../../lib/actions'
 import { api } from '../../lib/api'
 import { useLang } from '../../lib/i18n'
 import { Icon } from '../../lib/icons'
@@ -15,7 +15,8 @@ const DRAW_COLORS = ['#e5484d', '#ffc53d', '#30a46c', '#0090ff', '#d6409f', '#ed
 export function BottomBar(): React.JSX.Element {
   const { t } = useTranslation()
   const { tx } = useLang()
-  const center = useViewportCenter()
+  const center = useVisibleCenter()
+  const place = usePlacement()
   const tool = useGraph((s) => s.tool)
   const setTool = useGraph((s) => s.setTool)
   const drawColor = useGraph((s) => s.drawColor)
@@ -28,22 +29,22 @@ export function BottomBar(): React.JSX.Element {
   const toggleCatalog = useApp((s) => s.toggleCatalog)
 
   const addText = (): void => {
-    const p = center()
+    const [p] = place([{ width: 220, height: 60 }])
     void addNodes([{ kind: 'text', type: 'text', label: t('bottombar.newText'), x: p.x, y: p.y, width: 220, height: 60, style: { fontSize: 16 } }])
   }
 
   const addPhoto = async (): Promise<void> => {
     if (!investigation) return
     const atts = await api('attachments:pick', investigation.id)
-    const p = center()
+    const spots = place(atts.map(() => ({ width: 260, height: 180 })))
     if (atts.length)
       await addNodes(
-        atts.map((a, i) => ({ kind: 'image' as const, type: 'image', label: a.name, imageId: a.id, x: p.x + i * 30, y: p.y + i * 30, width: 260, height: 180 }))
+        atts.map((a, i) => ({ kind: 'image' as const, type: 'image', label: a.name, imageId: a.id, x: spots[i].x, y: spots[i].y, width: 260, height: 180 }))
       )
   }
 
   const addMap = (): void => {
-    const p = center()
+    const [p] = place([{ width: 320, height: 220 }])
     // La carte se centre sur l'entité géolocalisée sélectionnée, sinon sur Paris.
     const sel = useGraph.getState().selectedNodes().find((n) => typeof n.data.lat === 'number' && typeof n.data.lon === 'number')
     void addNodes([
@@ -117,6 +118,14 @@ export function BottomBar(): React.JSX.Element {
           { label: t('style.edgeBezier'), icon: settings?.edgeStyle === 'bezier' ? 'Check' : 'Spline', onClick: () => void updateSettings({ edgeStyle: 'bezier' }) },
           { label: t('style.edgeStep'), icon: settings?.edgeStyle === 'smoothstep' ? 'Check' : 'CornerDownRight', onClick: () => void updateSettings({ edgeStyle: 'smoothstep' }) },
           { label: t('style.edgeStraight'), icon: settings?.edgeStyle === 'straight' ? 'Check' : 'Slash', onClick: () => void updateSettings({ edgeStyle: 'straight' }) },
+          {
+            label: (
+              <span className="flex items-center justify-between">
+                {t('style.edgeLabelsAll')} <Switch checked={settings?.edgeLabels === 'always'} onChange={() => undefined} />
+              </span>
+            ),
+            onClick: () => void updateSettings({ edgeLabels: settings?.edgeLabels === 'always' ? 'auto' : 'always' })
+          },
           { separator: true, label: '' },
           {
             label: (

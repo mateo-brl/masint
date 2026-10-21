@@ -89,34 +89,150 @@ const roleLabel = (d: ReDirigeant): string => {
     .join(' · ')
 }
 
-export function companiesFor(results: ReResult[], name: PersonName): OutEntity[] {
-  const out: OutEntity[] = []
+/** Plafond des entreprises rattachées : au-delà, ce sont presque toujours des homonymes. */
+const MAX_COMPANIES = 10
+
+export interface PartialDate {
+  year: number
+  month?: number
+  day?: number
+}
+
+/** `1867-11-07`, `1867-11`, `1867`, `07/11/1867` ou `11/1867`. */
+export function parsePartialDate(v: unknown): PartialDate | null {
+  if (typeof v !== 'string' && typeof v !== 'number') return null
+  const s = String(v).trim().replace(/^\+/, '')
+  let m = s.match(/^(\d{4})(?:-(\d{1,2})(?:-(\d{1,2}))?)?(?:T|$)/)
+  if (m) return { year: Number(m[1]), month: m[2] ? Number(m[2]) || undefined : undefined, day: m[3] ? Number(m[3]) || undefined : undefined }
+  m = s.match(/^(?:(\d{1,2})\/)?(\d{1,2})\/(\d{4})$/)
+  if (m) return { year: Number(m[3]), month: Number(m[2]) || undefined, day: m[1] ? Number(m[1]) : undefined }
+  return null
+}
+
+const dateKey = (d: PartialDate): number => d.year * 10000 + (d.month ?? 0) * 100 + (d.day ?? 0)
+
+/** Ce que l'on sait déjà de la personne (propriétés de l'entité d'entrée). */
+export interface KnownIdentity {
+  birth?: PartialDate | null
+  death?: PartialDate | null
+}
+
+export type Consistency = 'confirmed' | 'possible' | 'excluded'
+
+/**
+ * Cohérence d'un mandat avec l'identité connue. Un mandat est exclu si la date de naissance
+ * déclarée diffère, si l'entreprise a été créée après le décès, si le mandat (ou l'entreprise
+ * individuelle) est resté ouvert longtemps après le décès, ou si l'entreprise a fermé avant les
+ * 16 ans de la personne.
+ * Il n'est confirmé que si l'année et le mois de naissance concordent.
+ */
+export function mandateConsistency(r: ReResult, d: ReDirigeant, id: KnownIdentity, now = new Date()): Consistency {
+  const born = parsePartialDate(d.date_de_naissance ?? d.annee_de_naissance)
+  const created = parsePartialDate(r.date_creation)
+  const closed = parsePartialDate(r.date_fermeture)
+  if (id.death) {
+    if (born && born.year > id.death.year) return 'excluded'
+    if (created && dateKey(created) > dateKey(id.death)) return 'excluded'
+    // Entreprise active : le mandat est toujours ouvert (on tolère un an de retard des registres).
+    if (r.etat_administratif === 'A' && now.getFullYear() - id.death.year > 1) return 'excluded'
+    // Entrepreneur individuel : l'activité est celle de la personne, elle cesse au plus tard au décès.
+    if (r.nature_juridique === '1000' && closed && closed.year - id.death.year > 1) return 'excluded'
+  }
+  if (id.birth) {
+    if (born && born.year !== id.birth.year) return 'excluded'
+    if (born?.month && id.birth.month && born.month !== id.birth.month) return 'excluded'
+    if (closed && closed.year < id.birth.year + 16) return 'excluded'
+    if (born?.month && id.birth.month) return 'confirmed'
+  }
+  return 'possible'
+}
+
+/** Pertinence d'une correspondance : premier prénom et nom identiques plutôt que prénom secondaire ou nom composé. */
+function relevance(d: ReDirigeant, name: PersonName): number {
+  const prenoms = fold(d.prenoms ?? '').split(/[\s,]+/).filter(Boolean)
+  const firstExact = prenoms[0] === fold(name.firstNames[0] ?? '')
+  const lastExact = fold(d.nom ?? '').replace(/\s*\(.*\)\s*$/, '').trim() === fold(name.lastName)
+  return (firstExact ? 2 : 0) + (lastExact ? 1 : 0)
+}
+
+export interface MandateCandidate {
+  result: ReResult
+  matches: ReDirigeant[]
+  confirmed: boolean
+  score: number
+}
+
+/** Entreprises où la personne apparaît, triées par pertinence, sans les mandats incohérents. */
+export function selectMandates(
+  results: ReResult[],
+  name: PersonName,
+  id: KnownIdentity = {},
+  now = new Date()
+): { kept: MandateCandidate[]; excluded: Array<{ result: ReResult; matches: ReDirigeant[] }> } {
+  const kept: MandateCandidate[] = []
+  const excluded: Array<{ result: ReResult; matches: ReDirigeant[] }> = []
+  const seen = new Set<string>()
   for (const r of results) {
-    const matches = (r.dirigeants ?? []).filter((d) => matchesPerson(d, name))
-    if (!matches.length) continue
-    const lat = Number(r.siege?.latitude)
-    const lon = Number(r.siege?.longitude)
-    out.push({
-      type: 'company',
-      label: r.nom_complet,
-      data: compact({
-        siren: r.siren,
-        siret: r.siege?.siret,
-        legal_form: r.nature_juridique ? (LEGAL_FORMS[r.nature_juridique] ?? `code ${r.nature_juridique}`) : undefined,
-        activity: r.activite_principale ?? undefined,
-        created_at: r.date_creation ?? undefined,
-        closed_at: r.date_fermeture ?? undefined,
-        status: r.etat_administratif === 'C' ? 'cessée' : r.etat_administratif === 'A' ? 'active' : undefined,
-        address: r.siege?.adresse,
-        employees: r.tranche_effectif_salarie ? HEADCOUNT[r.tranche_effectif_salarie] : undefined,
-        lat: Number.isFinite(lat) && r.siege?.latitude ? lat : undefined,
-        lon: Number.isFinite(lon) && r.siege?.longitude ? lon : undefined,
-        url: `https://annuaire-entreprises.data.gouv.fr/entreprise/${r.siren}`
-      }),
-      linkLabel: matches.map(roleLabel).join(' ; ')
+    if (seen.has(r.siren)) continue
+    seen.add(r.siren)
+    const all = (r.dirigeants ?? []).filter((d) => matchesPerson(d, name))
+    if (!all.length) continue
+    const verdicts = all.map((d) => mandateConsistency(r, d, id, now))
+    const matches = all.filter((_, i) => verdicts[i] !== 'excluded')
+    if (!matches.length) {
+      excluded.push({ result: r, matches: all })
+      continue
+    }
+    kept.push({
+      result: r,
+      matches,
+      // Naissance concordante et prénom d'usage identique (pas un prénom secondaire).
+      confirmed: all.some((d, i) => verdicts[i] === 'confirmed' && relevance(d, name) >= 2),
+      score: Math.max(...matches.map((d) => relevance(d, name)))
     })
   }
-  return out
+  kept.sort(
+    (a, b) =>
+      Number(b.confirmed) - Number(a.confirmed) ||
+      b.score - a.score ||
+      Number(b.result.etat_administratif === 'A') - Number(a.result.etat_administratif === 'A') ||
+      (b.result.date_creation ?? '').localeCompare(a.result.date_creation ?? '')
+  )
+  return { kept, excluded }
+}
+
+function companyEntity(c: MandateCandidate, lang: 'fr' | 'en'): OutEntity {
+  const r = c.result
+  const lat = Number(r.siege?.latitude)
+  const lon = Number(r.siege?.longitude)
+  const roles = c.matches.map(roleLabel).join(' ; ')
+  return {
+    type: 'company',
+    label: r.nom_complet,
+    data: compact({
+      siren: r.siren,
+      siret: r.siege?.siret,
+      legal_form: r.nature_juridique ? (LEGAL_FORMS[r.nature_juridique] ?? `code ${r.nature_juridique}`) : undefined,
+      activity: r.activite_principale ?? undefined,
+      created_at: r.date_creation ?? undefined,
+      closed_at: r.date_fermeture ?? undefined,
+      status: r.etat_administratif === 'C' ? 'cessée' : r.etat_administratif === 'A' ? 'active' : undefined,
+      address: r.siege?.adresse,
+      employees: r.tranche_effectif_salarie ? HEADCOUNT[r.tranche_effectif_salarie] : undefined,
+      lat: Number.isFinite(lat) && r.siege?.latitude ? lat : undefined,
+      lon: Number.isFinite(lon) && r.siege?.longitude ? lon : undefined,
+      url: `https://annuaire-entreprises.data.gouv.fr/entreprise/${r.siren}`
+    }),
+    // Seule une date de naissance concordante permet d'écarter l'homonymie.
+    linkLabel: c.confirmed ? roles : `${roles} · ${lang === 'fr' ? 'homonyme possible' : 'possible namesake'}`
+  }
+}
+
+/** Entreprises liées à la personne (10 au plus, les plus pertinentes d'abord). */
+export function companiesFor(results: ReResult[], name: PersonName, id: KnownIdentity = {}, lang: 'fr' | 'en' = 'fr', now = new Date()): OutEntity[] {
+  return selectMandates(results, name, id, now)
+    .kept.slice(0, MAX_COMPANIES)
+    .map((c) => companyEntity(c, lang))
 }
 
 async function page(ctx: ModuleContext, name: PersonName, n: number): Promise<ReResponse> {
@@ -148,8 +264,8 @@ export default defineModule({
   id: 'person.fr_dirigeants',
   name: { fr: 'Mandats de dirigeant (France)', en: 'Company officer roles (France)' },
   description: {
-    fr: 'Cherche la personne parmi les dirigeants d’entreprises françaises (API Recherche d’entreprises de l’État, sans clé) : entreprises liées avec la fonction et le mois de naissance déclaré pour départager les homonymes.',
-    en: 'Looks the person up among French company officers (government Company Search API, no key): linked companies with the role and declared birth month to tell namesakes apart.'
+    fr: 'Cherche la personne parmi les dirigeants d’entreprises françaises (API Recherche d’entreprises de l’État, sans clé) : 10 entreprises au plus, avec la fonction et le mois de naissance déclaré. Les mandats incompatibles avec la date de naissance ou de décès connue sont écartés ; sans date concordante, le lien est marqué « homonyme possible ».',
+    en: 'Looks the person up among French company officers (government Company Search API, no key): up to 10 companies, with the role and declared birth month. Roles inconsistent with the known birth or death date are dropped; without a matching date, the link is marked as a possible namesake.'
   },
   category: 'person',
   inputTypes: ['person'],
@@ -160,15 +276,31 @@ export default defineModule({
     const first = await page(ctx, name, 1)
     const results = [...first.results]
     for (let n = 2; n <= Math.min(first.total_pages, MAX_PAGES); n++) results.push(...(await page(ctx, name, n)).results)
-    const entities = companiesFor(results, name)
+    const id: KnownIdentity = { birth: parsePartialDate(input.data.birth_date), death: parsePartialDate(input.data.death_date) }
+    const { kept, excluded } = selectMandates(results, name, id)
+    const entities = kept.slice(0, MAX_COMPANIES).map((c) => companyEntity(c, ctx.lang))
     return {
       entities,
+      properties: compact({
+        officer_companies_count: kept.length || undefined,
+        officer_companies_excluded: excluded.length || undefined
+      }),
       raw: {
         query: { nom: name.lastName, prenom: name.firstNames[0] },
+        identity: id,
         total_results: first.total_results,
         fetched: results.length,
-        matched: entities.length,
-        birth_dates: [...new Set(results.flatMap((r) => (r.dirigeants ?? []).filter((d) => matchesPerson(d, name)).map((d) => d.date_de_naissance ?? d.annee_de_naissance ?? '?')))]
+        kept: kept.map((c) => ({
+          siren: c.result.siren,
+          name: c.result.nom_complet,
+          confirmed: c.confirmed,
+          roles: c.matches.map((d) => ({ prenoms: d.prenoms, qualite: d.qualite, naissance: d.date_de_naissance ?? d.annee_de_naissance }))
+        })),
+        excluded: excluded.map((c) => ({
+          siren: c.result.siren,
+          name: c.result.nom_complet,
+          roles: c.matches.map((d) => ({ prenoms: d.prenoms, qualite: d.qualite, naissance: d.date_de_naissance ?? d.annee_de_naissance }))
+        }))
       }
     }
   }

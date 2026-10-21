@@ -229,6 +229,8 @@ export interface Settings {
   autoEnrich: boolean
   autoUpdate: boolean
   edgeStyle: 'bezier' | 'smoothstep' | 'straight'
+  /** `auto` : libellés masqués autour des nœuds très reliés, sauf pour la sélection. */
+  edgeLabels: 'auto' | 'always'
   showMinimap: boolean
 }
 
@@ -241,6 +243,19 @@ export interface UpdateStatus {
   state: 'idle' | 'checking' | 'available' | 'none' | 'downloading' | 'ready' | 'error'
   version?: string
   progress?: number
+  error?: string
+}
+
+/** État d'une clé roso.info (`/api/auth/status`, sans crédit). */
+export interface RosoStatus {
+  ok: boolean
+  credits?: number
+  bonusCredits?: number
+  dailyUsed?: number
+  creditsPerDay?: number
+  tier?: string
+  /** Le niveau de la clé impose un captcha que MASINT ne peut pas résoudre. */
+  captcha?: boolean
   error?: string
 }
 

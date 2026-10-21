@@ -349,6 +349,17 @@ interface EventbriteLookup {
   is_email_verified?: boolean
 }
 
+/** Origine du site Eventbrite effectivement servi (domaine national après redirection). */
+export function eventbriteOrigin(finalUrl: string): string {
+  try {
+    const u = new URL(finalUrl)
+    if (u.protocol === 'https:' && /(^|\.)eventbrite\.[a-z.]{2,8}$/i.test(u.hostname)) return u.origin
+  } catch {
+    /* URL invalide : domaine par défaut */
+  }
+  return 'https://www.eventbrite.com'
+}
+
 export function parseEventbrite(json: EventbriteLookup): Parsed {
   if (typeof json.exists !== 'boolean') throw new ModuleError('Eventbrite : réponse inattendue', 'other')
   if (!json.exists) return { found: false }
@@ -373,16 +384,23 @@ const eventbrite = accountCheck({
     await page.res.body?.cancel().catch(() => undefined)
     const csrf = session.cookie('csrftoken')
     if (!csrf) throw page.res.ok ? new ModuleError('Eventbrite : jeton CSRF absent', 'other') : httpFailure('Eventbrite', page.res.status)
-    const { res } = await session.request('https://www.eventbrite.com/api/v3/users/lookup/', {
+    // Selon le pays, eventbrite.com redirige vers un domaine local (eventbrite.fr, .co.uk...) dont
+    // le jeton CSRF est propre : l'API doit être appelée sur ce même domaine. Une redirection de
+    // la requête POST la transformerait sinon en GET, refusé par l'API (HTTP 405).
+    const origin = eventbriteOrigin(page.url)
+    const { res } = await session.request(`${origin}/api/v3/users/lookup/`, {
       method: 'POST',
+      keepMethod: true,
       headers: {
         accept: 'application/json',
         'x-csrftoken': csrf,
-        referer: 'https://www.eventbrite.com/signin/',
-        origin: 'https://www.eventbrite.com'
+        'x-requested-with': 'XMLHttpRequest',
+        referer: `${origin}/signin/`,
+        origin
       },
       json: { email }
     })
+    if (res.status === 405) throw new ModuleError('Eventbrite : la vérification a été redirigée et refusée (HTTP 405)', 'blocked')
     if (!res.ok) throw httpFailure('Eventbrite', res.status)
     const json = await readJson<EventbriteLookup>(res, 'Eventbrite')
     return { ...parseEventbrite(json), raw: json }

@@ -1,17 +1,27 @@
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
-import { compact, isDomain, isIPv4, isIPv6, isoDate, normalizeDomain, normalizeHost, serviceError, uniq } from './_util'
+import { sharedInfrastructure, sharedLabel } from './_hosting'
+import { cappedList, compact, isDomain, isIPv4, isIPv6, isoDate, MAX_LIST_ENTITIES, normalizeDomain, normalizeHost, serviceError, uniq } from './_util'
 
 const KEY = { id: 'otx', label: 'AlienVault OTX API key', url: 'https://otx.alienvault.com/api', optional: true }
 const BASE = 'https://otx.alienvault.com/api/v1/indicators'
-const MAX_ENTITIES = 30
 
 export interface OtxGeneral {
   pulse_info?: {
     count?: number
-    pulses?: Array<{ name?: string; tags?: string[]; created?: string; malware_families?: Array<{ display_name?: string } | string>; adversary?: string }>
+    pulses?: OtxPulse[]
   }
-  validation?: Array<{ source?: string; message?: string }>
+  validation?: Array<{ source?: string; message?: string; name?: string }>
+  false_positive?: unknown[]
+}
+
+interface OtxPulse {
+  name?: string
+  tags?: string[]
+  created?: string
+  modified?: string
+  malware_families?: Array<{ display_name?: string } | string>
+  adversary?: string
 }
 
 export interface OtxPassiveDns {
@@ -19,56 +29,102 @@ export interface OtxPassiveDns {
   passive_dns?: Array<{ address?: string; hostname?: string; first?: string; last?: string; record_type?: string; asn?: string }>
 }
 
+/** OTX classe l'indicateur comme légitime (liste blanche, domaine populaire) ou faux positif. */
+export function otxWhitelisted(g: OtxGeneral | null): boolean {
+  if (g?.false_positive?.length) return true
+  return (g?.validation ?? []).some((v) => /whitelist|allowlist|popular|false positive/i.test(`${v.name ?? ''} ${v.message ?? ''} ${v.source ?? ''}`))
+}
+
+const pulseDate = (p: OtxPulse): string => p.modified ?? p.created ?? ''
+
 /** Synthèse des « pulses » (rapports de menace communautaires) citant l'indicateur. */
 function pulseProperties(g: OtxGeneral | null): Record<string, PropValue> {
-  const pulses = g?.pulse_info?.pulses ?? []
+  const pulses = [...(g?.pulse_info?.pulses ?? [])].sort((a, b) => pulseDate(b).localeCompare(pulseDate(a)))
+  const whitelisted = otxWhitelisted(g)
   const families = uniq(
     pulses.flatMap((p) => (p.malware_families ?? []).map((m) => (typeof m === 'string' ? m : (m.display_name ?? '')))).filter(Boolean)
   )
-  return compact({
+  const base = {
     otx_pulses: g?.pulse_info?.count ?? null,
-    otx_pulse_names: uniq(pulses.map((p) => p.name ?? '').filter(Boolean)).slice(0, 15),
-    otx_tags: uniq(pulses.flatMap((p) => p.tags ?? [])).slice(0, 30),
-    otx_malware_families: families.slice(0, 15),
-    otx_adversaries: uniq(pulses.map((p) => p.adversary ?? '').filter(Boolean)),
-    otx_validation: (g?.validation ?? []).map((v) => v.message ?? v.source ?? '').filter(Boolean)
+    otx_whitelisted: whitelisted || null,
+    otx_validation: uniq((g?.validation ?? []).map((v) => v.message ?? v.source ?? '').filter(Boolean)).slice(0, 5)
+  }
+  // Indicateur légitime : il est cité dans des listes d'IOC génériques, tags et familles n'ont pas de sens.
+  if (whitelisted) return compact({ ...base, otx_pulse_names: uniq(pulses.map((p) => p.name ?? '').filter(Boolean)).slice(0, 5) })
+  return compact({
+    ...base,
+    otx_pulse_names: uniq(pulses.map((p) => p.name ?? '').filter(Boolean)).slice(0, 10),
+    otx_last_pulse_at: isoDate(pulses[0] ? pulseDate(pulses[0]) : null),
+    otx_tags: uniq(pulses.flatMap((p) => p.tags ?? [])).slice(0, 20),
+    otx_malware_families: families.slice(0, 10),
+    otx_adversaries: uniq(pulses.map((p) => p.adversary ?? '').filter(Boolean)).slice(0, 5)
   })
 }
 
+/**
+ * `hint` : ASN / organisation de l'IP déjà connus (propriétés de l'entité), pour reconnaître
+ * un CDN dont les plages ne sont pas publiées.
+ */
 export function parseOtx(
   indicator: string,
   kind: 'domain' | 'ip',
   general: OtxGeneral | null,
   pdns: OtxPassiveDns | null,
-  lang: 'fr' | 'en'
+  lang: 'fr' | 'en',
+  hint: { asn?: unknown; org?: unknown } = {}
 ): ModuleOutput {
   const fr = lang === 'fr'
+  // Les résolutions les plus récentes d'abord : ce sont les plus pertinentes.
   const rows = [...(pdns?.passive_dns ?? [])].sort((a, b) => (b.last ?? '').localeCompare(a.last ?? ''))
-  const entities: OutEntity[] = []
-  const seen = new Set<string>()
+  const values: string[] = []
+  const byValue = new Map<string, (typeof rows)[number]>()
   for (const r of rows) {
-    const value = kind === 'domain' ? r.address : r.hostname
-    if (!value || seen.has(value) || value === indicator) continue
+    const value = (kind === 'domain' ? r.address : r.hostname)?.toLowerCase()
+    if (!value || byValue.has(value) || value === indicator) continue
     if (kind === 'domain' && !(isIPv4(value) || isIPv6(value))) continue
-    seen.add(value)
-    if (entities.length >= MAX_ENTITIES) continue
-    entities.push({
-      type: kind === 'domain' ? 'ip' : 'domain',
-      label: value,
-      data: compact({ first_seen: isoDate(r.first), last_seen: isoDate(r.last) }) as Record<string, PropValue>,
-      linkLabel: fr ? 'DNS passif' : 'passive DNS'
-    })
+    if (kind === 'ip' && !isDomain(value)) continue
+    byValue.set(value, r)
+    values.push(value)
   }
+  // IP de CDN ou résolveur public : les domaines qui y ont pointé n'ont aucun lien entre eux.
+  const shared = kind === 'ip' ? sharedInfrastructure(indicator, { asn: hint.asn ?? rows.find((r) => r.asn)?.asn, org: hint.org }) : null
+  const entities: OutEntity[] = shared
+    ? []
+    : values.slice(0, MAX_LIST_ENTITIES).map((value) => {
+        const r = byValue.get(value)!
+        return {
+          type: kind === 'domain' ? 'ip' : 'domain',
+          label: value,
+          data: compact({ first_seen: isoDate(r.first), last_seen: isoDate(r.last) }) as Record<string, PropValue>,
+          linkLabel: fr ? 'DNS passif' : 'passive DNS'
+        }
+      })
   const properties: Record<string, PropValue> = {
     ...pulseProperties(general),
     ...compact({
       otx_passive_dns_count: pdns?.count ?? null,
-      [kind === 'domain' ? 'otx_resolved_ips' : 'otx_hostnames']: Array.from(seen).slice(0, 200),
+      ...cappedList(kind === 'domain' ? 'otx_resolved_ips' : 'otx_hostnames', values),
+      shared_infrastructure: shared ? sharedLabel(shared, lang) : null,
       otx_link: `https://otx.alienvault.com/indicator/${kind === 'domain' ? 'domain' : 'ip'}/${indicator}`
     })
   }
   if (!entities.length && !general?.pulse_info?.count && !pdns?.count) return {}
-  return { properties, entities, raw: { general: { pulse_info: general?.pulse_info, validation: general?.validation }, passive_dns: rows.slice(0, 100) } }
+  const pulses = (general?.pulse_info?.pulses ?? []).slice(0, 50).map((p) => ({
+    name: p.name,
+    created: p.created,
+    modified: p.modified,
+    tags: p.tags?.slice(0, 10),
+    malware_families: p.malware_families?.slice(0, 10),
+    adversary: p.adversary
+  }))
+  return {
+    properties,
+    entities,
+    raw: {
+      general: { pulse_info: { count: general?.pulse_info?.count, pulses }, validation: general?.validation },
+      passive_dns: rows.slice(0, 200)
+    }
+  }
 }
 
 async function otx<T>(ctx: ModuleContext, path: string): Promise<T | null> {
@@ -117,8 +173,8 @@ const otxIp = defineModule({
   id: 'ip.otx',
   name: { fr: 'AlienVault OTX (IP)', en: 'AlienVault OTX (IP)' },
   description: {
-    fr: 'Rapports de menace communautaires citant l’IP (scanner, Tor, botnet...) et DNS passif : domaines qui ont pointé vers cette adresse. Clé facultative.',
-    en: 'Community threat reports mentioning the IP (scanner, Tor, botnet...) and passive DNS: domains that pointed to this address. Optional key.'
+    fr: 'Rapports de menace communautaires citant l’IP (scanner, Tor, botnet...) et DNS passif : domaines qui ont pointé vers cette adresse (10 plus récents en entités, aucun pour une IP de CDN ou de DNS public). Clé facultative.',
+    en: 'Community threat reports mentioning the IP (scanner, Tor, botnet...) and passive DNS: domains that pointed to this address (10 most recent as entities, none for a CDN or public DNS IP). Optional key.'
   },
   category: 'ip',
   inputTypes: ['ip'],
@@ -132,7 +188,7 @@ const otxIp = defineModule({
       otx<OtxGeneral>(ctx, `${family}/${ip}/general`),
       otx<OtxPassiveDns>(ctx, `${family}/${ip}/passive_dns`)
     )
-    return parseOtx(ip, 'ip', general, pdns, ctx.lang)
+    return parseOtx(ip, 'ip', general, pdns, ctx.lang, { asn: input.data.asn, org: input.data.org ?? input.data.isp })
   }
 })
 

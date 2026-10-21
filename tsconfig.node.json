@@ -35,6 +35,7 @@
     "tests/**/*"
   ],
   "exclude": [
-    "tests/export*.test.ts"
+    "tests/export*.test.ts",
+    "tests/layout.test.ts"
   ]
 }

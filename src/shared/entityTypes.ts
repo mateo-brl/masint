@@ -61,6 +61,11 @@ export interface EntityTypeDef {
   placeholder?: string
   /** Les nœuds de ce type portent une plateforme (compte, opérateur...). */
   usesPlatform?: boolean
+  /**
+   * L'icône du type reste affichée (teintée de la couleur de la plateforme) au lieu du logo
+   * de la plateforme : une transaction Bitcoin ne doit pas ressembler à un portefeuille.
+   */
+  keepTypeIcon?: boolean
 }
 
 const f = (key: string, fr: string, en: string, kind?: FieldKind): FieldDef => ({
@@ -667,6 +672,7 @@ export const ENTITY_TYPES: EntityTypeDef[] = [
     icon: 'ArrowLeftRight',
     color: '#fbbf24',
     usesPlatform: true,
+    keepTypeIcon: true,
     fields: [f('date', 'Date', 'Date', 'date'), f('amount', 'Montant', 'Amount'), f('fee', 'Frais', 'Fee'), f('block', 'Bloc', 'Block', 'number')]
   },
 

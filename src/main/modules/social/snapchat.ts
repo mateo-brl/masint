@@ -1,5 +1,5 @@
-import { defineModule, ModuleError } from '@shared/modules'
-import { acceptsPlatform, linkedEntities, metaContent, notFound, profileOutput, requireUsername, scriptJson, toNumber, type Lang, type Parsed } from './_lib'
+import { defineModule } from '@shared/modules'
+import { acceptsPlatform, linkedEntities, metaContent, notFound, profileOutput, requireUsername, scriptJson, statusError, toNumber, type Lang, type Parsed } from './_lib'
 
 interface SnapPublicProfile {
   username: string
@@ -88,7 +88,7 @@ export default defineModule({
     const res = await ctx.fetch(`https://www.snapchat.com/@${encodeURIComponent(username.toLowerCase())}`, { headers: { 'accept-language': 'en-US,en;q=0.9' } })
     if (res.status === 404) return notFound()
     const html = await res.text()
-    if (!res.ok) throw new ModuleError(`Snapchat : HTTP ${res.status}`, res.status === 429 ? 'rate_limited' : 'blocked')
+    if (!res.ok) throw statusError('Snapchat', res.status, html)
     const parsed = parseSnapchat(html, ctx.lang)
     if (!parsed) return notFound()
     return profileOutput(input, 'snapchat', parsed.profile, parsed.children, parsed.profile, ctx.lang)

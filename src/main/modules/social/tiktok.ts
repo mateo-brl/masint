@@ -1,5 +1,5 @@
 import { defineModule, ModuleError } from '@shared/modules'
-import { acceptsPlatform, linkedEntities, notFound, profileOutput, requireUsername, scriptJson, toIso, toNumber, type Lang, type Parsed } from './_lib'
+import { acceptsPlatform, blockedError, linkedEntities, looksBlocked, notFound, profileOutput, requireUsername, scriptJson, toIso, toNumber, type Lang, type Parsed } from './_lib'
 
 export interface TikTokUserInfo {
   user?: {
@@ -32,7 +32,9 @@ export function parseTikTokPage(html: string): { status: 'found' | 'not_found' |
   const data = scriptJson<Rehydration>(html, '__UNIVERSAL_DATA_FOR_REHYDRATION__')
   const detail = data?.__DEFAULT_SCOPE__?.['webapp.user-detail']
   if (!detail) return { status: 'unknown' }
-  if (detail.statusCode === 0 && detail.userInfo?.user?.uniqueId) return { status: 'found', info: detail.userInfo }
+  // 10222 (ErrBizUserSecret) : compte privé, le profil de base reste fourni.
+  if ((detail.statusCode === 0 || detail.statusCode === 10222) && detail.userInfo?.user?.uniqueId)
+    return { status: 'found', info: detail.userInfo }
   // 10221 : compte inexistant (vérifié). Les autres codes sont remontés tels quels.
   if (detail.statusCode === 10221) return { status: 'not_found', code: detail.statusCode }
   return { status: 'unknown', code: detail.statusCode }
@@ -90,6 +92,7 @@ export default defineModule({
     if (res.status === 404) return notFound()
     const page = parseTikTokPage(html)
     if (page.status === 'not_found') return notFound({ statusCode: page.code })
+    if (page.status !== 'found' && (res.status === 403 || looksBlocked(html))) throw blockedError('TikTok', res.status)
     if (page.status !== 'found' || !page.info) throw new ModuleError(`TikTok : réponse inattendue (HTTP ${res.status}, code ${page.code ?? '?'})`, 'blocked')
     const parsed = parseTikTok(page.info, ctx.lang)
     return profileOutput(input, 'tiktok', parsed.profile, parsed.children, page.info, ctx.lang)

@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { attachmentUrl } from '@shared/api'
 import { ENTITY_TYPES, getEntityType, type CategoryId } from '@shared/entityTypes'
+import { propertyLabel } from '@shared/propertyLabels'
 import { emailProvider, getPlatform, PLATFORMS } from '@shared/platforms'
 import type { GraphEdge, GraphNode, ModuleRun, PropValue } from '@shared/types'
-import { enrichNode, fileToBase64, modulesForNode } from '../../lib/actions'
+import { canEnrich, enrichNode, fileToBase64, modulesForNode, useApplicable } from '../../lib/actions'
 import { api, openExternal } from '../../lib/api'
 import { useLang } from '../../lib/i18n'
 import { EntityBadge, Icon } from '../../lib/icons'
@@ -38,7 +39,9 @@ export function PropertiesPanel(): React.JSX.Element | null {
   if (!content) return null
 
   return (
-    <aside className="glass absolute top-4 right-4 bottom-20 z-20 flex w-[318px] flex-col overflow-hidden rounded-2xl">{content}</aside>
+    <aside data-panel="properties" className="glass absolute top-4 right-4 bottom-20 z-20 flex w-[318px] flex-col overflow-hidden rounded-2xl">
+      {content}
+    </aside>
   )
 }
 
@@ -104,16 +107,35 @@ function useDebouncedSave<T>(value: T, save: (v: T) => void, delay = 450): void 
   }, [value, delay])
 }
 
+/**
+ * Texte modifiable localement (saisie fluide, sauvegarde différée) qui suit aussi les
+ * changements venus d'ailleurs (édition sur le canevas, fusion, module) tant que
+ * l'utilisateur n'a pas de saisie en attente.
+ */
+function useSyncedText(value: string, save: (v: string) => void): [string, (v: string) => void] {
+  const [local, setLocal] = useState(value)
+  const synced = useRef(value)
+  useEffect(() => {
+    if (value === synced.current) return
+    if (local === synced.current) setLocal(value)
+    synced.current = value
+  }, [value])
+  useDebouncedSave(local, (v) => {
+    if (v === synced.current) return
+    synced.current = v
+    save(v)
+  })
+  return [local, setLocal]
+}
+
 function EntitySheet({ node }: { node: GraphNode }): React.JSX.Element {
   const { t } = useTranslation()
   const { tx } = useLang()
   const updateNode = useGraph((s) => s.updateNode)
   const def = getEntityType(node.type)
-  const [label, setLabel] = useState(node.label)
-  useDebouncedSave(label, (v) => {
-    if (v === node.label) return
+  const [label, setLabel] = useSyncedText(node.label, (v) => {
     const provider = node.type === 'email' && !node.platform ? emailProvider(v.trim())?.id : undefined
-    void updateNode(node.id, { label: v.trim(), ...(provider ? { platform: provider } : {}) })
+    void updateNode(node.id, { label: v, ...(provider ? { platform: provider } : {}) })
   })
 
   const platformCats = PLATFORM_CATEGORIES[node.type]
@@ -188,12 +210,13 @@ function ImageDrop({ node }: { node: GraphNode }): React.JSX.Element {
   const setFromFile = async (f: File): Promise<void> => {
     if (!inv || !f.type.startsWith('image/')) return
     const att = await api('attachments:add', inv.id, { name: f.name, mime: f.type, base64: await fileToBase64(f) })
-    await updateNode(node.id, { imageId: att.id })
+    await updateNode(node.id, { imageId: att.id, label: node.label || att.name })
   }
   const pick = async (): Promise<void> => {
     if (!inv) return
     const [att] = await api('attachments:pick', inv.id)
-    if (att) await updateNode(node.id, { imageId: att.id })
+    // Une entité sans valeur prend le nom du fichier, pour pouvoir l'enrichir aussitôt.
+    if (att) await updateNode(node.id, { imageId: att.id, label: node.label || att.name })
   }
 
   if (node.imageId)
@@ -290,15 +313,18 @@ function parseValue(text: string, previous: PropValue, kind?: string): PropValue
 
 function PropertyList({ node }: { node: GraphNode }): React.JSX.Element {
   const { t } = useTranslation()
-  const { tx } = useLang()
+  const { tx, lang } = useLang()
   const updateNode = useGraph((s) => s.updateNode)
   const def = getEntityType(node.type)
   const [adding, setAdding] = useState(false)
   const [newKey, setNewKey] = useState('')
+  const [draft, setDraft] = useState<{ key: string; label: string; kind?: string } | null>(null)
 
   const fieldByKey = new Map(def.fields.map((f) => [f.key, f]))
   const keys = Object.keys(node.data).filter((k) => !k.startsWith('__'))
-  const ordered = [...def.fields.map((f) => f.key).filter((k) => keys.includes(k)), ...keys.filter((k) => !fieldByKey.has(k)).sort()]
+  // Champs du type d'abord, puis les autres dans leur ordre d'ajout : un champ créé à la main
+  // reste à l'endroit où on vient de le saisir.
+  const ordered = [...def.fields.map((f) => f.key).filter((k) => keys.includes(k)), ...keys.filter((k) => !fieldByKey.has(k))]
   const missingFields = def.fields.filter((f) => !keys.includes(f.key))
 
   const setProp = (key: string, value: PropValue | undefined): void => {
@@ -315,7 +341,7 @@ function PropertyList({ node }: { node: GraphNode }): React.JSX.Element {
         return (
           <PropertyRow
             key={k}
-            label={f ? tx(f.label) : k.replace(/_/g, ' ')}
+            label={f ? tx(f.label) : propertyLabel(k, lang)}
             value={node.data[k]}
             kind={f?.kind}
             onChange={(text) => setProp(k, parseValue(text, node.data[k], f?.kind))}
@@ -323,6 +349,21 @@ function PropertyList({ node }: { node: GraphNode }): React.JSX.Element {
           />
         )
       })}
+      {draft && (
+        <PropertyRow
+          key={`draft:${draft.key}`}
+          label={draft.label}
+          value=""
+          kind={draft.kind}
+          startEditing
+          onChange={(text) => {
+            setProp(draft.key, parseValue(text, null, draft.kind))
+            setDraft(null)
+          }}
+          onCancel={() => setDraft(null)}
+          onDelete={() => setDraft(null)}
+        />
+      )}
       {adding ? (
         <div className="flex gap-1.5">
           <input
@@ -332,9 +373,12 @@ function PropertyList({ node }: { node: GraphNode }): React.JSX.Element {
             onChange={(e) => setNewKey(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && newKey.trim()) {
-                const key = newKey.trim().toLowerCase().replace(/\s+/g, '_')
-                const field = def.fields.find((f) => f.key === key || tx(f.label).toLowerCase() === newKey.trim().toLowerCase())
-                setProp(field?.key ?? key, '…')
+                const typed = newKey.trim()
+                const key = typed.toLowerCase().replace(/\s+/g, '_')
+                const field = def.fields.find((f) => f.key === key || tx(f.label).toLowerCase() === typed.toLowerCase())
+                // Champ libre : le nom saisi est gardé tel quel (« Lieu de naissance »).
+                const k = field?.key ?? typed
+                if (node.data[k] === undefined) setDraft({ key: k, label: field ? tx(field.label) : newKey.trim(), kind: field?.kind })
                 setNewKey('')
                 setAdding(false)
               }
@@ -369,15 +413,20 @@ function PropertyRow({
   value,
   kind,
   onChange,
-  onDelete
+  onDelete,
+  onCancel,
+  startEditing = false
 }: {
   label: string
   value: PropValue
   kind?: string
   onChange: (text: string) => void
   onDelete: () => void
+  /** Sortie d'édition sans valeur (brouillon de nouveau champ). */
+  onCancel?: () => void
+  startEditing?: boolean
 }): React.JSX.Element {
-  const [editing, setEditing] = useState(false)
+  const [editing, setEditing] = useState(startEditing)
   const [text, setText] = useState(formatValue(value))
   useEffect(() => setText(formatValue(value)), [value])
   const str = formatValue(value)
@@ -385,11 +434,12 @@ function PropertyRow({
   const commit = (): void => {
     setEditing(false)
     if (text !== str) onChange(text)
+    else if (!text) onCancel?.()
   }
   return (
     <div className="group rounded-xl border border-line bg-panel-2 px-3 py-2">
       <div className="flex items-center gap-2">
-        <span className="min-w-0 flex-1 truncate text-[11px] text-muted capitalize">{label}</span>
+        <span className="min-w-0 flex-1 truncate text-[11px] text-muted" title={label}>{label}</span>
         <button onClick={onDelete} className="text-faint opacity-0 transition group-hover:opacity-100 hover:text-accent">
           <Icon name="X" size={12} />
         </button>
@@ -408,6 +458,7 @@ function PropertyRow({
               if (e.key === 'Escape') {
                 setText(str)
                 setEditing(false)
+                if (!str) onCancel?.()
               }
             }}
             className="field mt-1 !py-1"
@@ -437,12 +488,16 @@ function EnrichBlock({ node }: { node: GraphNode }): React.JSX.Element {
   const job = useApp((s) => Object.values(s.jobs).find((j) => j.nodeId === node.id && !j.finished))
   const [picker, setPicker] = useState(false)
   const applicable = useMemo(() => modulesForNode(node, modules), [node, modules])
+  // Décompte du moteur : mêmes filtres que l'exécution (valeur acceptée, clé, module actif).
+  const server = useApplicable(node)
+  const accepts = (id: string): boolean => !server || server.accepted.has(id)
   const [checked, setChecked] = useState<Set<string>>(new Set())
   useEffect(() => {
-    setChecked(new Set(applicable.filter((m) => !m.ondemand && m.enabled && m.configured).map((m) => m.id)))
-  }, [applicable])
+    setChecked(server ? new Set(server.auto) : new Set(applicable.filter((m) => !m.ondemand && m.enabled && m.configured).map((m) => m.id)))
+  }, [applicable, server])
 
-  const auto = applicable.filter((m) => !m.ondemand && m.enabled && m.configured).length
+  const auto = server ? server.auto.size : applicable.filter((m) => !m.ondemand && m.enabled && m.configured).length
+  const enrichable = canEnrich(node)
 
   return (
     <div className="flex flex-col gap-2">
@@ -452,11 +507,11 @@ function EnrichBlock({ node }: { node: GraphNode }): React.JSX.Element {
             <Spinner /> {job.done}/{job.total} · {t('common.cancel')}
           </Button>
         ) : (
-          <Button variant="primary" icon="Zap" className="flex-1" disabled={!node.label || auto === 0} onClick={() => void enrichNode(node.id)}>
+          <Button variant="primary" icon="Zap" className="flex-1" disabled={!enrichable || auto === 0} onClick={() => void enrichNode(node.id)}>
             {t('enrich.button', { count: auto })}
           </Button>
         )}
-        <Button icon="ListChecks" disabled={!node.label} onClick={() => setPicker(true)} title={t('enrich.choose')} />
+        <Button icon="ListChecks" disabled={!enrichable} onClick={() => setPicker(true)} title={t('enrich.choose')} />
       </div>
       <Dialog
         open={picker}
@@ -485,10 +540,13 @@ function EnrichBlock({ node }: { node: GraphNode }): React.JSX.Element {
         <div className="flex flex-col gap-1">
           {applicable.length === 0 && <div className="text-muted">{t('enrich.noneForType')}</div>}
           {applicable.map((m) => (
-            <label key={m.id} className={`flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-panel-2 ${!m.configured ? 'opacity-60' : ''}`}>
+            <label
+              key={m.id}
+              className={`flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-panel-2 ${!m.configured || !accepts(m.id) ? 'opacity-60' : ''}`}
+            >
               <input
                 type="checkbox"
-                disabled={!m.configured}
+                disabled={!m.configured || !accepts(m.id)}
                 checked={checked.has(m.id)}
                 onChange={(e) => {
                   const next = new Set(checked)
@@ -505,6 +563,7 @@ function EnrichBlock({ node }: { node: GraphNode }): React.JSX.Element {
                   {m.experimental && <span className="rounded bg-panel-3 px-1.5 text-[10px] text-warning">{t('modules.experimental')}</span>}
                 </div>
                 <div className="text-[11.5px] text-muted">{tx(m.description)}</div>
+                {!accepts(m.id) && <div className="mt-0.5 text-[11.5px] text-warning">{t('enrich.notApplicable')}</div>}
                 {!m.configured && (
                   <button className="mt-0.5 text-[11.5px] text-accent hover:underline" onClick={() => openSettings('keys')}>
                     {t('modules.needsKey')}
@@ -559,7 +618,11 @@ function RunsList({ node }: { node: GraphNode }): React.JSX.Element | null {
     <div className="border-t border-line pt-3">
       <button onClick={() => setOpen(!open)} className="flex w-full items-center gap-1.5 text-left text-[12px] text-muted hover:text-fg">
         <Icon name={open ? 'ChevronDown' : 'ChevronRight'} size={13} />
-        {t('runs.summary', { done, results, errors })}
+        {t('runs.summaryLine', {
+          done: t('runs.nDone', { count: done }),
+          results: t('runs.nResults', { count: results }),
+          errors: t('runs.nErrors', { count: errors })
+        })}
       </button>
       {open && (
         <div className="mt-2 flex flex-col gap-0.5">
@@ -567,11 +630,14 @@ function RunsList({ node }: { node: GraphNode }): React.JSX.Element | null {
             <button
               key={r.id}
               onClick={() => void api('modules:runRaw', r.id).then((data) => setRaw({ title: name(r.moduleId), data }))}
-              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[12px] hover:bg-panel-2"
-              title={r.error ?? undefined}
+              className="flex flex-wrap items-center gap-x-2 rounded-lg px-2 py-1.5 text-left text-[12px] hover:bg-panel-2"
             >
               <RunIcon run={r} />
               <span className="min-w-0 flex-1 truncate">{name(r.moduleId)}</span>
+              {r.status === 'error' && r.error && (
+                // Le message complet, sous le nom : une infobulle serait coupée par le bord du panneau.
+                <span className="order-last w-full pl-[21px] text-[11px] leading-snug [overflow-wrap:anywhere] text-accent">{r.error}</span>
+              )}
               <span className="shrink-0 text-[11px] text-faint">
                 {r.status === 'error'
                   ? t('runs.error')
@@ -612,8 +678,7 @@ function RunIcon({ run }: { run: ModuleRun }): React.JSX.Element {
 function AnnotationSheet({ node }: { node: GraphNode }): React.JSX.Element {
   const { t } = useTranslation()
   const updateNode = useGraph((s) => s.updateNode)
-  const [label, setLabel] = useState(node.label)
-  useDebouncedSave(label, (v) => v !== node.label && void updateNode(node.id, { label: v }))
+  const [label, setLabel] = useSyncedText(node.label, (v) => void updateNode(node.id, { label: v }))
   const num = (k: string): string => (typeof node.data[k] === 'number' ? String(node.data[k]) : '')
   const setNum = (k: string, v: string): void => {
     const n = Number(v.replace(',', '.'))
@@ -801,8 +866,7 @@ function EdgePanel({ edge }: { edge: GraphEdge }): React.JSX.Element {
   const updateEdge = useGraph((s) => s.updateEdge)
   const deleteEdges = useGraph((s) => s.deleteEdges)
   const nodes = useGraph((s) => s.nodes)
-  const [label, setLabel] = useState(edge.label)
-  useDebouncedSave(label, (v) => v !== edge.label && void updateEdge(edge.id, { label: v }))
+  const [label, setLabel] = useSyncedText(edge.label, (v) => void updateEdge(edge.id, { label: v }))
   const src = nodes.find((n) => n.id === edge.source)?.data.node
   const dst = nodes.find((n) => n.id === edge.target)?.data.node
   return (

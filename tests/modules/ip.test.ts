@@ -29,7 +29,7 @@ describe('ip.geo', () => {
     const g = fromIpWhoIs(fixtureJson<IpWhoIs>('ip/ipwhois_8.8.8.8.json'))
     const flags = fixtureJson<IpApi>('ip/ipapi_8.8.8.8.json')
     const out = buildGeoOutput(g, flags, 'fr')
-    expect(out.properties).toMatchObject({ country: 'United States', asn: 'AS15169', isp: 'Google LLC', is_hosting: true, reverse: 'dns.google' })
+    expect(out.properties).toMatchObject({ country: 'États-Unis', country_code: 'US', asn: 'AS15169', isp: 'Google LLC', is_hosting: true, reverse: 'dns.google' })
     expect(typeof out.properties?.lat).toBe('number')
     expect(types(out, 'asn')).toEqual(['AS15169'])
     expect(fromIpApi(flags, '8.8.8.8')?.asn).toBe(15169)
@@ -183,8 +183,9 @@ describe('ip.greynoise', () => {
   it('lit la réponse community', async () => {
     const out = parseGreyNoise(fixtureJson<GreyNoiseCommunity>('ip/greynoise_185.220.101.1.json'))
     expect(out.properties).toMatchObject({ greynoise_noise: true, greynoise_classification: 'malicious' })
+    // 404 « non observée » : on le dit, sans affirmer que l'IP est hors RIOT (non renseigné sans clé).
     const ctx = fakeContext({ routes: { 'https://api.greynoise.io/': { status: 404, body: { ip: '8.8.8.8', noise: false, riot: false } } } })
-    expect(await greynoise.run(entity('ip', '8.8.8.8'), ctx)).toEqual({})
+    expect((await greynoise.run(entity('ip', '8.8.8.8'), ctx)).properties).toEqual({ greynoise_noise: false, greynoise_link: 'https://viz.greynoise.io/ip/8.8.8.8' })
   })
 })
 

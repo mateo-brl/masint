@@ -200,6 +200,25 @@ export class Repo {
     ).map(toNode)
   }
 
+  /**
+   * Emprises des nœuds d'une enquête (placement sans chevauchement), sans décoder les données.
+   * Les dessins à main levée sont ignorés : un trait qui entoure un groupe ne bloque pas la place.
+   */
+  listNodeBoxes(investigationId: string): Array<{ id: string; x: number; y: number; width: number | null; height: number | null; style: GraphNode['style'] }> {
+    const rows = this.db
+      .prepare("SELECT id, x, y, width, height, style FROM nodes WHERE investigation_id = ? AND deleted_at IS NULL AND kind != 'drawing'")
+      .all(investigationId) as Array<{ id: string; x: number; y: number; width: number | null; height: number | null; style: string }>
+    return rows.map((r) => {
+      let style: GraphNode['style'] = {}
+      try {
+        style = JSON.parse(r.style) as GraphNode['style']
+      } catch {
+        /* style illisible : taille par défaut */
+      }
+      return { ...r, style }
+    })
+  }
+
   getNode(id: string): GraphNode | null {
     const r = this.db.prepare('SELECT * FROM nodes WHERE id = ? AND deleted_at IS NULL').get(id) as NodeRow | undefined
     return r ? toNode(r) : null

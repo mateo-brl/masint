@@ -40,11 +40,11 @@ export function parseReddit(about: RedditAbout, lang: Lang): Parsed | null {
         link_karma: d.link_karma,
         comment_karma: d.comment_karma,
         total_karma: d.total_karma,
-        verified_email: d.has_verified_email,
+        email_verified: d.has_verified_email,
         moderator: d.is_mod,
         employee: d.is_employee || undefined,
         suspended: d.is_suspended || undefined,
-        nsfw_profile: d.subreddit?.over_18 || undefined
+        nsfw: d.subreddit?.over_18 || undefined
       }
     },
     children: linkedEntities({ text: bio, lang, self: { platform: 'reddit', username: d.name } })

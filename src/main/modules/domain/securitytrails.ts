@@ -1,5 +1,5 @@
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
-import { compact, isDomain, normalizeDomain, requireKey, serviceError, uniq } from './_util'
+import { cappedList, compact, isDomain, MAX_LIST_PROPERTY, normalizeDomain, requireKey, serviceError, uniq } from './_util'
 
 const KEY = { id: 'securitytrails', label: 'SecurityTrails API key', url: 'https://securitytrails.com/app/account/credentials' }
 const BASE = 'https://api.securitytrails.com/v1'
@@ -70,14 +70,14 @@ export function parseSecurityTrails(
     properties: compact({
       a: currentIps,
       st_a_first_seen: d?.current_dns?.a?.first_seen ?? null,
-      st_past_ips: past.slice(0, 100),
+      ...cappedList('st_past_ips', past),
       subdomain_count: subs?.subdomain_count ?? d?.subdomain_count ?? null,
-      subdomains: subdomains.slice(0, 1000),
+      subdomains: subdomains.slice(0, MAX_LIST_PROPERTY),
       st_ip_organizations: uniq((d?.current_dns?.a?.values ?? []).map((v) => v.ip_organization ?? '').filter(Boolean)),
       soa_email: d?.current_dns?.soa?.values?.[0]?.email ?? null
     }),
     entities,
-    raw: { domain: d, subdomain_count: subs?.subdomain_count, history: history?.records?.slice(0, 50) }
+    raw: { domain: d, subdomain_count: subs?.subdomain_count, subdomains: subdomains.slice(0, 1000), history: history?.records?.slice(0, 50) }
   }
 }
 

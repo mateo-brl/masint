@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ModuleCategory, ModuleInfo, ModuleRoute, ModuleRun } from '@shared/types'
 import { api, openExternal } from '../../lib/api'
+import { loadPref, savePref } from '../../lib/prefs'
 import { useLang } from '../../lib/i18n'
 import { Icon } from '../../lib/icons'
 import { useApp } from '../../store/app'
@@ -164,7 +165,11 @@ function RunLog(): React.JSX.Element {
   const modules = useApp((s) => s.modules)
   const jobs = useApp((s) => s.jobs)
   const [runs, setRuns] = useState<ModuleRun[]>([])
-  const [onlyErrors, setOnlyErrors] = useState(false)
+  const [onlyErrors, setOnlyErrorsState] = useState(() => loadPref('onlyErrors', false))
+  const setOnlyErrors = (v: boolean): void => {
+    savePref('onlyErrors', v)
+    setOnlyErrorsState(v)
+  }
 
   useEffect(() => {
     if (inv) void api('modules:runs', inv.id).then(setRuns)
@@ -178,7 +183,9 @@ function RunLog(): React.JSX.Element {
         <Switch checked={onlyErrors} onChange={setOnlyErrors} /> {t('modules.onlyErrors')}
       </label>
       <div className="overflow-hidden rounded-2xl border border-line">
-        {list.length === 0 && <div className="bg-panel px-4 py-6 text-center text-muted">{t('modules.noRuns')}</div>}
+        {list.length === 0 && (
+          <div className="bg-panel px-4 py-6 text-center text-muted">{onlyErrors && runs.length ? t('modules.noErrors') : t('modules.noRuns')}</div>
+        )}
         {list.slice(0, 500).map((r) => {
           const m = modules.find((x) => x.id === r.moduleId)
           return (

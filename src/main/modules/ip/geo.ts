@@ -1,6 +1,6 @@
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
-import { compact, isIPv4, isIPv6, normalizeHost, serviceError } from '../domain/_util'
+import { compact, isIPv4, isIPv6, localizeCountry, normalizeHost, serviceError } from '../domain/_util'
 
 export interface IpWhoIs {
   ip?: string
@@ -101,21 +101,23 @@ export function fromIpApi(d: IpApi, ip: string): Geo | null {
 export function buildGeoOutput(g: Geo | null, flags: IpApi | null, lang: 'fr' | 'en'): ModuleOutput {
   if (!g) return {}
   const fr = lang === 'fr'
+  // Les deux services renvoient le nom du pays en anglais : on le traduit à partir du code ISO.
+  const country = localizeCountry(g.country, g.country_code, lang)
   const entities: OutEntity[] = []
   if (g.asn)
     entities.push({
       type: 'asn',
       label: `AS${g.asn}`,
-      data: compact({ name: g.asnName, country: g.country }) as Record<string, PropValue>,
+      data: compact({ name: g.asnName, country }) as Record<string, PropValue>,
       linkLabel: fr ? 'réseau' : 'network'
     })
   const properties = compact({
     version: g.version,
-    country: g.country,
+    country,
     country_code: g.country_code,
     region: g.region,
     city: g.city,
-    postal_code: g.postal,
+    postcode: g.postal,
     lat: g.lat,
     lon: g.lon,
     timezone: g.timezone,

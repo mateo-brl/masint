@@ -1,0 +1,351 @@
+{
+ "indicator": "example.com",
+ "validation": [
+  {
+   "source": "akamai",
+   "message": "Akamai rank: #1608",
+   "name": "Akamai Popular Domain"
+  },
+  {
+   "source": "majestic",
+   "message": "Whitelisted domain example.com",
+   "name": "Whitelisted domain"
+  },
+  {
+   "source": "whitelist",
+   "message": "Whitelisted domain example.com",
+   "name": "Whitelisted domain"
+  }
+ ],
+ "false_positive": [],
+ "pulse_info": {
+  "count": 50,
+  "pulses": [
+   {
+    "name": "Microsoft Phishing Collection",
+    "tags": [
+     "urls",
+     "phishing",
+     "scam",
+     "microsoft"
+    ],
+    "created": "2023-01-25T11:11:02.458000",
+    "modified": "2026-10-21T13:37:52.563000",
+    "malware_families": [],
+    "adversary": ""
+   },
+   {
+    "name": "Fastly: find your muse + keep them on your radar * CAPE Sandbox",
+    "tags": [
+     "ip address",
+     "status code",
+     "body length",
+     "kb body",
+     "sha256",
+     "csv text",
+     "altitude",
+     "south shore"
+    ],
+    "created": "2026-05-24T16:42:34.355000",
+    "modified": "2026-10-20T03:33:49.497000",
+    "malware_families": [
+     {
+      "id": "Norwell",
+      "display_name": "Norwell",
+      "target": null
+     }
+    ],
+    "adversary": ""
+   },
+   {
+    "name": "check",
+    "tags": [],
+    "created": "2026-03-18T20:56:38.824000",
+    "modified": "2026-10-15T20:45:05.115000",
+    "malware_families": [],
+    "adversary": ""
+   },
+   {
+    "name": "Christopher P. Ahmann IS responsible for Pegasus attacks Reputation Damage | nsis_installer.bin",
+    "tags": [
+     "netherlands",
+     "united",
+     "south korea",
+     "china",
+     "active",
+     "search",
+     "added active",
+     "ssdeep"
+    ],
+    "created": "2026-10-13T23:32:46.526000",
+    "modified": "2026-10-13T23:32:46.526000",
+    "malware_families": [
+     {
+      "id": "Trojan.FlyStudio/R002c0dkt22",
+      "display_name": "Trojan.FlyStudio/R002c0dkt22",
+      "target": null
+     },
+     {
+      "id": "NSIS",
+      "display_name": "NSIS",
+      "target": null
+     },
+     {
+      "id": "NSIS_Installer.Bin",
+      "display_name": "NSIS_Installer.Bin",
+      "target": null
+     },
+     {
+      "id": "Win.Packed.njRAT-10002074-1",
+      "display_name": "Win.Packed.njRAT-10002074-1",
+      "target": null
+     }
+    ],
+    "adversary": "NSO Group featuring Christopher Ahmann , Law Enforcement and Workers Compensation Insurance"
+   },
+   {
+    "name": "NSO ->FMGLaw.com (Christopher Ahmann) is responsible for Pegasus attacks Reputation Damage | nsis_installer.bin",
+    "tags": [
+     "netherlands",
+     "united",
+     "south korea",
+     "china",
+     "active",
+     "search",
+     "added active",
+     "ssdeep"
+    ],
+    "created": "2026-10-13T22:56:30.679000",
+    "modified": "2026-10-13T22:56:30.679000",
+    "malware_families": [
+     {
+      "id": "Trojan.FlyStudio/R002c0dkt22",
+      "display_name": "Trojan.FlyStudio/R002c0dkt22",
+      "target": null
+     },
+     {
+      "id": "NSIS",
+      "display_name": "NSIS",
+      "target": null
+     },
+     {
+      "id": "NSIS_Installer.Bin",
+      "display_name": "NSIS_Installer.Bin",
+      "target": null
+     },
+     {
+      "id": "Win.Packed.njRAT-10002074-1",
+      "display_name": "Win.Packed.njRAT-10002074-1",
+      "target": null
+     }
+    ],
+    "adversary": ""
+   },
+   {
+    "name": "NSO ->FMGLaw.com (Christopher Ahmann) is responsible for Pegasus attacks Reputation Damage | nsis_installer.bin",
+    "tags": [
+     "netherlands",
+     "united",
+     "south korea",
+     "china",
+     "active",
+     "search",
+     "added active",
+     "ssdeep"
+    ],
+    "created": "2026-10-13T22:56:29.726000",
+    "modified": "2026-10-13T22:56:29.726000",
+    "malware_families": [
+     {
+      "id": "Trojan.FlyStudio/R002c0dkt22",
+      "display_name": "Trojan.FlyStudio/R002c0dkt22",
+      "target": null
+     },
+     {
+      "id": "NSIS",
+      "display_name": "NSIS",
+      "target": null
+     },
+     {
+      "id": "NSIS_Installer.Bin",
+      "display_name": "NSIS_Installer.Bin",
+      "target": null
+     },
+     {
+      "id": "Win.Packed.njRAT-10002074-1",
+      "display_name": "Win.Packed.njRAT-10002074-1",
+      "target": null
+     }
+    ],
+    "adversary": ""
+   },
+   {
+    "name": "NSO ->FMGLaw.com (Christopher Ahmann) is responsible for Pegasus attacks Reputation Damage | nsis_installer.bin",
+    "tags": [
+     "netherlands",
+     "united",
+     "south korea",
+     "china",
+     "active",
+     "search",
+     "added active",
+     "ssdeep"
+    ],
+    "created": "2026-10-13T22:56:25.297000",
+    "modified": "2026-10-13T22:56:25.297000",
+    "malware_families": [
+     {
+      "id": "Trojan.FlyStudio/R002c0dkt22",
+      "display_name": "Trojan.FlyStudio/R002c0dkt22",
+      "target": null
+     },
+     {
+      "id": "NSIS",
+      "display_name": "NSIS",
+      "target": null
+     },
+     {
+      "id": "NSIS_Installer.Bin",
+      "display_name": "NSIS_Installer.Bin",
+      "target": null
+     },
+     {
+      "id": "Win.Packed.njRAT-10002074-1",
+      "display_name": "Win.Packed.njRAT-10002074-1",
+      "target": null
+     }
+    ],
+    "adversary": ""
+   },
+   {
+    "name": "www.filescan.io feed 6/6/25",
+    "tags": [],
+    "created": "2025-06-06T00:50:14.138000",
+    "modified": "2026-10-08T22:08:12.909000",
+    "malware_families": [],
+    "adversary": ""
+   },
+   {
+    "name": "Part 2 - | Incomplete Pulse",
+    "tags": [
+     "port",
+     "bytes",
+     "read",
+     "write",
+     "start",
+     "united",
+     "aaaa",
+     "443 ma2592000"
+    ],
+    "created": "2026-09-05T21:23:02.384000",
+    "modified": "2026-10-05T15:09:30.201000",
+    "malware_families": [
+     {
+      "id": "#LowFiIrcJoinPort",
+      "display_name": "#LowFiIrcJoinPort",
+      "target": null
+     },
+     {
+      "id": "IRC",
+      "display_name": "IRC",
+      "target": null
+     }
+    ],
+    "adversary": ""
+   },
+   {
+    "name": "Vercel Servers | Log in \u00b7 TaskBounty | Crysen",
+    "tags": [
+     "urls",
+     "emails",
+     "certificate",
+     "refresh",
+     "encrypt",
+     "united",
+     "record value",
+     "unknown ns"
+    ],
+    "created": "2026-10-03T04:48:27.600000",
+    "modified": "2026-10-03T04:48:27.600000",
+    "malware_families": [
+     {
+      "id": "TrojanDownloader:O97M/Emotet.ARJ!MTB",
+      "display_name": "TrojanDownloader:O97M/Emotet.ARJ!MTB",
+      "target": "/malware/TrojanDownloader:O97M/Emotet.ARJ!MTB"
+     },
+     {
+      "id": "Tofsee",
+      "display_name": "Tofsee",
+      "target": null
+     },
+     {
+      "id": "Backdoor:Win32/Tofsee.T",
+      "display_name": "Backdoor:Win32/Tofsee.T",
+      "target": "/malware/Backdoor:Win32/Tofsee.T"
+     },
+     {
+      "id": "Trojan:Win32/Dorv.A!rfn",
+      "display_name": "Trojan:Win32/Dorv.A!rfn",
+      "target": "/malware/Trojan:Win32/Dorv.A!rfn"
+     }
+    ],
+    "adversary": ""
+   },
+   {
+    "name": "LinkedIN \u2022 Google Cloud IP Scheme | Server Hello with Downgrade Request",
+    "tags": [
+     "linkedin",
+     "eva lisa",
+     "experience",
+     "denver health",
+     "location",
+     "united",
+     "view eva",
+     "lisa"
+    ],
+    "created": "2026-09-29T06:07:05.387000",
+    "modified": "2026-09-29T06:07:05.387000",
+    "malware_families": [
+     {
+      "id": "ALF:Trojan:MSIL/LokiBot.AQB!MTB",
+      "display_name": "ALF:Trojan:MSIL/LokiBot.AQB!MTB",
+      "target": null
+     },
+     {
+      "id": "ALF:JASYP:VirTool:Win32/Satan!atmn",
+      "display_name": "ALF:JASYP:VirTool:Win32/Satan!atmn",
+      "target": null
+     },
+     {
+      "id": "Win.Dropper.Tiggre-9845940-0",
+      "display_name": "Win.Dropper.Tiggre-9845940-0",
+      "target": null
+     },
+     {
+      "id": "TrojanDropper:Win32/Systex.A",
+      "display_name": "TrojanDropper:Win32/Systex.A",
+      "target": "/malware/TrojanDropper:Win32/Systex.A"
+     }
+    ],
+    "adversary": ""
+   },
+   {
+    "name": "Catrobat Oura PD Health Spyware: right under the acceptable use policy but after the unbecoming of a public pro.",
+    "tags": [
+     "microsoft smtp",
+     "server",
+     "validated",
+     "lsalford",
+     "ocomodo ca",
+     "limited",
+     "cncomodo rsa",
+     "secure server"
+    ],
+    "created": "2026-08-28T10:05:05.520000",
+    "modified": "2026-09-27T09:26:23.840000",
+    "malware_families": [],
+    "adversary": ""
+   }
+  ]
+ }
+}

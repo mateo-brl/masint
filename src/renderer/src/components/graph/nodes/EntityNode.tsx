@@ -15,6 +15,9 @@ const SIZES = { sm: 168, md: 196, lg: 240 }
 /** Nombre de liens sortants par nœud, fourni par le canevas (pastille rouge). */
 export const OutDegreeContext = createContext<Map<string, number>>(new Map())
 
+/** Nœuds sélectionnés : leurs liens affichent toujours leur libellé. */
+export const SelectedNodesContext = createContext<Set<string>>(new Set())
+
 
 function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Element {
   const n = data.node
@@ -25,7 +28,7 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
   const platform = getPlatform(n.platform)
   const accent = n.style.color ?? platform?.color ?? def.color
   const width = SIZES[n.style.size ?? 'md']
-  const kicker = (platform?.name ?? tx(def.label)).toUpperCase()
+  const kicker = (platform && def.keepTypeIcon ? `${tx(def.label)} · ${platform.name}` : (platform?.name ?? tx(def.label))).toUpperCase()
   const subtitle = n.style.hideSubtitle ? '' : nodeSubtitle(n)
   const childCount = useContext(OutDegreeContext).get(n.id) ?? 0
 
@@ -36,7 +39,7 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
         width,
         minHeight: 38,
         background: n.style.bg ?? 'var(--node)',
-        borderColor: selected ? 'var(--accent)' : 'var(--node-border)',
+        borderColor: selected ? 'var(--accent)' : n.style.color && n.imageId ? n.style.color : 'var(--node-border)',
         boxShadow: selected ? '0 0 0 1px var(--accent), 0 6px 24px rgb(0 0 0 / .35)' : '0 2px 10px rgb(0 0 0 / .25)'
       }}
     >

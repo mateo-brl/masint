@@ -7,6 +7,7 @@ import {
   MiniMap,
   ReactFlow,
   SelectionMode,
+  useNodesInitialized,
   useReactFlow,
   type EdgeTypes,
   type NodeTypes,
@@ -17,9 +18,10 @@ import { detectEntity } from '@shared/detect'
 import { getEntityType } from '@shared/entityTypes'
 import { getPlatform } from '@shared/platforms'
 import type { GraphNode } from '@shared/types'
-import { addEntityAt, addFromText, addImageFiles, enrichNode, modulesForNode } from '../../lib/actions'
+import { addEntityAt, addFromLines, addFromText, addImageFiles, canEnrich, enrichNode, modulesForNode, useApplicable } from '../../lib/actions'
 import { api, openExternal } from '../../lib/api'
 import { DRAG_MIME } from '../../lib/catalog'
+import { fitGraph, visibleCenter } from '../../lib/viewport'
 import { useLang } from '../../lib/i18n'
 import { EntityBadge, Icon } from '../../lib/icons'
 import { useApp } from '../../store/app'
@@ -28,7 +30,7 @@ import { confirmDialog } from '../ui'
 import { DrawLayer } from './DrawLayer'
 import { MasintEdge } from './edges/MasintEdge'
 import { DrawingNode } from './nodes/DrawingNode'
-import { EntityNode, OutDegreeContext } from './nodes/EntityNode'
+import { EntityNode, OutDegreeContext, SelectedNodesContext } from './nodes/EntityNode'
 import { ImageNode } from './nodes/ImageNode'
 import { MapNode } from './nodes/MapNode'
 import { TextNode } from './nodes/TextNode'
@@ -37,13 +39,16 @@ const nodeTypes: NodeTypes = { entity: EntityNode, text: TextNode, image: ImageN
 const edgeTypes: EdgeTypes = { masint: MasintEdge }
 const defaultEdgeOptions = { type: 'masint', markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14, color: 'var(--edge)' } }
 
+/** Dernière enquête recadrée : on recadre à l'ouverture, pas à chaque retour sur la vue Graphe. */
+let fittedInvestigation: string | null = null
+
 type Menu =
   | { kind: 'node'; x: number; y: number; nodeId: string }
   | { kind: 'pane'; x: number; y: number; flow: { x: number; y: number } }
   | null
 
 export function GraphCanvas(): React.JSX.Element {
-  const rf = useReactFlow()
+  const rf = useReactFlow<FlowNode, FlowEdge>()
   const nodes = useGraph((s) => s.nodes)
   const edges = useGraph((s) => s.edges)
   const tool = useGraph((s) => s.tool)
@@ -56,6 +61,33 @@ export function GraphCanvas(): React.JSX.Element {
   const [menu, setMenu] = useState<Menu>(null)
   const [quickAdd, setQuickAdd] = useState<{ x: number; y: number; flow: { x: number; y: number } } | null>(null)
   const wrapper = useRef<HTMLDivElement>(null)
+
+  // Recadrage à l'ouverture d'une enquête, une fois les nœuds mesurés.
+  const initialized = useNodesInitialized()
+  useEffect(() => {
+    // Enquête vide : on attend son premier nœud pour le centrer.
+    if (!investigation || !nodes.length || !initialized || fittedInvestigation === investigation.id) return
+    fittedInvestigation = investigation.id
+    fitGraph(rf, 0, 1)
+  }, [investigation, initialized, nodes.length, rf])
+
+  // Premier enrichissement d'une enquête presque vide : on recadre quand il se termine.
+  const jobs = useApp((s) => s.jobs)
+  const fitAfter = useRef(new Set<string>())
+  useEffect(() => {
+    for (const j of Object.values(jobs)) {
+      if (j.investigationId !== investigation?.id) continue
+      if (!j.finished && j.done === 0 && useGraph.getState().nodes.length <= 1) fitAfter.current.add(j.jobId)
+      if (j.finished && fitAfter.current.delete(j.jobId)) setTimeout(() => fitGraph(rf, 400), 150)
+    }
+  }, [jobs, investigation?.id, rf])
+
+  // Ensemble stable tant que la sélection ne change pas (pas à chaque déplacement).
+  const selectedKey = nodes
+    .filter((n) => n.selected)
+    .map((n) => n.id)
+    .join('|')
+  const selectedNodes = useMemo(() => new Set(selectedKey ? selectedKey.split('|') : []), [selectedKey])
 
   const outDegree = useMemo(() => {
     const m = new Map<string, number>()
@@ -85,7 +117,7 @@ export function GraphCanvas(): React.JSX.Element {
       const raw = e.dataTransfer.getData(DRAG_MIME)
       if (raw) {
         const item = JSON.parse(raw) as { type: string; platform?: string }
-        await addEntityAt(item.type, { x: pos.x - 98, y: pos.y - 19 }, { platform: item.platform ?? null })
+        await addEntityAt(item.type, pos, { platform: item.platform ?? null })
         return
       }
       const files = Array.from(e.dataTransfer.files)
@@ -104,9 +136,8 @@ export function GraphCanvas(): React.JSX.Element {
     const onPaste = (e: ClipboardEvent): void => {
       const target = e.target as HTMLElement
       if (target.closest('input, textarea, [contenteditable="true"]')) return
-      const el = wrapper.current?.getBoundingClientRect()
-      if (!el) return
-      const pos = rf.screenToFlowPosition({ x: el.left + el.width / 2, y: el.top + el.height / 2 })
+      if (!wrapper.current) return
+      const pos = visibleCenter(rf)
       const files = Array.from(e.clipboardData?.files ?? [])
       if (files.length) {
         e.preventDefault()
@@ -117,7 +148,7 @@ export function GraphCanvas(): React.JSX.Element {
       if (text) {
         e.preventDefault()
         const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).slice(0, 50)
-        lines.forEach((line, i) => void addFromText(line, { x: pos.x + (i % 4) * 220 - 330, y: pos.y + Math.floor(i / 4) * 70 }))
+        void addFromLines(lines, pos)
       }
     }
     window.addEventListener('paste', onPaste)
@@ -143,7 +174,7 @@ export function GraphCanvas(): React.JSX.Element {
         e.preventDefault()
         for (const n of useGraph.getState().selectedNodes()) void enrichNode(n.id)
       } else if (e.key === 'f' && !mod) {
-        void rf.fitView({ padding: 0.2, duration: 300 })
+        fitGraph(rf)
       } else if (e.key === 'Escape') {
         useGraph.getState().setTool('select')
         setMenu(null)
@@ -165,66 +196,68 @@ export function GraphCanvas(): React.JSX.Element {
   return (
     <div ref={wrapper} className="absolute inset-0" onDoubleClick={onPaneDoubleClick}>
       <OutDegreeContext.Provider value={outDegree}>
-        <ReactFlow<FlowNode, FlowEdge>
-          nodes={nodes}
-          edges={edges}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          defaultEdgeOptions={defaultEdgeOptions}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onMoveEnd={onMoveEnd}
-          onDrop={onDrop}
-          onDragOver={onDragOver}
-          onNodeContextMenu={(e, node) => {
-            e.preventDefault()
-            if (!node.selected) useGraph.getState().select([node.id])
-            setMenu({ kind: 'node', x: e.clientX, y: e.clientY, nodeId: node.id })
-          }}
-          onPaneContextMenu={(e) => {
-            e.preventDefault()
-            setMenu({ kind: 'pane', x: e.clientX, y: e.clientY, flow: rf.screenToFlowPosition({ x: e.clientX, y: e.clientY }) })
-          }}
-          onPaneClick={() => {
-            setMenu(null)
-            setQuickAdd(null)
-          }}
-          onNodeDoubleClick={(_, node) => {
-            const n = node.data.node
-            if (n.kind === 'entity' && n.label) void enrichNode(n.id)
-          }}
-          defaultViewport={investigation?.viewport ?? { x: 0, y: 0, zoom: 1 }}
-          fitView={!investigation?.viewport && nodes.length > 0}
-          fitViewOptions={{ padding: 0.3, maxZoom: 1.4 }}
-          minZoom={0.05}
-          maxZoom={3}
-          connectionMode={ConnectionMode.Loose}
-          selectionMode={SelectionMode.Partial}
-          panOnDrag={tool === 'select'}
-          panOnScroll={false}
-          zoomOnDoubleClick={false}
-          deleteKeyCode={['Delete', 'Backspace']}
-          multiSelectionKeyCode={['Meta', 'Control']}
-          elementsSelectable={tool === 'select'}
-          nodesDraggable={tool === 'select'}
-          proOptions={{ hideAttribution: true }}
-          colorMode={settings?.theme === 'light' ? 'light' : 'dark'}
-        >
-          <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="var(--canvas-dot)" />
-          {settings?.showMinimap !== false && (
-            <MiniMap
-              position="bottom-left"
-              pannable
-              zoomable
-              nodeColor={(n) => ((n as FlowNode).data.node.kind === 'entity' ? 'var(--accent)' : 'var(--faint)')}
-              nodeStrokeWidth={0}
-              nodeBorderRadius={2}
-              style={{ width: 190, height: 130, marginLeft: 16, marginBottom: 16 }}
-            />
-          )}
-          {tool === 'draw' && <DrawLayer />}
-        </ReactFlow>
+        <SelectedNodesContext.Provider value={selectedNodes}>
+          <ReactFlow<FlowNode, FlowEdge>
+            // `isolate` : les calques Leaflet des blocs Carte (z-index 400 à 1000) restent sous les barres et menus.
+            className="isolate"
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            defaultEdgeOptions={defaultEdgeOptions}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onMoveEnd={onMoveEnd}
+            onDrop={onDrop}
+            onDragOver={onDragOver}
+            onNodeContextMenu={(e, node) => {
+              e.preventDefault()
+              if (!node.selected) useGraph.getState().select([node.id])
+              setMenu({ kind: 'node', x: e.clientX, y: e.clientY, nodeId: node.id })
+            }}
+            onPaneContextMenu={(e) => {
+              e.preventDefault()
+              setMenu({ kind: 'pane', x: e.clientX, y: e.clientY, flow: rf.screenToFlowPosition({ x: e.clientX, y: e.clientY }) })
+            }}
+            onPaneClick={() => {
+              setMenu(null)
+              setQuickAdd(null)
+            }}
+            onNodeDoubleClick={(_, node) => {
+              const n = node.data.node
+              if (canEnrich(n)) void enrichNode(n.id)
+            }}
+            defaultViewport={investigation?.viewport ?? { x: 0, y: 0, zoom: 1 }}
+            minZoom={0.05}
+            maxZoom={3}
+            connectionMode={ConnectionMode.Loose}
+            selectionMode={SelectionMode.Partial}
+            panOnDrag={tool === 'select'}
+            panOnScroll={false}
+            zoomOnDoubleClick={false}
+            deleteKeyCode={['Delete', 'Backspace']}
+            multiSelectionKeyCode={['Meta', 'Control']}
+            elementsSelectable={tool === 'select'}
+            nodesDraggable={tool === 'select'}
+            proOptions={{ hideAttribution: true }}
+            colorMode={settings?.theme === 'light' ? 'light' : 'dark'}
+          >
+            <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="var(--canvas-dot)" />
+            {settings?.showMinimap !== false && (
+              <MiniMap
+                position="bottom-left"
+                pannable
+                zoomable
+                nodeColor={(n) => ((n as FlowNode).data.node.kind === 'entity' ? 'var(--accent)' : 'var(--faint)')}
+                nodeStrokeWidth={0}
+                nodeBorderRadius={2}
+                style={{ width: 190, height: 130, marginLeft: 16, marginBottom: 16 }}
+              />
+            )}
+            {tool === 'draw' && <DrawLayer />}
+          </ReactFlow>
+        </SelectedNodesContext.Provider>
       </OutDegreeContext.Provider>
 
       {menu && <ContextMenu menu={menu} onClose={() => setMenu(null)} onQuickAdd={(p) => setQuickAdd(p)} wrapper={wrapper} />}
@@ -256,7 +289,7 @@ function QuickAdd({ at, onClose }: { at: { x: number; y: number; flow: { x: numb
   const submit = async (): Promise<void> => {
     if (!d) return
     onClose()
-    await addEntityAt(d.type, { x: at.flow.x - 98, y: at.flow.y - 19 }, { label: d.value, platform: d.platform ?? null })
+    await addEntityAt(d.type, at.flow, { label: d.value, platform: d.platform ?? null })
   }
   return (
     <div className="glass absolute z-30 w-80 rounded-xl p-1.5" style={{ left: at.x - 10, top: at.y - 10 }}>
@@ -295,11 +328,12 @@ function ContextMenu({
   const { tx } = useLang()
   const modules = useApp((s) => s.modules)
   const toast = useApp((s) => s.toast)
-  const rf = useReactFlow()
+  const rf = useReactFlow<FlowNode, FlowEdge>()
   const [sub, setSub] = useState(false)
   const allNodes = useGraph((s) => s.nodes)
   const selected = useMemo(() => allNodes.filter((n) => n.selected).map((n) => n.data.node), [allNodes])
   const node: GraphNode | undefined = menu.kind === 'node' ? useGraph.getState().nodes.find((n) => n.id === menu.nodeId)?.data.node : undefined
+  const server = useApplicable(node)
 
   useEffect(() => {
     const close = (e: MouseEvent): void => {
@@ -339,7 +373,7 @@ function ContextMenu({
           if (text) await addFromText(text.trim(), menu.flow)
         })}
         <div className="my-1 border-t border-line" />
-        {item('ScanSearch', t('canvas.fitView'), () => void rf.fitView({ padding: 0.2, duration: 300 }), { hint: 'F' })}
+        {item('ScanSearch', t('canvas.fitView'), () => fitGraph(rf), { hint: 'F' })}
       </div>
     )
   }
@@ -353,10 +387,10 @@ function ContextMenu({
     <div data-context-menu className="glass absolute z-40 w-64 rounded-xl p-1" style={{ left, top }}>
       {!many && node.kind === 'entity' && (
         <>
-          {item('Zap', t('enrich.all'), () => void enrichNode(node.id), { hint: 'Ctrl+E', disabled: !node.label })}
+          {item('Zap', t('enrich.all'), () => void enrichNode(node.id), { hint: 'Ctrl+E', disabled: !canEnrich(node) || server?.auto.size === 0 })}
           <button
             onClick={() => setSub(!sub)}
-            disabled={!node.label}
+            disabled={!canEnrich(node)}
             className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[12.5px] hover:bg-panel-3 disabled:opacity-40"
           >
             <Icon name="ListChecks" size={14} className="text-muted" />
@@ -369,7 +403,7 @@ function ContextMenu({
               {applicable.map((m) => (
                 <button
                   key={m.id}
-                  disabled={!m.configured}
+                  disabled={!m.configured || (server ? !server.accepted.has(m.id) : false)}
                   onClick={() => {
                     onClose()
                     void enrichNode(node.id, [m.id])

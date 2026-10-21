@@ -1,6 +1,6 @@
 import { defineModule, ModuleError, type ModuleOutput, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
-import { cleanOrg, detectHosting } from '../domain/_hosting'
+import { cleanOrg, detectHosting, sharedInfrastructure, sharedLabel } from '../domain/_hosting'
 import { compact, countryName, isIPv4, isIPv6, normalizeHost } from '../domain/_util'
 import { abuseContacts, optional, prefixOverview, rirCountry, type AbuseContacts, type PrefixOverview, type RirCountry } from './_ripestat'
 
@@ -30,6 +30,8 @@ export function buildIpNetworkOutput(
     })
   if (prefix) entities.push({ type: 'cidr', label: prefix, linkLabel: fr ? 'appartient à' : 'belongs to' })
   const hosting = detectHosting({ asn: main?.asn, org: main?.holder, ips: [ip] })
+  // Résolveur DNS public ou CDN : adresse partagée par des milliers de sites sans lien entre eux.
+  const shared = sharedInfrastructure(ip, { asn: main?.asn, org: main?.holder })
   if (hosting)
     entities.push({
       type: 'hosting',
@@ -45,7 +47,8 @@ export function buildIpNetworkOutput(
       prefix,
       rir: abuse?.authoritative_rir?.toUpperCase() ?? null,
       registered_country: cname,
-      abuse_email: abuseEmail
+      abuse_email: abuseEmail,
+      shared_infrastructure: shared && shared.kind !== 'reserved' ? sharedLabel(shared, lang) : null
     }),
     entities,
     raw: { overview, country, abuse }

@@ -4,6 +4,7 @@
 
 import { defineModule, ModuleError, type ModuleContext, type OutEntity } from '@shared/modules'
 import { emailProvider } from '@shared/platforms'
+import { parseMx } from '../domain/_mail'
 import { compact, splitEmail, tr } from './_lib'
 import disposableList from './_disposable-domains.json'
 
@@ -119,17 +120,15 @@ export default defineModule({
 
     const mxRaw = await resolve(ctx, domain, 'MX')
     if (mxRaw === null) throw new ModuleError('Résolution DNS impossible', 'unavailable')
-    const mx = mxRaw
-      .map((r) => r.trim().split(/\s+/))
-      .map(([prio, host]) => ({ prio: Number(prio), host: (host ?? prio).replace(/\.$/, '') }))
-      .sort((a, b) => a.prio - b.prio)
-      .map((r) => r.host)
-      .filter((h) => h && h !== '.')
+    const parsedMx = parseMx(mxRaw)
+    const mx = parsedMx.hosts.map((r) => r.host)
+    // Null MX (RFC 7505) : le domaine existe mais refuse explicitement tout email.
+    const nullMx = parsedMx.nullMx && !mx.length
     const host = mailHost(mx)
 
     let spf: string | undefined
     let dmarc: string | undefined
-    let domainExists = mx.length > 0
+    let domainExists = mx.length > 0 || nullMx
     if (!webmail) {
       const [txt, dmarcTxt, a] = await Promise.all([
         resolve(ctx, domain, 'TXT'),
@@ -147,7 +146,7 @@ export default defineModule({
       entities.push({
         type: 'domain',
         label: domain,
-        data: compact({ mx, mail_host: host }),
+        data: compact({ mx, mx_null: nullMx || undefined, mail_host: host }),
         linkLabel: tr(ctx, 'domaine', 'domain')
       })
     }
@@ -164,13 +163,14 @@ export default defineModule({
         valid_mx: mx.length > 0,
         disposable,
         mx,
+        mx_null: nullMx || undefined,
         mail_host: host,
         spf: spf?.slice(0, 300),
         dmarc_policy: webmail ? undefined : (dmarc ?? (domainExists ? 'absent' : undefined)),
         domain_exists: webmail ? undefined : domainExists
       }),
       entities,
-      raw: { mx, spf, dmarc, webmail: webmail?.id, disposable }
+      raw: { mx: mxRaw, spf, dmarc, webmail: webmail?.id, disposable }
     }
   }
 })

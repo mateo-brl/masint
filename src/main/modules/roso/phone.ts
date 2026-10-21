@@ -5,6 +5,7 @@ import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
 import { findPlatformByName } from '@shared/platforms'
 import { normalizePhone } from '@shared/detect'
+import { MAX_LIST_ENTITIES } from '../domain/_util'
 import { creditsOf, isFatal, redact, ROSO_COMMON, RosoClient, sleep, toRosoError, type Json } from './_client'
 import {
   accountEntities,
@@ -148,7 +149,8 @@ export default defineModule({
         continue
       }
       if (r.platform === 'reversewhois') {
-        for (const d of asArr(p.domains ?? p.domainList ?? p.results).slice(0, 100)) {
+        // WHOIS inversé : 10 domaines en entités, la liste complète reste dans la réponse brute.
+        for (const d of asArr(p.domains ?? p.domainList ?? p.results).slice(0, MAX_LIST_ENTITIES)) {
           const name = (isObj(d) ? pick(d, 'domain', 'name', 'value') : str(d)).toLowerCase()
           if (isDomain(name)) entities.push({ type: 'domain', label: name, linkLabel: 'reverse WHOIS' })
         }

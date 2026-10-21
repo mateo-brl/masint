@@ -3,6 +3,7 @@
 // (administrées localement, fréquentes sur les smartphones) sont signalées sans requête.
 
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
+import { localizeCountry } from '../domain/_util'
 import { compact, serviceError, tr } from './_util'
 
 export interface MacInfo {
@@ -42,14 +43,14 @@ export function macOutput(ctx: Pick<ModuleContext, 'lang'>, m: MacInfo, vendor: 
     oui: m.oui,
     vendor: vendor?.company ?? null,
     vendor_address: address,
-    vendor_country: vendor?.country ?? null,
+    vendor_country: localizeCountry(vendor?.country, null, ctx.lang),
     oui_block: vendor?.type ?? null,
     locally_administered: m.local,
     randomized: m.local ? tr(ctx, 'probable (adresse aléatoire ou virtuelle)', 'likely (random or virtual address)') : null,
     multicast: m.multicast || null
   })
   const entities: OutEntity[] = vendor
-    ? [{ type: 'organization', label: vendor.company, data: { kind: tr(ctx, 'constructeur', 'manufacturer'), country: vendor.country ?? null }, linkLabel: tr(ctx, 'constructeur', 'manufacturer') }]
+    ? [{ type: 'organization', label: vendor.company, data: { kind: tr(ctx, 'constructeur', 'manufacturer'), country: localizeCountry(vendor.country, null, ctx.lang) }, linkLabel: tr(ctx, 'constructeur', 'manufacturer') }]
     : []
   return { properties, entities, raw: vendor }
 }

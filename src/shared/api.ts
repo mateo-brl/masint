@@ -14,6 +14,7 @@ import type {
   ModuleRun,
   NodeInput,
   ProxyTestResult,
+  RosoStatus,
   SecretStatus,
   Settings,
   UpdateStatus
@@ -62,6 +63,8 @@ export interface ApiMap {
   'modules:cancel': (jobId: string) => void
   'modules:runs': (investigationId: string, nodeId?: string) => ModuleRun[]
   'modules:jobs': () => JobProgress[]
+  /** Modules lancés par « Enrichir » pour ce nœud, et modules applicables à sa valeur. */
+  'modules:applicable': (nodeId: string) => { auto: string[]; accepted: string[] }
   'modules:setEnabled': (moduleId: string, enabled: boolean) => void
   /** Données brutes archivées d'une exécution (réponse du service). */
   'modules:runRaw': (runId: string) => unknown
@@ -72,7 +75,11 @@ export interface ApiMap {
   'secrets:list': () => SecretStatus[]
   'secrets:set': (id: string, value: string) => void
   'secrets:delete': (id: string) => void
+  /** Protection effective des clés : trousseau du système ou stockage faiblement chiffré. */
+  'secrets:security': () => { encrypted: boolean; backend: string }
   'proxy:test': () => ProxyTestResult
+  /** Vérifie la clé roso.info et lit les crédits restants, sans en consommer. */
+  'roso:status': () => RosoStatus
 
   // Exports
   /** Imprime un document HTML en PDF et l'enregistre. */

@@ -113,8 +113,13 @@ export interface SessionResponse {
   url: string
 }
 
+export interface SessionRequestInit extends FetchOptions {
+  /** Garde la méthode et le corps sur une redirection 301 / 302 / 303 (API qui changent de domaine). */
+  keepMethod?: boolean
+}
+
 export interface Session {
-  request(url: string, init?: FetchOptions): Promise<SessionResponse>
+  request(url: string, init?: SessionRequestInit): Promise<SessionResponse>
   cookie(name: string): string | undefined
 }
 
@@ -135,7 +140,7 @@ export function createSession(ctx: ModuleContext, maxRedirects = 8): Session {
   }
   return {
     cookie: (name) => jar.get(name),
-    async request(url, init = {}) {
+    async request(url, { keepMethod, ...init } = {}) {
       let target = url
       let opts: FetchOptions = init
       for (let hop = 0; hop <= maxRedirects; hop++) {
@@ -148,7 +153,7 @@ export function createSession(ctx: ModuleContext, maxRedirects = 8): Session {
           await res.body?.cancel().catch(() => undefined)
           target = new URL(location, target).toString()
           const method = (opts.method ?? 'GET').toUpperCase()
-          const keepBody = res.status === 307 || res.status === 308
+          const keepBody = res.status === 307 || res.status === 308 || !!keepMethod
           opts = keepBody ? { ...opts, query: undefined } : { headers: init.headers, timeoutMs: init.timeoutMs }
           if (!keepBody && method !== 'GET') opts.method = 'GET'
           continue

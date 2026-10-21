@@ -35,7 +35,8 @@
     "src/renderer/src/**/*.tsx",
     "src/preload/*.d.ts",
     "src/shared/**/*",
-    "tests/export*.test.ts"
+    "tests/export*.test.ts",
+    "tests/layout.test.ts"
   ],
   "exclude": [
     "src/shared/modules.ts"

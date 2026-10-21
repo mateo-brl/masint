@@ -2,6 +2,7 @@
 // France : Base Adresse Nationale (IGN) ; ailleurs ou à défaut : Nominatim.
 
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput } from '@shared/modules'
+import { localizeCountry } from '../domain/_util'
 import { compact, tr } from '../misc/_util'
 import { distanceM, geopfReverse, inFrance, nominatimReverse, pointOf, type GeoPoint, type GeoResult } from './_geo'
 
@@ -10,6 +11,7 @@ const MAX_BAN_DISTANCE = 300
 
 export function reverseOutput(ctx: Pick<ModuleContext, 'lang'>, p: GeoPoint, r: GeoResult): ModuleOutput {
   const distance = r.distance ?? distanceM(p, r)
+  const country = localizeCountry(r.country, r.countryCode, ctx.lang)
   return {
     properties: compact({
       lat: p.lat,
@@ -17,15 +19,16 @@ export function reverseOutput(ctx: Pick<ModuleContext, 'lang'>, p: GeoPoint, r: 
       address: r.label,
       city: r.city,
       postcode: r.postcode,
-      country: r.country,
+      country,
       region: r.region,
+      district: typeof r.extra?.district === 'string' ? r.extra.district : null,
       osm_url: r.url
     }),
     entities: [
       {
         type: 'address',
         label: r.label,
-        data: { street: r.street, postcode: r.postcode, city: r.city, country: r.country, lat: r.lat, lon: r.lon, distance_m: distance },
+        data: { street: r.street, postcode: r.postcode, city: r.city, country, lat: r.lat, lon: r.lon, distance_m: distance },
         linkLabel: distance > 50 ? tr(ctx, `adresse proche (${distance} m)`, `nearby address (${distance} m)`) : tr(ctx, 'adresse', 'address')
       }
     ],

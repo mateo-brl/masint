@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { app, BrowserWindow, Menu, protocol, safeStorage, session, shell } from 'electron'
+import { app, BrowserWindow, Menu, protocol, safeStorage, screen, session, shell } from 'electron'
 import { ATTACHMENT_PROTOCOL } from '@shared/api'
 import type { EventChannel, EventMap } from '@shared/api'
 import type { Settings } from '@shared/types'
-import { importArchive } from './archive'
+import { openArchiveOnce } from './archive'
 import { openDatabase } from './db/database'
 import { Repo } from './db/repo'
 import { Engine } from './engine/runner'
@@ -37,6 +37,7 @@ function send<E extends EventChannel>(event: E, payload: EventMap[E]): void {
 
 const electronCipher: Cipher = {
   available: () => safeStorage.isEncryptionAvailable(),
+  backend: () => (process.platform === 'linux' ? safeStorage.getSelectedStorageBackend() : 'system'),
   encrypt: (s) => safeStorage.encryptString(s),
   decrypt: (b) => safeStorage.decryptString(b)
 }
@@ -50,10 +51,41 @@ async function applySessionProxy(s: Settings): Promise<void> {
   await session.defaultSession.setProxy(proxyRules ? { proxyRules, proxyBypassRules: '<local>' } : { mode: 'direct' })
 }
 
-function createWindow(): BrowserWindow {
+interface WindowState {
+  x?: number
+  y?: number
+  width: number
+  height: number
+  maximized: boolean
+}
+
+/** Taille et position de la dernière session, si elles tiennent encore sur un écran branché. */
+function restoredState(repo: Repo): WindowState {
+  const fallback: WindowState = { width: 1600, height: 960, maximized: false }
+  const saved = repo.getSetting<WindowState | null>('windowState', null)
+  if (!saved || !(saved.width > 0 && saved.height > 0)) return fallback
+  if (saved.x === undefined || saved.y === undefined) return { ...fallback, ...saved }
+  const area = screen.getDisplayMatching({ x: saved.x, y: saved.y, width: saved.width, height: saved.height }).workArea
+  const visible = saved.x < area.x + area.width - 100 && saved.x + saved.width > area.x + 100 && saved.y >= area.y - 20 && saved.y < area.y + area.height - 100
+  return visible ? saved : { ...fallback, maximized: saved.maximized }
+}
+
+function saveWindowState(win: BrowserWindow, repo: Repo): void {
+  try {
+    const b = win.getNormalBounds()
+    repo.setSetting('windowState', { x: b.x, y: b.y, width: b.width, height: b.height, maximized: win.isMaximized() || win.isFullScreen() })
+  } catch {
+    /* base déjà fermée ou fenêtre détruite : la taille ne sera pas retenue cette fois */
+  }
+}
+
+function createWindow(repo: Repo): BrowserWindow {
+  const state = restoredState(repo)
   const win = new BrowserWindow({
-    width: 1600,
-    height: 960,
+    x: state.x,
+    y: state.y,
+    width: state.width,
+    height: state.height,
     minWidth: 1100,
     minHeight: 700,
     show: false,
@@ -69,7 +101,15 @@ function createWindow(): BrowserWindow {
       spellcheck: false
     }
   })
-  win.once('ready-to-show', () => win.show())
+  win.once('ready-to-show', () => {
+    if (state.maximized) win.maximize()
+    win.show()
+  })
+  win.on('close', () => saveWindowState(win, repo))
+  // Avertissements et erreurs de l'interface recopiés dans la sortie standard (diagnostic).
+  win.webContents.on('console-message', (details) => {
+    if (details.level === 'warning' || details.level === 'error') console.log(`[interface:${details.level}] ${details.message}`)
+  })
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//i.test(url)) void shell.openExternal(url)
     return { action: 'deny' }
@@ -127,12 +167,12 @@ void app.whenReady().then(async () => {
 
   initUpdater((s) => send('update:status', s), settings.get().autoUpdate)
 
-  mainWindow = createWindow()
+  mainWindow = createWindow(repo)
   mainWindow.on('closed', () => (mainWindow = null))
 
   openFile = (path) => {
     void readFile(path)
-      .then((buf) => importArchive(repo, buf))
+      .then((buf) => openArchiveOnce(repo, buf))
       .then((inv) => {
         queueOpen(inv.id)
         send('app:openInvestigation', { id: inv.id })
@@ -144,9 +184,13 @@ void app.whenReady().then(async () => {
   })
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) mainWindow = createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) mainWindow = createWindow(repo)
   })
-  app.on('before-quit', () => db.close())
+  // `before-quit` précède la fermeture des fenêtres : on enregistre leur taille avant de fermer la base.
+  app.on('before-quit', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) saveWindowState(mainWindow, repo)
+    db.close()
+  })
 })
 
 app.on('window-all-closed', () => {

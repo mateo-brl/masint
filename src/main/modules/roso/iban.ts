@@ -3,6 +3,7 @@
 
 import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
 import { isValidIban } from '@shared/detect'
+import { localizeCountry } from '../domain/_util'
 import { creditsOf, redact, ROSO_COMMON, RosoClient } from './_client'
 import { asArr, asObj, dropEmpty, pick, str, type Obj } from './_parse'
 
@@ -27,7 +28,7 @@ export function ibanEntities(r: Obj, lang: 'fr' | 'en'): OutEntity[] {
     const address = pick(r, 'address', 'bank_address')
     if (address) out.push({ type: 'address', label: address, from: 'bank', data: { source: 'roso.info' }, linkLabel: lang === 'fr' ? 'adresse de l’agence' : 'branch address' })
   }
-  const country = pick(r, 'country', 'country_name')
+  const country = localizeCountry(pick(r, 'country', 'country_name'), pick(r, 'country_code') || str(r.iban).slice(0, 2), lang)
   if (country) out.push({ type: 'country', label: country, linkLabel: lang === 'fr' ? 'pays' : 'country' })
   return out
 }
@@ -60,7 +61,7 @@ export default defineModule({
         valid: typeof r.valid === 'boolean' ? r.valid : undefined,
         bic: pick(r, 'bic', 'swift') || undefined,
         bank: pick(r, 'bank', 'bank_name') || undefined,
-        country: pick(r, 'country', 'country_name') || undefined,
+        country: localizeCountry(pick(r, 'country', 'country_name'), pick(r, 'country_code') || iban.slice(0, 2), ctx.lang) || undefined,
         branch: [pick(r, 'branch_number'), pick(r, 'branch_name')].filter(Boolean).join(' · ') || undefined,
         sepa: sepaList.length ? sepaList : undefined,
         checks: asArr(r.checks)

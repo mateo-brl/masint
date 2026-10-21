@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { KeyRequirement, ProxyMode, ProxyTestResult, Settings } from '@shared/types'
+import type { KeyRequirement, ProxyMode, ProxyTestResult, RosoStatus, Settings } from '@shared/types'
 import { api, openExternal } from '../../lib/api'
 import { useLang } from '../../lib/i18n'
 import { Icon } from '../../lib/icons'
 import { Logo } from '../Logo'
 import { useApp } from '../../store/app'
+import { errorMessage } from '../../lib/errors'
 import { Button, Dialog, Spinner, Switch } from '../ui'
 
 type Tab = 'general' | 'network' | 'keys' | 'about'
@@ -24,7 +25,8 @@ export function SettingsDialog(): React.JSX.Element {
   ]
   return (
     <Dialog open={open} onClose={close} title={t('settings.title')} width={820}>
-      <div className="flex min-h-[460px] gap-6">
+      {/* Hauteur fixe : la fenêtre ne change pas de taille d'un onglet à l'autre. */}
+      <div className="flex h-[min(540px,calc(100vh-170px))] gap-6">
         <div className="flex w-44 shrink-0 flex-col gap-0.5">
           {tabs.map((it) => (
             <button
@@ -38,7 +40,7 @@ export function SettingsDialog(): React.JSX.Element {
             </button>
           ))}
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 overflow-y-auto pr-1">
           {tab === 'general' && <GeneralTab />}
           {tab === 'network' && <NetworkTab />}
           {tab === 'keys' && <KeysTab />}
@@ -200,6 +202,37 @@ function NetworkTab(): React.JSX.Element | null {
   )
 }
 
+function RosoStatusLine({ status }: { status: RosoStatus }): React.JSX.Element {
+  const { t } = useTranslation()
+  if (!status.ok)
+    return (
+      <div className="mt-2 flex items-start gap-1.5 text-[11.5px] text-accent">
+        <Icon name="CircleX" size={13} className="mt-px shrink-0" />
+        <span className="break-words">{status.error}</span>
+      </div>
+    )
+  const parts = [
+    status.credits !== undefined && t('settings.rosoCredits', { count: status.credits }),
+    status.bonusCredits ? t('settings.rosoBonus', { count: status.bonusCredits }) : '',
+    status.creditsPerDay !== undefined && t('settings.rosoDaily', { used: status.dailyUsed ?? 0, max: status.creditsPerDay }),
+    status.tier && t('settings.rosoTier', { tier: status.tier })
+  ].filter(Boolean)
+  return (
+    <div className="mt-2 flex flex-col gap-1 text-[11.5px]">
+      <div className="flex items-start gap-1.5 text-success">
+        <Icon name="CircleCheck" size={13} className="mt-px shrink-0" />
+        <span>{[t('settings.rosoValid'), ...parts].join(' · ')}</span>
+      </div>
+      {status.captcha && (
+        <div className="flex items-start gap-1.5 text-warning">
+          <Icon name="TriangleAlert" size={13} className="mt-px shrink-0" />
+          <span>{t('settings.rosoCaptcha')}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function KeysTab(): React.JSX.Element {
   const { t } = useTranslation()
   const { tx } = useLang()
@@ -209,6 +242,15 @@ function KeysTab(): React.JSX.Element {
   const refreshModules = useApp((s) => s.refreshModules)
   const [values, setValues] = useState<Record<string, string>>({})
   const [q, setQ] = useState('')
+  const [security, setSecurity] = useState<{ encrypted: boolean; backend: string } | null>(null)
+  const [roso, setRoso] = useState<RosoStatus | 'checking' | null>(null)
+  useEffect(() => {
+    void api('secrets:security').then(setSecurity)
+  }, [])
+  const checkRoso = async (): Promise<void> => {
+    setRoso('checking')
+    setRoso(await api('roso:status').catch((e) => ({ ok: false, error: errorMessage(e) })))
+  }
 
   // Une ligne par clé, avec les modules qui l'utilisent.
   const keys = useMemo(() => {
@@ -233,17 +275,25 @@ function KeysTab(): React.JSX.Element {
     await api('secrets:set', id, values[id] ?? '')
     setValues({ ...values, [id]: '' })
     await Promise.all([refreshSecrets(), refreshModules()])
+    if (id === 'roso') void checkRoso()
   }
   const remove = async (id: string): Promise<void> => {
     await api('secrets:delete', id)
     await Promise.all([refreshSecrets(), refreshModules()])
+    if (id === 'roso') setRoso(null)
   }
 
   return (
     <div className="flex flex-col gap-3">
       <p className="text-[12.5px] text-muted">{t('settings.keysIntro')}</p>
+      {security && !security.encrypted && (
+        <div className="flex gap-2.5 rounded-xl border border-warning/40 bg-panel-2 p-3 text-[12px] text-warning">
+          <Icon name="TriangleAlert" size={15} className="mt-0.5 shrink-0" />
+          <span>{t('settings.keyringMissing', { backend: security.backend })}</span>
+        </div>
+      )}
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('common.filter')} className="field" />
-      <div className="flex max-h-[420px] flex-col gap-2 overflow-auto pr-1">
+      <div className="flex flex-col gap-2">
         {keys.length === 0 && <div className="py-6 text-center text-muted">{t('settings.noKeys')}</div>}
         {keys.map(([id, { req, modules: used }]) => (
           <div key={id} className="rounded-xl border border-line bg-panel-2 p-3">
@@ -274,8 +324,14 @@ function KeysTab(): React.JSX.Element {
               <Button size="sm" variant="primary" disabled={!values[id]} onClick={() => void save(id)}>
                 {t('common.save')}
               </Button>
+              {isSet(id) && id === 'roso' && (
+                <Button size="sm" disabled={roso === 'checking'} onClick={() => void checkRoso()}>
+                  {roso === 'checking' ? <Spinner size={12} /> : t('settings.rosoCheck')}
+                </Button>
+              )}
               {isSet(id) && <Button size="sm" variant="ghost" icon="Trash" onClick={() => void remove(id)} />}
             </div>
+            {id === 'roso' && roso && roso !== 'checking' && <RosoStatusLine status={roso} />}
           </div>
         ))}
       </div>
@@ -289,9 +345,22 @@ function AboutTab(): React.JSX.Element {
   const settings = useApp((s) => s.settings)
   const updateSettings = useApp((s) => s.updateSettings)
   const [info, setInfo] = useState<{ version: string; platform: string; dataPath: string } | null>(null)
+  const [checking, setChecking] = useState(false)
+  const [checkedAt, setCheckedAt] = useState<string | null>(null)
   useEffect(() => {
     void api('app:info').then(setInfo)
   }, [])
+  const check = async (): Promise<void> => {
+    setChecking(true)
+    try {
+      useApp.setState({ update: await api('update:check') })
+    } catch (e) {
+      useApp.setState({ update: { state: 'error', error: errorMessage(e) } })
+    } finally {
+      setChecking(false)
+      setCheckedAt(new Date().toLocaleTimeString(settings?.lang === 'en' ? 'en-GB' : 'fr-FR', { hour: '2-digit', minute: '2-digit' }))
+    }
+  }
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
@@ -307,11 +376,17 @@ function AboutTab(): React.JSX.Element {
         <Switch checked={!!settings?.autoUpdate} onChange={(v) => void updateSettings({ autoUpdate: v })} />
       </Row>
       <div className="flex items-center gap-3">
-        <Button icon="RefreshCw" onClick={() => void api('update:check').then((s) => useApp.setState({ update: s }))}>
+        <Button disabled={checking} onClick={() => void check()}>
+          {checking ? <Spinner size={13} /> : <Icon name="RefreshCw" size={15} />}
           {t('about.check')}
         </Button>
-        <span className="text-[12.5px] text-muted">
-          {update.state === 'error' && update.error === 'dev' ? t('about.devMode') : t(`about.state.${update.state}`, { version: update.version, progress: Math.round(update.progress ?? 0) })}
+        <span className="text-[12.5px] text-muted" title={update.state === 'error' ? update.error : undefined}>
+          {checking
+            ? t('about.state.checking')
+            : update.state === 'error' && update.error === 'dev'
+              ? t('about.devMode')
+              : t(`about.state.${update.state}`, { version: update.version, progress: Math.round(update.progress ?? 0) })}
+          {!checking && checkedAt && <span className="text-faint"> · {t('about.checkedAt', { time: checkedAt })}</span>}
         </span>
         {update.state === 'ready' && (
           <Button variant="primary" icon="CloudDownload" onClick={() => void api('update:install')}>

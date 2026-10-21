@@ -2,6 +2,7 @@
 // via deux fournisseurs payants à crédits. Formats tirés des exemples officiels.
 
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
+import { localizeCountry } from '../domain/_util'
 import { compact, fetchRetry, httpFailure, isoDay, readJson, tr } from '../email/_lib'
 import { carrierPlatform, toE164 } from './_phone'
 
@@ -35,14 +36,13 @@ export function hlrTimestamp(v?: string | null): string | undefined {
   return Number.isNaN(d.getTime()) ? isoDay(v) : d.toISOString()
 }
 
-function carrierEntity(n: Network, linkLabel: string, ref?: string): OutEntity | null {
+function carrierEntity(n: Network, linkLabel: string, lang: 'fr' | 'en'): OutEntity | null {
   if (!n.name) return null
   return {
-    ...(ref ? { ref } : {}),
     type: 'carrier',
     label: n.name,
     platform: carrierPlatform(n.name),
-    data: compact({ country: n.country, mccmnc: n.mccmnc }),
+    data: compact({ country: localizeCountry(n.country, null, lang) ?? undefined, mccmnc: n.mccmnc }),
     linkLabel
   }
 }
@@ -67,14 +67,14 @@ export function hlrOutput(h: HlrSummary, lang: 'fr' | 'en', raw: unknown): Modul
     })
   }
   const current = h.current?.name ? h.current : h.original
-  const cur = current && carrierEntity(current, tr({ lang }, 'opérateur actuel', 'current carrier'))
+  const cur = current && carrierEntity(current, tr({ lang }, 'opérateur actuel', 'current carrier'), lang)
   if (cur) entities.push(cur)
   if (h.ported && h.original?.name && h.original.name !== current?.name) {
-    const orig = carrierEntity(h.original, tr({ lang }, "opérateur d'origine", 'original carrier'))
+    const orig = carrierEntity(h.original, tr({ lang }, "opérateur d'origine", 'original carrier'), lang)
     if (orig) entities.push(orig)
   }
   if (h.roaming && h.roamingNetwork?.name) {
-    const roam = carrierEntity(h.roamingNetwork, tr({ lang }, 'réseau visité', 'visited network'))
+    const roam = carrierEntity(h.roamingNetwork, tr({ lang }, 'réseau visité', 'visited network'), lang)
     if (roam) entities.push(roam)
   }
   return {

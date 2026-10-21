@@ -1,0 +1,1802 @@
+[
+ {
+  "results": [
+   {
+    "siren": "994012565",
+    "nom_complet": "THICU",
+    "nature_juridique": "6599",
+    "activite_principale": "66.30Z",
+    "date_creation": "2025-11-15",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE",
+      "prenoms": "HÉLÈNE MARIE",
+      "annee_de_naissance": "1985",
+      "date_de_naissance": "1985-03",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "CURIE",
+      "prenoms": "THIBAUD ANDRÉ PIERRE",
+      "annee_de_naissance": "1991",
+      "date_de_naissance": "1991-01",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "99401256500010",
+     "adresse": "37 CHEMIN DE PRAT 63540 ROMAGNAT",
+     "latitude": "45.7380128626293",
+     "longitude": "3.11873906608657",
+     "libelle_commune": "ROMAGNAT"
+    }
+   },
+   {
+    "siren": "480749472",
+    "nom_complet": "MARIE-JEANNE CURIE",
+    "nature_juridique": "1000",
+    "activite_principale": "68.20B",
+    "date_creation": "2004-12-29",
+    "date_fermeture": "2008-10-03",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE",
+      "prenoms": "MARIE-JEANNE",
+      "annee_de_naissance": null,
+      "date_de_naissance": null,
+      "qualite": null,
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "48074947200019",
+     "adresse": "LES CHALETS VALORIA ZAC CHARBONNIERES 73450 VALLOIRE",
+     "latitude": null,
+     "longitude": null,
+     "libelle_commune": "VALLOIRE"
+    }
+   },
+   {
+    "siren": "791688526",
+    "nom_complet": "MACM",
+    "nature_juridique": "5710",
+    "activite_principale": "68.20B",
+    "date_creation": "2013-03-08",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE",
+      "prenoms": "MARIE-ODILE",
+      "annee_de_naissance": "1964",
+      "date_de_naissance": "1964-02",
+      "qualite": "Président de SAS",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "79168852600031",
+     "adresse": "324 CHEMIN DE LA MARTINE 83320 CARQUEIRANNE",
+     "latitude": "43.094953926",
+     "longitude": "6.0798498954",
+     "libelle_commune": "CARQUEIRANNE"
+    }
+   },
+   {
+    "siren": "307264119",
+    "nom_complet": "SCHUSTER ET FILS",
+    "nature_juridique": "5499",
+    "activite_principale": "46.39B",
+    "date_creation": "1974-01-01",
+    "date_fermeture": "2013-12-31",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE",
+      "prenoms": "JEAN-MARIE",
+      "annee_de_naissance": "1972",
+      "date_de_naissance": "1972-08",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "30726411900024",
+     "adresse": "16 RUE DES ARTISANS 57120 ROMBAS",
+     "latitude": "49.253397639",
+     "longitude": "6.0901171098",
+     "libelle_commune": "ROMBAS"
+    }
+   },
+   {
+    "siren": "492306691",
+    "nom_complet": "S.C.I. DES DEUX ORCHIDEES",
+    "nature_juridique": "6540",
+    "activite_principale": "68.20B",
+    "date_creation": "2006-08-26",
+    "date_fermeture": "2025-02-20",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "LUJAN (CURIE)",
+      "prenoms": "DOMINIQUE GERMAINE",
+      "annee_de_naissance": "1957",
+      "date_de_naissance": "1957-05",
+      "qualite": "Autre",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "CURIE",
+      "prenoms": "MARIE-JEANNE",
+      "annee_de_naissance": "1959",
+      "date_de_naissance": "1959-08",
+      "qualite": "Autre",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "49230669100014",
+     "adresse": "22 RUE DU VAL D'ORAIN 39120 SELIGNEY",
+     "latitude": "46.936286971",
+     "longitude": "5.5376730028",
+     "libelle_commune": "SELIGNEY"
+    }
+   },
+   {
+    "siren": "433091683",
+    "nom_complet": "MARIE-GHISLAINE CURIE",
+    "nature_juridique": "1000",
+    "activite_principale": "47.73Z",
+    "date_creation": "2000-10-01",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE",
+      "prenoms": "MARIE-GHISLAINE ADELE",
+      "annee_de_naissance": "1967",
+      "date_de_naissance": "1967-01",
+      "qualite": null,
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "43309168300014",
+     "adresse": "94 RUE ALEXANDRE DETROY 59650 VILLENEUVE-D'ASCQ",
+     "latitude": "50.634596176",
+     "longitude": "3.1264159037",
+     "libelle_commune": "VILLENEUVE-D'ASCQ"
+    }
+   },
+   {
+    "siren": "481035426",
+    "nom_complet": "JYM IMMO",
+    "nature_juridique": "6540",
+    "activite_principale": "68.20B",
+    "date_creation": "2005-02-01",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE",
+      "prenoms": "JEAN-MARIE MICHEL",
+      "annee_de_naissance": "1972",
+      "date_de_naissance": "1972-08",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "48103542600016",
+     "adresse": "43 CHEMIN DE MONTCIEL 39100 DOLE",
+     "latitude": "47.069474846",
+     "longitude": "5.4944312768",
+     "libelle_commune": "DOLE"
+    }
+   },
+   {
+    "siren": "419076211",
+    "nom_complet": "MICHEL CURIE",
+    "nature_juridique": "1000",
+    "activite_principale": "68.20B",
+    "date_creation": "1998-04-03",
+    "date_fermeture": "2015-12-25",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE",
+      "prenoms": "MICHEL MARIE GABRIEL",
+      "annee_de_naissance": null,
+      "date_de_naissance": null,
+      "qualite": null,
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "41907621100012",
+     "adresse": "RES LA BELLE DUNE PROMENADE DU MARQUENTERRE 80120 FORT-MAHON-PLAGE",
+     "latitude": "50.331064791",
+     "longitude": "1.565754904",
+     "libelle_commune": "FORT-MAHON-PLAGE"
+    }
+   },
+   {
+    "siren": "334887098",
+    "nom_complet": "ASS STE REDACTEURS COURRIER PICARD",
+    "nature_juridique": "6599",
+    "activite_principale": "74.8K",
+    "date_creation": "1986-01-14",
+    "date_fermeture": "1991-12-31",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "BOUILLARD",
+      "prenoms": "DANIEL ROMAIN",
+      "annee_de_naissance": "1942",
+      "date_de_naissance": "1942-03",
+      "qualite": "Administrateur",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "CURIE",
+      "prenoms": "MICHEL M?MARIE GABRIEL",
+      "annee_de_naissance": "1936",
+      "date_de_naissance": "1936-11",
+      "qualite": "Président du conseil d’administration",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "DUVAL",
+      "prenoms": "PATRICK YVES VINCENT",
+      "annee_de_naissance": "1950",
+      "date_de_naissance": "1950-04",
+      "qualite": "Administrateur",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "FLUCKIGER",
+      "prenoms": "PATRICK ROLAND",
+      "annee_de_naissance": "1953",
+      "date_de_naissance": "1953-08",
+      "qualite": "Administrateur",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "GODDERIDGE",
+      "prenoms": "ANDRE LOUIS GEORGES",
+      "annee_de_naissance": "1943",
+      "date_de_naissance": "1943-05",
+      "qualite": "Administrateur",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "LACOCHE",
+      "prenoms": "PHILIPPE BRUNO",
+      "annee_de_naissance": "1956",
+      "date_de_naissance": "1956-01",
+      "qualite": "Administrateur",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "PICOU",
+      "prenoms": "MARIE-NOELLE",
+      "annee_de_naissance": "1955",
+      "date_de_naissance": "1955-12",
+      "qualite": "Administrateur",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "33488709800013",
+     "adresse": "6 BD PASTEUR 80000 AMIENS",
+     "latitude": "49.889446852",
+     "longitude": "2.2917446346",
+     "libelle_commune": "AMIENS"
+    }
+   },
+   {
+    "siren": "815354139",
+    "nom_complet": "CURIE NEGO BOIS (CURIE NEGO BOIS)",
+    "nature_juridique": "5499",
+    "activite_principale": "46.73A",
+    "date_creation": "2015-11-19",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "01",
+    "dirigeants": [
+     {
+      "nom": "CURIE (CURIE)",
+      "prenoms": "JEAN ALFRED",
+      "annee_de_naissance": "1946",
+      "date_de_naissance": "1946-09",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "CURIE (CURIE)",
+      "prenoms": "JEAN MARIE MICHEL SIMON",
+      "annee_de_naissance": "1972",
+      "date_de_naissance": "1972-08",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "CURIE",
+      "prenoms": "JEAN-MARIE MICHEL SIMON",
+      "annee_de_naissance": "1972",
+      "date_de_naissance": "1972-08",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "81535413900017",
+     "adresse": "7 A RUE VIEILLE DE SALINS 39380 MONT-SOUS-VAUDREY",
+     "latitude": "46.981984622",
+     "longitude": "5.6082289245",
+     "libelle_commune": "MONT-SOUS-VAUDREY"
+    }
+   },
+   {
+    "siren": "843506163",
+    "nom_complet": "ALICE CURIE",
+    "nature_juridique": "1000",
+    "activite_principale": "70.22Z",
+    "date_creation": "2018-11-02",
+    "date_fermeture": "2019-10-31",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE",
+      "prenoms": "ALICE MARIE SIMONNE",
+      "annee_de_naissance": null,
+      "date_de_naissance": null,
+      "qualite": null,
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "84350616300016",
+     "adresse": "19 RUE DU COMMANDANT L'HERMINIER 94240 L'HAY-LES-ROSES",
+     "latitude": "48.769873029",
+     "longitude": "2.3277023721",
+     "libelle_commune": "L'HAY-LES-ROSES"
+    }
+   },
+   {
+    "siren": "907827901",
+    "nom_complet": "SCI LES TROIS SAPONTS",
+    "nature_juridique": "6540",
+    "activite_principale": "68.20B",
+    "date_creation": "2021-11-08",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "VERNEREY (BOUHELIER)",
+      "prenoms": "RACHEL MERCEDES MARIE ANNA",
+      "annee_de_naissance": "1970",
+      "date_de_naissance": "1970-07",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "CURIE",
+      "prenoms": "JEAN-MARIE MICHEL SIMON",
+      "annee_de_naissance": "1972",
+      "date_de_naissance": "1972-08",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "NICOD",
+      "prenoms": "SAMUEL JEAN-ALAIN CHRISTIAN",
+      "annee_de_naissance": "1980",
+      "date_de_naissance": "1980-07",
+      "qualite": "Gérant et associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "90782790100014",
+     "adresse": "14 RUE MERMOZ 25300 PONTARLIER",
+     "latitude": "46.911116081",
+     "longitude": "6.3447384209",
+     "libelle_commune": "PONTARLIER"
+    }
+   },
+   {
+    "siren": "754801520",
+    "nom_complet": "BLEU BLANC CHEF SAS (BLEU BLANC CHEF)",
+    "nature_juridique": "5710",
+    "activite_principale": "46.38B",
+    "date_creation": "1954-01-01",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "12",
+    "dirigeants": [
+     {
+      "nom": "CURIE",
+      "prenoms": "JEAN-MARIE MICHEL SIMON",
+      "annee_de_naissance": "1972",
+      "date_de_naissance": "1972-08",
+      "qualite": "Directeur Général",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "75480152000075",
+     "adresse": "PARC DES SAVLONS 2 RUE GUSTAVE NORDON 54220 MALZEVILLE",
+     "latitude": "48.71915563",
+     "longitude": "6.1766983243",
+     "libelle_commune": "MALZEVILLE"
+    }
+   },
+   {
+    "siren": "911646461",
+    "nom_complet": "SCI THANN DE GAULLE",
+    "nature_juridique": "6540",
+    "activite_principale": "68.20B",
+    "date_creation": "2022-01-25",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "BISSELICHES",
+      "prenoms": "CEDRIC ILAN JORDAN",
+      "annee_de_naissance": "1991",
+      "date_de_naissance": "1991-12",
+      "qualite": "Gérant et associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "BISSELICHES",
+      "prenoms": "JEROME MAX",
+      "annee_de_naissance": "1966",
+      "date_de_naissance": "1966-01",
+      "qualite": "Gérant et associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "CURIE",
+      "prenoms": "LAETITIA ODILE JUSTICE MARIE",
+      "annee_de_naissance": "1985",
+      "date_de_naissance": "1985-03",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "91164646100010",
+     "adresse": "MELPARK BATIMENT 5 40 RUE JEAN MONNET 68200 MULHOUSE",
+     "latitude": "47.7329136587178",
+     "longitude": "7.28709768805769",
+     "libelle_commune": "MULHOUSE"
+    }
+   },
+   {
+    "siren": "432344562",
+    "nom_complet": "JMC DISTRIBUTION",
+    "nature_juridique": "5499",
+    "activite_principale": "46.39B",
+    "date_creation": "2000-06-01",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "21",
+    "dirigeants": [
+     {
+      "nom": "CURIE",
+      "prenoms": "JEAN-MARIE MICHEL SIMON",
+      "annee_de_naissance": "1972",
+      "date_de_naissance": "1972-08",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "43234456200041",
+     "adresse": "ZI NORD RUE DOCTEUR STEIN 21000 DIJON",
+     "latitude": "47.340164649",
+     "longitude": "5.0625698456",
+     "libelle_commune": "DIJON"
+    }
+   },
+   {
+    "siren": "882811086",
+    "nom_complet": "SGM",
+    "nature_juridique": "5710",
+    "activite_principale": "70.22Z",
+    "date_creation": "2020-03-26",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "01",
+    "dirigeants": [
+     {
+      "nom": "CURIE",
+      "prenoms": "LAETITIA ODILE JUSTINE MARIE",
+      "annee_de_naissance": "1985",
+      "date_de_naissance": "1985-03",
+      "qualite": "Président de SAS",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "88281108600017",
+     "adresse": "BAT 5 40 RUE JEAN MONNET 68200 MULHOUSE",
+     "latitude": "47.7329136587178",
+     "longitude": "7.28709768805769",
+     "libelle_commune": "MULHOUSE"
+    }
+   },
+   {
+    "siren": "928181221",
+    "nom_complet": "FLORENCE CURIE",
+    "nature_juridique": "1000",
+    "activite_principale": "70.22Z",
+    "date_creation": "2024-05-20",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE",
+      "prenoms": "FLORENCE SOPHIE MARIE-ANNE",
+      "annee_de_naissance": "1979",
+      "date_de_naissance": "1979-09",
+      "qualite": null,
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "92818122100013",
+     "adresse": "[NON-DIFFUSIBLE]",
+     "latitude": "[NON-DIFFUSIBLE]",
+     "longitude": "[NON-DIFFUSIBLE]",
+     "libelle_commune": "CORMERY"
+    }
+   },
+   {
+    "siren": "318702081",
+    "nom_complet": "MARIE CURIE (CUNIN)",
+    "nature_juridique": "1000",
+    "activite_principale": "86.22C",
+    "date_creation": "1980-01-01",
+    "date_fermeture": "2016-12-31",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE (CUNIN)",
+      "prenoms": "MARIE",
+      "annee_de_naissance": null,
+      "date_de_naissance": null,
+      "qualite": null,
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "31870208100023",
+     "adresse": "48 RUE DE LA RAVINE 27400 LOUVIERS",
+     "latitude": "49.2072343821365",
+     "longitude": "1.1585490887372",
+     "libelle_commune": "LOUVIERS"
+    }
+   },
+   {
+    "siren": "036140713",
+    "nom_complet": "MARIE CURIE (MAITRE)",
+    "nature_juridique": "1000",
+    "activite_principale": "81.21",
+    "date_creation": "1961-12-25",
+    "date_fermeture": "1987-04-16",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE (MAITRE)",
+      "prenoms": "MARIE",
+      "annee_de_naissance": null,
+      "date_de_naissance": null,
+      "qualite": null,
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "03614071300011",
+     "adresse": "55 RUE DE LA RESISTANCE 39100 DOLE",
+     "latitude": "47.085639882",
+     "longitude": "5.5056325478",
+     "libelle_commune": "DOLE"
+    }
+   },
+   {
+    "siren": "832047039",
+    "nom_complet": "RMG",
+    "nature_juridique": "6599",
+    "activite_principale": "68.20B",
+    "date_creation": "2017-09-18",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE",
+      "prenoms": "GILLES BERNARD STANISLAS",
+      "annee_de_naissance": "1943",
+      "date_de_naissance": "1943-12",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "CURIE (MOULIN)",
+      "prenoms": "ROSE MARIE",
+      "annee_de_naissance": "1947",
+      "date_de_naissance": "1947-09",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "83204703900017",
+     "adresse": "28 RUE DU NORD 69550 AMPLEPUIS",
+     "latitude": "45.973120771",
+     "longitude": "4.3292017634",
+     "libelle_commune": "AMPLEPUIS"
+    }
+   },
+   {
+    "siren": "918030834",
+    "nom_complet": "AC2E IMMO",
+    "nature_juridique": "6540",
+    "activite_principale": "68.20B",
+    "date_creation": "2022-07-28",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE",
+      "prenoms": "ETIENNE",
+      "annee_de_naissance": "1968",
+      "date_de_naissance": "1968-02",
+      "qualite": "Autre",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "CURIE (LAMBERT)",
+      "prenoms": "EMMANUELLE MARIE",
+      "annee_de_naissance": "1971",
+      "date_de_naissance": "1971-04",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "91803083400017",
+     "adresse": "18 CHEMIN DE LA PLAINE 09000 SAINT-JEAN-DE-VERGES",
+     "latitude": "43.018119022",
+     "longitude": "1.6176178703",
+     "libelle_commune": "SAINT-JEAN-DE-VERGES"
+    }
+   },
+   {
+    "siren": "390072858",
+    "nom_complet": "MARIE-PIERRE CURIE (LANDAIS)",
+    "nature_juridique": "1000",
+    "activite_principale": "47.99A",
+    "date_creation": "1993-02-11",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE (LANDAIS)",
+      "prenoms": "MARIE-PIERRE",
+      "annee_de_naissance": null,
+      "date_de_naissance": null,
+      "qualite": null,
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "39007285800025",
+     "adresse": "7 RUE DU GUE MARY 35760 SAINT-GREGOIRE",
+     "latitude": "48.156606699",
+     "longitude": "-1.69805735",
+     "libelle_commune": "SAINT-GREGOIRE"
+    }
+   },
+   {
+    "siren": "324589076",
+    "nom_complet": "MARIE CURIE (BROQUET)",
+    "nature_juridique": "1000",
+    "activite_principale": "64.11",
+    "date_creation": null,
+    "date_fermeture": "1984-12-25",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE (BROQUET)",
+      "prenoms": "MARIE ANNE",
+      "annee_de_naissance": null,
+      "date_de_naissance": null,
+      "qualite": null,
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "32458907600011",
+     "adresse": "90400 BERMONT",
+     "latitude": null,
+     "longitude": null,
+     "libelle_commune": "BERMONT"
+    }
+   },
+   {
+    "siren": "903205607",
+    "nom_complet": "SCI PRILLARD",
+    "nature_juridique": "6540",
+    "activite_principale": "68.20B",
+    "date_creation": "2021-06-26",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "PRILLARD (CURIE)",
+      "prenoms": "EMMANUELLE MARIE",
+      "annee_de_naissance": "1964",
+      "date_de_naissance": "1964-11",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "PRILLARD",
+      "prenoms": "CHARLES BERNARD CLAUDE",
+      "annee_de_naissance": "1959",
+      "date_de_naissance": "1959-02",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "PRILLARD",
+      "prenoms": "JEANNE BEATRICE MARIE",
+      "annee_de_naissance": "1994",
+      "date_de_naissance": "1994-09",
+      "qualite": "Autre",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "PERRIN (PRILLARD)",
+      "prenoms": "LEA CLEMENCE JULIA",
+      "annee_de_naissance": "1989",
+      "date_de_naissance": "1989-01",
+      "qualite": "Autre",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "PRILLARD",
+      "prenoms": "MADELEINE MARIE",
+      "annee_de_naissance": "2001",
+      "date_de_naissance": "2001-06",
+      "qualite": "Autre",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "PRILLARD",
+      "prenoms": "STANISLAS PAUL MARIE",
+      "annee_de_naissance": "1990",
+      "date_de_naissance": "1990-11",
+      "qualite": "Autre",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "90320560700018",
+     "adresse": "18 RUE DE LA VILLE 39210 FRONTENAY",
+     "latitude": "46.788213354",
+     "longitude": "5.6157666248",
+     "libelle_commune": "FRONTENAY"
+    }
+   },
+   {
+    "siren": "804112449",
+    "nom_complet": "EC2 AMENAGEMENT",
+    "nature_juridique": "5499",
+    "activite_principale": "47.59A",
+    "date_creation": "2014-08-19",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "02",
+    "dirigeants": [
+     {
+      "nom": "CURIE (LAMBERT)",
+      "prenoms": "EMMANUELLE MARIE",
+      "annee_de_naissance": "1971",
+      "date_de_naissance": "1971-04",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "80411244900017",
+     "adresse": "RUE ANDRE CITROEN 09100 PAMIERS",
+     "latitude": "43.10898725",
+     "longitude": "1.6273250851",
+     "libelle_commune": "PAMIERS"
+    }
+   }
+  ],
+  "total_results": 47,
+  "total_pages": 2,
+  "page": 1,
+  "per_page": 25
+ },
+ {
+  "results": [
+   {
+    "siren": "917763906",
+    "nom_complet": "HECL",
+    "nature_juridique": "5710",
+    "activite_principale": "70.10Z",
+    "date_creation": "2022-07-21",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE (LAMBERT)",
+      "prenoms": "EMMANUELLE MARIE",
+      "annee_de_naissance": "1971",
+      "date_de_naissance": "1971-04",
+      "qualite": "Président de SAS",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "91776390600018",
+     "adresse": "18 CHEMIN DE LA PLAINE 09000 SAINT-JEAN-DE-VERGES",
+     "latitude": "43.018119022",
+     "longitude": "1.6176178703",
+     "libelle_commune": "SAINT-JEAN-DE-VERGES"
+    }
+   },
+   {
+    "siren": "802568675",
+    "nom_complet": "MARIE CHRISTINE CURIE (SIRVENT)",
+    "nature_juridique": "1000",
+    "activite_principale": "70.22Z",
+    "date_creation": "2014-06-02",
+    "date_fermeture": "2015-12-31",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE (SIRVENT)",
+      "prenoms": "MARIE CHRISTINE",
+      "annee_de_naissance": null,
+      "date_de_naissance": null,
+      "qualite": null,
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "80256867500010",
+     "adresse": "2743 ROUTE DU GRISARD 69560 SAINT-CYR-SUR-LE-RHONE",
+     "latitude": "45.51511115",
+     "longitude": "4.8439392092",
+     "libelle_commune": "SAINT-CYR-SUR-LE-RHONE"
+    }
+   },
+   {
+    "siren": "919220574",
+    "nom_complet": "CELFLA",
+    "nature_juridique": "6540",
+    "activite_principale": "68.20B",
+    "date_creation": "2022-09-04",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE",
+      "prenoms": "CHRISTOPHE ROGER GASTON",
+      "annee_de_naissance": "1975",
+      "date_de_naissance": "1975-06",
+      "qualite": "Autre",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "CURIE (FOURNIER)",
+      "prenoms": "PATRICIA MARIE-MADELEINE",
+      "annee_de_naissance": "1979",
+      "date_de_naissance": "1979-12",
+      "qualite": "Autre",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "91922057400017",
+     "adresse": "6 IMPASSE DES OLIVIERS 30840 MEYNES",
+     "latitude": "43.87582958",
+     "longitude": "4.5548256528",
+     "libelle_commune": "MEYNES"
+    }
+   },
+   {
+    "siren": "818047953",
+    "nom_complet": "HOLDING CURIE DESESQUELLES",
+    "nature_juridique": "5499",
+    "activite_principale": "70.10Z",
+    "date_creation": "2016-02-15",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "DESESQUELLES (CURIE)",
+      "prenoms": "HERMINE MARIE MICHELE",
+      "annee_de_naissance": "1980",
+      "date_de_naissance": "1980-10",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "DESESQUELLES",
+      "prenoms": "SEBASTIEN GILLES RENE",
+      "annee_de_naissance": "1977",
+      "date_de_naissance": "1977-06",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "81804795300026",
+     "adresse": "22 RUE DES ECOLES 80150 CRECY-EN-PONTHIEU",
+     "latitude": "50.250219708",
+     "longitude": "1.8838575069",
+     "libelle_commune": "CRECY-EN-PONTHIEU"
+    }
+   },
+   {
+    "siren": "818027575",
+    "nom_complet": "SCI DES ECOLES",
+    "nature_juridique": "6540",
+    "activite_principale": "68.20B",
+    "date_creation": "2016-02-01",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "DESESQUELLES (CURIE)",
+      "prenoms": "HERMINE MARIE MICHELE",
+      "annee_de_naissance": "1980",
+      "date_de_naissance": "1980-10",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "DESESQUELLES",
+      "prenoms": "SEBASTIEN GILLES RENE",
+      "annee_de_naissance": "1977",
+      "date_de_naissance": "1977-06",
+      "qualite": "Autre",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "81802757500021",
+     "adresse": "22 RUE DES ECOLES 80150 CRECY-EN-PONTHIEU",
+     "latitude": "50.250219708",
+     "longitude": "1.8838575069",
+     "libelle_commune": "CRECY-EN-PONTHIEU"
+    }
+   },
+   {
+    "siren": "322472960",
+    "nom_complet": "AMBULANCES CRECEENNES - TRANSPORTS CRECEENS (AMBULANCES CRECEENNES)",
+    "nature_juridique": "5499",
+    "activite_principale": "86.90A",
+    "date_creation": "1975-01-01",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "12",
+    "dirigeants": [
+     {
+      "nom": "DESESQUELLES (CURIE)",
+      "prenoms": "HERMINE",
+      "annee_de_naissance": "1980",
+      "date_de_naissance": "1980-10",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "DESESQUELLES (CURIE)",
+      "prenoms": "HERMINE MARIE MICHELE",
+      "annee_de_naissance": "1980",
+      "date_de_naissance": "1980-10",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "DESESQUELLES (DESESQUELLES)",
+      "prenoms": "SEBASTIEN",
+      "annee_de_naissance": "1977",
+      "date_de_naissance": "1977-06",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "DESESQUELLES",
+      "prenoms": "SEBASTIEN GILLES RENE",
+      "annee_de_naissance": "1977",
+      "date_de_naissance": "1977-06",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "32247296000028",
+     "adresse": "135 RUE DES ECOLES 80150 CRECY-EN-PONTHIEU",
+     "latitude": "50.251140958",
+     "longitude": "1.8827670488",
+     "libelle_commune": "CRECY-EN-PONTHIEU"
+    }
+   },
+   {
+    "siren": "903554244",
+    "nom_complet": "ABC COACHING ET CONSEIL",
+    "nature_juridique": "5710",
+    "activite_principale": "85.59A",
+    "date_creation": "2021-10-01",
+    "date_fermeture": "2025-12-31",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "01",
+    "dirigeants": [
+     {
+      "nom": "BARRAQUE-CURIE",
+      "prenoms": "ANNE BERNADETTE MARIE",
+      "annee_de_naissance": "1970",
+      "date_de_naissance": "1970-07",
+      "qualite": "Liquidateur",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "90355424400017",
+     "adresse": "25 RUE DU PARC 94000 CRETEIL",
+     "latitude": "48.796166177",
+     "longitude": "2.4547262582",
+     "libelle_commune": "CRETEIL"
+    }
+   },
+   {
+    "siren": "799628755",
+    "nom_complet": "PATRICIA CURIE (FOURNIER)",
+    "nature_juridique": "1000",
+    "activite_principale": "68.31Z",
+    "date_creation": "2014-01-07",
+    "date_fermeture": "2015-01-15",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE (FOURNIER)",
+      "prenoms": "PATRICIA MARIE MADELEINE",
+      "annee_de_naissance": null,
+      "date_de_naissance": null,
+      "qualite": null,
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "79962875500016",
+     "adresse": "5 IMPASSE DES OLIVIERS 30840 MEYNES",
+     "latitude": "43.875598992",
+     "longitude": "4.5551150238",
+     "libelle_commune": "MEYNES"
+    }
+   },
+   {
+    "siren": "333146157",
+    "nom_complet": "SCI RABELAIS",
+    "nature_juridique": "6540",
+    "activite_principale": "68.20B",
+    "date_creation": "1985-06-03",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "BEGIN",
+      "prenoms": "CLAIRE EVA",
+      "annee_de_naissance": "1972",
+      "date_de_naissance": "1972-03",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "BEGIN",
+      "prenoms": "THOMAS LUC",
+      "annee_de_naissance": "1970",
+      "date_de_naissance": "1970-01",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "BORDET",
+      "prenoms": "ERIC",
+      "annee_de_naissance": "1957",
+      "date_de_naissance": "1957-02",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "COHEN (BOTBOL)",
+      "prenoms": "AURELIE",
+      "annee_de_naissance": "1985",
+      "date_de_naissance": "1985-05",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "DIMRI BEN ARI (BOTBOL)",
+      "prenoms": "EMMANUELLE",
+      "annee_de_naissance": "1982",
+      "date_de_naissance": "1982-08",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "BOTBOL",
+      "prenoms": "YOHAN",
+      "annee_de_naissance": "1989",
+      "date_de_naissance": "1989-07",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "CURIE (CUNIN)",
+      "prenoms": "MARIE-CLAUDE LOUISE",
+      "annee_de_naissance": "1949",
+      "date_de_naissance": "1949-08",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "DELACOUR",
+      "prenoms": "ERIC MARIE ANDRE LOUIS",
+      "annee_de_naissance": "1948",
+      "date_de_naissance": "1948-06",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "DROCOURT (GERIN)",
+      "prenoms": "ANNIE MADELEINE",
+      "annee_de_naissance": "1943",
+      "date_de_naissance": "1943-02",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "LELOUP",
+      "prenoms": "PHILIPPE JACQUES MAURICE GEORGES",
+      "annee_de_naissance": "1957",
+      "date_de_naissance": "1957-10",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "PANNETIER",
+      "prenoms": "BRUNO GEORGES LOUIS MAURICE",
+      "annee_de_naissance": "1956",
+      "date_de_naissance": "1956-10",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "PEUGNET",
+      "prenoms": "JEAN-PIERRE FRANCOIS LOUIS JOSEPH",
+      "annee_de_naissance": "1948",
+      "date_de_naissance": "1948-06",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "SAUVAN",
+      "prenoms": "STEPHANE MARIE YVES JEAN",
+      "annee_de_naissance": "1948",
+      "date_de_naissance": "1948-05",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "DERUMEAUX (SEXE)",
+      "prenoms": "BERTILLE BRIGITTE",
+      "annee_de_naissance": "1953",
+      "date_de_naissance": "1953-12",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "TEILLET",
+      "prenoms": "JEAN-FRANCOIS PAUL",
+      "annee_de_naissance": "1955",
+      "date_de_naissance": "1955-06",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "SAVELLA (VELU)",
+      "prenoms": "CLAUDE ANNE AIMEE SUZANNE",
+      "annee_de_naissance": "1954",
+      "date_de_naissance": "1954-10",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "BOTBOL (ZERAPHA)",
+      "prenoms": "CLAUDE",
+      "annee_de_naissance": "1956",
+      "date_de_naissance": "1956-04",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "33314615700016",
+     "adresse": "48 RUE DE LA RAVINE 27400 LOUVIERS",
+     "latitude": "49.2072343821365",
+     "longitude": "1.1585490887372",
+     "libelle_commune": "LOUVIERS"
+    }
+   },
+   {
+    "siren": "817423403",
+    "nom_complet": "CURIE ACF (CURIE A.C.F)",
+    "nature_juridique": "5499",
+    "activite_principale": "70.22Z",
+    "date_creation": "2016-01-01",
+    "date_fermeture": "2019-01-23",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE (SIRVENT)",
+      "prenoms": "MARIE-CHRISTINE MICHELLE",
+      "annee_de_naissance": "1967",
+      "date_de_naissance": "1967-04",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "81742340300010",
+     "adresse": "2743 RTE DU GRISARD 69560 SAINT-CYR-SUR-LE-RHONE",
+     "latitude": "45.51511115",
+     "longitude": "4.8439392092",
+     "libelle_commune": "SAINT-CYR-SUR-LE-RHONE"
+    }
+   },
+   {
+    "siren": "380988642",
+    "nom_complet": "JEANNE DURET (CURIE)",
+    "nature_juridique": "1000",
+    "activite_principale": "01.3Z",
+    "date_creation": "1991-01-01",
+    "date_fermeture": "1998-12-31",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "DURET (CURIE)",
+      "prenoms": "JEANNE MARIE MARGUERITE",
+      "annee_de_naissance": null,
+      "date_de_naissance": null,
+      "qualite": null,
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "38098864200019",
+     "adresse": "39120 SELIGNEY",
+     "latitude": null,
+     "longitude": null,
+     "libelle_commune": "SELIGNEY"
+    }
+   },
+   {
+    "siren": "990096778",
+    "nom_complet": "CAMP7",
+    "nature_juridique": "5499",
+    "activite_principale": "70.10Z",
+    "date_creation": "2025-08-06",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "DUPRÉ (CURIE)",
+      "prenoms": "EVELYNE ANNE-MARIE DANIELLE",
+      "annee_de_naissance": "1972",
+      "date_de_naissance": "1972-03",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "DUPRÉ",
+      "prenoms": "PHILIPPE DIDIER EUGÈNE LOUIS-MARIE",
+      "annee_de_naissance": "1969",
+      "date_de_naissance": "1969-07",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "99009677800016",
+     "adresse": "KERGONAN 56340 PLOUHARNEL",
+     "latitude": "47.5960799862824",
+     "longitude": "-3.10137902442618",
+     "libelle_commune": "PLOUHARNEL"
+    }
+   },
+   {
+    "siren": "820992493",
+    "nom_complet": "KINE CDGR",
+    "nature_juridique": "6540",
+    "activite_principale": "68.20B",
+    "date_creation": "2016-06-09",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE (CHARVET)",
+      "prenoms": "FREDERIQUE CHRISTINE JEANNE-MARIE",
+      "annee_de_naissance": "1970",
+      "date_de_naissance": "1970-02",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "DESEILLE",
+      "prenoms": "FRANCOIS MICHEL DIDIER",
+      "annee_de_naissance": "1968",
+      "date_de_naissance": "1968-02",
+      "qualite": "Gérant et associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "GROSJEAN",
+      "prenoms": "JULIE EMMA",
+      "annee_de_naissance": "1987",
+      "date_de_naissance": "1987-02",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "RACINE",
+      "prenoms": "LIONEL GASTON MAURICE",
+      "annee_de_naissance": "1957",
+      "date_de_naissance": "1957-02",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "82099249300024",
+     "adresse": "4 RUE LOUNES MATOUB 21000 DIJON",
+     "latitude": "47.3619428111514",
+     "longitude": "5.05072230151343",
+     "libelle_commune": "DIJON"
+    }
+   },
+   {
+    "siren": "942866385",
+    "nom_complet": "CAMILLE D'AUDIFFRET (CURIE) (ACHILLEE MILLEPERTHUIS)",
+    "nature_juridique": "1000",
+    "activite_principale": "70.22Z",
+    "date_creation": "2025-03-01",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "D'AUDIFFRET (CURIE)",
+      "prenoms": "CAMILLE BÉNÉDICTE NATHALIE MARIE",
+      "annee_de_naissance": "1990",
+      "date_de_naissance": "1990-07",
+      "qualite": null,
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "94286638500019",
+     "adresse": "NANTES 5 RUE BATONNIER GUINAUDEAU 44100 NANTES",
+     "latitude": "47.2099356980619",
+     "longitude": "-1.56615094729355",
+     "libelle_commune": "NANTES"
+    }
+   },
+   {
+    "siren": "318745536",
+    "nom_complet": "SOCIETE CAPITOLE",
+    "nature_juridique": "6599",
+    "activite_principale": "68.20A",
+    "date_creation": "1980-01-01",
+    "date_fermeture": "2019-04-25",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE (SABATIER)",
+      "prenoms": "MARIE MADELEINE MARGUERITE JEANNE",
+      "annee_de_naissance": "1915",
+      "date_de_naissance": "1915-03",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "31874553600017",
+     "adresse": "2 RUE IDRAC 31000 TOULOUSE",
+     "latitude": "43.6011270008327",
+     "longitude": "1.45235712266125",
+     "libelle_commune": "TOULOUSE"
+    }
+   },
+   {
+    "siren": "798796512",
+    "nom_complet": "THEOS.21",
+    "nature_juridique": "6540",
+    "activite_principale": "68.20B",
+    "date_creation": "2013-11-06",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CHIFFLOT",
+      "prenoms": "JEAN-PIERRE CLAUDE",
+      "annee_de_naissance": "1944",
+      "date_de_naissance": "1944-07",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "CHIFFLOT",
+      "prenoms": "THOMAS JEAN",
+      "annee_de_naissance": "1976",
+      "date_de_naissance": "1976-05",
+      "qualite": "Gérant et associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "CHIFFLOT (CURIE)",
+      "prenoms": "ANNE-MARIE ANDREE HELENE",
+      "annee_de_naissance": "1940",
+      "date_de_naissance": "1940-08",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "MONARD",
+      "prenoms": "STEPHANIE",
+      "annee_de_naissance": "1975",
+      "date_de_naissance": "1975-10",
+      "qualite": "Associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "79879651200019",
+     "adresse": "37 RUE DE MULHOUSE 21000 DIJON",
+     "latitude": "47.3254109198032",
+     "longitude": "5.05007159790056",
+     "libelle_commune": "DIJON"
+    }
+   },
+   {
+    "siren": "885352955",
+    "nom_complet": "SA3C",
+    "nature_juridique": "6540",
+    "activite_principale": "41.10A",
+    "date_creation": "2020-07-21",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE (BOURGEOIS)",
+      "prenoms": "CELINE MONIQUE MARIE ODETTE",
+      "annee_de_naissance": "1978",
+      "date_de_naissance": "1978-11",
+      "qualite": "Gérant et associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "CURIE",
+      "prenoms": "STEPHANE YVES PATRICK",
+      "annee_de_naissance": "1980",
+      "date_de_naissance": "1980-02",
+      "qualite": "Gérant et associé indéfiniment responsable",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "88535295500011",
+     "adresse": "2 LOT LES ARCADES 25560 BANNANS",
+     "latitude": "46.887224809",
+     "longitude": "6.234861049",
+     "libelle_commune": "BANNANS"
+    }
+   },
+   {
+    "siren": "489112219",
+    "nom_complet": "SARL LES GOELANDS",
+    "nature_juridique": "5499",
+    "activite_principale": "55.30Z",
+    "date_creation": "2006-02-28",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "00",
+    "dirigeants": [
+     {
+      "nom": "DUPRE (CURIE)",
+      "prenoms": "EVELYNE ANNE-MARIE DANIELLE",
+      "annee_de_naissance": "1972",
+      "date_de_naissance": "1972-03",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     },
+     {
+      "nom": "DUPRE",
+      "prenoms": "PHILIPPE DIDIER EUGENE LOUIS-MARIE",
+      "annee_de_naissance": "1969",
+      "date_de_naissance": "1969-07",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "48911221900014",
+     "adresse": "LD KERGONAN 56340 PLOUHARNEL",
+     "latitude": "47.596079986",
+     "longitude": "-3.101379024",
+     "libelle_commune": "PLOUHARNEL"
+    }
+   },
+   {
+    "siren": "402253090",
+    "nom_complet": "RACHEL BARRAQUE CURIE (LAMUGUE)",
+    "nature_juridique": "1000",
+    "activite_principale": "52.1B",
+    "date_creation": "1995-10-01",
+    "date_fermeture": "1999-09-30",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "BARRAQUE CURIE (LAMUGUE)",
+      "prenoms": "RACHEL MARIE",
+      "annee_de_naissance": null,
+      "date_de_naissance": null,
+      "qualite": null,
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "40225309000011",
+     "adresse": "64230 MAZEROLLES",
+     "latitude": null,
+     "longitude": null,
+     "libelle_commune": "MAZEROLLES"
+    }
+   },
+   {
+    "siren": "788470482",
+    "nom_complet": "SABINE SITTER (CURIE-NODIN)",
+    "nature_juridique": "1000",
+    "activite_principale": "85.60Z",
+    "date_creation": "2012-10-01",
+    "date_fermeture": "2017-10-23",
+    "etat_administratif": "C",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "SITTER (CURIE-NODIN)",
+      "prenoms": "SABINE ROSE-MARIE",
+      "annee_de_naissance": null,
+      "date_de_naissance": null,
+      "qualite": null,
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "78847048200027",
+     "adresse": "9 IMPASSE DES ORTINIERES 37260 ARTANNES-SUR-INDRE",
+     "latitude": "47.268677726",
+     "longitude": "0.6069409167",
+     "libelle_commune": "ARTANNES-SUR-INDRE"
+    }
+   },
+   {
+    "siren": "802521492",
+    "nom_complet": "MADELEINE COLLIAT DANGUS (CURIE)",
+    "nature_juridique": "1000",
+    "activite_principale": "47.99A",
+    "date_creation": "2013-02-22",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "COLLIAT DANGUS (CURIE)",
+      "prenoms": "MADELEINE MARIE ANDREE",
+      "annee_de_naissance": null,
+      "date_de_naissance": null,
+      "qualite": null,
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "80252149200016",
+     "adresse": "265 ROUTE DU PASSAGE 38730 CHELIEU",
+     "latitude": "45.506238325",
+     "longitude": "5.492937836",
+     "libelle_commune": "CHELIEU"
+    }
+   },
+   {
+    "siren": "338993520",
+    "nom_complet": "LES DOUVES DE MONTBAZON",
+    "nature_juridique": "6541",
+    "activite_principale": "41.10D",
+    "date_creation": "1986-06-01",
+    "date_fermeture": null,
+    "etat_administratif": "A",
+    "tranche_effectif_salarie": "NN",
+    "dirigeants": [
+     {
+      "nom": "CURIE-NODIN (MURAT)",
+      "prenoms": "FRANCOISE GILBERTE MARIE-MICHELLE",
+      "annee_de_naissance": "1949",
+      "date_de_naissance": "1949-09",
+      "qualite": "Gérant",
+      "nationalite": null,
+      "type_dirigeant": "personne physique"
+     }
+    ],
+    "siege": {
+     "siret": "33899352000018",
+     "adresse": "LES ANSAULTS 37260 ARTANNES-SUR-INDRE",
+     "latitude": "47.272629445",
+     "longitude": "0.6088562548",
+     "libelle_commune": "ARTANNES-SUR-INDRE"
+    }
+   }
+  ],
+  "total_results": 47,
+  "total_pages": 2,
+  "page": 2,
+  "per_page": 25
+ }
+]

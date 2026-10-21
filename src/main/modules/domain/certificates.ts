@@ -1,6 +1,6 @@
 import { defineModule, ModuleError, type ModuleOutput, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
-import { compact, isDomain, isoDate, normalizeHost, serviceError } from './_util'
+import { cappedList, compact, isDomain, isoDate, MAX_LIST_ENTITIES, normalizeHost, serviceError } from './_util'
 
 const MAX_CERTS = 5
 const MAX_NAMES = 50
@@ -56,7 +56,7 @@ export function parseCertSpotterCerts(host: string, rows: CertSpotterCert[], lan
     properties: compact({
       tls_issuer: latest.issuer?.friendly_name ?? latest.issuer?.name ?? null,
       tls_not_after: isoDate(latest.not_after),
-      tls_san: sans.slice(0, 100),
+      ...cappedList('tls_san', sans),
       tls_certificates: certs.length
     }),
     entities,
@@ -93,10 +93,11 @@ export function parseCrtShCert(rows: CrtShCert[], lang: 'fr' | 'en'): ModuleOutp
       not_before: isoDate(c.not_before),
       not_after: isoDate(c.not_after),
       serial: c.serial_number ?? null,
-      dns_names: names.slice(0, 200),
+      ...cappedList('dns_names', names),
       crtsh_id: c.id ?? null
     }),
-    entities: names.slice(0, MAX_NAMES).map((n) => ({ type: 'domain', label: n, linkLabel: fr ? 'nom couvert' : 'covered name' })),
+    // Un certificat mutualisé (CDN) peut couvrir des dizaines de domaines sans lien entre eux.
+    entities: names.slice(0, MAX_LIST_ENTITIES).map((n) => ({ type: 'domain', label: n, linkLabel: fr ? 'nom couvert' : 'covered name' })),
     raw: rows.slice(0, 10)
   }
 }

@@ -10,6 +10,7 @@ import { useApp } from '../../store/app'
 import { useGraph } from '../../store/graph'
 import { Logo } from '../Logo'
 import { Button, confirmDialog, Dialog, Dropdown, Empty, Switch } from '../ui'
+import { errorMessage } from '../../lib/errors'
 
 const COLORS = ['#e5484d', '#f76b15', '#ffc53d', '#30a46c', '#12a594', '#0090ff', '#6e56cf', '#d6409f', '#8d8d93']
 
@@ -45,7 +46,7 @@ export function Home(): React.JSX.Element {
         await refresh()
       }
     } catch (e) {
-      toast('error', e instanceof Error ? e.message : String(e))
+      toast('error', errorMessage(e))
     }
   }
 

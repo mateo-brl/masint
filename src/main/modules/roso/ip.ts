@@ -4,6 +4,8 @@
 import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
 import { findPlatformByName } from '@shared/platforms'
+import { sharedInfrastructure, sharedLabel } from '../domain/_hosting'
+import { cappedList, localizeCountry, MAX_LIST_ENTITIES } from '../domain/_util'
 import { creditsOf, redact, ROSO_COMMON, RosoClient, toRosoError, type Json } from './_client'
 import { asArr, asObj, dropEmpty, isDomain, isIp, pick, pickNum, str } from './_parse'
 
@@ -37,7 +39,7 @@ export function sourceFields(d: Json): Record<string, string | number | boolean>
   return out
 }
 
-function geoProps(d: Json): Record<string, PropValue | undefined> {
+function geoProps(d: Json, lang: 'fr' | 'en'): Record<string, PropValue | undefined> {
   const mm = asObj(d.maxmind)
   const cls = asObj(d.classification)
   const flags = Object.entries(cls)
@@ -47,7 +49,7 @@ function geoProps(d: Json): Record<string, PropValue | undefined> {
   if (d.is_mobile === true) flags.push('mobile')
   if (d.is_satellite === true) flags.push('satellite')
   return {
-    country: pick(d, 'country') || pick(mm, 'country') || undefined,
+    country: localizeCountry(pick(d, 'country') || pick(mm, 'country'), pick(d, 'country_code') || pick(mm, 'country_code', 'countryCode'), lang) || undefined,
     city: pick(d, 'city') || pick(mm, 'city') || undefined,
     region: pick(d, 'region') || pick(mm, 'subdivision') || undefined,
     postcode: pick(d, 'postal') || pick(mm, 'postal') || undefined,
@@ -77,7 +79,7 @@ function geoEntities(d: Json, lang: 'fr' | 'en'): OutEntity[] {
       linkLabel: 'ASN'
     })
   }
-  const country = pick(d, 'country')
+  const country = localizeCountry(pick(d, 'country'), pick(d, 'country_code'), lang)
   if (country) out.push({ type: 'country', label: country, data: dropEmpty({ code: pick(d, 'country_code') || undefined }), linkLabel: lang === 'fr' ? 'pays' : 'country' })
   const asName = pick(d, 'as_name')
   const hosting = asName ? findPlatformByName(asName, 'hosting') : undefined
@@ -120,7 +122,8 @@ export default defineModule({
 
     const geo = geoRes?.ok && geoRes.data.success !== false ? geoRes.data : null
     const entities: OutEntity[] = geo ? geoEntities(geo, ctx.lang) : []
-    const properties: Record<string, PropValue | undefined> = geo ? geoProps(geo) : {}
+    const properties: Record<string, PropValue | undefined> = geo ? geoProps(geo, ctx.lang) : {}
+    const passiveNames: string[] = []
 
     const okSources: string[] = []
     const rawSources: Record<string, unknown> = {}
@@ -133,14 +136,19 @@ export default defineModule({
       if (Object.keys(fields).length) properties[`roso_${s.id}`] = fields
       // DNS passif : noms d'hôte pointant vers cette IP.
       if (s.id === 'otx' || s.id === 'rapiddns') {
-        let n = 0
         for (const rec of asArr(d.records)) {
           const name = str(asObj(rec).title).toLowerCase()
-          if (!isDomain(name) || n++ >= 30) continue
-          entities.push({ type: 'domain', label: name, linkLabel: ctx.lang === 'fr' ? 'DNS passif' : 'passive DNS' })
+          if (isDomain(name) && !passiveNames.includes(name)) passiveNames.push(name)
         }
       }
     }
+    // IP de CDN ou résolveur public : les domaines vus dessus n'ont pas de lien avec la cible.
+    const shared = sharedInfrastructure(ip, { asn: properties.asn ?? input.data.asn, org: properties.org ?? input.data.org })
+    if (!shared)
+      for (const name of passiveNames.slice(0, MAX_LIST_ENTITIES))
+        entities.push({ type: 'domain', label: name, linkLabel: ctx.lang === 'fr' ? 'DNS passif' : 'passive DNS' })
+    Object.assign(properties, cappedList('passive_dns_hostnames', passiveNames))
+    if (shared) properties.shared_infrastructure = sharedLabel(shared, ctx.lang)
 
     return {
       properties: dropEmpty({

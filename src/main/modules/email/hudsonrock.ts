@@ -90,7 +90,9 @@ export default defineModule({
     const email = requireEmail(input)
     const res = await fetchRetry(ctx, 'https://cavalier.hudsonrock.com/api/json/v2/osint-tools/search-by-email', {
       query: { email },
-      headers: { accept: 'application/json' }
+      headers: { accept: 'application/json' },
+      // Même service que la recherche par domaine, parfois lent sous charge.
+      timeoutMs: 30_000
     })
     if (!res.ok) throw httpFailure('Hudson Rock', res.status)
     return parseCavalier(await readJson<CavalierResponse>(res, 'Hudson Rock'), ctx.lang)

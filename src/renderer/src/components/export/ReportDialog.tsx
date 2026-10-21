@@ -8,6 +8,7 @@ import { useGraph } from '../../store/graph'
 import { Button, Dialog, Spinner, Tabs } from '../ui'
 import { DEFAULT_SECTIONS, REPORT_SECTIONS, type ReportOptions, type ReportSectionId } from './report'
 import { generateReportHtml, generateReportPdf, type ReportStep } from './reportGen'
+import { errorMessage } from '../../lib/errors'
 
 const PREFS_KEY = 'masint.report'
 
@@ -91,7 +92,7 @@ function ReportForm(): React.JSX.Element {
         setOpen(false)
       }
     } catch (e) {
-      toast('error', e instanceof Error ? e.message : String(e))
+      toast('error', errorMessage(e))
     } finally {
       setStep(null)
     }
