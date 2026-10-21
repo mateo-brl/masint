@@ -50,7 +50,7 @@ export function fakeContext(opts: {
     const r = find(full)
     if (!r) return new Response('not found', { status: 404 })
     const body = typeof r.body === 'string' || Buffer.isBuffer(r.body) ? r.body : JSON.stringify(r.body)
-    const res = new Response(body as BodyInit, { status: r.status ?? 200, headers: r.headers ?? {} })
+    const res = new Response(body as ConstructorParameters<typeof Response>[0], { status: r.status ?? 200, headers: r.headers ?? {} })
     Object.defineProperty(res, 'url', { value: r.url ?? full })
     return res
   }

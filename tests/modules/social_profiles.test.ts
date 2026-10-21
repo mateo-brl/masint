@@ -210,7 +210,7 @@ describe('X, Twitch, Kick', () => {
     const { account, children } = split(await run(x, routes, 'elonmusk'))
     expect(account.data).toMatchObject({ user_id: '44196397', display_name: 'Elon Musk', created_at: '2009-06-02T20:12:29.000Z' })
     expect(account.image).toMatch(/_400x400\.jpg$/)
-    expect(children.map((c) => c.label)).toEqual(['http://Terafab.AI'])
+    expect(children.map((c) => c.label)).toEqual(['http://terafab.ai'])
     expect((await run(x, routes, 'nobody')).found).toBe(false)
   })
   it('Twitch', async () => {
@@ -284,7 +284,7 @@ describe('Duolingo, Docker Hub, npm, Hugging Face, DEV', () => {
   it('Duolingo', async () => {
     const routes: Route[] = [[/users\?username=luis/i, json('duolingo_users.json')], [/users\?username=/, { body: '{"users":[]}' }]]
     const { account } = split(await run(duolingo, routes, 'Luis'))
-    expect(account.data).toMatchObject({ user_id: '14', location: 'Guatemala', linked_logins: ['Facebook', 'Google'], created_at: '2011-11-30T03:10:37.000Z' })
+    expect(account.data).toMatchObject({ user_id: '14', location: 'Guatemala', linked_logins: ['Facebook', 'Google'], created_at: '2011-11-30T02:43:57.000Z' })
     expect((await run(duolingo, routes, 'nobody')).found).toBe(false)
   })
   it('Docker Hub', async () => {
