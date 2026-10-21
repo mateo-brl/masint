@@ -1,0 +1,34 @@
+{
+  "_source": "Construit d'après https://roso.info/ip/ et /ip/ip-enrich-v2.js (renderIpReport, render). Formats non observés avec une vraie clé.",
+  "start": { "success": true, "credits": 13 },
+  "lookup": {
+    "success": true,
+    "ip": "1.1.1.1",
+    "country": "Australia",
+    "country_code": "AU",
+    "continent": "Oceania",
+    "city": "Brisbane",
+    "region": "Queensland",
+    "postal": "4000",
+    "timezone": "Australia/Brisbane",
+    "lat": -27.4679,
+    "lng": 153.0281,
+    "asn": "AS13335",
+    "as_name": "Cloudflare, Inc.",
+    "as_domain": "cloudflare.com",
+    "as_route": "1.1.1.0/24",
+    "as_type": "hosting",
+    "hostname": "one.one.one.one",
+    "company_name": "APNIC and Cloudflare DNS Resolver project",
+    "company_domain": "cloudflare.com",
+    "classification": { "hosting": true, "vpn": false, "tor": false, "proxy": false, "anycast": true },
+    "is_anonymous": false,
+    "maxmind": { "country": "Australia", "city": null, "latitude": -33.494, "longitude": 143.2104, "accuracyRadius": 1000, "isp": "Cloudflare", "organization": "APNIC and Cloudflare DNS Resolver project", "network": "1.1.1.0/24", "asn": 13335, "connectionType": "Corporate" }
+  },
+  "sources": {
+    "virustotal": { "status": "ok", "cached": false, "fields": [{ "label": "Malveillant", "value": 0 }, { "label": "Réputation", "value": 120 }], "records": [] },
+    "otx": { "status": "ok", "fields": [{ "label": "Pulses", "value": 50 }], "records": [{ "title": "one.one.one.one", "detail": "A · 2024-01-01", "url": "https://otx.alienvault.com/indicator/hostname/one.one.one.one" }, { "title": "pas un domaine", "detail": "" }] },
+    "greynoise": { "status": "empty", "fields": [], "records": [] },
+    "abuseipdb": { "status": "error", "error": "quota" }
+  }
+}

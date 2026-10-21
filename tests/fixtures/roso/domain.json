@@ -1,0 +1,55 @@
+{
+  "_source": "Construit d'après https://roso.info/domain/ (fetchWhois/renderWhois, fetchCrtSh, fetchWhoisHistory, renderIntelx, renderHudson, renderWayback, VirusTotal, renderUrlscan, AbuseIPDB, OTX) et /domain/cti-integrated.js. La réponse RDAP suit le format RDAP standard. Formats roso non observés avec une vraie clé.",
+  "start": { "success": true, "credits": 11 },
+  "cti": {
+    "data": {
+      "final_url": "https://www.example.com/",
+      "scanned_at": "2026-10-21T12:00:00Z",
+      "page": { "title": "Example Domain", "description": "Exemple", "links": [], "scripts": [] },
+      "hops": [{ "url": "https://example.com/", "status": 301, "addresses": [] }, { "url": "https://www.example.com/", "status": 200, "addresses": ["93.184.215.14"], "headers": { "server": "ECAcc" } }],
+      "geo": { "ip": "93.184.215.14", "place": "Los Angeles", "region": "California", "isp": "Edgecast", "coordinates": "34.0522, -118.2437" },
+      "whois": { "domain": "example.com", "created": "1995-08-14", "expires": "2027-08-13", "registrar": "RESERVED-Internet Assigned Numbers Authority", "nameservers": ["a.iana-servers.net"] },
+      "emails": ["contact@example.com", "contact@example.com", "not-an-email"],
+      "dns": { "a": ["93.184.215.14"], "aaaa": ["2606:2800:21f:cb07:6820:80da:af6b:8b2c"], "ns": ["a.iana-servers.net"] },
+      "passive_dns": { "names": ["mail.example.com", "www.example.com"] },
+      "browser": { "screenshot": "iVBORw0KGgo=" }
+    }
+  },
+  "rdap": {
+    "success": true,
+    "data": {
+      "ldhName": "EXAMPLE.COM",
+      "status": ["client delete prohibited", "client transfer prohibited"],
+      "events": [
+        { "eventAction": "registration", "eventDate": "1995-08-14T04:00:00Z" },
+        { "eventAction": "expiration", "eventDate": "2027-08-13T04:00:00Z" },
+        { "eventAction": "last changed", "eventDate": "2026-08-14T07:01:34Z" }
+      ],
+      "nameservers": [{ "ldhName": "A.IANA-SERVERS.NET" }, { "ldhName": "B.IANA-SERVERS.NET" }],
+      "entities": [
+        { "roles": ["registrar"], "vcardArray": ["vcard", [["version", {}, "text", "4.0"], ["fn", {}, "text", "RESERVED-Internet Assigned Numbers Authority"]]] },
+        {
+          "roles": ["registrant"],
+          "vcardArray": ["vcard", [["fn", {}, "text", "Jane Registrant"], ["org", {}, "text", "Example Org"], ["email", {}, "text", "jane@example.com"], ["tel", {}, "uri", "tel:+33.612345678"]]]
+        },
+        { "roles": ["technical"], "vcardArray": ["vcard", [["fn", {}, "text", "REDACTED FOR PRIVACY"], ["email", {}, "text", "Please query the RDDS service"]]] }
+      ]
+    }
+  },
+  "crtsh": { "success": true, "subdomains": ["example.com", "api.example.com", "www.example.com", "evil.other.com"] },
+  "whoisHistory": {
+    "success": true,
+    "total_records": 2,
+    "records": [
+      { "create_date": "1995-08-14", "registrar": { "registrar_name": "IANA" }, "registrant_name": "John Old", "registrant_email": "john.old@example.net", "registrant": { "name": "John Old", "company": "Old Corp", "email": "john.old@example.net", "phone": "+1.5555550100", "city": "Los Angeles" } },
+      { "registrant": { "name": "Data Protected", "email": "redacted@privacy.net" } }
+    ]
+  },
+  "intelx": { "success": true, "result": { "totalRecords": 1, "records": [{ "name": "example_dump.sql", "date": "2020-02-02", "bucket": "leaks.public", "media": "Text file" }], "searchUrl": "https://intelx.io/?s=example.com" } },
+  "hudsonrock": { "success": true, "result": { "total": 3, "employees": 1, "users": 2, "thirdParties": 0, "stealerFamilies": ["RedLine", "Vidar"], "lastEmployeeCompromised": "2024-03-01" } },
+  "wayback": { "success": true, "result": { "urls": [{ "url": "https://example.com/old", "captures": 3 }, { "url": "https://example.com/", "captures": 120 }], "truncated": false } },
+  "virustotal": { "success": true, "result": { "positives": 1, "scanned": 94, "reputation": 5, "lastDns": [{ "type": "A", "value": "93.184.215.14", "ttl": 300 }, { "type": "MX", "value": "mx.example.com" }] } },
+  "urlscan": { "success": true, "result": { "total": 1200, "results": [{ "url": "https://example.com/", "time": "2026-10-01T00:00:00Z" }] } },
+  "abuseipdb": { "success": true, "result": { "hits": [{ "ip": "93.184.215.14", "score": 0, "reports": 2, "isp": "Edgecast", "country": "US" }] } },
+  "otx": { "success": true, "result": { "pulseCount": 2, "pulses": [{ "name": "Phishing kit", "author": "AlienVault" }], "passiveDns": [{ "record_type": "A", "hostname": "cdn.example.com", "address": "198.51.100.4" }] } }
+}

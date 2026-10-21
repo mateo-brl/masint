@@ -1,0 +1,15 @@
+{
+  "_source": "Construit d'après https://roso.info/partial-number/ (startScanSession, checkPhone, appendHit). Format non observé avec une vraie clé.",
+  "start": { "success": true, "credits": 5 },
+  "hitPhone": "+33612345678",
+  "hit": {
+    "success": true,
+    "results": {
+      "callapp": { "exists": true, "name": "Jean Dupont", "avatar": "https://s3.callapp.com/photos/xyz.jpg" },
+      "eyecon": { "exists": true, "name": "Jean D.", "avatar": "https://cdn.eyecon-app.com/pic.jpg" },
+      "allovoisins": { "exists": false, "error": "server_500" }
+    }
+  },
+  "miss": { "success": true, "results": { "callapp": { "exists": false }, "eyecon": { "exists": false } } },
+  "rateLimited": { "success": true, "results": { "callapp": { "exists": null, "rateLimited": true, "error": "rate_limit" } } }
+}

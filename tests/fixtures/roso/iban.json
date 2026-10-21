@@ -1,0 +1,21 @@
+{
+  "_source": "Construit d'après https://roso.info/iban/ (check, render). Format non observé avec une vraie clé.",
+  "check": {
+    "success": true,
+    "credits": 19,
+    "result": {
+      "ok": true,
+      "valid": true,
+      "iban": "FR7630006000011234567890189",
+      "bank": "BNP PARIBAS",
+      "bic": "BNPAFRPPXXX",
+      "country": "France",
+      "address": "16 boulevard des Italiens, 75009 Paris",
+      "branch_number": "00001",
+      "branch_name": "PARIS CENTRE",
+      "sepa": { "credit_transfer": true, "direct_debit": true, "b2b": false, "instant": true },
+      "checks": [{ "ok": true, "text": "Clé IBAN valide" }, { "ok": true, "text": "Code banque connu" }],
+      "data_valid_as_of": "2026-09-01"
+    }
+  }
+}
