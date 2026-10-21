@@ -5,6 +5,7 @@ import { Rail } from './components/Rail'
 import { Home } from './components/home/Home'
 import { Workspace } from './components/Workspace'
 import { LangSwitch } from './components/LangSwitch'
+import { ShortcutsDialog } from './components/ShortcutsDialog'
 import { SettingsDialog } from './components/settings/SettingsDialog'
 import { useApp } from './store/app'
 
@@ -30,6 +31,7 @@ export default function App(): React.JSX.Element {
       <Rail />
       <main className="relative min-w-0 flex-1">{currentId ? <Workspace key={currentId} /> : <Home />}</main>
       <LangSwitch />
+      <ShortcutsDialog />
       <SettingsDialog />
       <Toasts />
       <ConfirmHost okLabel={t('common.confirm')} cancelLabel={t('common.cancel')} />

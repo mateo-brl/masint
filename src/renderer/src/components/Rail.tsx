@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useApp, type View } from '../store/app'
+import { Logo } from './Logo'
 import { IconButton } from './ui'
 
 const VIEWS: Array<{ id: View; icon: string }> = [
@@ -25,9 +26,9 @@ export function Rail(): React.JSX.Element {
       <button
         onClick={goHome}
         title={t('rail.home')}
-        className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-[11px] font-black tracking-tight text-white shadow-[0_0_18px_var(--accent-soft)]"
+        className="mb-2 rounded-lg transition hover:scale-105"
       >
-        M
+        <Logo size={32} />
       </button>
       {currentId &&
         VIEWS.map((v) => (

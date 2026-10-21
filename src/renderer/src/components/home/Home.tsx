@@ -8,6 +8,7 @@ import { useLang } from '../../lib/i18n'
 import { EntityBadge, Icon } from '../../lib/icons'
 import { useApp } from '../../store/app'
 import { useGraph } from '../../store/graph'
+import { Logo } from '../Logo'
 import { Button, confirmDialog, Dialog, Dropdown, Empty, Switch } from '../ui'
 
 const COLORS = ['#e5484d', '#f76b15', '#ffc53d', '#30a46c', '#12a594', '#0090ff', '#6e56cf', '#d6409f', '#8d8d93']
@@ -57,7 +58,9 @@ export function Home(): React.JSX.Element {
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1 text-[11px] text-muted">
             <span className="h-1.5 w-1.5 rounded-full bg-accent" /> {t('home.tagline')}
           </div>
-          <h1 className="text-[34px] font-semibold tracking-tight">MASINT</h1>
+          <h1 className="flex items-center justify-center gap-3 text-[34px] font-semibold tracking-tight">
+            <Logo size={44} /> MASINT
+          </h1>
           <p className="mt-1 text-muted">{t('home.subtitle')}</p>
         </div>
 

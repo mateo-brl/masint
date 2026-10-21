@@ -133,6 +133,12 @@ export function GraphCanvas(): React.JSX.Element {
       if (mod && e.key.toLowerCase() === 'a') {
         e.preventDefault()
         useGraph.getState().select(useGraph.getState().nodes.map((n) => n.id))
+      } else if (mod && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        void useGraph.getState().undo()
+      } else if (mod && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))) {
+        e.preventDefault()
+        void useGraph.getState().redo()
       } else if (mod && e.key.toLowerCase() === 'e') {
         e.preventDefault()
         for (const n of useGraph.getState().selectedNodes()) void enrichNode(n.id)

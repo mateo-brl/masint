@@ -94,6 +94,8 @@ const fr = {
     links: 'Liens',
     search: 'Rechercher dans le graphe',
     searchPlaceholder: 'Rechercher un nœud…',
+    undo: 'Annuler',
+    redo: 'Rétablir',
     hideCatalog: 'Masquer le catalogue',
     showCatalog: 'Afficher le catalogue'
   },
@@ -383,6 +385,8 @@ const en: typeof fr = {
     links: 'Links',
     search: 'Search the graph',
     searchPlaceholder: 'Find a node…',
+    undo: 'Undo',
+    redo: 'Redo',
     hideCatalog: 'Hide catalog',
     showCatalog: 'Show catalog'
   },
