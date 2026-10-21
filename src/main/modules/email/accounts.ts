@@ -290,12 +290,20 @@ const duolingo = accountCheck({
     en: 'Checks whether the address has a Duolingo account and reports linked Google, Facebook or Apple sign-ins.'
   },
   homepage: 'https://www.duolingo.com',
+  timeoutMs: 60000,
   async check(email, ctx) {
-    const { status, json } = await getJson<{ users?: DuolingoUser[] }>(ctx, 'Duolingo', 'https://www.duolingo.com/2017-06-30/users', {
-      query: { email }
-    })
+    const url = 'https://www.duolingo.com/2017-06-30/users'
+    const { status, json } = await getJson<{ users?: DuolingoUser[] }>(ctx, 'Duolingo', url, { query: { email } })
     if (status >= 400) throw httpFailure('Duolingo', status)
-    return { ...parseDuolingo(json), raw: json }
+    const r = parseDuolingo(json)
+    if (!r.found) {
+      // Quand Duolingo bride une IP, il répond une liste vide à tout : on contrôle
+      // avec le compte officiel, qui existe forcément, avant de conclure à l'absence.
+      const control = await getJson<{ users?: DuolingoUser[] }>(ctx, 'Duolingo', url, { query: { username: 'duolingo' } })
+      if (!control.json.users?.length)
+        throw new ModuleError('Duolingo : réponses vides pour tous les comptes (IP bridée), réessayez via un autre proxy', 'blocked')
+    }
+    return { ...r, raw: json }
   }
 })
 

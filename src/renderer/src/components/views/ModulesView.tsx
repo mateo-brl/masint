@@ -23,6 +23,8 @@ const CATEGORY_ICON: Record<ModuleCategory, string> = {
   image: 'Image',
   messaging: 'MessageCircle',
   social: 'Share2',
+  forensic: 'ShieldAlert',
+  misc: 'Cpu',
   roso: 'Sparkles'
 }
 

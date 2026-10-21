@@ -84,7 +84,7 @@ export default defineModule({
     fr: "Vérifie si l'empreinte correspond à un fichier légitime connu (base NSRL du NIST, paquets Linux, logiciels courants) : nom du fichier, produit, éditeur et autres empreintes.",
     en: 'Checks whether the hash matches a known legitimate file (NIST NSRL, Linux packages, common software): file name, product, vendor and other hashes.'
   },
-  category: 'web',
+  category: 'forensic',
   inputTypes: ['hash'],
   homepage: 'https://hashlookup.circl.lu',
   accepts: (input) => !!PATHS[algorithmOf(input) ?? ''],

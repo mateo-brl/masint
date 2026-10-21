@@ -1,7 +1,7 @@
 // Rapport d'enquête : document HTML autonome, mis en page pour l'impression A4
 // (le processus principal l'imprime en PDF). Fonction pure, sans accès au DOM.
 
-import { CATEGORIES, getEntityType, type CategoryId } from '@shared/entityTypes'
+import { CATEGORIES, ENTITY_TYPES, getEntityType, type CategoryId } from '@shared/entityTypes'
 import type { GraphEdge, GraphNode, Investigation, Lang, ModuleInfo, ModuleRun } from '@shared/types'
 import { entityBadgeHtml, iconSvg, logoHtml, type IconMarkup } from './badges'
 import {
@@ -89,17 +89,25 @@ export function fingerprintPayload(investigation: Investigation, nodes: GraphNod
   )
 }
 
-/** Références courtes (E001…) attribuées dans l'ordre des fiches. */
+const TYPE_RANK = new Map(ENTITY_TYPES.map((t, i) => [t.id, i]))
+
+/** Fiches groupées par catégorie, types dans l'ordre du catalogue (la personne avant ses comptes). */
 export function entityOrder(nodes: GraphNode[], lang: Lang): Array<{ category: CategoryId; nodes: GraphNode[] }> {
   const entities = nodes.filter((n) => n.kind === 'entity')
+  const rank = (type: string): number => TYPE_RANK.get(type) ?? ENTITY_TYPES.length
   const groups: Array<{ category: CategoryId; nodes: GraphNode[] }> = []
   for (const cat of CATEGORIES) {
     const list = entities
       .filter((n) => getEntityType(n.type).category === cat.id)
-      .sort((a, b) => typeLabel(a.type, lang).localeCompare(typeLabel(b.type, lang), lang) || a.label.localeCompare(b.label, lang))
+      .sort((a, b) => rank(a.type) - rank(b.type) || a.label.localeCompare(b.label, lang))
     if (list.length) groups.push({ category: cat.id, nodes: list })
   }
   return groups
+}
+
+const isoDate = (ts: number): string | number => {
+  const d = new Date(ts)
+  return Number.isNaN(d.getTime()) ? ts : d.toISOString()
 }
 
 export function buildReportHtml(input: ReportInput): string {
@@ -192,7 +200,7 @@ export function buildReportHtml(input: ReportInput): string {
     for (const n of entities) typeCounts.set(n.type, (typeCounts.get(n.type) ?? 0) + 1)
     const typeRows = Array.from(typeCounts.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 20)
+      .slice(0, 10)
       .map(([type, count]) => `<tr><td>${e(typeLabel(type, lang))}</td><td class="num">${count}</td></tr>`)
       .join('')
     const top = entities
@@ -204,7 +212,7 @@ export function buildReportHtml(input: ReportInput): string {
           `<tr><td>${refTag(n.id)}</td><td class="wrap">${e(n.label)}</td><td>${e(typeLabel(n.type, lang))}</td><td class="num">${degree.get(n.id)}</td></tr>`
       )
       .join('')
-    parts.push(`<section class="chapter">${chapterHead('summary')}
+    parts.push(`<section class="chapter summary">${chapterHead('summary')}
 <div class="tiles">${tile(entities.length, S.stats.entities)}${tile(edges.length, S.stats.links)}${tile(types.size, S.stats.types)}${tile(runs.length, S.stats.runs)}${tile(results, S.stats.results)}${tile(imageCount, S.stats.images)}</div>
 <table class="kv"><tbody>
 ${period ? `<tr><th>${e(S.stats.period)}</th><td>${e(period)}</td></tr>` : ''}
@@ -382,7 +390,18 @@ ${
       .map(
         (n) =>
           `<div class="raw"><div class="raw-head">${refTag(n.id)} ${e(n.label)}</div><pre>${e(
-            json({ id: n.id, type: n.type, platform: n.platform, label: n.label, data: n.data, notes: n.notes || undefined, source: n.source, imageId: n.imageId ?? undefined, createdAt: n.createdAt, updatedAt: n.updatedAt })
+            json({
+              id: n.id,
+              type: n.type,
+              platform: n.platform,
+              label: n.label,
+              data: n.data,
+              notes: n.notes || undefined,
+              source: n.source,
+              imageId: n.imageId ?? undefined,
+              createdAt: isoDate(n.createdAt),
+              updatedAt: isoDate(n.updatedAt)
+            })
           )}</pre></div>`
       )
       .join('')
@@ -513,15 +532,17 @@ h3{font-size:10.5pt;margin:6mm 0 2.5mm;break-after:avoid}
 .toc-count{color:#a1a1aa;font-variant-numeric:tabular-nums}
 
 /* Synthèse */
-.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm;margin-bottom:5mm}
-.tile{border:1px solid #e4e4e7;border-radius:6px;padding:3.5mm 4mm;break-inside:avoid}
-.tile-value{font-size:19pt;font-weight:650;line-height:1.1;font-variant-numeric:tabular-nums}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5mm;margin-bottom:4mm}
+.tile{border:1px solid #e4e4e7;border-radius:6px;padding:2.8mm 4mm;break-inside:avoid}
+.tile-value{font-size:17pt;font-weight:650;line-height:1.1;font-variant-numeric:tabular-nums}
 .tile-label{font-size:7.5pt;letter-spacing:.1em;text-transform:uppercase;color:#71717a;margin-top:1mm}
 .tile:first-child{border-top:2px solid #dc2626}
 table.kv{border-collapse:collapse;font-size:9pt;margin-bottom:2mm}
 table.kv th{text-align:left;font-weight:500;color:#63636b;padding:1.2mm 8mm 1.2mm 0}
 table.kv td{padding:1.2mm 0;font-variant-numeric:tabular-nums}
 .cols{display:grid;grid-template-columns:1fr 1.4fr;gap:6mm}
+.summary table.grid td{padding:1.1mm 2mm}
+.summary h3{margin:5mm 0 2mm}
 .cols>div{min-width:0}
 .cat-ico{display:inline-flex;vertical-align:-2px;margin-right:6px}
 .bar-cell{width:45%;position:relative}
@@ -534,7 +555,9 @@ table.grid thead{display:table-header-group}
 table.grid th{text-align:left;font-weight:600;color:#3f3f46;background:#f4f4f5;padding:1.6mm 2mm;border-bottom:1px solid #d4d4d8;font-size:7.5pt;letter-spacing:.05em;text-transform:uppercase}
 table.grid td{padding:1.5mm 2mm;border-bottom:1px solid #ececef;vertical-align:top}
 table.grid tr{break-inside:avoid;page-break-inside:avoid}
-table.links td:first-child,table.links td:nth-child(3){width:30%}
+table.links td:first-child,table.links td:nth-child(3){width:27%}
+table.links td:nth-child(2){width:15%}
+table.links td:nth-child(4){width:16%}
 .rel-cell{color:#52525b;font-style:italic}
 .ref{display:inline-block;font-family:'JetBrains Mono',Consolas,ui-monospace,monospace;font-size:7pt;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:3px;padding:0 3px;line-height:1.5;vertical-align:1px}
 .ref.big{font-size:8pt;padding:1px 5px;margin-left:auto;align-self:flex-start}
@@ -599,5 +622,12 @@ table.props td{padding:1mm 0;overflow-wrap:anywhere;vertical-align:top;border-bo
 .fingerprint{border:1px solid #e4e4e7;border-radius:6px;padding:2.5mm 3.5mm;margin-bottom:5mm;break-inside:avoid}
 .fingerprint code{font-size:8pt;overflow-wrap:anywhere}
 .disclaimer{font-size:8pt;color:#71717a;border-top:1px solid #e4e4e7;padding-top:3mm}
-@media screen{body{background:#e9e9ec}.cover,table.frame{background:#fff;max-width:210mm;margin:0 auto;padding:12mm 12mm}.cover{height:auto;min-height:297mm;margin-bottom:8mm}}
+@media screen{
+body{background:#e9e9ec;padding:8mm 4mm}
+.cover,table.frame{background:#fff;max-width:210mm;margin:0 auto;box-shadow:0 2px 12px rgb(0 0 0/.12)}
+.cover{height:auto;min-height:270mm;padding:14mm 16mm;margin-bottom:8mm}
+table.frame>thead>tr>td{padding:10mm 16mm 0}
+table.frame>tbody>tr>td{padding:0 16mm 14mm}
+.chapter+.chapter{margin-top:12mm;padding-top:10mm;border-top:1px dashed #d4d4d8}
+}
 `

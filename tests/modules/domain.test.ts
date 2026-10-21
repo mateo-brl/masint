@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ModuleError } from '@shared/modules'
 import { detectDnsProvider, detectHosting } from '../../src/main/modules/domain/_hosting'
 import { analyzeMail, dmarcPolicy } from '../../src/main/modules/domain/_mail'
 import { normalizeDomain, normalizeHost } from '../../src/main/modules/domain/_util'
@@ -326,9 +327,15 @@ describe.skipIf(!LIVE)('domaine en direct', () => {
     expect(out).toBeTruthy()
   }, 60000)
 
-  it('domain.wayback', async () => {
-    const out = await runModule(wayback, entity('domain', 'lemonde.fr'), ctx)
-    expect(out.properties?.wayback_last_seen).toBeTruthy()
+  it('domain.wayback', async (t) => {
+    try {
+      const out = await runModule(wayback, entity('domain', 'lemonde.fr'), ctx)
+      expect(out.properties?.wayback_last_seen).toBeTruthy()
+    } catch (e) {
+      // web.archive.org est parfois injoignable ou limité depuis certains réseaux (bac à sable, Tor).
+      if (e instanceof ModuleError && (e.code === 'unavailable' || e.code === 'rate_limited')) t.skip()
+      else throw e
+    }
   }, 90000)
 
   it('domain.typosquat', async () => {

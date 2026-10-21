@@ -15,7 +15,7 @@ export interface LoadedImage {
 
 /** URL publique (http/https) de l'image, si elle est connue. */
 export function publicUrl(input: InputEntity): string | null {
-  const candidates = [input.data.url, input.data.image_url, input.label]
+  const candidates = [input.data.url, input.data.image_url, input.imageOrigin, input.label]
   for (const c of candidates) {
     if (typeof c === 'string' && /^https?:\/\/\S+$/i.test(c.trim())) return c.trim()
   }

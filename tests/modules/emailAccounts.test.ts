@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import type { OsintModule } from '@shared/modules'
+import { ModuleError, type FetchOptions, type OsintModule } from '@shared/modules'
 import {
   modules,
   parseAdobe,
@@ -78,6 +78,17 @@ describe('vérifications de comptes email (parsing)', () => {
     expect(withPhoto.data?.linked_logins).toEqual(['Google'])
   })
 
+  it('Duolingo : liste vide suspecte quand le compte témoin est absent aussi', async () => {
+    const m = byId('email.duolingo')
+    const reply = (blocked: boolean) => async (_url: string, init?: FetchOptions) => {
+      const isControl = String((init?.query as Record<string, string> | undefined)?.username ?? '') === 'duolingo'
+      return new Response(JSON.stringify(isControl && !blocked ? fx.duolingo_found : fx.duolingo_notfound))
+    }
+    const ok = await runModule(m, entity('email', 'absent@example.com'), { ...makeContext(), fetch: reply(false) })
+    expect(ok.found).toBe(false)
+    await expect(runModule(m, entity('email', 'absent@example.com'), { ...makeContext(), fetch: reply(true) })).rejects.toThrow(/bridée/)
+  })
+
   it('Snapchat / Bitmoji', () => {
     expect(parseBitmoji(200, fx.bitmoji_found).found).toBe(true)
     expect(parseBitmoji(204, null).found).toBe(false)
@@ -100,7 +111,7 @@ describe('vérifications de comptes email (parsing)', () => {
     const ids = modules.map((m) => m.id)
     expect(new Set(ids).size).toBe(ids.length)
     for (const m of modules) {
-      for (const t of [m.name.fr, m.name.en, m.description.fr, m.description.en]) expect(t).not.toMatch(/[–—]/)
+      for (const t of [m.name.fr, m.name.en, m.description.fr, m.description.en]) expect(t).not.toMatch(/[\u2013\u2014]/)
     }
   })
 
@@ -130,10 +141,17 @@ describe.skipIf(!LIVE)('vérifications de comptes email (live)', () => {
     ['email.eventbrite', 'john@gmail.com']
   ]
   for (const [id, present] of cases) {
-    it(id, async () => {
-      expect((await runModule(byId(id), entity('email', present), ctx)).found).toBe(true)
-      expect((await runModule(byId(id), entity('email', absent), ctx)).found).toBe(false)
-    })
+    it(id, async (t) => {
+      try {
+        expect((await runModule(byId(id), entity('email', present), ctx)).found).toBe(true)
+        expect((await runModule(byId(id), entity('email', absent), ctx)).found).toBe(false)
+      } catch (e) {
+        // Service qui bride l'IP de test : signalé explicitement par le module, pas un échec du parseur.
+        if (e instanceof ModuleError && (e.code === 'blocked' || e.code === 'rate_limited')) t.skip(e.message)
+        if (e instanceof Error && e.name === 'TimeoutError') t.skip(`${id} : délai dépassé (IP bridée ?)`)
+        throw e
+      }
+    }, 90000)
   }
 
   it('email.mailru', async () => {

@@ -146,12 +146,12 @@ const DNS_PROVIDERS: Array<{ name: string; platform?: string; re: RegExp }> = [
   { name: 'Scaleway', platform: 'scaleway', re: /\.scaleway\.com$|\.online\.net$/ },
   { name: 'Shopify', platform: 'shopify_hosting', re: /\.myshopify\.com$/ },
   { name: 'Squarespace', platform: 'squarespace', re: /\.squarespacedns\.com$/ },
-  { name: 'NS1', re: /\.nsone\.net$/ },
-  { name: 'UltraDNS', re: /\.ultradns\.(com|net|org|biz|info|co\.uk)$/ },
-  { name: 'Dyn (Oracle)', re: /\.dynect\.net$/ },
+  { name: 'NS1', platform: 'ns1', re: /\.nsone\.net$/ },
+  { name: 'UltraDNS', platform: 'ultradns', re: /\.ultradns\.(com|net|org|biz|info|co\.uk)$/ },
+  { name: 'Dyn (Oracle)', platform: 'oracle_dyn', re: /\.dynect\.net$/ },
   { name: 'DNSimple', re: /\.dnsimple(-edge)?\.(com|net|org|info)$/ },
   { name: 'DNS Made Easy', re: /\.dnsmadeeasy\.com$/ },
-  { name: 'Bunny DNS', re: /\.bunny\.net$/ },
+  { name: 'Bunny DNS', platform: 'bunny', re: /\.bunny\.net$/ },
   { name: 'Netim', re: /\.netim\.(net|com)$/ },
   { name: 'Afnic', re: /\.nic\.fr$/ }
 ]

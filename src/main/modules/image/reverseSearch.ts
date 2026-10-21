@@ -28,8 +28,8 @@ export default defineModule({
   id: 'image.reverse_search',
   name: { fr: "Recherche d'image inversée", en: 'Reverse image search' },
   description: {
-    fr: "Liens Google Lens, Yandex, Bing et TinEye pour retrouver où la photo a été publiée. Nécessite une URL publique de l'image (propriété url). Hors ligne.",
-    en: 'Google Lens, Yandex, Bing and TinEye links to find where the photo was published. Requires a public image URL (url property). Offline.'
+    fr: "Liens Google Lens, Yandex, Bing et TinEye pour retrouver où la photo a été publiée. Nécessite une URL publique de l'image (propriété url ou image téléchargée par un module). Hors ligne.",
+    en: 'Google Lens, Yandex, Bing and TinEye links to find where the photo was published. Requires a public image URL (url property or image downloaded by a module). Offline.'
   },
   category: 'image',
   inputTypes: ['photo'],

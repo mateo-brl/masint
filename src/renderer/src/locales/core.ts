@@ -230,6 +230,8 @@ const fr = {
       image: 'Image',
       messaging: 'Messagerie',
       social: 'Réseaux sociaux',
+      forensic: 'Forensic / IOC',
+      misc: 'Divers',
       roso: 'roso.info'
     }
   },
@@ -521,6 +523,8 @@ const en: typeof fr = {
       image: 'Image',
       messaging: 'Messaging',
       social: 'Social networks',
+      forensic: 'Forensic / IOC',
+      misc: 'Misc',
       roso: 'roso.info'
     }
   },

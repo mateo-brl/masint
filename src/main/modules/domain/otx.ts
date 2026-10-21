@@ -83,6 +83,13 @@ async function otx<T>(ctx: ModuleContext, path: string): Promise<T | null> {
   }
 }
 
+/** Les deux sections sont indépendantes : une seule réponse suffit (OTX est parfois très lent). */
+async function both<A, B>(a: Promise<A | null>, b: Promise<B | null>): Promise<[A | null, B | null]> {
+  const [ra, rb] = await Promise.allSettled([a, b])
+  if (ra.status === 'rejected' && rb.status === 'rejected') throw ra.reason
+  return [ra.status === 'fulfilled' ? ra.value : null, rb.status === 'fulfilled' ? rb.value : null]
+}
+
 const otxDomain = defineModule({
   id: 'domain.otx',
   name: { fr: 'AlienVault OTX (domaine)', en: 'AlienVault OTX (domain)' },
@@ -98,10 +105,10 @@ const otxDomain = defineModule({
     const domain = normalizeDomain(input.label)
     if (!isDomain(domain)) throw new ModuleError('Domaine invalide', 'invalid_input')
     const section = domain.split('.').length > 2 ? 'hostname' : 'domain'
-    const [general, pdns] = await Promise.all([
+    const [general, pdns] = await both(
       otx<OtxGeneral>(ctx, `${section}/${domain}/general`),
       otx<OtxPassiveDns>(ctx, `${section}/${domain}/passive_dns`)
-    ])
+    )
     return parseOtx(domain, 'domain', general, pdns, ctx.lang)
   }
 })
@@ -121,10 +128,10 @@ const otxIp = defineModule({
     const ip = normalizeHost(input.label)
     const family = isIPv4(ip) ? 'IPv4' : isIPv6(ip) ? 'IPv6' : null
     if (!family) throw new ModuleError('Adresse IP invalide', 'invalid_input')
-    const [general, pdns] = await Promise.all([
+    const [general, pdns] = await both(
       otx<OtxGeneral>(ctx, `${family}/${ip}/general`),
       otx<OtxPassiveDns>(ctx, `${family}/${ip}/passive_dns`)
-    ])
+    )
     return parseOtx(ip, 'ip', general, pdns, ctx.lang)
   }
 })

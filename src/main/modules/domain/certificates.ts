@@ -114,15 +114,20 @@ const domainCertificates = defineModule({
   async run(input, ctx) {
     const host = normalizeHost(input.label)
     if (!isDomain(host)) throw new ModuleError('Nom d’hôte invalide', 'invalid_input')
-    let rows: CertSpotterCert[]
-    try {
-      rows = await ctx.fetchJson<CertSpotterCert[]>(
-        `https://api.certspotter.com/v1/issuances?domain=${encodeURIComponent(host)}&expand=dns_names&expand=issuer`
-      )
-    } catch (e) {
-      throw serviceError(e, 'Cert Spotter')
+    const load = async (name: string): Promise<CertSpotterCert[]> => {
+      try {
+        return await ctx.fetchJson<CertSpotterCert[]>(
+          `https://api.certspotter.com/v1/issuances?domain=${encodeURIComponent(name)}&expand=dns_names&expand=issuer`
+        )
+      } catch (e) {
+        throw serviceError(e, 'Cert Spotter')
+      }
     }
-    return parseCertSpotterCerts(host, rows, ctx.lang)
+    const out = parseCertSpotterCerts(host, await load(host), ctx.lang)
+    // Un sous-domaine est souvent couvert par un certificat joker du parent (*.example.com).
+    const parent = host.split('.').slice(1).join('.')
+    if (out.entities?.length || !parent.includes('.')) return out
+    return parseCertSpotterCerts(host, await load(parent), ctx.lang)
   }
 })
 
