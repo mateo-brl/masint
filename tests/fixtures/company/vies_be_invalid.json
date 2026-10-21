@@ -1,0 +1,19 @@
+{
+  "countryCode" : "BE",
+  "vatNumber" : "0403170702",
+  "requestDate" : "2026-10-21T14:10:14.770Z",
+  "valid" : false,
+  "requestIdentifier" : "",
+  "name" : "---",
+  "address" : "---",
+  "traderName" : "---",
+  "traderStreet" : "---",
+  "traderPostalCode" : "---",
+  "traderCity" : "---",
+  "traderCompanyType" : "---",
+  "traderNameMatch" : "NOT_PROCESSED",
+  "traderStreetMatch" : "NOT_PROCESSED",
+  "traderPostalCodeMatch" : "NOT_PROCESSED",
+  "traderCityMatch" : "NOT_PROCESSED",
+  "traderCompanyTypeMatch" : "NOT_PROCESSED"
+}

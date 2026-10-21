@@ -1,0 +1,160 @@
+[
+ {
+  "id": "12599001109",
+  "tbs_sha256": "8148f0c444d10457c5da6a451a7be5b6a394c05c2d2e5e1105bd79f002779f7d",
+  "cert_sha256": "ba2fa7971e26ddcc6ee6034f6ac4aa81507faacf810541b202992636bd4c091a",
+  "dns_names": [
+   "aboadmin.lemonde.fr",
+   "aboapi.lemonde.fr",
+   "abosh.lemonde.fr",
+   "boutique.lemonde.fr",
+   "checkout.lemonde.fr",
+   "moncompte.lemonde.fr"
+  ],
+  "pubkey_sha256": "eb8824f40e45172ebc22b628623f2a13e6e35376439ba9bbd42dff48c594d1ae",
+  "not_before": "2025-11-06T00:00:00Z",
+  "not_after": "2026-11-06T23:59:59Z",
+  "revoked": true
+ },
+ {
+  "id": "12601032824",
+  "tbs_sha256": "0ce9e74764da600682a894c5d0f29619b826df2bd6027766047c3613150c841a",
+  "cert_sha256": "69d3315f9ed64ca097d693676538e508a5d9ce26882faeaf3580f16aaa1970cb",
+  "dns_names": [
+   "aboadmin.lemonde.fr",
+   "aboapi.lemonde.fr",
+   "abosh.lemonde.fr",
+   "boutique.lemonde.fr",
+   "checkout.lemonde.fr",
+   "moncompte.lemonde.fr"
+  ],
+  "pubkey_sha256": "fa0c53c4063b72876b248321e681bc77703fbf64b61e94d1e8ffe5a5e4805fe6",
+  "not_before": "2025-11-06T00:00:00Z",
+  "not_after": "2026-11-06T23:59:59Z",
+  "revoked": true
+ },
+ {
+  "id": "12611860979",
+  "tbs_sha256": "0f80199fad112ea5a11db25ea76909ec3883a788d164a2d39698fd00560681a3",
+  "cert_sha256": "87f0b80ff32dd4c870e76ab813653763e196c6219384fad27fee35e750c8aa84",
+  "dns_names": [
+   "*.lemonde.fr",
+   "lemonde.fr"
+  ],
+  "pubkey_sha256": "0b0659e6833089f9fc2310b488bd7cb2200b372eb4e2e3e3b67e0f6091c0e4fa",
+  "not_before": "2025-11-07T00:00:00Z",
+  "not_after": "2026-12-08T23:59:59Z",
+  "revoked": false
+ },
+ {
+  "id": "12663750995",
+  "tbs_sha256": "62b3ccb3ccfacc57e9e13a73e6cb395cf5f1e9f54c6dd297e0842e2cc42304a8",
+  "cert_sha256": "bc1d689ba56e0cd7c9b4fab1db05ea3e580787da30f05e1e0cde85f2ceb6bbcc",
+  "dns_names": [
+   "*.lemonde.fr"
+  ],
+  "pubkey_sha256": "972681e82a33dc424349ac96cccda6a64adf1fd4279d4907168db73219c57931",
+  "not_before": "2025-11-10T21:03:01Z",
+  "not_after": "2026-12-12T21:03:00Z",
+  "revoked": false
+ },
+ {
+  "id": "12948207914",
+  "tbs_sha256": "19eec2f21a0db231bed628ff8995ee4caf4df535616e2351a7a1e0e919db3ea1",
+  "cert_sha256": "0a31d9c8dd8286645c4d98ddff96d0984e3e7870df25ed47b960c2f2b883b0d3",
+  "dns_names": [
+   "arcade.lemonde.fr"
+  ],
+  "pubkey_sha256": "1847a46ff38423ba744e7c9132e08abbce739a5ba54c7976e2e1793cd149b271",
+  "not_before": "2025-12-03T00:00:00Z",
+  "not_after": "2027-01-01T23:59:59Z",
+  "revoked": false
+ },
+ {
+  "id": "13526940938",
+  "tbs_sha256": "6f1443e75cdc881a2deb23fa2b6e4470523c5c118a9d9e20e30748af5aa53929",
+  "cert_sha256": "03042e328967746b7ff8ef1c50daf14d0911b4a40e911a72448445d0fb096b61",
+  "dns_names": [
+   "idp-stg.lemonde.fr"
+  ],
+  "pubkey_sha256": "98700214201c95a42080463455a243addb1f6961eab9c29839b8f5b4b1ec9ad3",
+  "not_before": "2026-01-22T00:00:00Z",
+  "not_after": "2027-02-20T23:59:59Z",
+  "revoked": false
+ },
+ {
+  "id": "13625532480",
+  "tbs_sha256": "2484e8f326681d951a40aa1e49a42f5b76897b984dac827dc2edb2807477a317",
+  "cert_sha256": "aefd413a81399473a4373196014f3098b2787e7e35ab3d0fe6858ae3810ff9cd",
+  "dns_names": [
+   "journal-uat.lemonde.fr",
+   "lmo-lmo-webreader-uat.twipemobile.com"
+  ],
+  "pubkey_sha256": "15647556ed66827ed6a19a57930dabe3086d554cde56eb899b2c444c9aad1939",
+  "not_before": "2026-01-31T00:00:00Z",
+  "not_after": "2027-02-28T23:59:59Z",
+  "revoked": false
+ },
+ {
+  "id": "13731119537",
+  "tbs_sha256": "1affa978dc97a2da66b32f3d76b7d469afd7afe7d6fb52df34e1b00d24c00919",
+  "cert_sha256": "46fb23bef5f63333fa1850dd09757c6f1921070e7a83ece39a6d1f2378d78970",
+  "dns_names": [
+   "journal.lemonde.fr",
+   "lmo-lmo-webreader-production.twipemobile.com"
+  ],
+  "pubkey_sha256": "e78980dd79699434a83f591e0687b2dfc3563df171206f428504975f8167a390",
+  "not_before": "2026-02-09T00:00:00Z",
+  "not_after": "2027-03-10T23:59:59Z",
+  "revoked": false
+ },
+ {
+  "id": "15841358189",
+  "tbs_sha256": "de4c0375848fb50c81161e1dfdc809ec9ec6bba40a61ba0c3b4f9437f5502628",
+  "cert_sha256": "aee7d69ca75e8322f200ed5c7261b3758ad90be09606ca6ea8b40e6b00b3408b",
+  "dns_names": [
+   "docs.forecast.lemonde.fr",
+   "www.docs.forecast.lemonde.fr"
+  ],
+  "pubkey_sha256": "c319ac56cfc1173903da90257aacc0bd02a46d883d0f7581a8ae54b6ce396651",
+  "not_before": "2026-07-14T00:00:00Z",
+  "not_after": "2027-01-27T23:59:59Z",
+  "revoked": false
+ },
+ {
+  "id": "16048733882",
+  "tbs_sha256": "c29791d767ba60e3a54b084974548b94148c67ce64334a9e7d2964e6509e039b",
+  "cert_sha256": "f57e560e2fb5f48609e88861c09a06dd14be0a24fa31754015c1b03dd8050e13",
+  "dns_names": [
+   "apprendre-francais.lemonde.fr"
+  ],
+  "pubkey_sha256": "3397038b47ff9170d307d48fd14af65f5ef3be8872e11aab6348d70318ea90cf",
+  "not_before": "2026-07-24T00:18:52Z",
+  "not_after": "2026-10-22T00:18:51Z",
+  "revoked": false
+ },
+ {
+  "id": "16111264189",
+  "tbs_sha256": "aa526407f501a5beca541befd73d243541b2a7b1e5e77a4326c8fb2ec7586a08",
+  "cert_sha256": "d6e3dacada55a7fb7394e59c78ccdccc009d1f02755f2f18932a789c0ac7cb9d",
+  "dns_names": [
+   "buf.lemonde.fr"
+  ],
+  "pubkey_sha256": "0e9243ec1e53d8b25aa4f1b289c90decde35af1e461f90adea6da705b95c16de",
+  "not_before": "2026-07-27T08:01:54Z",
+  "not_after": "2026-10-25T08:01:53Z",
+  "revoked": false
+ },
+ {
+  "id": "16113142584",
+  "tbs_sha256": "1a4e4c622b6758fad00ab319ba4b5acb21edc40ad3c56a88bba26e5f7c0d5880",
+  "cert_sha256": "3d8f54884f51d3e26f3b263f6571dcb95909348e20d2fedc72fcd26de8d6d404",
+  "dns_names": [
+   "mba-executive.lemonde.fr"
+  ],
+  "pubkey_sha256": "f1866ee67aa0d832b212cc882e394ba8890e7796560f3d0bf49f4fb5b02db839",
+  "not_before": "2026-07-27T10:16:28Z",
+  "not_after": "2026-10-25T10:16:27Z",
+  "revoked": false
+ }
+]

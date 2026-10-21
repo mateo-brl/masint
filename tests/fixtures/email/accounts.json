@@ -1,0 +1,160 @@
+{
+  "spotify_found": {
+    "status": 20,
+    "errors": {
+      "email": "That email is already registered to an account."
+    },
+    "country": "US"
+  },
+  "spotify_notfound": {
+    "status": 1,
+    "country": "US"
+  },
+  "adobe_found": [
+    {
+      "type": "individual",
+      "authenticationMethods": [
+        {
+          "id": "password",
+          "url": null
+        },
+        {
+          "id": "otp",
+          "url": null
+        },
+        {
+          "id": "facebook",
+          "url": "https://adobeid-na1.services.adobe.com/renga-idprovider/social/v2/signin/facebook"
+        }
+      ],
+      "status": {
+        "code": "active",
+        "reason": null
+      },
+      "images": {
+        "50": "https://pps.services.adobe.com/api/profile/image/default/bb99dbb8-eab4-438d-ab41-f2f9f1b8ead3/50",
+        "100": "https://pps.services.adobe.com/api/profile/image/default/bb99dbb8-eab4-438d-ab41-f2f9f1b8ead3/100",
+        "115": "https://pps.services.adobe.com/api/profile/image/default/bb99dbb8-eab4-438d-ab41-f2f9f1b8ead3/115",
+        "138": "https://pps.services.adobe.com/api/profile/image/default/bb99dbb8-eab4-438d-ab41-f2f9f1b8ead3/138",
+        "230": "https://pps.services.adobe.com/api/profile/image/default/bb99dbb8-eab4-438d-ab41-f2f9f1b8ead3/230",
+        "276": "https://pps.services.adobe.com/api/profile/image/default/bb99dbb8-eab4-438d-ab41-f2f9f1b8ead3/276"
+      },
+      "hasT2ELinked": true
+    }
+  ],
+  "adobe_notfound": [],
+  "duolingo_found": {
+    "users": [
+      {
+        "hasFacebookId": false,
+        "hasGoogleId": false,
+        "hasAppleId": false,
+        "requiresSsoLogin": false,
+        "picture": "//d3gq3s1iyyx31w.cloudfront.net/static/render/bg/BackgroundColor-7/Body-5/ClothingColor-2/Expression-17/EyeColor-1/FacialHair-0/FacialHairColor-1/Glasses-0/GlassesColor-1/Headwear-0/HeadwearColor-1/MainHair-54/MainHairColor-1/Nose%20Piercing-3/Piercings-6/SkinTone-14/Wrinkles-2",
+        "courses": [],
+        "name": "",
+        "fromLanguage": "",
+        "roles": [],
+        "id": 0,
+        "streak": 0,
+        "hasPlus": false,
+        "hasRecentActivity15": false,
+        "username": ""
+      }
+    ]
+  },
+  "duolingo_notfound": {
+    "users": []
+  },
+  "freelancer_found": {
+    "status": "error",
+    "message": "This email already exists, please choose another",
+    "error_code": "UserExceptionCodes.EMAIL_TAKEN",
+    "error": {
+      "code": "EMAIL_ALREADY_IN_USE",
+      "detail": "This email already exists, please choose another",
+      "source": null
+    },
+    "request_id": "ba8c33b81aabd3ad053b9e6b2bf9e6f2"
+  },
+  "freelancer_notfound": {
+    "status": "success",
+    "request_id": "402756e8f70b450b8c44cd5c5ba6abc4"
+  },
+  "mailru_found": {
+    "status": 200,
+    "email": "test@mail.ru",
+    "htmlencoded": true,
+    "body": {
+      "exists": true,
+      "alternatives": []
+    }
+  },
+  "mailru_notfound": {
+    "status": 200,
+    "htmlencoded": true,
+    "email": "zq8xk2vmw93pq7@mail.ru",
+    "body": {
+      "exists": false,
+      "alternatives": [
+        "zq8xk2vmw93pq7@bk.ru",
+        "zq8xk2vmw93pq700@mail.ru",
+        "zq8xk2vmw93pq7@inbox.ru",
+        "zq8xk2vmw93pq7.00@mail.ru",
+        "zq8xk2vmw93pq7@list.ru",
+        "zq8xk2vmw93pq7_00@mail.ru",
+        "zq8xk2vmw93pq7@internet.ru",
+        "zq8xk2vmw93pq7-00@mail.ru"
+      ]
+    }
+  },
+  "wordpress_found": {
+    "error": "email_login_not_allowed",
+    "message": "Please log in using your WordPress.com username instead of your email address.",
+    "reason": "unauthenticated"
+  },
+  "wordpress_notfound": {
+    "error": "unknown_user",
+    "message": "User does not exist."
+  },
+  "chess_found": {
+    "isEmailAvailable": false,
+    "reason": "Email In Use"
+  },
+  "chess_notfound": {
+    "isEmailAvailable": true,
+    "reason": "Email Available"
+  },
+  "twitter_found": {
+    "valid": false,
+    "msg": "Email has already been taken.",
+    "taken": true
+  },
+  "twitter_notfound": {
+    "valid": true,
+    "msg": "Available!",
+    "taken": false
+  },
+  "eventbrite_found": {
+    "user_id": "941247935",
+    "can_login": true,
+    "exists": true,
+    "is_email_verified": false,
+    "sign_in_methods": [
+      "password"
+    ],
+    "enable_auth0_login_for_user": false,
+    "auth0_redirect_url": null
+  },
+  "eventbrite_notfound": {
+    "can_login": false,
+    "exists": false,
+    "is_email_verified": false,
+    "sign_in_methods": [],
+    "enable_auth0_login_for_user": false,
+    "auth0_redirect_url": null
+  },
+  "bitmoji_found": {
+    "account_type": "bitmoji"
+  }
+}

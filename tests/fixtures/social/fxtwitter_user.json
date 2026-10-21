@@ -1,0 +1,42 @@
+{
+ "code": 200,
+ "message": "OK",
+ "user": {
+  "screen_name": "elonmusk",
+  "url": "https://x.com/elonmusk",
+  "id": "44196397",
+  "followers": 241513597,
+  "following": 1419,
+  "likes": 254413,
+  "media_count": 4745,
+  "tweets": 110592,
+  "name": "Elon Musk",
+  "description": "http://Terafab.AI",
+  "raw_description": {
+   "text": "https://t.co/ZdBx5WABYx",
+   "facets": [
+    {
+     "type": "url",
+     "indices": [
+      0,
+      23
+     ],
+     "original": "https://t.co/ZdBx5WABYx",
+     "replacement": "http://Terafab.AI",
+     "display": "Terafab.AI"
+    }
+   ]
+  },
+  "location": "",
+  "banner_url": "https://pbs.twimg.com/profile_banners/44196397/1774145451",
+  "avatar_url": "https://pbs.twimg.com/profile_images/2103567689515954176/aR-Kjpp4_normal.jpg",
+  "joined": "Tue Jun 02 20:12:29 +0000 2009",
+  "protected": false,
+  "website": null,
+  "verification": {
+   "verified": true,
+   "verified_at": null,
+   "type": "individual"
+  }
+ }
+}

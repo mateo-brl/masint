@@ -1,0 +1,177 @@
+{
+ "address": {
+  "block_number_balance_updated_at": 26241359,
+  "coin_balance": "5773252986299759339",
+  "creation_status": "success",
+  "creation_transaction_hash": null,
+  "creator_address_hash": null,
+  "ens_domain_name": "vitalik.eth",
+  "exchange_rate": "2462.43",
+  "has_beacon_chain_withdrawals": false,
+  "has_logs": false,
+  "has_token_transfers": true,
+  "has_tokens": true,
+  "has_validated_blocks": false,
+  "hash": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+  "implementations": [
+   {
+    "address_hash": "0x5A7FC11397E9a8AD41BF10bf13F22B0a63f96f6d",
+    "name": "AmbireAccount7702"
+   }
+  ],
+  "is_contract": true,
+  "is_scam": false,
+  "is_verified": true,
+  "metadata": null,
+  "name": null,
+  "private_tags": [],
+  "proxy_type": "eip7702",
+  "public_tags": [],
+  "reputation": "ok",
+  "token": null,
+  "watchlist_address_id": null,
+  "watchlist_names": []
+ },
+ "counters": {
+  "transactions_count": "78413",
+  "token_transfers_count": "403714",
+  "gas_usage_count": "1210862963",
+  "validations_count": "0"
+ },
+ "txs": [
+  {
+   "hash": "0x34db29dbb4d75439583de53ea954133a12ec9a92347dca4037c3c809ab4e0158",
+   "timestamp": "2026-10-20T07:55:11.000000Z",
+   "block_number": 26232435,
+   "value": "73604354161448",
+   "fee": {
+    "value": "1016350179920"
+   },
+   "result": "success",
+   "method": null,
+   "from": {
+    "hash": "0xB0bAc44173a65f79932F6D550Df605Eb235C628E",
+    "ens_domain_name": null,
+    "name": null,
+    "is_contract": false,
+    "metadata": null
+   },
+   "to": {
+    "hash": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+    "ens_domain_name": "vitalik.eth",
+    "name": null,
+    "is_contract": true,
+    "metadata": {
+     "tags": [
+      {
+       "name": "Vitalik Buterin",
+       "tagType": "name"
+      },
+      {
+       "name": "Farcaster",
+       "tagType": "classifier"
+      },
+      {
+       "name": "Gitcoin Grantee",
+       "tagType": "generic"
+      }
+     ]
+    }
+   },
+   "created_contract": null
+  },
+  {
+   "hash": "0xd917e0a6f79617474064e6dd78e45cf61acc819943c3976f7e9d44f38d8572ab",
+   "timestamp": "2026-10-20T02:57:35.000000Z",
+   "block_number": 26230953,
+   "value": "560000000000000",
+   "fee": {
+    "value": "62731207445520"
+   },
+   "result": "success",
+   "method": "0x56e7a59e",
+   "from": {
+    "hash": "0xbdd9f6D35C7B8C9D53cC2C3060E8cbf3823Bb731",
+    "ens_domain_name": null,
+    "name": null,
+    "is_contract": false,
+    "metadata": null
+   },
+   "to": {
+    "hash": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+    "ens_domain_name": "vitalik.eth",
+    "name": null,
+    "is_contract": true,
+    "metadata": {
+     "tags": [
+      {
+       "name": "Vitalik Buterin",
+       "tagType": "name"
+      },
+      {
+       "name": "Farcaster",
+       "tagType": "classifier"
+      },
+      {
+       "name": "Gitcoin Grantee",
+       "tagType": "generic"
+      }
+     ]
+    }
+   },
+   "created_contract": null
+  },
+  {
+   "hash": "0x384554825f9e7e4834afecb88f67d65e76094884040ecd682fc0a571365f14a6",
+   "timestamp": "2026-10-07T03:09:35.000000Z",
+   "block_number": 26137726,
+   "value": "0",
+   "fee": {
+    "value": "13197722795584"
+   },
+   "result": "success",
+   "method": "setContenthash",
+   "from": {
+    "hash": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+    "ens_domain_name": "vitalik.eth",
+    "name": null,
+    "is_contract": true,
+    "metadata": {
+     "tags": [
+      {
+       "name": "Vitalik Buterin",
+       "tagType": "name"
+      },
+      {
+       "name": "Farcaster",
+       "tagType": "classifier"
+      },
+      {
+       "name": "Gitcoin Grantee",
+       "tagType": "generic"
+      }
+     ]
+    }
+   },
+   "to": {
+    "hash": "0x231b0Ee14048e9dCcD1d247744d114a4EB5E8E63",
+    "ens_domain_name": "resolver.eth",
+    "name": "PublicResolver",
+    "is_contract": true,
+    "metadata": {
+     "tags": [
+      {
+       "name": "ENS: Public Resolver",
+       "tagType": "name"
+      },
+      {
+       "name": "ENS",
+       "tagType": "protocol"
+      }
+     ]
+    }
+   },
+   "created_contract": null
+  }
+ ]
+}

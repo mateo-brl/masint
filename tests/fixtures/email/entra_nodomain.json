@@ -1,0 +1,24 @@
+{
+  "Username": "contact@zq8xk2vmw93pq7.fr",
+  "Display": "contact@zq8xk2vmw93pq7.fr",
+  "IfExistsResult": 1,
+  "IsUnmanaged": false,
+  "ThrottleStatus": 1,
+  "Credentials": {
+    "PrefCredential": 1,
+    "HasPassword": true,
+    "RemoteNgcParams": null,
+    "FidoParams": null,
+    "QrCodePinParams": null,
+    "SasParams": null,
+    "CertAuthParams": null,
+    "GoogleParams": null,
+    "FacebookParams": null,
+    "OtcNotAutoSent": false
+  },
+  "DfpProperties": {},
+  "EstsProperties": {
+    "DomainType": 1
+  },
+  "IsSignupDisallowed": false
+}

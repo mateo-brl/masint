@@ -1,0 +1,85 @@
+{
+ "messages": [],
+ "see_also": [],
+ "version": "1.0",
+ "data_call_name": "maxmind-geo-lite",
+ "data_call_status": "supported",
+ "cached": false,
+ "query_id": "20261021141151-32c92f16-895f-4590-8a0e-0152a75394c7",
+ "process_time": 78,
+ "server_id": "app190",
+ "build_version": "v0.12.1-2026.10.21",
+ "pipeline": "1474833",
+ "status": "ok",
+ "status_code": 200,
+ "time": "2026-10-21T14:11:51.661294",
+ "data": {
+  "located_resources": [
+   {
+    "resource": "193.70.0.0/17",
+    "locations": [
+     {
+      "country": "FR",
+      "city": "",
+      "resources": [
+       "193.70.0.0/20",
+       "193.70.18.0/23",
+       "193.70.20.0/22"
+      ],
+      "latitude": 46.227638,
+      "longitude": 2.213749,
+      "covered_percentage": 95.96
+     },
+     {
+      "country": "PL",
+      "city": "",
+      "resources": [
+       "193.70.94.0/23",
+       "193.70.54.82/32",
+       "193.70.100.64/26"
+      ],
+      "latitude": 51.919438,
+      "longitude": 19.145136,
+      "covered_percentage": 2.87
+     },
+     {
+      "country": "ES",
+      "city": "",
+      "resources": [
+       "193.70.16.175/32",
+       "193.70.77.36/30",
+       "193.70.101.202/32"
+      ],
+      "latitude": 40.463667,
+      "longitude": -3.74922,
+      "covered_percentage": 0.02
+     },
+     {
+      "country": "DE",
+      "city": "",
+      "resources": [
+       "193.70.17.104/30",
+       "193.70.31.8/29",
+       "193.70.31.48/29"
+      ],
+      "latitude": 51.165691,
+      "longitude": 10.451526,
+      "covered_percentage": 0.16
+     }
+    ],
+    "unknown_percentage": 0
+   }
+  ],
+  "unknown_percentage": {
+   "v4": 0.0
+  },
+  "result_time": "2026-10-20T20:16:00",
+  "latest_time": "2026-10-20T20:16:00",
+  "earliest_time": "2026-10-20T20:16:00",
+  "parameters": {
+   "resource": "193.70.0.0/17",
+   "resolution": "country",
+   "cache": null
+  }
+ }
+}

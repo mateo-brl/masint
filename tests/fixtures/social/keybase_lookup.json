@@ -1,0 +1,300 @@
+{
+ "status": {
+  "code": 0,
+  "name": "OK"
+ },
+ "them": [
+  {
+   "id": "23260c2ce19420f97b58d7d95b68ca00",
+   "basics": {
+    "username": "chris",
+    "ctime": 1391653108,
+    "mtime": 1624468589,
+    "id_version": 1285,
+    "track_version": 1253,
+    "last_id_change": 1792169693,
+    "username_cased": "chris",
+    "status": 0,
+    "salt": "cc452fd965487276619b273617a79986",
+    "eldest_seqno": 1
+   },
+   "profile": {
+    "mtime": null,
+    "full_name": "Chris Coyne",
+    "location": "Maine",
+    "bio": "Previously worked on 🔐 Keybase, 😻OkCupid, 📘SparkNotes, and some random other junk. I love making things."
+   },
+   "pictures": {
+    "primary": {
+     "url": "https://s3.amazonaws.com/keybase_processed_uploads/4c7cff041ee54c71fd25595898133505_360_360.jpg",
+     "source": null
+    }
+   },
+   "proofs_summary": {
+    "by_presentation_group": {
+     "twitter": [
+      {
+       "proof_type": "twitter",
+       "nametag": "malgorithms",
+       "state": 1,
+       "service_url": "https://twitter.com/malgorithms",
+       "proof_url": "https://twitter.com/malgorithms/status/433640580220874754",
+       "sig_id": "0d9f6b71c043f2ef80b6dea44338471edc3ef76e2cee236dd397412ad9631aa90f",
+       "proof_id": "0632bb3cc394f594920a1810",
+       "human_url": "https://twitter.com/malgorithms/status/433640580220874754",
+       "presentation_group": "twitter",
+       "presentation_tag": "tweet"
+      }
+     ],
+     "github": [
+      {
+       "proof_type": "github",
+       "nametag": "malgorithms",
+       "state": 1,
+       "service_url": "https://github.com/malgorithms",
+       "proof_url": "https://gist.github.com/2d5bed094c6429c63f21",
+       "sig_id": "2664f7178ecd207dd498153cfb80dd742a2c209df3346311e302038cefe70bb90f",
+       "proof_id": "2f7a45919d02f5e54229b610",
+       "human_url": "https://gist.github.com/2d5bed094c6429c63f21",
+       "presentation_group": "github",
+       "presentation_tag": "gist"
+      }
+     ],
+     "reddit": [
+      {
+       "proof_type": "reddit",
+       "nametag": "malgorithms",
+       "state": 1,
+       "service_url": "https://reddit.com/user/malgorithms",
+       "proof_url": "https://www.reddit.com/r/KeybaseProofs/comments/7qsbzv/my_keybase_proof_redditmalgorithms_keybasechris/",
+       "sig_id": "477e5895df8701d0982428c563755669b0bbdfc51cbe01dbb24f26c08e4c47b70f",
+       "proof_id": "b66c806efb9fdf587f460210",
+       "human_url": "https://www.reddit.com/r/KeybaseProofs/comments/7qsbzv/my_keybase_proof_redditmalgorithms_keybasechris/",
+       "presentation_group": "reddit",
+       "presentation_tag": "post"
+      }
+     ],
+     "hackernews": [
+      {
+       "proof_type": "hackernews",
+       "nametag": "malgorithms",
+       "state": 1,
+       "service_url": "https://news.ycombinator.com/user?id=malgorithms",
+       "proof_url": "https://news.ycombinator.com/user?id=malgorithms",
+       "sig_id": "646378c66fb1b2d05835dd67a4a5e2e895d03088940c0a707b096742fa91b1890f",
+       "proof_id": "514c6420d72cf6a2d67cb810",
+       "human_url": "https://news.ycombinator.com/user?id=malgorithms",
+       "presentation_group": "hackernews",
+       "presentation_tag": "profile"
+      }
+     ],
+     "web:chriscoyne.com": [
+      {
+       "proof_type": "generic_web_site",
+       "nametag": "chriscoyne.com",
+       "state": 1,
+       "service_url": "https://chriscoyne.com",
+       "proof_url": "https://chriscoyne.com/keybase.txt",
+       "sig_id": "4cc5a8b2ace43914fa0a10662dc6f3b680275ebfcf0314ea1ee999dca2a5601d0f",
+       "proof_id": "fc9ca63881a1b5f0c78b0c10",
+       "human_url": "https://chriscoyne.com/keybase.txt",
+       "presentation_group": "web:chriscoyne.com",
+       "presentation_tag": "https"
+      },
+      {
+       "proof_type": "dns",
+       "nametag": "chriscoyne.com",
+       "state": 1,
+       "service_url": "http://chriscoyne.com",
+       "proof_url": "https://keybase.io/chris/sigchain#dbf530c689d2f3af60c5b11341d5eb2ad229995d6ef39dfd1661962d088a75ec0f",
+       "sig_id": "dbf530c689d2f3af60c5b11341d5eb2ad229995d6ef39dfd1661962d088a75ec0f",
+       "proof_id": "9d75bdbc9e2b839545620d10",
+       "human_url": "dns://chriscoyne.com",
+       "presentation_group": "web:chriscoyne.com",
+       "presentation_tag": "dns"
+      }
+     ]
+    },
+    "by_sig_id": {
+     "0d9f6b71c043f2ef80b6dea44338471edc3ef76e2cee236dd397412ad9631aa90f": {
+      "proof_type": "twitter",
+      "nametag": "malgorithms",
+      "state": 1,
+      "service_url": "https://twitter.com/malgorithms",
+      "proof_url": "https://twitter.com/malgorithms/status/433640580220874754",
+      "sig_id": "0d9f6b71c043f2ef80b6dea44338471edc3ef76e2cee236dd397412ad9631aa90f",
+      "proof_id": "0632bb3cc394f594920a1810",
+      "human_url": "https://twitter.com/malgorithms/status/433640580220874754",
+      "presentation_group": "twitter",
+      "presentation_tag": "tweet"
+     },
+     "2664f7178ecd207dd498153cfb80dd742a2c209df3346311e302038cefe70bb90f": {
+      "proof_type": "github",
+      "nametag": "malgorithms",
+      "state": 1,
+      "service_url": "https://github.com/malgorithms",
+      "proof_url": "https://gist.github.com/2d5bed094c6429c63f21",
+      "sig_id": "2664f7178ecd207dd498153cfb80dd742a2c209df3346311e302038cefe70bb90f",
+      "proof_id": "2f7a45919d02f5e54229b610",
+      "human_url": "https://gist.github.com/2d5bed094c6429c63f21",
+      "presentation_group": "github",
+      "presentation_tag": "gist"
+     },
+     "477e5895df8701d0982428c563755669b0bbdfc51cbe01dbb24f26c08e4c47b70f": {
+      "proof_type": "reddit",
+      "nametag": "malgorithms",
+      "state": 1,
+      "service_url": "https://reddit.com/user/malgorithms",
+      "proof_url": "https://www.reddit.com/r/KeybaseProofs/comments/7qsbzv/my_keybase_proof_redditmalgorithms_keybasechris/",
+      "sig_id": "477e5895df8701d0982428c563755669b0bbdfc51cbe01dbb24f26c08e4c47b70f",
+      "proof_id": "b66c806efb9fdf587f460210",
+      "human_url": "https://www.reddit.com/r/KeybaseProofs/comments/7qsbzv/my_keybase_proof_redditmalgorithms_keybasechris/",
+      "presentation_group": "reddit",
+      "presentation_tag": "post"
+     },
+     "646378c66fb1b2d05835dd67a4a5e2e895d03088940c0a707b096742fa91b1890f": {
+      "proof_type": "hackernews",
+      "nametag": "malgorithms",
+      "state": 1,
+      "service_url": "https://news.ycombinator.com/user?id=malgorithms",
+      "proof_url": "https://news.ycombinator.com/user?id=malgorithms",
+      "sig_id": "646378c66fb1b2d05835dd67a4a5e2e895d03088940c0a707b096742fa91b1890f",
+      "proof_id": "514c6420d72cf6a2d67cb810",
+      "human_url": "https://news.ycombinator.com/user?id=malgorithms",
+      "presentation_group": "hackernews",
+      "presentation_tag": "profile"
+     },
+     "4cc5a8b2ace43914fa0a10662dc6f3b680275ebfcf0314ea1ee999dca2a5601d0f": {
+      "proof_type": "generic_web_site",
+      "nametag": "chriscoyne.com",
+      "state": 1,
+      "service_url": "https://chriscoyne.com",
+      "proof_url": "https://chriscoyne.com/keybase.txt",
+      "sig_id": "4cc5a8b2ace43914fa0a10662dc6f3b680275ebfcf0314ea1ee999dca2a5601d0f",
+      "proof_id": "fc9ca63881a1b5f0c78b0c10",
+      "human_url": "https://chriscoyne.com/keybase.txt",
+      "presentation_group": "web:chriscoyne.com",
+      "presentation_tag": "https"
+     },
+     "dbf530c689d2f3af60c5b11341d5eb2ad229995d6ef39dfd1661962d088a75ec0f": {
+      "proof_type": "dns",
+      "nametag": "chriscoyne.com",
+      "state": 1,
+      "service_url": "http://chriscoyne.com",
+      "proof_url": "https://keybase.io/chris/sigchain#dbf530c689d2f3af60c5b11341d5eb2ad229995d6ef39dfd1661962d088a75ec0f",
+      "sig_id": "dbf530c689d2f3af60c5b11341d5eb2ad229995d6ef39dfd1661962d088a75ec0f",
+      "proof_id": "9d75bdbc9e2b839545620d10",
+      "human_url": "dns://chriscoyne.com",
+      "presentation_group": "web:chriscoyne.com",
+      "presentation_tag": "dns"
+     }
+    },
+    "all": [
+     {
+      "proof_type": "twitter",
+      "nametag": "malgorithms",
+      "state": 1,
+      "service_url": "https://twitter.com/malgorithms",
+      "proof_url": "https://twitter.com/malgorithms/status/433640580220874754",
+      "sig_id": "0d9f6b71c043f2ef80b6dea44338471edc3ef76e2cee236dd397412ad9631aa90f",
+      "proof_id": "0632bb3cc394f594920a1810",
+      "human_url": "https://twitter.com/malgorithms/status/433640580220874754",
+      "presentation_group": "twitter",
+      "presentation_tag": "tweet"
+     },
+     {
+      "proof_type": "github",
+      "nametag": "malgorithms",
+      "state": 1,
+      "service_url": "https://github.com/malgorithms",
+      "proof_url": "https://gist.github.com/2d5bed094c6429c63f21",
+      "sig_id": "2664f7178ecd207dd498153cfb80dd742a2c209df3346311e302038cefe70bb90f",
+      "proof_id": "2f7a45919d02f5e54229b610",
+      "human_url": "https://gist.github.com/2d5bed094c6429c63f21",
+      "presentation_group": "github",
+      "presentation_tag": "gist"
+     },
+     {
+      "proof_type": "reddit",
+      "nametag": "malgorithms",
+      "state": 1,
+      "service_url": "https://reddit.com/user/malgorithms",
+      "proof_url": "https://www.reddit.com/r/KeybaseProofs/comments/7qsbzv/my_keybase_proof_redditmalgorithms_keybasechris/",
+      "sig_id": "477e5895df8701d0982428c563755669b0bbdfc51cbe01dbb24f26c08e4c47b70f",
+      "proof_id": "b66c806efb9fdf587f460210",
+      "human_url": "https://www.reddit.com/r/KeybaseProofs/comments/7qsbzv/my_keybase_proof_redditmalgorithms_keybasechris/",
+      "presentation_group": "reddit",
+      "presentation_tag": "post"
+     },
+     {
+      "proof_type": "hackernews",
+      "nametag": "malgorithms",
+      "state": 1,
+      "service_url": "https://news.ycombinator.com/user?id=malgorithms",
+      "proof_url": "https://news.ycombinator.com/user?id=malgorithms",
+      "sig_id": "646378c66fb1b2d05835dd67a4a5e2e895d03088940c0a707b096742fa91b1890f",
+      "proof_id": "514c6420d72cf6a2d67cb810",
+      "human_url": "https://news.ycombinator.com/user?id=malgorithms",
+      "presentation_group": "hackernews",
+      "presentation_tag": "profile"
+     },
+     {
+      "proof_type": "dns",
+      "nametag": "chriscoyne.com",
+      "state": 1,
+      "service_url": "http://chriscoyne.com",
+      "proof_url": "https://keybase.io/chris/sigchain#dbf530c689d2f3af60c5b11341d5eb2ad229995d6ef39dfd1661962d088a75ec0f",
+      "sig_id": "dbf530c689d2f3af60c5b11341d5eb2ad229995d6ef39dfd1661962d088a75ec0f",
+      "proof_id": "9d75bdbc9e2b839545620d10",
+      "human_url": "dns://chriscoyne.com",
+      "presentation_group": "web:chriscoyne.com",
+      "presentation_tag": "dns"
+     },
+     {
+      "proof_type": "generic_web_site",
+      "nametag": "chriscoyne.com",
+      "state": 1,
+      "service_url": "https://chriscoyne.com",
+      "proof_url": "https://chriscoyne.com/keybase.txt",
+      "sig_id": "4cc5a8b2ace43914fa0a10662dc6f3b680275ebfcf0314ea1ee999dca2a5601d0f",
+      "proof_id": "fc9ca63881a1b5f0c78b0c10",
+      "human_url": "https://chriscoyne.com/keybase.txt",
+      "presentation_group": "web:chriscoyne.com",
+      "presentation_tag": "https"
+     }
+    ],
+    "has_web": true
+   },
+   "cryptocurrency_addresses": {
+    "bitcoin": [
+     {
+      "address": "3LKaAcHgUja3B3ZwfJjxVdqWbxd71pE6NK",
+      "sig_id": "a18cce51ab8e2f6c81de426eba6fe049c3c12de4df3527df555816afebea8b1f0f"
+     }
+    ],
+    "zcash": [
+     {
+      "address": "t1KiyNNYFy7jEEFsveRJjTaDzE1MtfT2FSx",
+      "sig_id": "1d7b4cac18940b0fcd868b088ba739ab57243243ad60c260c8f2a1beecfbcdd50f"
+     }
+    ]
+   },
+   "stellar": {
+    "hidden": false,
+    "primary": {
+     "account_id": "GBA3ZJS4ECOCDF3E3ILAMWGNX25IXORCEYXNPARMCJRCPX7FW3JKGSQT"
+    }
+   },
+   "devices": {
+    "0c0c1393f8dd8a6ff19e710333533718": {},
+    "594bf7611bb6ef8f65a6e3cfbd1bfd18": {},
+    "7d46d40374ec7b446f78cb08f56eb618": {},
+    "9992ab0f36e8bab6283e9ebef62e2c18": {},
+    "b838321f43c9cadb910c847216dbc818": {},
+    "bc11baec4a32a0e13b3fa486d933ae18": {},
+    "d9a5b9c73bdbd06b5be368a9b821f718": {},
+    "ed6c304e1b394c01fcc36202d345ff18": {}
+   }
+  }
+ ]
+}

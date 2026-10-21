@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Variante simplifiée de icon.svg pour les tailles de 32 px et moins. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="32" x2="0" y2="992" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#202026"/>
+      <stop offset="1" stop-color="#0b0b0d"/>
+    </linearGradient>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="192" fill="url(#bg)"/>
+  <path d="M264 760 L264 264 L512 600 L760 264 L760 760" fill="none" stroke="#e5484d" stroke-width="112" stroke-linejoin="round" stroke-linecap="round"/>
+  <g fill="#f4f4f5">
+    <circle cx="264" cy="264" r="100"/>
+    <circle cx="760" cy="264" r="100"/>
+    <circle cx="264" cy="760" r="100"/>
+    <circle cx="760" cy="760" r="100"/>
+  </g>
+  <circle cx="512" cy="600" r="124" fill="#f4f4f5"/>
+  <circle cx="512" cy="600" r="64" fill="#e5484d"/>
+</svg>

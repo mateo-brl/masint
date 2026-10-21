@@ -1,0 +1,109 @@
+{
+ "version": "8.0",
+ "build_revision": "89598ea",
+ "relays_published": "2026-10-21 13:00:00",
+ "relays": [
+  {
+   "nickname": "artikel10ber03",
+   "fingerprint": "6C64100D8F7050E76F420CE404031EABC7101124",
+   "or_addresses": [
+    "185.220.101.1:9003",
+    "[2a0b:f4c2::1]:9003"
+   ],
+   "exit_addresses": [
+    "185.220.101.1"
+   ],
+   "last_seen": "2026-10-21 13:00:00",
+   "first_seen": "2024-01-01 00:00:00",
+   "running": true,
+   "flags": [
+    "Exit",
+    "Fast",
+    "Running",
+    "Stable",
+    "Valid"
+   ],
+   "country": "de",
+   "as": "AS60729",
+   "as_name": "Stiftung Erneuerbare Freiheit",
+   "contact": "Artikel10 url:artikel10.org email:info[]artikel10.org abuse:abuse[]artikel10.org gpg:401C81D432FBAD2CEEB0FA145A7563B99D808815 proof:uri-rsa ciissversion:2"
+  },
+  {
+   "nickname": "artikel10ber01",
+   "fingerprint": "8F744605199E75C26F74E818BDE50D9A7325EC94",
+   "or_addresses": [
+    "185.220.101.1:9001",
+    "[2a0b:f4c2::1]:9001"
+   ],
+   "exit_addresses": [
+    "185.220.101.1"
+   ],
+   "last_seen": "2026-10-21 13:00:00",
+   "first_seen": "2024-01-01 00:00:00",
+   "running": true,
+   "flags": [
+    "Exit",
+    "Fast",
+    "Running",
+    "Stable",
+    "Valid"
+   ],
+   "country": "de",
+   "as": "AS60729",
+   "as_name": "Stiftung Erneuerbare Freiheit",
+   "contact": "Artikel10 url:artikel10.org email:info[]artikel10.org abuse:abuse[]artikel10.org gpg:401C81D432FBAD2CEEB0FA145A7563B99D808815 proof:uri-rsa ciissversion:2"
+  },
+  {
+   "nickname": "relayon0170",
+   "fingerprint": "003A08F1ADC002D24979C68AA5A33369C04D9C7F",
+   "or_addresses": [
+    "185.220.101.170:10170",
+    "[2a0b:f4c2:1::170]:10170"
+   ],
+   "exit_addresses": [
+    "185.220.101.170"
+   ],
+   "last_seen": "2026-10-21 13:00:00",
+   "first_seen": "2024-01-01 00:00:00",
+   "running": true,
+   "flags": [
+    "Exit",
+    "Fast",
+    "Running",
+    "Stable",
+    "Valid"
+   ],
+   "country": "de",
+   "as": "AS60729",
+   "as_name": "Stiftung Erneuerbare Freiheit",
+   "contact": "url:relayon.org proof:uri-rsa abuse:abuse[]relayon.org ciissversion:2"
+  },
+  {
+   "nickname": "relayon0153",
+   "fingerprint": "0138DDE95A04DF80DAF96111C93051BBBB6BF0A2",
+   "or_addresses": [
+    "185.220.101.153:10153",
+    "[2a0b:f4c2:1::153]:10153"
+   ],
+   "exit_addresses": [
+    "185.220.101.153"
+   ],
+   "last_seen": "2026-10-21 13:00:00",
+   "first_seen": "2024-01-01 00:00:00",
+   "running": true,
+   "flags": [
+    "Exit",
+    "Fast",
+    "Running",
+    "Stable",
+    "Valid"
+   ],
+   "country": "de",
+   "as": "AS60729",
+   "as_name": "Stiftung Erneuerbare Freiheit",
+   "contact": "url:relayon.org proof:uri-rsa abuse:abuse[]relayon.org ciissversion:2"
+  }
+ ],
+ "bridges_published": "2026-10-21 12:44:00",
+ "bridges": []
+}

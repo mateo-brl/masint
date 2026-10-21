@@ -1,0 +1,38 @@
+{
+  "Username": "test@gmail.com",
+  "Display": "test@gmail.com",
+  "Location": "",
+  "AliasDisabledForLogin": false,
+  "Credentials": {
+    "PrefCredential": 3,
+    "HasPassword": 1,
+    "IsPasswordDisabled": 0,
+    "HasRemoteNGC": 0,
+    "HasFido": 0,
+    "HasPhone": 1,
+    "OTCNotAutoSent": 1,
+    "CobasiApp": false,
+    "HasGitHubFed": 0,
+    "HasGoogleFed": 0,
+    "HasLinkedInFed": 0,
+    "HasAppleFed": 0,
+    "SendOTTHR": "0x0",
+    "OtcLoginEligibleProofs": [
+      {
+        "data": "-DoqsMwFH1aoR0HnHbMqD38O...",
+        "isDefault": true,
+        "isNopa": false,
+        "type": 1,
+        "display": "test@gmail.com",
+        "otcEnabled": true,
+        "otcSent": false,
+        "isLost": false,
+        "isSleeping": false,
+        "isSADef": true,
+        "pushEnabled": false
+      }
+    ]
+  },
+  "FullPasswordResetExperience": false,
+  "IfExistsResult": 0
+}

@@ -1,0 +1,142 @@
+# Configuration de packaging de MASINT (electron-builder 26).
+# Documentation : https://www.electron.build/configuration
+#
+#   npm run dist:win     installeur Windows (NSIS, x64)
+#   npm run dist:linux   AppImage + .deb (x64)
+#   npm run dist:dir     dossier non empaqueté, pour tester rapidement
+#
+# Les artefacts sont écrits dans release/ (ignoré par git).
+
+appId: io.github.mateo-brl.masint
+productName: MASINT
+copyright: Copyright © 2026 Mateo Baril
+
+directories:
+  output: release
+  buildResources: build
+
+# Contenu de l'archive app.asar. Les dépendances de production (node_modules)
+# sont ajoutées automatiquement ; tout le reste (sources, tests, docs) est exclu.
+files:
+  - out/**
+  - resources/**
+  - package.json
+  - '!**/*.map'
+  - '!**/*.{ts,mts,cts,tsx}'
+  - '!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme,HISTORY.md}'
+  - '!**/node_modules/*/{test,tests,__tests__,example,examples,docs,benchmark,benchmarks}/**'
+  # better-sqlite3 : seul build/Release/better_sqlite3.node sert à l'exécution.
+  - '!**/node_modules/better-sqlite3/{deps,src}/**'
+  - '!**/node_modules/better-sqlite3/build/{deps,Release/obj,Release/obj.target,Release/.deps}/**'
+  - '!**/node_modules/better-sqlite3/build/Release/{test_extension.node,sqlite3.a}'
+  - '!**/node_modules/better-sqlite3/build/{Makefile,*.mk,config.gypi}'
+  - '!**/node_modules/better-sqlite3/binding.gyp'
+  # libphonenumber-geo-carrier : seules les données en anglais et en français sont
+  # utilisées (repli automatique sur l'anglais pour les autres langues).
+  - '!**/node_modules/libphonenumber-geo-carrier/resources/geocodes/{ar,be,bg,bs,de,el,es,fa,fi,hr,hu,hy,id,it,iw,ja,ko,nl,pl,pt,ro,ru,sq,sr,sv,th,tr,uk,vi,zh,zh_Hant}/**'
+  - '!**/node_modules/libphonenumber-geo-carrier/resources/carrier/{ar,be,fa,ko,ru,uk,zh,zh_Hant}/**'
+
+asar: true
+# Les modules natifs (better-sqlite3) ne peuvent pas être chargés depuis l'asar.
+# libphonenumber-geo-carrier lit ses fichiers .bson avec fs.access / fs.readFile,
+# que l'asar d'Electron sait servir : inutile de le décompresser.
+asarUnpack:
+  - '**/*.node'
+
+# Ne garder que les traductions de Chromium utiles (allège le paquet d'environ 40 Mo).
+electronLanguages:
+  - fr
+  - en-US
+
+# Archive d'enquête : double-clic dans l'explorateur, le processus principal
+# importe le fichier passé en argument.
+fileAssociations:
+  - ext: masint
+    name: MASINT.Investigation
+    description: Enquête MASINT
+    mimeType: application/x-masint
+    role: Editor
+
+# Mises à jour automatiques (electron-updater) depuis les GitHub Releases.
+# Le fichier app-update.yml est généré à partir de ce bloc ; latest.yml et
+# latest-linux.yml sont publiés à côté des installeurs.
+publish:
+  provider: github
+  owner: mateo-brl
+  repo: masint
+  releaseType: draft
+
+# ---------------------------------------------------------------------------
+# Windows
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: icon.ico
+  # Exécutable non signé : pas de vérification de signature des mises à jour.
+  verifyUpdateCodeSignature: false
+
+nsis:
+  oneClick: false
+  # Page « pour moi seulement / pour tous les utilisateurs », avec élévation si besoin.
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: MASINT
+  menuCategory: false
+  runAfterFinish: true
+  installerIcon: icon.ico
+  uninstallerIcon: icon.ico
+  installerHeaderIcon: icon.ico
+  uninstallDisplayName: MASINT ${version}
+  license: LICENSE
+  # Les enquêtes ne sont jamais supprimées en silence : build/installer.nsh pose
+  # la question à la désinstallation (jamais lors d'une mise à jour).
+  deleteAppDataOnUninstall: false
+  include: build/installer.nsh
+  # Langue choisie d'après celle de Windows ; anglais par défaut.
+  installerLanguages:
+    - en_US
+    - fr_FR
+  multiLanguageInstaller: true
+  artifactName: MASINT-Setup-${version}.${ext}
+
+# ---------------------------------------------------------------------------
+# Linux
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+  icon: icons
+  category: Network
+  maintainer: Mateo Baril <mateobaril.pro@gmail.com>
+  vendor: Mateo Baril
+  synopsis: Enquête OSINT par graphe
+  description: >-
+    MASINT est une application de bureau d'enquête en sources ouvertes (OSINT) :
+    graphe d'entités, modules d'enrichissement, carte, frise chronologique,
+    exports et rapports.
+  syncDesktopName: true
+  desktop:
+    entry:
+      Name: MASINT
+      GenericName: Enquête OSINT
+      Keywords: OSINT;enquête;investigation;graphe;graph;
+  executableName: masint
+
+appImage:
+  artifactName: MASINT-${version}-${arch}.${ext}
+
+deb:
+  artifactName: masint_${version}_${arch}.${ext}
+  packageCategory: utils
+  priority: optional

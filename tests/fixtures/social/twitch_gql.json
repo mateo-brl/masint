@@ -1,0 +1,89 @@
+{
+ "data": {
+  "user": {
+   "id": "71092938",
+   "login": "xqc",
+   "displayName": "xQc",
+   "description": "THE BEST AT ABSOLUTELY EVERYTHING. THE JUICER. LEADER OF THE JUICERS.",
+   "createdAt": "2014-09-12T23:50:05.989719Z",
+   "updatedAt": "2026-10-19T20:28:13.754657Z",
+   "profileImageURL": "https://static-cdn.jtvnw.net/jtv_user_pictures/xqc-profile_image-9298dca608632101-300x300.jpeg",
+   "followers": {
+    "totalCount": 12642371
+   },
+   "roles": {
+    "isPartner": true,
+    "isAffiliate": false,
+    "isStaff": null
+   },
+   "lastBroadcast": {
+    "startedAt": "2026-10-20T07:34:26.720127Z",
+    "title": "🌞LIVE🌞CLICK🌞DRAMA🌞NEWS🌞GTA V🌞NOPIXEL V🌞BIG UPDATE🌞I THINK🌞MEGA NEWS🌞IMPORTANT🌞SUPER DAY LOCK IN🌞CAR PART STACKING🌞"
+   },
+   "stream": null,
+   "channel": {
+    "socialMedias": [
+     {
+      "name": "twitter",
+      "title": "Twitter",
+      "url": "https://twitter.com/xQc"
+     },
+     {
+      "name": "discord",
+      "title": "Discord",
+      "url": "https://discord.com/invite/xqcow"
+     },
+     {
+      "name": "reddit",
+      "title": "reddit",
+      "url": "https://www.reddit.com/r/xqcow/"
+     },
+     {
+      "name": "youtube",
+      "title": "youtube",
+      "url": "https://www.youtube.com/channel/UCmDTrq0LNgPodDOFZiSbsww"
+     }
+    ]
+   },
+   "panels": [
+    {
+     "id": "12592823"
+    },
+    {
+     "id": "141003135"
+    },
+    {
+     "id": "6720150"
+    },
+    {
+     "id": "12592818"
+    },
+    {
+     "id": "8847001"
+    },
+    {
+     "id": "22113669"
+    },
+    {
+     "id": "8847029"
+    },
+    {
+     "id": "22360616"
+    },
+    {
+     "id": "22360618"
+    },
+    {
+     "id": "14506832"
+    },
+    {
+     "id": "154310956"
+    }
+   ]
+  }
+ },
+ "extensions": {
+  "durationMilliseconds": 48,
+  "requestID": "01M5FC8Q9X8CQQTDBEXF3013JX"
+ }
+}

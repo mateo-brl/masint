@@ -1,0 +1,41 @@
+{
+ "kind": "t2",
+ "data": {
+  "is_employee": true,
+  "is_friend": false,
+  "subreddit": {
+   "default_set": true,
+   "user_is_contributor": null,
+   "banner_img": "",
+   "title": "spez",
+   "over_18": false,
+   "icon_img": "https://styles.redditmedia.com/t5_3k30p/styles/profileIcon_snoo.png?width=256&amp;height=256&amp;s=1",
+   "display_name_prefixed": "u/spez",
+   "public_description": "Reddit CEO. Contact: hello@example.com",
+   "subscribers": 0,
+   "name": "t5_3k30p",
+   "url": "/user/spez/",
+   "user_is_banned": null
+  },
+  "snoovatar_size": null,
+  "awardee_karma": 0,
+  "id": "1w72",
+  "verified": true,
+  "is_gold": true,
+  "is_mod": true,
+  "awarder_karma": 0,
+  "has_verified_email": true,
+  "icon_img": "https://styles.redditmedia.com/t5_3k30p/styles/profileIcon_snoo.png?width=256&amp;height=256&amp;s=1",
+  "hide_from_robots": false,
+  "link_karma": 175923,
+  "total_karma": 935461,
+  "pref_show_snoovatar": false,
+  "name": "spez",
+  "created": 1118030400.0,
+  "created_utc": 1118030400.0,
+  "snoovatar_img": "",
+  "comment_karma": 759538,
+  "accept_followers": true,
+  "has_subscribed": true
+ }
+}

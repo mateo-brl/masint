@@ -2,14 +2,28 @@
   "name": "masint",
   "productName": "MASINT",
   "version": "0.1.0",
-  "description": "Application de bureau d'enquête OSINT par graphe (Windows, Linux)",
+  "description": "Application de bureau d'enquête OSINT par graphe : entités, modules d'enrichissement, carte, frise, rapports (Windows, Linux)",
+  "keywords": [
+    "osint",
+    "investigation",
+    "enquête",
+    "graph",
+    "link-analysis",
+    "threat-intelligence",
+    "electron",
+    "desktop"
+  ],
   "main": "./out/main/index.js",
+  "desktopName": "masint.desktop",
   "author": {
     "name": "Mateo Baril",
     "email": "mateobaril.pro@gmail.com"
   },
   "license": "Apache-2.0",
-  "homepage": "https://github.com/mateo-brl/masint",
+  "homepage": "https://github.com/mateo-brl/masint#readme",
+  "bugs": {
+    "url": "https://github.com/mateo-brl/masint/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/mateo-brl/masint.git"
@@ -22,10 +36,14 @@
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
+    "test:core": "node scripts/test-core.mjs",
     "postinstall": "electron-builder install-app-deps",
-    "dist": "npm run build && electron-builder",
-    "dist:win": "npm run build && electron-builder --win",
-    "dist:linux": "npm run build && electron-builder --linux"
+    "dist": "npm run build && electron-builder --publish never",
+    "dist:win": "npm run build && electron-builder --win --publish never",
+    "dist:linux": "npm run build && electron-builder --linux --publish never",
+    "dist:dir": "npm run build && electron-builder --dir --publish never",
+    "icons": "node build/scripts/make-icons.mjs",
+    "modules:list": "node build/scripts/list-modules.mjs > docs/modules-list.md"
   },
   "dependencies": {
     "better-sqlite3": "^12.11.1",

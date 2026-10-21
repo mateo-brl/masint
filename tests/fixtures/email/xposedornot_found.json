@@ -1,0 +1,84 @@
+{
+  "BreachMetrics": {
+    "risk": [
+      {
+        "risk_label": "Critical",
+        "risk_score": 100
+      }
+    ]
+  },
+  "BreachesSummary": {
+    "site": "AngelOne;McKesson;LegionProxy;BaxterInternational"
+  },
+  "ExposedBreaches": {
+    "breaches_details": [
+      {
+        "breach": "AngelOne",
+        "details": "Angel One, an Indian stock brokerage firm, was breached in April 2023, with data later leaked online exposing 7.9M user records including 6.8M unique email addresses along with names, physical addresses, phone numbers, bank account numbers, Permanent Account Numbers (PANs), and portfolio holdings.",
+        "domain": "angelone.in",
+        "industry": "Finance",
+        "logo": "https://xposedornot.com/static/logos/AngelOne.png",
+        "password_risk": "unknown",
+        "references": "",
+        "searchable": "Yes",
+        "verified": "Yes",
+        "xposed_data": "Email addresses;Names;Phone numbers;Physical addresses;Dates of birth;Government issued IDs;Bank account numbers",
+        "xposed_date": "2023",
+        "xposed_records": 6767242,
+        "added": "2026-10-09T06:45:26+00:00"
+      },
+      {
+        "breach": "McKesson",
+        "details": "McKesson, a healthcare and pharmaceutical company, was targeted by the ShinyHunters group in August 2026, with data later published online exposing 6.8M unique email addresses along with other personal and corporate information relating to patients, staff, healthcare provider contacts, and marketing recipients.",
+        "domain": "mckesson.com",
+        "industry": "Health Care",
+        "logo": "https://xposedornot.com/static/logos/Mckesson.png",
+        "password_risk": "unknown",
+        "references": "",
+        "searchable": "Yes",
+        "verified": "Yes",
+        "xposed_data": "Email addresses;Names;Phone numbers;Physical addresses;Dates of birth;Genders",
+        "xposed_date": "2026",
+        "xposed_records": 6832822,
+        "added": "2026-10-02T12:15:46+00:00"
+      },
+      {
+        "breach": "LegionProxy",
+        "details": "LegionProxy, a residential and ISP proxy network, was breached in April 2026, exposing 10k email addresses along with names, purchase information, and bcrypt password hashes.",
+        "domain": "legionproxy.io",
+        "industry": "Information Technology",
+        "logo": "https://xposedornot.com/static/logos/Legionproxy.png",
+        "password_risk": "hardtocrack",
+        "references": "",
+        "searchable": "Yes",
+        "verified": "Yes",
+        "xposed_data": "Email addresses;Names;Passwords",
+        "xposed_date": "2026",
+        "xposed_records": 10148,
+        "added": "2026-09-28T12:36:11+00:00"
+      },
+      {
+        "breach": "BaxterInternational",
+        "details": "Baxter International, a healthcare and medical products company, was compromised in August 2026, exposing 489k unique email addresses along with names, geographic locations, physical addresses, and nationalities from more than 7.1M Salesforce records.",
+        "domain": "baxter.com",
+        "industry": "Health Care",
+        "logo": "https://xposedornot.com/static/logos/Baxter.png",
+        "password_risk": "unknown",
+        "references": "",
+        "searchable": "Yes",
+        "verified": "Yes",
+        "xposed_data": "Email addresses;Names;Geographic locations;Physical addresses;Nationality;",
+        "xposed_date": "2026",
+        "xposed_records": 488992,
+        "added": "2026-09-04T12:28:08+00:00"
+      }
+    ]
+  },
+  "ExposedPastes": null,
+  "PasteMetrics": null,
+  "PastesSummary": {
+    "cnt": 0,
+    "domain": "",
+    "tmpstmp": ""
+  }
+}

@@ -1,0 +1,390 @@
+{
+ "messages": [
+  [
+   "info",
+   "Results exclude routes with very low visibility (less than 10 RIS full-feed peers seeing)."
+  ]
+ ],
+ "see_also": [],
+ "version": "1.2",
+ "data_call_name": "announced-prefixes",
+ "data_call_status": "supported",
+ "cached": false,
+ "query_id": "20261021141149-dca9dd7d-ee97-44fa-9a13-51aeb68bdb46",
+ "process_time": 614,
+ "server_id": "app178",
+ "build_version": "v0.12.1-2026.10.21",
+ "pipeline": "1474833",
+ "status": "ok",
+ "status_code": 200,
+ "time": "2026-10-21T14:11:50.000779",
+ "data": {
+  "prefixes": [
+   {
+    "prefix": "37.59.0.0/16",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "85.217.144.0/23",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "176.105.231.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "79.172.216.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "31.56.219.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "81.168.32.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "109.176.48.0/21",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "72.244.230.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "144.2.32.0/19",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "141.11.107.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "216.247.96.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "191.101.150.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "134.195.148.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "82.38.232.0/22",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "140.233.177.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "185.207.134.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "185.135.188.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "166.0.112.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "15.204.128.0/17",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "87.83.66.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "5.230.153.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "167.148.193.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "45.39.79.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "45.66.82.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "40.160.240.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "155.117.127.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "94.23.0.0/16",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "191.101.218.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "82.152.8.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "45.94.50.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "103.170.116.0/23",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "82.39.119.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "54.36.0.0/16",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "151.241.68.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "193.33.176.0/23",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "82.38.244.0/22",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "104.167.16.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "117.18.104.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "158.62.199.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   },
+   {
+    "prefix": "31.59.68.0/24",
+    "timelines": [
+     {
+      "starttime": "2026-10-07T08:00:00",
+      "endtime": "2026-10-21T08:00:00"
+     }
+    ]
+   }
+  ],
+  "query_starttime": "2026-10-07T08:00:00",
+  "query_endtime": "2026-10-21T08:00:00",
+  "resource": "16276",
+  "latest_time": "2026-10-21T08:00:00",
+  "earliest_time": "2000-08-01T00:00:00"
+ }
+}

@@ -1,0 +1,88 @@
+{
+ "type": 0,
+ "code": "H5MNcFW63r",
+ "inviter": {
+  "id": "389240817124114434",
+  "username": "pukkandan",
+  "avatar": "1d0fc6339f5899c40a56f7fa9ec2ec7e",
+  "discriminator": "0",
+  "public_flags": 0,
+  "flags": 0,
+  "banner": null,
+  "accent_color": 1644825,
+  "global_name": "pukkandan",
+  "avatar_decoration_data": null,
+  "collectibles": null,
+  "display_name_styles": null,
+  "vad_colors": null,
+  "banner_color": "#191919",
+  "clan": {
+   "identity_guild_id": "807245652072857610",
+   "identity_enabled": true,
+   "tag": "_dlp",
+   "badge": "5607047f21b7e25a26c195cc49871278"
+  },
+  "primary_guild": {
+   "identity_guild_id": "807245652072857610",
+   "identity_enabled": true,
+   "tag": "_dlp",
+   "badge": "5607047f21b7e25a26c195cc49871278"
+  }
+ },
+ "expires_at": null,
+ "id": 0,
+ "flags": 2,
+ "guild": {
+  "id": "807245652072857610",
+  "name": "yt-dlp",
+  "splash": null,
+  "banner": null,
+  "description": null,
+  "icon": "dc1ae5f4eaa70301d97a4e530d3099e1",
+  "features": [
+   "TIERLESS_BOOSTING_SYSTEM_MESSAGE",
+   "CHANNEL_ICON_EMOJIS_GENERATED",
+   "MEMBER_VERIFICATION_GATE_ENABLED",
+   "COMMUNITY_EXP_LARGE_UNGATED",
+   "COMMUNITY"
+  ],
+  "verification_level": 2,
+  "vanity_url_code": null,
+  "nsfw_level": 0,
+  "nsfw": false,
+  "premium_subscription_count": 4,
+  "premium_tier": 0
+ },
+ "guild_id": "807245652072857610",
+ "channel": {
+  "id": "807246227351535616",
+  "type": 0,
+  "name": "rules"
+ },
+ "profile": {
+  "id": "807245652072857610",
+  "name": "yt-dlp",
+  "icon_hash": "dc1ae5f4eaa70301d97a4e530d3099e1",
+  "member_count": 50639,
+  "online_count": 4696,
+  "description": null,
+  "banner_hash": null,
+  "game_activity": {},
+  "tag": "_dlp",
+  "badge": 5,
+  "badge_color_primary": "#ff8f1c",
+  "badge_color_secondary": "#ffae77",
+  "badge_hash": "5607047f21b7e25a26c195cc49871278",
+  "traits": [],
+  "features": [
+   "MEMBER_VERIFICATION_GATE_ENABLED",
+   "COMMUNITY"
+  ],
+  "visibility": 1,
+  "custom_banner_hash": null,
+  "premium_subscription_count": 4,
+  "premium_tier": 0
+ },
+ "approximate_member_count": 50639,
+ "approximate_presence_count": 4696
+}

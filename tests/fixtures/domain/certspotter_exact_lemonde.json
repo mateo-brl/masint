@@ -1,0 +1,54 @@
+[
+ {
+  "id": "12611860979",
+  "tbs_sha256": "0f80199fad112ea5a11db25ea76909ec3883a788d164a2d39698fd00560681a3",
+  "cert_sha256": "87f0b80ff32dd4c870e76ab813653763e196c6219384fad27fee35e750c8aa84",
+  "dns_names": [
+   "*.lemonde.fr",
+   "lemonde.fr"
+  ],
+  "pubkey_sha256": "0b0659e6833089f9fc2310b488bd7cb2200b372eb4e2e3e3b67e0f6091c0e4fa",
+  "issuer": {
+   "friendly_name": "DigiCert",
+   "pubkey_sha256": "d1d7e5805a1f5e2b8ba19be04693fc37dc6ba434e067b735c5b9938c8c729bba",
+   "name": "C=FR, O=Gandi SAS, CN=GandiCert"
+  },
+  "not_before": "2025-11-07T00:00:00Z",
+  "not_after": "2026-12-08T23:59:59Z",
+  "revoked": false
+ },
+ {
+  "id": "16560593335",
+  "tbs_sha256": "c6aed9ebddeb957c38d2177d2f56551f088b6bf884e6b818222177d7234ac116",
+  "cert_sha256": "f2ad194dcdb7a9594182cd4a054c94a89bf8db49f77a3d6e3b555035696af343",
+  "dns_names": [
+   "lemonde.fr"
+  ],
+  "pubkey_sha256": "c98fa88ecabd76a579b92c1d3c3021ae0d1291004b426df85d70a741574cd100",
+  "issuer": {
+   "friendly_name": "Let's Encrypt",
+   "pubkey_sha256": "2e8307068b6db620e4a39d068b5dee5d6ef5788cbb2c0b6d23ead84fcc17178c",
+   "name": "C=US, O=Let's Encrypt, CN=YR1"
+  },
+  "not_before": "2026-08-17T07:47:53Z",
+  "not_after": "2026-11-15T07:47:52Z",
+  "revoked": false
+ },
+ {
+  "id": "17814586065",
+  "tbs_sha256": "c045944085802ecd3d1a2a509311b0f94affc0db11139d811b2c7a10a39cbf34",
+  "cert_sha256": "fc258d896053e7cef0136e3657d7377383cfc0d11e93ae9a4d65c18f32c01b7a",
+  "dns_names": [
+   "lemonde.fr"
+  ],
+  "pubkey_sha256": "a11dd39ad0a878d1cb9607149db57fc65d9e3b4cbd5714dbd020753797dce0f9",
+  "issuer": {
+   "friendly_name": "Let's Encrypt",
+   "pubkey_sha256": "9d637b3d27a9e570d07607b9ccadb80a70915c7af72afce12841b1b1da825fd1",
+   "name": "C=US, O=Let's Encrypt, CN=YR2"
+  },
+  "not_before": "2026-10-16T06:53:12Z",
+  "not_after": "2027-01-14T06:53:11Z",
+  "revoked": false
+ }
+]

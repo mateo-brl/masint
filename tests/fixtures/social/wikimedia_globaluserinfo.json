@@ -1,0 +1,73 @@
+{
+ "batchcomplete": "",
+ "query": {
+  "globaluserinfo": {
+   "home": "enwiki",
+   "id": 1843,
+   "registration": "2008-04-12T16:22:49Z",
+   "name": "Jimbo Wales",
+   "groups": [
+    "founder"
+   ],
+   "merged": [
+    {
+     "wiki": "enwiki",
+     "url": "https://en.wikipedia.org",
+     "id": 24,
+     "timestamp": "2008-04-12T16:22:49Z",
+     "method": "primary",
+     "editcount": 15135,
+     "registration": "2001-03-27T20:47:31Z",
+     "groups": [
+      "extendedconfirmed",
+      "founder",
+      "reviewer"
+     ]
+    },
+    {
+     "wiki": "metawiki",
+     "url": "https://meta.wikimedia.org",
+     "id": 22,
+     "timestamp": "2008-04-12T16:23:10Z",
+     "method": "password",
+     "editcount": 443,
+     "registration": "2026-10-21T13:51:00Z",
+     "groups": [
+      "autopatrolled"
+     ]
+    },
+    {
+     "wiki": "commonswiki",
+     "url": "https://commons.wikimedia.org",
+     "id": 121,
+     "timestamp": "2008-04-12T16:23:10Z",
+     "method": "password",
+     "editcount": 214,
+     "registration": "2026-10-21T13:51:00Z",
+     "groups": [
+      "autopatrolled",
+      "filemover"
+     ]
+    },
+    {
+     "wiki": "enwikinews",
+     "url": "https://en.wikinews.org",
+     "id": 18,
+     "timestamp": "2008-04-12T16:23:10Z",
+     "method": "password",
+     "editcount": 136,
+     "registration": "2026-10-21T13:51:00Z"
+    },
+    {
+     "wiki": "enwikiversity",
+     "url": "https://en.wikiversity.org",
+     "id": 34734,
+     "timestamp": "2008-09-14T14:35:09Z",
+     "method": "login",
+     "editcount": 63,
+     "registration": "2008-09-14T14:35:09Z"
+    }
+   ]
+  }
+ }
+}

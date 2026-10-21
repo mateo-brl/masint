@@ -1,0 +1,130 @@
+{
+ "address": {
+  "address": "bc1qa5wkgaew2dkv56kfvj49j0av5nml45x9ek9hz6",
+  "chain_stats": {
+   "funded_txo_count": 189,
+   "funded_txo_sum": 6937018461850,
+   "spent_txo_count": 0,
+   "spent_txo_sum": 0,
+   "tx_count": 189
+  },
+  "mempool_stats": {
+   "funded_txo_count": 0,
+   "funded_txo_sum": 0,
+   "spent_txo_count": 0,
+   "spent_txo_sum": 0,
+   "tx_count": 0
+  }
+ },
+ "txs": [
+  {
+   "txid": "b1e9a091811ff64b30272ba427ced63537530fb0f860dd61213e6196bf903351",
+   "fee": 36,
+   "vin": [
+    {
+     "is_coinbase": false,
+     "prevout": {
+      "scriptpubkey_address": "bc1p2jpzzggaqve0a2c9a2flk8v5uc2asqudeyrhjt88sx38majdk5jsjycutv",
+      "value": 330
+     }
+    }
+   ],
+   "vout": [
+    {
+     "scriptpubkey_address": "bc1qa5wkgaew2dkv56kfvj49j0av5nml45x9ek9hz6",
+     "value": 294
+    }
+   ],
+   "status": {
+    "confirmed": true,
+    "block_height": 966293,
+    "block_time": 1789004734
+   }
+  },
+  {
+   "txid": "c31d20940b733ab302c1b6107bc5ee0635722528880fc764ba790edcf76339df",
+   "fee": 288,
+   "vin": [
+    {
+     "is_coinbase": false,
+     "prevout": {
+      "scriptpubkey_address": "bc1qvfj0wzl2tl9df6ra2027ux9earhjrpg5eef00n",
+      "value": 11906
+     }
+    }
+   ],
+   "vout": [
+    {
+     "scriptpubkey_address": "bc1qa5wkgaew2dkv56kfvj49j0av5nml45x9ek9hz6",
+     "value": 2566
+    },
+    {
+     "scriptpubkey_address": "bc1qfm40ctg4nkqe680ncu4cma06g737prpnmfmj5p",
+     "value": 9052
+    }
+   ],
+   "status": {
+    "confirmed": true,
+    "block_height": 965307,
+    "block_time": 1788437602
+   }
+  },
+  {
+   "txid": "ad3501200064d4ae96b13c77c668777f88fc40baad065c49a0b5cca3981674bb",
+   "fee": 1125,
+   "vin": [
+    {
+     "is_coinbase": false,
+     "prevout": {
+      "scriptpubkey_address": "bc1q0apu0zjzjpx7x8fnx7ktrnvhfytj9pjf2vzpun",
+      "value": 330
+     }
+    },
+    {
+     "is_coinbase": false,
+     "prevout": {
+      "scriptpubkey_address": "bc1q0apu0zjzjpx7x8fnx7ktrnvhfytj9pjf2vzpun",
+      "value": 330
+     }
+    },
+    {
+     "is_coinbase": false,
+     "prevout": {
+      "scriptpubkey_address": "bc1q0apu0zjzjpx7x8fnx7ktrnvhfytj9pjf2vzpun",
+      "value": 330
+     }
+    },
+    {
+     "is_coinbase": false,
+     "prevout": {
+      "scriptpubkey_address": "bc1q0apu0zjzjpx7x8fnx7ktrnvhfytj9pjf2vzpun",
+      "value": 330
+     }
+    }
+   ],
+   "vout": [
+    {
+     "scriptpubkey_address": "3C8mzzeiyakvXkQadUM5f98zCt5NQWwXo1",
+     "value": 540
+    },
+    {
+     "scriptpubkey_address": "35WHp4Hid61peyH4tuhNunwRj2gtNB41Lo",
+     "value": 540
+    },
+    {
+     "scriptpubkey_address": "bc1qdhvtwg0eealy5d2spua2a89sq05ydvtgjy4uau",
+     "value": 330
+    },
+    {
+     "scriptpubkey_address": "bc1qvy0sp8cdj3cv2wwh05scucxw6vxqpdlhfjvqn8",
+     "value": 330
+    }
+   ],
+   "status": {
+    "confirmed": true,
+    "block_height": 964492,
+    "block_time": 1787958835
+   }
+  }
+ ]
+}

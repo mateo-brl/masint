@@ -1,0 +1,44 @@
+{
+ "_id": "5dd96eb166059660ed1ee413",
+ "avatarUrl": "https://cdn-avatars.huggingface.co/v1/production/uploads/5dd96eb166059660ed1ee413/NQtzmrDdbG0H8qkZvRyGk.jpeg",
+ "isPro": true,
+ "fullname": "Julien Chaumond",
+ "numModels": 53,
+ "numDatasets": 26,
+ "numSpaces": 47,
+ "numKernels": 0,
+ "numBuckets": 9,
+ "numDiscussions": 1880,
+ "numPapers": 8,
+ "numUpvotes": 1072,
+ "numLikes": 2066,
+ "numFollowers": 5140,
+ "numFollowing": 594,
+ "numFollowingOrgs": 337,
+ "orgs": [
+  {
+   "id": "635bf1ceca038892de04727e",
+   "name": "safetensors",
+   "fullname": "Safetensors",
+   "avatarUrl": "https://cdn-avatars.huggingface.co/v1/production/uploads/1666970060075-5dd96eb166059660ed1ee413.png"
+  },
+  {
+   "id": "5e67bd5b1009063689407478",
+   "name": "huggingface",
+   "fullname": "Hugging Face",
+   "avatarUrl": "https://cdn-avatars.huggingface.co/v1/production/uploads/1583856921041-5dd96eb166059660ed1ee413.png"
+  },
+  {
+   "id": "63878a485c68cf2713b9f0af",
+   "name": "ph-snps",
+   "fullname": "ph-snps",
+   "avatarUrl": "https://www.gravatar.com/avatar/0d37081b4a297db9a79d2ffa2985d819?d=retro&size=100"
+  }
+ ],
+ "user": "julien-c",
+ "type": "user",
+ "isFollowing": false,
+ "details": "<3 ML/AI for everyone, building products to propel communities fwd",
+ "primaryOrgAvatarUrl": "https://cdn-avatars.huggingface.co/v1/production/uploads/1583856921041-5dd96eb166059660ed1ee413.png",
+ "createdAt": "2019-11-23T17:38:57.000Z"
+}
