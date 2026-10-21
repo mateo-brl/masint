@@ -141,7 +141,8 @@ const fr = {
     edgeStep: 'Liens à angles',
     edgeStraight: 'Liens droits',
     minimap: 'Mini-carte',
-    lightTheme: 'Thème clair'
+    lightTheme: 'Thème clair',
+    postit: 'Fond post-it'
   },
   props: {
     selectedNode: 'Nœud sélectionné',
@@ -176,7 +177,8 @@ const fr = {
     caption: 'Légende',
     lat: 'Latitude',
     lon: 'Longitude',
-    zoom: 'Zoom'
+    zoom: 'Zoom',
+    drawing: 'Dessin libre : la couleur et l’épaisseur se règlent dans l’onglet Style.'
   },
   runs: {
     summary: 'Modules : {{done}} terminés · {{results}} résultats · {{errors}} erreurs',
@@ -434,7 +436,8 @@ const en: typeof fr = {
     edgeStep: 'Stepped links',
     edgeStraight: 'Straight links',
     minimap: 'Minimap',
-    lightTheme: 'Light theme'
+    lightTheme: 'Light theme',
+    postit: 'Sticky note background'
   },
   props: {
     selectedNode: 'Selected node',
@@ -469,7 +472,8 @@ const en: typeof fr = {
     caption: 'Caption',
     lat: 'Latitude',
     lon: 'Longitude',
-    zoom: 'Zoom'
+    zoom: 'Zoom',
+    drawing: 'Freehand drawing: color and width are set in the Style tab.'
   },
   runs: {
     summary: 'Modules: {{done}} done · {{results}} results · {{errors}} errors',

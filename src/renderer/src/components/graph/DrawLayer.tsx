@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useReactFlow, useStore } from '@xyflow/react'
 import { getStroke } from 'perfect-freehand'
-import type { PropValue } from '@shared/types'
 import { useGraph } from '../../store/graph'
 
 /** Point d'un trait : x, y et pression facultative (stylet). */
@@ -203,7 +202,7 @@ async function createDrawing(points: StrokePoint[], color: string, width: number
         type: 'drawing',
         label: '',
         // Les points sont stockés tels quels en JSON (tableau de tableaux).
-        data: { points: rel as unknown as PropValue, w: r1(w), h: r1(h) },
+        data: { points: rel, w: r1(w), h: r1(h) },
         x: r1(x0),
         y: r1(y0),
         width: r1(w),

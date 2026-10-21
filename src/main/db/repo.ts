@@ -288,7 +288,7 @@ export class Repo {
     for (const [k, v] of Object.entries(props)) {
       if (v === undefined || v === null || v === '') continue
       if (Array.isArray(v) && Array.isArray(data[k])) {
-        data[k] = Array.from(new Set([...(data[k] as string[]), ...v]))
+        data[k] = Array.from(new Set([...(data[k] as string[]), ...(v as string[])]))
       } else if (overwrite || data[k] === undefined || data[k] === null || data[k] === '') {
         data[k] = v
       }

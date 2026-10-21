@@ -624,12 +624,22 @@ function AnnotationSheet({ node }: { node: GraphNode }): React.JSX.Element {
         </label>
       )}
       {node.kind === 'image' && <ImageDrop node={node} />}
+      {node.kind === 'drawing' && (
+        <div className="flex flex-col gap-3 text-[12.5px] text-muted">
+          <div className="flex items-center gap-2">
+            <Icon name="Pencil" size={14} /> {t('props.drawing')}
+          </div>
+          <Button variant="danger" icon="Trash" onClick={() => void useGraph.getState().deleteNodes([node.id])}>
+            {t('common.delete')}
+          </Button>
+        </div>
+      )}
       {node.kind === 'map' && (
         <div className="grid grid-cols-3 gap-2">
           {(['lat', 'lon', 'zoom'] as const).map((k) => (
             <label key={k} className="flex flex-col gap-1">
               <span className="text-[11px] text-muted">{t(`props.${k}`)}</span>
-              <input defaultValue={num(k)} onBlur={(e) => setNum(k, e.target.value)} className="field !py-1" />
+              <input key={num(k)} defaultValue={num(k)} onBlur={(e) => setNum(k, e.target.value)} className="field !py-1" />
             </label>
           ))}
         </div>
@@ -692,10 +702,25 @@ function StyleTab({ node }: { node: GraphNode }): React.JSX.Element {
         </>
       )}
       {node.kind === 'text' && (
-        <label className="flex flex-col gap-2">
-          <span className="text-[11.5px] text-muted">{t('style.fontSize')}</span>
-          <input type="range" min={10} max={64} value={node.style.fontSize ?? 14} onChange={(e) => set({ fontSize: Number(e.target.value) })} />
-        </label>
+        <>
+          <label className="flex flex-col gap-2">
+            <span className="text-[11.5px] text-muted">{t('style.fontSize')}</span>
+            <input type="range" min={10} max={64} value={node.style.fontSize ?? 14} onChange={(e) => set({ fontSize: Number(e.target.value) })} />
+          </label>
+          <div className="flex flex-col gap-2">
+            <span className="text-[11.5px] text-muted">{t('style.postit')}</span>
+            <div className="flex flex-wrap gap-2">
+              {['', '#fde68a', '#fbcfe8', '#bbf7d0', '#bfdbfe', '#e9d5ff'].map((c) => (
+                <button
+                  key={c || 'none'}
+                  onClick={() => set({ bg: c || undefined })}
+                  className="h-6 w-6 rounded-md border border-line-strong"
+                  style={{ background: c || 'transparent', outline: (node.style.bg ?? '') === c ? '2px solid var(--accent)' : 'none', outlineOffset: 2 }}
+                />
+              ))}
+            </div>
+          </div>
+        </>
       )}
       {node.kind === 'drawing' && (
         <label className="flex flex-col gap-2">
