@@ -303,6 +303,16 @@ export interface AssistResult {
   title: string
   matches: Array<{ title: string; url: string; snippet: string }>
   error?: string
+  /** Capture de la page de résultats (réglage « Capturer les pages consultées »). */
+  captureId?: string
+}
+
+/** Dernier résultat d'une recherche assistée, gardé en base avec la recherche manuelle. */
+export interface StoredAssist {
+  result: AssistResult
+  /** Résultats déjà ajoutés au graphe, masqués de la liste. */
+  added: string[]
+  at: number
 }
 
 /** Résultat en attente de validation par l'enquêteur (voir `OutEntity.review`, `OutManualCheck`). */
@@ -324,6 +334,8 @@ export interface Suggestion {
   reason: string
   /** `checked` : recherche manuelle faite, rien trouvé. */
   status: 'pending' | 'accepted' | 'rejected' | 'checked'
+  /** Dernière recherche assistée de cette recherche manuelle. */
+  assist?: StoredAssist | null
   createdAt: number
   updatedAt: number
 }
@@ -394,6 +406,10 @@ export interface Settings {
   /** `auto` : libellés masqués autour des nœuds très reliés, sauf pour la sélection. */
   edgeLabels: 'auto' | 'always'
   showMinimap: boolean
+  /** Nom inscrit dans le journal d'activité ; vide : nom de session du système. */
+  investigatorName: string
+  /** Recherche assistée : la page de résultats est capturée (preuve) avant la fermeture de sa fenêtre. */
+  assistCapture: boolean
 }
 
 export interface SecretStatus {
@@ -465,4 +481,153 @@ export interface SitesUpdateResult {
   /** `updated` : nouvelle base installée ; `current` : déjà à jour. */
   status?: 'updated' | 'current'
   error?: string
+}
+
+// ---------------------------------------------------------------------------
+// Preuves et journal d'activité
+
+/**
+ * Capture d'une page web (preuve) : image pleine page, archive MHTML et contexte JSON, chacun
+ * en pièce jointe avec son SHA-256. `manifestSha256` scelle les trois (voir `captureManifest`).
+ */
+export interface Capture {
+  id: string
+  investigationId: string
+  /** Nœud de rattachement ; `null` pour une page ouverte hors d'une fiche. */
+  nodeId: string | null
+  /** Adresse demandée (début de la chaîne de redirections). */
+  url: string
+  /** Adresse affichée au moment de la capture. */
+  finalUrl: string
+  title: string
+  /** Date de la capture, ISO 8601 UTC. */
+  capturedAt: string
+  screenshotAttachment: string
+  mhtmlAttachment: string
+  metaAttachment: string
+  manifestSha256: string
+}
+
+/** Contexte d'ouverture d'un lien : la capture faite depuis le navigateur d'enquête s'y rattache. */
+export interface LinkContext {
+  investigationId: string
+  nodeId?: string | null
+}
+
+/** Export enregistré par le processus principal, inscrit au journal de l'enquête. */
+export interface ExportMeta {
+  investigationId: string
+  /** Format : `png`, `csv-nodes`, `report-pdf`, `report-html`... */
+  kind: string
+}
+
+export type ActivityAction =
+  | 'investigation.create'
+  | 'investigation.duplicate'
+  | 'node.create'
+  | 'node.update'
+  | 'node.delete'
+  | 'node.merge'
+  | 'edge.create'
+  | 'edge.update'
+  | 'edge.delete'
+  | 'module.run'
+  | 'suggestion.accept'
+  | 'suggestion.reject'
+  | 'suggestion.checked'
+  | 'suggestion.reopen'
+  | 'capture.create'
+  | 'export.file'
+  | 'export.report'
+  | 'archive.export'
+  | 'archive.import'
+
+/** Nœud désigné dans le journal : identifiant, type et libellé au moment de l'action. */
+export interface ActivityNodeRef {
+  id: string
+  type: string
+  label: string
+}
+
+/** Lien désigné dans le journal : libellés de ses extrémités au moment de l'action. */
+export interface ActivityEdgeRef {
+  id: string
+  from: string
+  to: string
+  label: string
+}
+
+/** Objet d'une entrée du journal (JSON court ; seuls les champs utiles à l'action sont présents). */
+export interface ActivityTarget {
+  name?: string
+  nodes?: ActivityNodeRef[]
+  edges?: ActivityEdgeRef[]
+  /** Nombre total d'éléments quand la liste est tronquée. */
+  count?: number
+  /** Champs modifiés. */
+  fields?: string[]
+  /** Nœud cible d'une fusion. */
+  into?: ActivityNodeRef
+  /** Liens supprimés avec les nœuds. */
+  removedEdges?: number
+  node?: ActivityNodeRef
+  modules?: string[]
+  job?: string
+  followUp?: boolean
+  /** Modules lancés par enchaînement : profondeur et modules qui ont mené au nœud. */
+  chain?: { depth: number; path: string[] }
+  suggestion?: string
+  value?: string
+  type?: string
+  module?: string
+  found?: { type: string; label: string }
+  capture?: string
+  url?: string
+  finalUrl?: string
+  via?: 'browser' | 'assist' | 'node'
+  kind?: string
+  file?: string
+  size?: number
+  sha256?: string
+  source?: { id: string; name: string }
+  copy?: { id: string; name: string }
+}
+
+/**
+ * Entrée du journal d'activité. `hash = sha256(prevHash + JSON canonique de { seq, at, actor,
+ * action, target })`, chaîné par enquête depuis 64 zéros.
+ */
+export interface ActivityEntry {
+  id: string
+  investigationId: string
+  /** Rang dans la chaîne de l'enquête, à partir de 1. */
+  seq: number
+  /** ISO 8601 UTC. */
+  at: string
+  actor: string
+  action: ActivityAction
+  target: ActivityTarget
+  prevHash: string
+  hash: string
+}
+
+export interface ActivityPage {
+  entries: ActivityEntry[]
+  /** Entrées qui répondent au filtre. */
+  total: number
+  /** Nombre d'entrées par action, sur tout le journal. */
+  counts: Partial<Record<ActivityAction, number>>
+}
+
+/** Vérification de la chaîne d'empreintes du journal. */
+export interface ActivityCheck {
+  ok: boolean
+  count: number
+  /** Empreinte de la dernière entrée (`null` : journal vide). */
+  lastHash: string | null
+  /**
+   * Première entrée altérée : empreinte recalculée différente (`hash`), maillon rompu avec
+   * l'entrée précédente (`link`) ou rang manquant ou en double (`order`).
+   */
+  broken?: { seq: number; id: string; at: string; action: string; reason: 'hash' | 'link' | 'order' }
 }

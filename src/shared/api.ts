@@ -2,14 +2,21 @@
 // Chaque entrée de `ApiMap` correspond à un canal `ipcMain.handle`.
 
 import type {
+  ActivityAction,
+  ActivityCheck,
+  ActivityEntry,
+  ActivityPage,
   AssistResult,
   Attachment,
+  Capture,
   EdgeInput,
+  ExportMeta,
   GraphChange,
   GraphEdge,
   Investigation,
   InvestigationBundle,
   JobProgress,
+  LinkContext,
   ModuleInfo,
   ModuleRun,
   ModuleRunStats,
@@ -73,6 +80,22 @@ export interface ApiMap {
   'attachments:readBase64': (id: string) => string | null
   /** Métadonnées EXIF d'une image jointe (GPS, appareil, date). */
   'attachments:exif': (id: string) => Record<string, unknown> | null
+  /** Enregistre une pièce jointe sur le disque (boîte de dialogue). Renvoie le chemin ou `null`. */
+  'attachments:save': (id: string) => string | null
+
+  // Preuves (captures de pages)
+  /** Captures d'une enquête (ou d'un nœud), dont le nœud existe encore. */
+  'captures:list': (investigationId: string, nodeId?: string) => Capture[]
+  /** Ouvre la page d'un nœud `url` ou `account` dans une fenêtre cachée du navigateur d'enquête et la capture. */
+  'captures:capture': (investigationId: string, nodeId: string) => Capture
+
+  // Journal d'activité
+  /** Page du journal, de la plus récente à la plus ancienne, filtrée par action. */
+  'activity:list': (investigationId: string, opts?: { offset?: number; limit?: number; actions?: ActivityAction[] }) => ActivityPage
+  /** Recalcule la chaîne d'empreintes et indique la première entrée altérée. */
+  'activity:verify': (investigationId: string) => ActivityCheck
+  /** Actions significatives (rapport), dans l'ordre chronologique, avec la vérification de la chaîne. */
+  'activity:report': (investigationId: string) => { entries: ActivityEntry[]; total: number; check: ActivityCheck }
 
   // Modules
   'modules:list': () => ModuleInfo[]
@@ -97,6 +120,8 @@ export interface ApiMap {
   ) => void
   /** Lance une recherche manuelle dans le navigateur intégré et renvoie les résultats qui contiennent la valeur. */
   'assist:run': (suggestionId: string) => AssistResult
+  /** Résultat de recherche assistée ajouté au graphe : masqué de la liste enregistrée. */
+  'assist:markAdded': (suggestionId: string, url: string) => void
   'modules:applicable': (nodeId: string) => { auto: string[]; accepted: string[] }
   'modules:setEnabled': (moduleId: string, enabled: boolean) => void
   /** Données brutes archivées d'une exécution (réponse du service). */
@@ -126,27 +151,32 @@ export interface ApiMap {
   'sites:cancelCheck': () => void
 
   // Exports
-  /** Imprime un document HTML en PDF et l'enregistre. */
-  'export:pdf': (html: string, defaultName: string) => string | null
+  /** Imprime un document HTML en PDF et l'enregistre (`meta` : export inscrit au journal de l'enquête). */
+  'export:pdf': (html: string, defaultName: string, meta?: ExportMeta) => string | null
   /** Enregistre un fichier texte ou binaire (base64) via une boîte de dialogue. */
   'export:save': (
     defaultName: string,
     filters: FileFilter[],
     content: string,
-    encoding: 'utf8' | 'base64'
+    encoding: 'utf8' | 'base64',
+    meta?: ExportMeta
   ) => string | null
 
   // Application
-  'app:info': () => { version: string; platform: string; dataPath: string }
+  /** `user` : nom de session du système (enquêteur par défaut du journal). */
+  'app:info': () => { version: string; platform: string; dataPath: string; user: string }
   /** Navigateur personnel de l'enquêteur : documentation, GitHub, pages d'inscription aux clés. */
   'app:openExternal': (url: string) => void
-  /** Lien d'enquête : navigateur d'enquête ou navigateur personnel, selon `linkOpening`. */
-  'app:openLink': (url: string) => void
+  /**
+   * Lien d'enquête : navigateur d'enquête ou navigateur personnel, selon `linkOpening`. Avec
+   * `ctx`, la barre du navigateur d'enquête propose « Capturer la page », rattachée à ce nœud.
+   */
+  'app:openLink': (url: string, ctx?: LinkContext) => void
   /**
    * Fenêtre visible du navigateur d'enquête : partition, proxy (ou Tor) et durcissement de la
-   * recherche assistée.
+   * recherche assistée. Avec `ctx`, la capture de la page est proposée.
    */
-  'browser:open': (url: string) => void
+  'browser:open': (url: string, ctx?: LinkContext) => void
   'app:showInFolder': (path: string) => void
   /** Enquêtes importées depuis l'explorateur et pas encore ouvertes. */
   'app:takePendingOpen': () => string[]
@@ -160,6 +190,8 @@ export interface EventMap {
   'graph:changed': GraphChange
   'job:progress': JobProgress
   'suggestions:changed': { investigationId: string; nodeId: string }
+  /** Nouvelle capture (preuve) dans une enquête. */
+  'captures:changed': { investigationId: string; nodeId: string | null }
   'update:status': UpdateStatus
   /** Une archive `.masint` ouverte depuis l'explorateur a été importée. */
   'app:openInvestigation': { id: string }

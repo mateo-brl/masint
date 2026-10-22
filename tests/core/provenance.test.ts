@@ -12,6 +12,7 @@ import { openDatabase, type DB } from '../../src/main/db/database'
 import { Repo } from '../../src/main/db/repo'
 import { CHAIN_BUDGET, chainExcluded, defaultStrength, isCommonPseudo, isGenericAddress, isPlatformHome, isShortener, stopReason } from '../../src/main/engine/chain'
 import { setModulesForTests } from '../../src/main/engine/registry'
+import { ActivityLog } from '../../src/main/activity'
 import { Engine } from '../../src/main/engine/runner'
 import { mergeNodes } from '../../src/main/merge'
 import { SettingsService } from '../../src/main/settings'
@@ -356,6 +357,22 @@ describe('Enchaînement', () => {
     expect(ran(inv3.id, repo.listNodes(inv3.id).find((n) => n.platform === 'github')!.id)).toEqual(['test.profile'])
   })
 
+  it('inscrit au journal d’activité les modules lancés par enchaînement', async () => {
+    install()
+    settings.set({ chainDepth: 1 })
+    const log = new ActivityLog(repo, () => 'Enquêteur test')
+    engine = new Engine(repo, settings, () => undefined, log)
+    const inv = repo.createInvestigation({ name: 'Journal' })
+    const [email] = repo.upsertNodes(inv.id, [{ type: 'email', label: 'jane@exemple.fr' }])
+    engine.enrich(inv.id, email.id, undefined, { chain: true })
+    await waitJobs()
+    const runs = repo.allActivity(inv.id).filter((e) => e.action === 'module.run')
+    expect(runs.map((e) => [e.target.node?.label, e.target.chain?.depth ?? 0, e.target.chain?.path.join(' > ') ?? ''])).toEqual([
+      ['jane@exemple.fr', 0, ''],
+      ['janedoe42', 1, 'test.mail']
+    ])
+  })
+
   it('relance la chaîne quand une mention mise de côté est validée', async () => {
     install()
     settings.set({ chainDepth: 2 })
@@ -570,7 +587,7 @@ describe('Fusion, suppression et archive', () => {
   })
 })
 
-describe('Migration 4', () => {
+describe('Migration de la provenance', () => {
   it('crée la table observations et reprend l’existant', () => {
     const inv = repo.createInvestigation({ name: 'Ancienne' })
     const [p, acc] = repo.upsertNodes(inv.id, [
@@ -578,7 +595,7 @@ describe('Migration 4', () => {
       { type: 'account', label: 'jean', platform: 'github', source: 'person.usernames' }
     ])
     repo.upsertEdges(inv.id, [{ source: p.id, target: acc.id, label: 'compte', sourceModule: 'social.github' }])
-    // Base d'avant la migration : ni table ni colonne.
+    // Base d'avant la migration : ni table ni colonne (les migrations suivantes sont rejouables).
     db.exec('DROP TABLE observations; ALTER TABLE nodes DROP COLUMN hop;')
     db.pragma('user_version = 3')
     db.close()

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   Background,
   BackgroundVariant,
@@ -10,6 +10,7 @@ import {
   useNodesInitialized,
   useReactFlow,
   type EdgeTypes,
+  type Node,
   type NodeChange,
   type NodeTypes,
   type Viewport
@@ -28,12 +29,13 @@ import { EntityBadge, Icon } from '../../lib/icons'
 import { useApp } from '../../store/app'
 import { useGraph, type FlowEdge, type FlowNode } from '../../store/graph'
 import { currentView, useView } from '../../store/view'
-import { bundleId, computeView } from '../../lib/collapse'
+import { bundleId, computeView, type Bundle } from '../../lib/collapse'
+import { DENSE_NODES, useCanvas } from '../../store/canvas'
 import { confirmDialog } from '../ui'
 import { DrawLayer } from './DrawLayer'
 import { MasintEdge } from './edges/MasintEdge'
 import { DrawingNode } from './nodes/DrawingNode'
-import { CollapsedCountContext, EntityNode, OutDegreeContext, ReviewCountContext, SelectedNodesContext } from './nodes/EntityNode'
+import { EntityNode } from './nodes/EntityNode'
 import { ImageNode } from './nodes/ImageNode'
 import { MapNode } from './nodes/MapNode'
 import { TextNode } from './nodes/TextNode'
@@ -42,6 +44,18 @@ import { BundleNode } from './nodes/BundleNode'
 const nodeTypes: NodeTypes = { entity: EntityNode, text: TextNode, image: ImageNode, drawing: DrawingNode, map: MapNode, bundle: BundleNode }
 const edgeTypes: EdgeTypes = { masint: MasintEdge }
 const defaultEdgeOptions = { type: 'masint', markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14, color: 'var(--edge)' } }
+// Valeurs stables : recréées à chaque rendu (chaque image d'un glisser), elles feraient re-rendre
+// les 2000 nœuds de la mini-carte et réinstaller les raccourcis de React Flow.
+const deleteKeys = ['Delete', 'Backspace']
+const multiSelectionKeys = ['Meta', 'Control']
+const proOptions = { hideAttribution: true }
+const minimapStyle = { width: 190, height: 130, marginLeft: 16, marginBottom: 16 }
+const minimapNodeColor = (n: Node): string => ((n as FlowNode).data.node.kind === 'entity' ? 'var(--accent)' : 'var(--faint)')
+/** Au-delà de ce nombre de nœuds, seuls les éléments visibles sont rendus. */
+const VISIBLE_ONLY_MIN = 300
+
+/** Nœud d'affichage d'un groupe, réutilisé tant que ce dont il dépend ne change pas. */
+type BundleEntry = { bundle: Bundle; st: unknown; node: GraphNode; x: number; y: number; flow: FlowNode }
 
 /** Dernière enquête recadrée : on recadre à l'ouverture, pas à chaque retour sur la vue Graphe. */
 let fittedInvestigation: string | null = null
@@ -110,9 +124,19 @@ export function GraphCanvas(): React.JSX.Element {
       ),
     [nodes, edges, expanded]
   )
+  // Objets réutilisés d'un rendu à l'autre (nœuds masqués, groupes) : pendant un glisser, React
+  // Flow ne voit changer que le nœud déplacé.
+  const hiddenCopies = useRef(new WeakMap<FlowNode, FlowNode>())
+  const bundleNodes = useRef(new Map<string, BundleEntry>())
   const displayNodes = useMemo(() => {
-    const out: FlowNode[] = nodes.map((n) => (view.hidden.has(n.id) ? { ...n, hidden: true } : n))
+    const out: FlowNode[] = nodes.map((n) => {
+      if (!view.hidden.has(n.id)) return n
+      let copy = hiddenCopies.current.get(n)
+      if (!copy) hiddenCopies.current.set(n, (copy = { ...n, hidden: true }))
+      return copy
+    })
     const byId = new Map(nodes.map((n) => [n.id, n]))
+    const cached = new Map<string, BundleEntry>()
     for (const b of view.bundles) {
       const first = byId.get(b.members[0])!
       const st = bundleState[b.id]
@@ -123,17 +147,25 @@ export function GraphCanvas(): React.JSX.Element {
         },
         { ...first.position }
       )
-      out.push({
-        id: b.id,
-        type: 'bundle',
-        position: st?.position ?? start,
-        data: { node: first.data.node, bundle: b },
-        selected: !!st?.selected,
-        deletable: false,
-        zIndex: 2,
-        ...(st?.measured ? { measured: st.measured } : {})
-      })
+      const position = st?.position ?? start
+      const prev = bundleNodes.current.get(b.id)
+      const same = prev && prev.bundle === b && prev.st === st && prev.node === first.data.node && prev.x === position.x && prev.y === position.y
+      const flow: FlowNode = same
+        ? prev.flow
+        : {
+            id: b.id,
+            type: 'bundle',
+            position,
+            data: { node: first.data.node, bundle: b },
+            selected: !!st?.selected,
+            deletable: false,
+            zIndex: 2,
+            ...(st?.measured ? { measured: st.measured } : {})
+          }
+      cached.set(b.id, { bundle: b, st, node: first.data.node, x: position.x, y: position.y, flow })
+      out.push(flow)
     }
+    bundleNodes.current = cached
     return out
   }, [nodes, view, bundleState])
   const displayEdges = useMemo(() => {
@@ -183,6 +215,14 @@ export function GraphCanvas(): React.JSX.Element {
     return m
   }, [edges])
 
+  // Valeurs lues nœud par nœud (voir store/canvas) : publiées avant l'affichage, et seulement
+  // quand elles changent (pas à chaque image d'un glisser).
+  const dense = nodes.length > DENSE_NODES
+  useLayoutEffect(() => {
+    useCanvas.setState({ outDegree, reviewCount, collapsedCount: view.collapsedCount, selected: selectedNodes, dense })
+  }, [outDegree, reviewCount, view.collapsedCount, selectedNodes, dense])
+  const capturing = useCanvas((s) => s.capturing)
+
   // Sauvegarde du point de vue (déplacement, zoom) avec un léger différé.
   const viewportTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onMoveEnd = useCallback(
@@ -192,6 +232,34 @@ export function GraphCanvas(): React.JSX.Element {
     },
     [updateInvestigation]
   )
+
+  // Gestionnaires stables : une fonction recréée à chaque rendu (chaque image d'un glisser)
+  // ferait re-rendre par React Flow l'enveloppe de tous les nœuds.
+  const onNodeContextMenu = useCallback((e: React.MouseEvent, node: FlowNode) => {
+    e.preventDefault()
+    if (node.data.bundle) {
+      setMenu({ kind: 'bundle', x: e.clientX, y: e.clientY, bundleId: node.id })
+      return
+    }
+    if (!node.selected) useGraph.getState().select([node.id])
+    setMenu({ kind: 'node', x: e.clientX, y: e.clientY, nodeId: node.id })
+  }, [])
+  const onPaneContextMenu = useCallback(
+    (e: React.MouseEvent | MouseEvent) => {
+      e.preventDefault()
+      setMenu({ kind: 'pane', x: e.clientX, y: e.clientY, flow: rf.screenToFlowPosition({ x: e.clientX, y: e.clientY }) })
+    },
+    [rf]
+  )
+  const onPaneClick = useCallback(() => {
+    setMenu(null)
+    setQuickAdd(null)
+  }, [])
+  const onNodeDoubleClick = useCallback((_: React.MouseEvent, node: FlowNode) => {
+    if (node.data.bundle) return void useView.getState().expandBundle(node.id)
+    const n = node.data.node
+    if (canEnrich(n)) void enrichNode(n.id)
+  }, [])
 
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -285,79 +353,55 @@ export function GraphCanvas(): React.JSX.Element {
 
   return (
     <div ref={wrapper} className="absolute inset-0" onDoubleClick={onPaneDoubleClick}>
-      <OutDegreeContext.Provider value={outDegree}>
-        <SelectedNodesContext.Provider value={selectedNodes}>
-          <ReviewCountContext.Provider value={reviewCount}>
-            <CollapsedCountContext.Provider value={view.collapsedCount}>
-              <ReactFlow<FlowNode, FlowEdge>
-                // `isolate` : les calques Leaflet des blocs Carte (z-index 400 à 1000) restent sous les barres et menus.
-                className="isolate"
-                nodes={displayNodes}
-                edges={displayEdges}
-                nodeTypes={nodeTypes}
-                edgeTypes={edgeTypes}
-                defaultEdgeOptions={defaultEdgeOptions}
-                onNodesChange={handleNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                onMoveEnd={onMoveEnd}
-                onDrop={onDrop}
-                onDragOver={onDragOver}
-                onNodeContextMenu={(e, node) => {
-                  e.preventDefault()
-                  if (node.data.bundle) {
-                    setMenu({ kind: 'bundle', x: e.clientX, y: e.clientY, bundleId: node.id })
-                    return
-                  }
-                  if (!node.selected) useGraph.getState().select([node.id])
-                  setMenu({ kind: 'node', x: e.clientX, y: e.clientY, nodeId: node.id })
-                }}
-                onPaneContextMenu={(e) => {
-                  e.preventDefault()
-                  setMenu({ kind: 'pane', x: e.clientX, y: e.clientY, flow: rf.screenToFlowPosition({ x: e.clientX, y: e.clientY }) })
-                }}
-                onPaneClick={() => {
-                  setMenu(null)
-                  setQuickAdd(null)
-                }}
-                onNodeDoubleClick={(_, node) => {
-                  if (node.data.bundle) return void useView.getState().expandBundle(node.id)
-                  const n = node.data.node
-                  if (canEnrich(n)) void enrichNode(n.id)
-                }}
-                defaultViewport={investigation?.viewport ?? { x: 0, y: 0, zoom: 1 }}
-                minZoom={0.05}
-                maxZoom={3}
-                connectionMode={ConnectionMode.Loose}
-                selectionMode={SelectionMode.Partial}
-                panOnDrag={tool === 'select'}
-                panOnScroll={false}
-                zoomOnDoubleClick={false}
-                deleteKeyCode={['Delete', 'Backspace']}
-                multiSelectionKeyCode={['Meta', 'Control']}
-                elementsSelectable={tool === 'select'}
-                nodesDraggable={tool === 'select'}
-                proOptions={{ hideAttribution: true }}
-                colorMode={settings?.theme === 'light' ? 'light' : 'dark'}
-              >
-                <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="var(--canvas-dot)" />
-                {settings?.showMinimap !== false && (
-                  <MiniMap
-                    position="bottom-left"
-                    pannable
-                    zoomable
-                    nodeColor={(n) => ((n as FlowNode).data.node.kind === 'entity' ? 'var(--accent)' : 'var(--faint)')}
-                    nodeStrokeWidth={0}
-                    nodeBorderRadius={2}
-                    style={{ width: 190, height: 130, marginLeft: 16, marginBottom: 16 }}
-                  />
-                )}
-                {tool === 'draw' && <DrawLayer />}
-              </ReactFlow>
-            </CollapsedCountContext.Provider>
-          </ReviewCountContext.Provider>
-        </SelectedNodesContext.Provider>
-      </OutDegreeContext.Provider>
+      <ReactFlow<FlowNode, FlowEdge>
+        // `isolate` : les calques Leaflet des blocs Carte (z-index 400 à 1000) restent sous les barres et menus.
+        className="isolate"
+        nodes={displayNodes}
+        edges={displayEdges}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        defaultEdgeOptions={defaultEdgeOptions}
+        onNodesChange={handleNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onMoveEnd={onMoveEnd}
+        onDrop={onDrop}
+        onDragOver={onDragOver}
+        onNodeContextMenu={onNodeContextMenu}
+        onPaneContextMenu={onPaneContextMenu}
+        onPaneClick={onPaneClick}
+        onNodeDoubleClick={onNodeDoubleClick}
+        defaultViewport={investigation?.viewport ?? { x: 0, y: 0, zoom: 1 }}
+        minZoom={0.05}
+        maxZoom={3}
+        connectionMode={ConnectionMode.Loose}
+        selectionMode={SelectionMode.Partial}
+        panOnDrag={tool === 'select'}
+        panOnScroll={false}
+        zoomOnDoubleClick={false}
+        deleteKeyCode={deleteKeys}
+        multiSelectionKeyCode={multiSelectionKeys}
+        elementsSelectable={tool === 'select'}
+        nodesDraggable={tool === 'select'}
+        proOptions={proOptions}
+        colorMode={settings?.theme === 'light' ? 'light' : 'dark'}
+        // Grand graphe : les éléments hors champ ne sont pas rendus (sauf pendant une capture).
+        onlyRenderVisibleElements={!capturing && nodes.length > VISIBLE_ONLY_MIN}
+      >
+        <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="var(--canvas-dot)" />
+        {settings?.showMinimap !== false && (
+          <MiniMap
+            position="bottom-left"
+            pannable
+            zoomable
+            nodeColor={minimapNodeColor}
+            nodeStrokeWidth={0}
+            nodeBorderRadius={2}
+            style={minimapStyle}
+          />
+        )}
+        {tool === 'draw' && <DrawLayer />}
+      </ReactFlow>
 
       {menu && <ContextMenu menu={menu} onClose={() => setMenu(null)} onQuickAdd={(p) => setQuickAdd(p)} wrapper={wrapper} />}
       {quickAdd && <QuickAdd at={quickAdd} onClose={() => setQuickAdd(null)} />}
@@ -555,12 +599,14 @@ function ContextMenu({
         item('Zap', t('enrich.selection', { count: selected.length }), () => {
           void enrichNodes(selected)
         })}
-      {url && item('ExternalLink', t('canvas.openLink'), () => openLink(url))}
+      {url && item('ExternalLink', t('canvas.openLink'), () => openLink(url, { investigationId: node.investigationId, nodeId: node.id }))}
       {!many &&
         node.platform &&
         getPlatform(node.platform)?.url &&
         typeof node.data.username === 'string' &&
-        item('ExternalLink', t('canvas.openProfile'), () => openLink(getPlatform(node.platform)!.url!.replace('{u}', String(node.data.username))))}
+        item('ExternalLink', t('canvas.openProfile'), () =>
+          openLink(getPlatform(node.platform)!.url!.replace('{u}', String(node.data.username)), { investigationId: node.investigationId, nodeId: node.id })
+        )}
       {!many && item('Copy', t('canvas.copyValue'), () => void navigator.clipboard.writeText(node.label))}
       {collapsible.length > 0 &&
         item('FoldVertical', t('collapse.collapse'), () => void setCollapsed(collapsible, true), {

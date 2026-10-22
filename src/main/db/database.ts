@@ -129,9 +129,64 @@ const MIGRATIONS: Migration[] = [
   `,
   // 3 : clés de dédoublonnage canoniques (numéros en E.164, plateforme ignorée pour les emails...).
   (db) => recomputeDedupKeys(db),
-  // 4 : provenance fine (observations par module, corroboration) et profondeur des nœuds.
+  // Preuves : captures de pages (image pleine page, archive MHTML, contexte JSON). Les trois
+  // fichiers sont des pièces jointes de l'enquête ; le manifeste scelle leurs empreintes.
+  `
+  CREATE TABLE IF NOT EXISTS captures (
+    id TEXT PRIMARY KEY,
+    investigation_id TEXT NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
+    node_id TEXT,
+    url TEXT NOT NULL,
+    final_url TEXT NOT NULL,
+    title TEXT NOT NULL DEFAULT '',
+    captured_at TEXT NOT NULL,
+    screenshot_attachment TEXT NOT NULL,
+    mhtml_attachment TEXT NOT NULL,
+    meta_attachment TEXT NOT NULL,
+    manifest_sha256 TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_captures_node ON captures(investigation_id, node_id);
+  `,
+  // Journal d'activité : ajout seul, chaque entrée scellée par l'empreinte de la précédente.
+  // Les déclencheurs refusent toute modification et toute suppression, sauf celle de l'enquête
+  // entière (cascade : l'enquête n'existe déjà plus quand ses entrées sont supprimées).
+  `
+  CREATE TABLE IF NOT EXISTS activity (
+    id TEXT PRIMARY KEY,
+    investigation_id TEXT NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
+    seq INTEGER NOT NULL,
+    at TEXT NOT NULL,
+    actor TEXT NOT NULL,
+    action TEXT NOT NULL,
+    target TEXT NOT NULL DEFAULT '{}',
+    prev_hash TEXT NOT NULL,
+    hash TEXT NOT NULL
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_activity_seq ON activity(investigation_id, seq);
+  CREATE TRIGGER IF NOT EXISTS activity_no_update BEFORE UPDATE ON activity
+  BEGIN
+    SELECT RAISE(ABORT, 'journal d''activité en ajout seul');
+  END;
+  CREATE TRIGGER IF NOT EXISTS activity_no_delete BEFORE DELETE ON activity
+  WHEN EXISTS (SELECT 1 FROM investigations WHERE id = OLD.investigation_id)
+  BEGIN
+    SELECT RAISE(ABORT, 'journal d''activité en ajout seul');
+  END;
+  `,
+  // Dernier résultat de la recherche assistée de chaque recherche manuelle (JSON).
+  (db) => addColumn(db, 'suggestions', 'assist_result', 'TEXT'),
+  // Provenance fine (observations par module, corroboration) et profondeur des nœuds.
   (db) => addObservations(db)
 ]
+
+/**
+ * Ajoute une colonne si elle manque : une migration rejouée (base remise à une version
+ * antérieure, migrations réordonnées) ne doit pas échouer.
+ */
+function addColumn(db: DB, table: string, column: string, type: string): void {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>
+  if (!columns.some((c) => c.name === column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`)
+}
 
 export function openDatabase(file: string): DB {
   const db = new Database(file)
@@ -266,8 +321,8 @@ function migrate(db: DB): void {
 }
 
 /**
- * Migration 4 : table `observations` (quel module a vu quel nœud, lien ou propriété, lors de
- * quelle exécution) et colonne `hop` des nœuds (profondeur depuis une saisie).
+ * Migration de la provenance : table `observations` (quel module a vu quel nœud, lien ou
+ * propriété, lors de quelle exécution) et colonne `hop` des nœuds (profondeur depuis une saisie).
  *
  * Reprise de l'existant, sans exécution connue (`run_id` vide) : un nœud créé par un module
  * est observé par ce module (`source`), un lien posé par un module l'est par le sien
@@ -277,10 +332,8 @@ export function addObservations(db: DB): void {
   // Rejouable : une base déjà migrée (version remise en arrière) n'est pas modifiée deux fois.
   const columns = db.prepare('PRAGMA table_info(nodes)').all() as Array<{ name: string }>
   if (!columns.some((c) => c.name === 'hop')) {
-    db.exec(`
-      ALTER TABLE nodes ADD COLUMN hop INTEGER NOT NULL DEFAULT 0;
-      UPDATE nodes SET hop = 1 WHERE kind = 'entity' AND source != 'manual';
-    `)
+    addColumn(db, 'nodes', 'hop', 'INTEGER NOT NULL DEFAULT 0')
+    db.exec("UPDATE nodes SET hop = 1 WHERE kind = 'entity' AND source != 'manual'")
   }
   const existed = !!db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'observations'").get()
   db.exec(`

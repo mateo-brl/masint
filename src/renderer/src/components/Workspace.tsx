@@ -12,6 +12,7 @@ import { BottomBar } from './toolbar/BottomBar'
 import { TopBar } from './toolbar/TopBar'
 import { MapView } from './views/MapView'
 import { ModulesView } from './views/ModulesView'
+import { JournalView } from './views/JournalView'
 import { NotesView } from './views/NotesView'
 import { TimelineView } from './views/TimelineView'
 
@@ -41,6 +42,7 @@ export function Workspace(): React.JSX.Element {
         {view === 'timeline' && <TimelineView />}
         {view === 'modules' && <ModulesView />}
         {view === 'notes' && <NotesView />}
+        {view === 'journal' && <JournalView />}
         {(view === 'graph' || view === 'map' || view === 'timeline') && <PropertiesPanel />}
         <ReportDialog />
         <ImportDialog />
