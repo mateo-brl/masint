@@ -8,6 +8,7 @@ import { useGraph } from '../../store/graph'
 import { attachmentDataUrl } from './collect'
 import { exportStrings } from './format'
 import { currentLang } from '../../lib/i18n'
+import { displayedNodes } from '../../store/view'
 
 const PADDING = 48
 // PNG transparent de 1 pixel.
@@ -101,8 +102,7 @@ async function withGraphView<T>(fn: () => Promise<T>): Promise<T> {
   // React Flow doit monter puis mesurer les nœuds.
   while (performance.now() - t0 < 4000) {
     await sleep(60)
-    const nodes = useGraph.getState().nodes
-    if (viewportElement() && nodes.every((n) => n.hidden || n.measured?.width)) break
+    if (viewportElement() && displayedNodes().every((n) => n.measured?.width)) break
   }
   await nextFrame()
   try {
@@ -137,8 +137,7 @@ async function applyTheme(theme: 'light' | 'dark' | undefined): Promise<() => vo
 
 async function capture(kind: 'png' | 'svg', opts: CaptureOptions = {}): Promise<string> {
   const s = exportStrings(currentLang()).exportx
-  const all = useGraph.getState().nodes.filter((n) => !n.hidden)
-  if (!all.length) throw new Error(s.emptyGraph)
+  if (!displayedNodes().length) throw new Error(s.emptyGraph)
   return withGraphView(async () => {
     const el = viewportElement()
     if (!el) throw new Error(s.canvasHidden)
@@ -155,8 +154,8 @@ async function capture(kind: 'png' | 'svg', opts: CaptureOptions = {}): Promise<
     const restore = await inlineAttachments(el)
     const restoreTheme = await applyTheme(opts.theme)
     try {
-      const nodes = useGraph.getState().nodes.filter((n) => !n.hidden)
-      const bounds = getNodesBounds(nodes)
+      // Ce qui est affiché : nœuds repliés ou regroupés exclus, groupes inclus.
+      const bounds = getNodesBounds(displayedNodes())
       const ratio = kind === 'png' ? (opts.pixelRatio ?? 2) : 1
       const natW = bounds.width + PADDING * 2
       const natH = bounds.height + PADDING * 2

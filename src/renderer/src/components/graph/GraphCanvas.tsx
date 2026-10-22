@@ -10,6 +10,7 @@ import {
   useNodesInitialized,
   useReactFlow,
   type EdgeTypes,
+  type NodeChange,
   type NodeTypes,
   type Viewport
 } from '@xyflow/react'
@@ -18,7 +19,7 @@ import { detectEntity } from '@shared/detect'
 import { getEntityType } from '@shared/entityTypes'
 import { getPlatform } from '@shared/platforms'
 import type { GraphNode } from '@shared/types'
-import { addEntityAt, addFromLines, addFromText, addImageFiles, canEnrich, enrichNode, modulesForNode, useApplicable } from '../../lib/actions'
+import { addEntityAt, addFromLines, addFromText, addImageFiles, canEnrich, enrichNode, modulesForNode, pasteImages, useApplicable } from '../../lib/actions'
 import { api, openExternal } from '../../lib/api'
 import { DRAG_MIME } from '../../lib/catalog'
 import { fitGraph, visibleCenter } from '../../lib/viewport'
@@ -26,16 +27,19 @@ import { useLang } from '../../lib/i18n'
 import { EntityBadge, Icon } from '../../lib/icons'
 import { useApp } from '../../store/app'
 import { useGraph, type FlowEdge, type FlowNode } from '../../store/graph'
+import { currentView, useView } from '../../store/view'
+import { bundleId, computeView } from '../../lib/collapse'
 import { confirmDialog } from '../ui'
 import { DrawLayer } from './DrawLayer'
 import { MasintEdge } from './edges/MasintEdge'
 import { DrawingNode } from './nodes/DrawingNode'
-import { EntityNode, OutDegreeContext, ReviewCountContext, SelectedNodesContext } from './nodes/EntityNode'
+import { CollapsedCountContext, EntityNode, OutDegreeContext, ReviewCountContext, SelectedNodesContext } from './nodes/EntityNode'
 import { ImageNode } from './nodes/ImageNode'
 import { MapNode } from './nodes/MapNode'
 import { TextNode } from './nodes/TextNode'
+import { BundleNode } from './nodes/BundleNode'
 
-const nodeTypes: NodeTypes = { entity: EntityNode, text: TextNode, image: ImageNode, drawing: DrawingNode, map: MapNode }
+const nodeTypes: NodeTypes = { entity: EntityNode, text: TextNode, image: ImageNode, drawing: DrawingNode, map: MapNode, bundle: BundleNode }
 const edgeTypes: EdgeTypes = { masint: MasintEdge }
 const defaultEdgeOptions = { type: 'masint', markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14, color: 'var(--edge)' } }
 
@@ -44,6 +48,7 @@ let fittedInvestigation: string | null = null
 
 type Menu =
   | { kind: 'node'; x: number; y: number; nodeId: string }
+  | { kind: 'bundle'; x: number; y: number; bundleId: string }
   | { kind: 'pane'; x: number; y: number; flow: { x: number; y: number } }
   | null
 
@@ -58,6 +63,8 @@ export function GraphCanvas(): React.JSX.Element {
   const investigation = useGraph((s) => s.investigation)
   const updateInvestigation = useGraph((s) => s.updateInvestigation)
   const settings = useApp((s) => s.settings)
+  const expanded = useView((s) => s.expanded)
+  const bundleState = useView((s) => s.bundles)
   const [menu, setMenu] = useState<Menu>(null)
   const [quickAdd, setQuickAdd] = useState<{ x: number; y: number; flow: { x: number; y: number } } | null>(null)
   const wrapper = useRef<HTMLDivElement>(null)
@@ -88,6 +95,80 @@ export function GraphCanvas(): React.JSX.Element {
     .map((n) => n.id)
     .join('|')
   const selectedNodes = useMemo(() => new Set(selectedKey ? selectedKey.split('|') : []), [selectedKey])
+
+  useEffect(() => {
+    if (investigation) useView.getState().load(investigation.id)
+  }, [investigation])
+
+  // Affichage : descendance des nœuds repliés masquée, feuilles semblables regroupées.
+  const view = useMemo(
+    () =>
+      computeView(
+        nodes.map((n) => n.data.node),
+        edges.map((e) => e.data!.edge),
+        expanded
+      ),
+    [nodes, edges, expanded]
+  )
+  const displayNodes = useMemo(() => {
+    const out: FlowNode[] = nodes.map((n) => (view.hidden.has(n.id) ? { ...n, hidden: true } : n))
+    const byId = new Map(nodes.map((n) => [n.id, n]))
+    for (const b of view.bundles) {
+      const first = byId.get(b.members[0])!
+      const st = bundleState[b.id]
+      const start = b.members.reduce(
+        (p, id) => {
+          const m = byId.get(id)!.position
+          return { x: Math.min(p.x, m.x), y: Math.min(p.y, m.y) }
+        },
+        { ...first.position }
+      )
+      out.push({
+        id: b.id,
+        type: 'bundle',
+        position: st?.position ?? start,
+        data: { node: first.data.node, bundle: b },
+        selected: !!st?.selected,
+        deletable: false,
+        zIndex: 2,
+        ...(st?.measured ? { measured: st.measured } : {})
+      })
+    }
+    return out
+  }, [nodes, view, bundleState])
+  const displayEdges = useMemo(() => {
+    const out: FlowEdge[] = edges.filter((e) => !view.hidden.has(e.source) && !view.hidden.has(e.target))
+    for (const b of view.bundles) {
+      const model = edges.find((e) => e.source === b.parentId && e.target === b.members[0])
+      if (!model) continue
+      out.push({ ...model, id: `${b.id}:edge`, target: b.id, selected: false, selectable: false, deletable: false })
+    }
+    return out
+  }, [edges, view])
+
+  // Les changements des nœuds de regroupement restent dans l'état d'affichage.
+  const handleNodesChange = useCallback(
+    (changes: NodeChange<FlowNode>[]) => {
+      const real: NodeChange<FlowNode>[] = []
+      const v = useView.getState()
+      for (const c of changes) {
+        const id = 'id' in c ? c.id : ''
+        if (!id.startsWith('bundle:')) {
+          real.push(c)
+          if (c.type === 'select' && c.selected) v.selectBundle(null)
+          continue
+        }
+        if (c.type === 'dimensions' && c.dimensions) v.patchBundle(id, { measured: c.dimensions })
+        else if (c.type === 'position' && c.position) v.patchBundle(id, { position: c.position }, c.dragging === false)
+        else if (c.type === 'select') {
+          if (c.selected) v.selectBundle(id)
+          else if (v.bundles[id]?.selected) v.patchBundle(id, { selected: false })
+        }
+      }
+      if (real.length) onNodesChange(real)
+    },
+    [onNodesChange]
+  )
 
   const suggestions = useGraph((s) => s.suggestions)
   const reviewCount = useMemo(() => {
@@ -144,19 +225,20 @@ export function GraphCanvas(): React.JSX.Element {
       const target = e.target as HTMLElement
       if (target.closest('input, textarea, [contenteditable="true"]')) return
       if (!wrapper.current) return
+      e.preventDefault()
       const pos = visibleCenter(rf)
-      const files = Array.from(e.clipboardData?.files ?? [])
-      if (files.length) {
-        e.preventDefault()
-        void addImageFiles(files, pos)
-        return
-      }
-      const text = e.clipboardData?.getData('text/plain')?.trim()
-      if (text) {
-        e.preventDefault()
-        const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).slice(0, 50)
-        void addFromLines(lines, pos)
-      }
+      // Lu tout de suite : le contenu de l'événement n'est plus accessible après coup.
+      const files = Array.from(e.clipboardData?.files ?? []).filter((f) => f.type.startsWith('image/'))
+      const text = e.clipboardData?.getData('text/plain')?.trim() ?? ''
+      void (async () => {
+        // Images d'abord, y compris les fichiers copiés dans l'explorateur, invisibles pour la page.
+        if (await pasteImages(pos).catch(() => false)) return
+        if (files.length) return void addImageFiles(files, pos)
+        if (text) {
+          const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).slice(0, 50)
+          void addFromLines(lines, pos)
+        }
+      })()
     }
     window.addEventListener('paste', onPaste)
     return () => window.removeEventListener('paste', onPaste)
@@ -205,66 +287,73 @@ export function GraphCanvas(): React.JSX.Element {
       <OutDegreeContext.Provider value={outDegree}>
         <SelectedNodesContext.Provider value={selectedNodes}>
           <ReviewCountContext.Provider value={reviewCount}>
-            <ReactFlow<FlowNode, FlowEdge>
-              // `isolate` : les calques Leaflet des blocs Carte (z-index 400 à 1000) restent sous les barres et menus.
-              className="isolate"
-              nodes={nodes}
-              edges={edges}
-              nodeTypes={nodeTypes}
-              edgeTypes={edgeTypes}
-              defaultEdgeOptions={defaultEdgeOptions}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              onMoveEnd={onMoveEnd}
-              onDrop={onDrop}
-              onDragOver={onDragOver}
-              onNodeContextMenu={(e, node) => {
-                e.preventDefault()
-                if (!node.selected) useGraph.getState().select([node.id])
-                setMenu({ kind: 'node', x: e.clientX, y: e.clientY, nodeId: node.id })
-              }}
-              onPaneContextMenu={(e) => {
-                e.preventDefault()
-                setMenu({ kind: 'pane', x: e.clientX, y: e.clientY, flow: rf.screenToFlowPosition({ x: e.clientX, y: e.clientY }) })
-              }}
-              onPaneClick={() => {
-                setMenu(null)
-                setQuickAdd(null)
-              }}
-              onNodeDoubleClick={(_, node) => {
-                const n = node.data.node
-                if (canEnrich(n)) void enrichNode(n.id)
-              }}
-              defaultViewport={investigation?.viewport ?? { x: 0, y: 0, zoom: 1 }}
-              minZoom={0.05}
-              maxZoom={3}
-              connectionMode={ConnectionMode.Loose}
-              selectionMode={SelectionMode.Partial}
-              panOnDrag={tool === 'select'}
-              panOnScroll={false}
-              zoomOnDoubleClick={false}
-              deleteKeyCode={['Delete', 'Backspace']}
-              multiSelectionKeyCode={['Meta', 'Control']}
-              elementsSelectable={tool === 'select'}
-              nodesDraggable={tool === 'select'}
-              proOptions={{ hideAttribution: true }}
-              colorMode={settings?.theme === 'light' ? 'light' : 'dark'}
-            >
-              <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="var(--canvas-dot)" />
-              {settings?.showMinimap !== false && (
-                <MiniMap
-                  position="bottom-left"
-                  pannable
-                  zoomable
-                  nodeColor={(n) => ((n as FlowNode).data.node.kind === 'entity' ? 'var(--accent)' : 'var(--faint)')}
-                  nodeStrokeWidth={0}
-                  nodeBorderRadius={2}
-                  style={{ width: 190, height: 130, marginLeft: 16, marginBottom: 16 }}
-                />
-              )}
-              {tool === 'draw' && <DrawLayer />}
-            </ReactFlow>
+            <CollapsedCountContext.Provider value={view.collapsedCount}>
+              <ReactFlow<FlowNode, FlowEdge>
+                // `isolate` : les calques Leaflet des blocs Carte (z-index 400 à 1000) restent sous les barres et menus.
+                className="isolate"
+                nodes={displayNodes}
+                edges={displayEdges}
+                nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
+                defaultEdgeOptions={defaultEdgeOptions}
+                onNodesChange={handleNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onMoveEnd={onMoveEnd}
+                onDrop={onDrop}
+                onDragOver={onDragOver}
+                onNodeContextMenu={(e, node) => {
+                  e.preventDefault()
+                  if (node.data.bundle) {
+                    setMenu({ kind: 'bundle', x: e.clientX, y: e.clientY, bundleId: node.id })
+                    return
+                  }
+                  if (!node.selected) useGraph.getState().select([node.id])
+                  setMenu({ kind: 'node', x: e.clientX, y: e.clientY, nodeId: node.id })
+                }}
+                onPaneContextMenu={(e) => {
+                  e.preventDefault()
+                  setMenu({ kind: 'pane', x: e.clientX, y: e.clientY, flow: rf.screenToFlowPosition({ x: e.clientX, y: e.clientY }) })
+                }}
+                onPaneClick={() => {
+                  setMenu(null)
+                  setQuickAdd(null)
+                }}
+                onNodeDoubleClick={(_, node) => {
+                  if (node.data.bundle) return void useView.getState().expandBundle(node.id)
+                  const n = node.data.node
+                  if (canEnrich(n)) void enrichNode(n.id)
+                }}
+                defaultViewport={investigation?.viewport ?? { x: 0, y: 0, zoom: 1 }}
+                minZoom={0.05}
+                maxZoom={3}
+                connectionMode={ConnectionMode.Loose}
+                selectionMode={SelectionMode.Partial}
+                panOnDrag={tool === 'select'}
+                panOnScroll={false}
+                zoomOnDoubleClick={false}
+                deleteKeyCode={['Delete', 'Backspace']}
+                multiSelectionKeyCode={['Meta', 'Control']}
+                elementsSelectable={tool === 'select'}
+                nodesDraggable={tool === 'select'}
+                proOptions={{ hideAttribution: true }}
+                colorMode={settings?.theme === 'light' ? 'light' : 'dark'}
+              >
+                <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="var(--canvas-dot)" />
+                {settings?.showMinimap !== false && (
+                  <MiniMap
+                    position="bottom-left"
+                    pannable
+                    zoomable
+                    nodeColor={(n) => ((n as FlowNode).data.node.kind === 'entity' ? 'var(--accent)' : 'var(--faint)')}
+                    nodeStrokeWidth={0}
+                    nodeBorderRadius={2}
+                    style={{ width: 190, height: 130, marginLeft: 16, marginBottom: 16 }}
+                  />
+                )}
+                {tool === 'draw' && <DrawLayer />}
+              </ReactFlow>
+            </CollapsedCountContext.Provider>
           </ReviewCountContext.Provider>
         </SelectedNodesContext.Provider>
       </OutDegreeContext.Provider>
@@ -383,11 +472,35 @@ function ContextMenu({
         })}
         <div className="my-1 border-t border-line" />
         {item('ScanSearch', t('canvas.fitView'), () => fitGraph(rf), { hint: 'F' })}
+        {item('ChevronsUpDown', t('collapse.expandAll'), () => void expandAll())}
+        {item('Group', t('collapse.regroupAll'), () => useView.getState().regroupAll())}
+      </div>
+    )
+  }
+
+  if (menu.kind === 'bundle') {
+    return (
+      <div data-context-menu className="glass absolute z-40 w-56 rounded-xl p-1" style={{ left, top }}>
+        {item('UnfoldVertical', t('bundle.expand'), () => void useView.getState().expandBundle(menu.bundleId))}
       </div>
     )
   }
 
   if (!node) return <div />
+  // Réduire : les nœuds sélectionnés qui ont des enfants ; Déplier : ceux qui sont repliés.
+  const allEdges = useGraph.getState().edges
+  const withChildren = selected.filter((s) => allEdges.some((e) => e.source === s.id))
+  const collapsible = withChildren.filter((s) => !s.style.collapsed)
+  const folded = selected.filter((s) => s.style.collapsed)
+  const memberOf = (id: string): string | undefined => {
+    const e = allEdges.find((x) => x.target === id)
+    if (!e) return undefined
+    const parent = useGraph.getState().nodes.find((n) => n.id === e.source)?.data.node
+    const n = useGraph.getState().nodes.find((x) => x.id === id)?.data.node
+    const bid = parent && n ? bundleId(parent.id, n.type, e.data!.edge.label) : undefined
+    return bid && useView.getState().expanded.has(bid) ? bid : undefined
+  }
+  const regroupable = selected.length <= 1 ? memberOf(node.id) : undefined
   const applicable = modulesForNode(node, modules)
   const url = typeof node.data.url === 'string' ? node.data.url : node.type === 'url' || node.type === 'website' ? node.label : undefined
   const many = selected.length > 1
@@ -441,6 +554,12 @@ function ContextMenu({
         typeof node.data.username === 'string' &&
         item('ExternalLink', t('canvas.openProfile'), () => openExternal(getPlatform(node.platform)!.url!.replace('{u}', String(node.data.username))))}
       {!many && item('Copy', t('canvas.copyValue'), () => void navigator.clipboard.writeText(node.label))}
+      {collapsible.length > 0 &&
+        item('FoldVertical', t('collapse.collapse'), () => void setCollapsed(collapsible, true), {
+          hint: t('collapse.hidden', { count: countDescendants(collapsible.map((s) => s.id)) })
+        })}
+      {folded.length > 0 && item('UnfoldVertical', t('collapse.expand'), () => void setCollapsed(folded, false))}
+      {regroupable && item('Group', t('collapse.regroup'), () => useView.getState().regroup(regroupable))}
       {item('GitFork', t('canvas.selectChildren'), () => {
         const { edges, select } = useGraph.getState()
         const ids = new Set(selected.map((s) => s.id))
@@ -462,4 +581,37 @@ function ContextMenu({
       }, { danger: true, hint: 'Suppr' })}
     </div>
   )
+}
+
+/** Replie ou déplie des nœuds (style `collapsed`, enregistré et annulable). */
+async function setCollapsed(nodes: GraphNode[], collapsed: boolean): Promise<void> {
+  await useGraph.getState().updateNodes(nodes.map((n) => ({ id: n.id, style: { ...n.style, collapsed } })))
+}
+
+/** Déplie tout : nœuds repliés et groupes automatiques. */
+async function expandAll(): Promise<void> {
+  const folded = useGraph
+    .getState()
+    .nodes.map((n) => n.data.node)
+    .filter((n) => n.style.collapsed)
+  if (folded.length) await setCollapsed(folded, false)
+  for (const b of currentView().bundles) await useView.getState().expandBundle(b.id)
+}
+
+/** Nombre de descendants distincts des nœuds donnés. */
+function countDescendants(ids: string[]): number {
+  const edges = useGraph.getState().edges
+  const seen = new Set(ids)
+  const queue = [...ids]
+  let count = 0
+  while (queue.length) {
+    const id = queue.shift()!
+    for (const e of edges)
+      if (e.source === id && !seen.has(e.target)) {
+        seen.add(e.target)
+        count++
+        queue.push(e.target)
+      }
+  }
+  return count
 }

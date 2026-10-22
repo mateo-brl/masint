@@ -8,12 +8,15 @@ import { nodeSubtitle } from '@shared/subtitle'
 import { useLang } from '../../../lib/i18n'
 import { EntityBadge } from '../../../lib/icons'
 import { useApp } from '../../../store/app'
-import type { FlowNode } from '../../../store/graph'
+import { useGraph, type FlowNode } from '../../../store/graph'
 
 const SIZES = { sm: 168, md: 196, lg: 240 }
 
 /** Nombre de liens sortants par nœud, fourni par le canevas (pastille rouge). */
 export const OutDegreeContext = createContext<Map<string, number>>(new Map())
+
+/** Nombre de nœuds masqués sous chaque nœud replié (« Réduire »). */
+export const CollapsedCountContext = createContext<Map<string, number>>(new Map())
 
 /** Nombre de résultats à vérifier par nœud d'origine (pastille orange). */
 export const ReviewCountContext = createContext<Map<string, number>>(new Map())
@@ -35,6 +38,7 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
   const subtitle = n.style.hideSubtitle ? '' : nodeSubtitle(n)
   const childCount = useContext(OutDegreeContext).get(n.id) ?? 0
   const reviewCount = useContext(ReviewCountContext).get(n.id) ?? 0
+  const hiddenCount = useContext(CollapsedCountContext).get(n.id) ?? 0
 
   return (
     <div
@@ -71,6 +75,19 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
         >
           {childCount}
         </span>
+      )}
+      {hiddenCount > 0 && (
+        <button
+          className="nodrag absolute -bottom-2.5 left-3 z-10 flex h-[17px] items-center gap-0.5 rounded-full border px-1.5 text-[9px] font-semibold text-fg hover:border-accent hover:text-accent"
+          style={{ background: 'var(--panel)', borderColor: 'var(--node-border)' }}
+          title={t('collapse.expand')}
+          onClick={(e) => {
+            e.stopPropagation()
+            void useGraph.getState().updateNode(n.id, { style: { ...n.style, collapsed: false } })
+          }}
+        >
+          +{hiddenCount}
+        </button>
       )}
       {reviewCount > 0 && (
         <span

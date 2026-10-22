@@ -128,3 +128,25 @@ export async function addImageFiles(files: File[], at: { x: number; y: number })
   }
   if (inputs.length) await addNodes(inputs)
 }
+
+/**
+ * Colle les images du presse-papiers (image copiée ou fichiers image copiés dans l'explorateur).
+ * La première va sur la photo sélectionnée si elle n'a pas encore d'image ; les autres deviennent
+ * des entités Photo près de `at`. Renvoie `false` si le presse-papiers ne contient pas d'image.
+ */
+export async function pasteImages(at: { x: number; y: number }): Promise<boolean> {
+  const { investigation, addNodes, updateNode, selectedNodes } = useGraph.getState()
+  if (!investigation) return false
+  const atts = await api('attachments:paste', investigation.id)
+  if (!atts.length) return false
+  const sel = selectedNodes()
+  const target =
+    sel.length === 1 && !sel[0].imageId && (sel[0].kind === 'image' || (sel[0].kind === 'entity' && sel[0].type === 'photo')) ? sel[0] : null
+  const rest = target ? atts.slice(1) : atts
+  if (target) await updateNode(target.id, { imageId: atts[0].id, label: target.label || (target.kind === 'entity' ? atts[0].name : target.label) })
+  if (rest.length) {
+    const spots = placeAround(at, rest.map(() => ENTITY_SIZE))
+    await addNodes(rest.map((a, i) => ({ kind: 'entity' as const, type: 'photo', label: a.name, imageId: a.id, x: spots[i].x, y: spots[i].y })))
+  }
+  return true
+}

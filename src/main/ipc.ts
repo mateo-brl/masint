@@ -2,7 +2,8 @@ import { existsSync } from 'node:fs'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, dirname, extname, join } from 'node:path'
-import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
+import { fileURLToPath } from 'node:url'
+import { app, BrowserWindow, clipboard, dialog, ipcMain, shell } from 'electron'
 import exifr from 'exifr'
 import type { ApiChannel, ApiMap } from '@shared/api'
 import type { GraphEdge, GraphNode, Settings } from '@shared/types'
@@ -151,6 +152,28 @@ export function registerIpc(deps: IpcDeps): void {
       const mime = MIME_BY_EXT[extname(p).toLowerCase()] ?? 'application/octet-stream'
       out.push(repo.addAttachment(invId, { name: basename(p), mime, data: await readFile(p) }))
     }
+    return out
+  })
+  handle('attachments:paste', async (invId) => {
+    const { images, paths } = await readClipboard()
+    const out = []
+    // Fichiers image copiés dans l'explorateur : on lit les fichiers eux-mêmes.
+    for (const p of paths) {
+      const mime = MIME_BY_EXT[extname(p).toLowerCase()]
+      if (!mime) continue
+      try {
+        const data = await readFile(p)
+        if (data.length <= 50 * 1024 * 1024) out.push(repo.addAttachment(invId, { name: basename(p), mime, data }))
+      } catch {
+        /* fichier déplacé ou illisible : ignoré */
+      }
+    }
+    if (out.length) return out
+    // Image copiée depuis un navigateur ou une capture d'écran.
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')
+    images.forEach((img, i) =>
+      out.push(repo.addAttachment(invId, { name: `image-collee-${stamp}${i ? `-${i + 1}` : ''}.${img.mime.split('/')[1] ?? 'png'}`, mime: img.mime, data: img.data }))
+    )
     return out
   })
   handle('attachments:get', (id) => repo.getAttachment(id))
@@ -321,6 +344,51 @@ function proxyErrorMessage(e: unknown, s: Settings): string {
     return fr ? `Le proxy ${p.url || '(adresse vide)'} ne répond pas (${code || detail}).` : `The proxy ${p.url || '(empty address)'} is not answering (${code || detail}).`
   if (/timeout|aborted/i.test(`${detail}`)) return fr ? 'Délai dépassé : le réseau ne répond pas.' : 'Timed out: the network is not answering.'
   return fr ? `Connexion impossible : ${code ? `${code}, ` : ''}${detail}` : `Connection failed: ${code ? `${code}, ` : ''}${detail}`
+}
+
+/**
+ * Contenu image du presse-papiers : données d'image (navigateur, capture d'écran) et chemins de
+ * fichiers copiés dans l'explorateur. Les formats varient selon le système (`text/uri-list`,
+ * `x-special/gnome-copied-files` sous Linux, liste de fichiers sous Windows, `public.file-url`
+ * sous macOS) : on lit tous les types proposés et on garde ce qui ressemble à un fichier.
+ */
+async function readClipboard(): Promise<{ images: Array<{ mime: string; data: Buffer }>; paths: string[] }> {
+  const images: Array<{ mime: string; data: Buffer }> = []
+  const paths = new Set<string>()
+  const addPath = (raw: string): void => {
+    const l = raw.trim().replace(/^"|"$/g, '')
+    if (!l) return
+    try {
+      if (l.startsWith('file://')) paths.add(fileURLToPath(l))
+      else if ((/^[a-zA-Z]:\\/.test(l) || l.startsWith('/')) && MIME_BY_EXT[extname(l).toLowerCase()] && existsSync(l)) paths.add(l)
+    } catch {
+      /* chemin invalide */
+    }
+  }
+  let items: Electron.ClipboardItem[] = []
+  try {
+    items = await clipboard.read()
+  } catch {
+    return { images, paths: [] }
+  }
+  for (const item of items)
+    for (const type of item.types) {
+      try {
+        const value = await item.getType(type)
+        if (!(value instanceof Blob)) continue
+        const data = Buffer.from(await value.arrayBuffer())
+        if (type.startsWith('image/')) {
+          images.push({ mime: type, data })
+          continue
+        }
+        // Liste de fichiers : UTF-16 sous Windows, texte ailleurs.
+        const text = data.includes(0) && data.length % 2 === 0 ? data.toString('utf16le') : data.toString('utf8')
+        for (const part of text.split(/[\r\n\0]+/)) addPath(part)
+      } catch {
+        /* type illisible : ignoré */
+      }
+    }
+  return { images, paths: Array.from(paths) }
 }
 
 function safeName(name: string): string {
