@@ -90,9 +90,10 @@ export function parseShodanHost(h: ShodanHost | null, lang: 'fr' | 'en'): Module
       linkLabel: fr ? 'vulnérable à' : 'vulnerable to'
     })
   const hostnames = uniq([...(h.hostnames ?? []), ...(h.domains ?? [])])
-  // IP de CDN : les noms vus dessus (certificats, SNI) sont ceux d'autres clients, sans lien avec la cible.
+  // IP de CDN ou de DNS public : les noms vus dessus (certificats, SNI) sont ceux d'autres clients,
+  // sans lien avec la cible.
   const shared = h.ip_str ? sharedInfrastructure(h.ip_str, { asn: h.asn, org: h.org }) : null
-  if (shared?.kind !== 'cdn')
+  if (!shared)
     for (const d of hostnames.slice(0, MAX_LIST_ENTITIES)) entities.push({ type: 'domain', label: d, linkLabel: 'hostname' })
 
   return {
@@ -108,7 +109,7 @@ export function parseShodanHost(h: ShodanHost | null, lang: 'fr' | 'en'): Module
       lon: h.longitude ?? null,
       shodan_tags: h.tags ?? [],
       ...cappedList('vulns', vulns),
-      ...(hostnames.length > MAX_LIST_ENTITIES || shared?.kind === 'cdn' ? cappedList('hostnames', hostnames) : {}),
+      ...(hostnames.length > MAX_LIST_ENTITIES || shared ? cappedList('hostnames', hostnames) : {}),
       shared_infrastructure: shared ? sharedLabel(shared, lang) : null,
       shodan_last_update: isoDate(h.last_update),
       shodan_link: h.ip_str ? `https://www.shodan.io/host/${h.ip_str}` : null

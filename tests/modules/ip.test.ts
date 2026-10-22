@@ -84,6 +84,12 @@ describe('ip.internetdb', () => {
     expect(out.properties?.hostnames).toHaveLength(3)
   })
 
+  it('ne relie pas les clients d’un DNS public', () => {
+    const out = parseInternetDb({ ip: '1.1.1.1', hostnames: ['one.one.one.one', 'client-sans-lien.example'] }, 'fr')
+    expect(types(out, 'domain')).toEqual([])
+    expect(out.properties?.hostnames).toHaveLength(2)
+  })
+
   it('renvoie un résultat vide pour une IP inconnue (404)', async () => {
     const ctx = fakeContext({ routes: { 'https://internetdb.shodan.io/': { status: 404, body: { detail: 'No information available' } } } })
     expect(await internetdb.run(entity('ip', '192.0.2.55'), ctx)).toEqual({})

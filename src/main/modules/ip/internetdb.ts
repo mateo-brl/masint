@@ -64,11 +64,12 @@ export function parseInternetDb(d: InternetDb | null, lang: 'fr' | 'en'): Module
   if (!d || !d.ip) return {}
   const fr = lang === 'fr'
   const entities: OutEntity[] = []
-  // IP de CDN : noms d'autres clients du CDN, gardés en propriété seulement. Même chose pour les
-  // noms des machines d'un hébergeur connu (`reverse-proxy-ip-1.infomaniak.ch`, `ec2-...amazonaws.com`).
+  // IP de CDN ou de DNS public (1.1.1.1) : noms d'autres clients, gardés en propriété seulement.
+  // Même chose pour les noms des machines d'un hébergeur connu (`reverse-proxy-ip-1.infomaniak.ch`,
+  // `ec2-...amazonaws.com`).
   const shared = sharedInfrastructure(d.ip)
   const hostnames = d.hostnames ?? []
-  const linked = shared?.kind === 'cdn' ? [] : hostnames.filter((h) => !isProviderHost(h)).slice(0, MAX_LIST_ENTITIES)
+  const linked = shared ? [] : hostnames.filter((h) => !isProviderHost(h)).slice(0, MAX_LIST_ENTITIES)
   for (const host of linked) entities.push({ type: 'domain', label: host, linkLabel: 'hostname' })
   for (const cpe of d.cpes ?? []) {
     const t = cpeToTechnology(cpe)
