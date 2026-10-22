@@ -5,6 +5,7 @@ import { create } from 'zustand'
 import { freeSpot, type Point } from '@shared/placement'
 import { collapsedAncestors, computeView, type GraphView } from '../lib/collapse'
 import { loadPref, savePref } from '../lib/prefs'
+import { activeViewFilter, useFilters, useViewFilter } from './filters'
 import { useGraph } from './graph'
 
 interface BundleState {
@@ -99,18 +100,34 @@ function save(): void {
   savePref(prefKey(investigationId), { expanded: Array.from(expanded), positions })
 }
 
-/** Vue courante (nœuds masqués, groupes) calculée à partir des stores. */
+/** Vue courante (filtre, nœuds masqués, groupes) calculée à partir des stores. */
 export function currentView(): GraphView {
   const { nodes, edges } = useGraph.getState()
   return computeView(
     nodes.map((n) => n.data.node),
     edges.map((e) => e.data!.edge),
-    useView.getState().expanded
+    useView.getState().expanded,
+    { filter: activeViewFilter() }
   )
 }
 
-/** Rend un nœud visible : déplie ses ancêtres repliés et le groupe qui le contient. */
+/**
+ * Vue courante pour un composant : mêmes paramètres que le canevas, donc le même calcul
+ * mémorisé. Le composant n'est re-rendu que si la vue change (pas pendant un glisser).
+ */
+export function useGraphView(): GraphView {
+  // Groupes dépliés et filtre : re-rendu quand ils changent, la vue est alors relue.
+  useView((s) => s.expanded)
+  useViewFilter()
+  return useGraph(() => currentView())
+}
+
+/**
+ * Rend un nœud visible : retire le filtre s'il l'écarte, déplie ses ancêtres repliés et le
+ * groupe qui le contient.
+ */
 export async function revealNode(id: string): Promise<void> {
+  if (currentView().filtered.has(id)) useFilters.getState().reset()
   const { nodes, edges, updateNodes } = useGraph.getState()
   const ancestors = collapsedAncestors(
     id,

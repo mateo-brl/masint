@@ -22,15 +22,20 @@ import { getPlatform } from '@shared/platforms'
 import type { GraphNode } from '@shared/types'
 import { addEntityAt, addFromLines, addFromText, addImageFiles, canEnrich, enrichNode, enrichNodes, modulesForNode, pasteImages, useApplicable } from '../../lib/actions'
 import { openLink } from '../../lib/api'
+import { communitiesAsync } from '../../lib/analysisAsync'
 import { DRAG_MIME } from '../../lib/catalog'
-import { fitGraph, visibleCenter } from '../../lib/viewport'
+import { centerOn, fitNodes, registerCanvas, takePendingFocus } from '../../lib/focus'
+import { useUiEvent } from '../../lib/uiEvents'
+import { canvasInsets, fitGraph, visibleCenter } from '../../lib/viewport'
 import { useLang } from '../../lib/i18n'
 import { EntityBadge, Icon } from '../../lib/icons'
 import { useApp } from '../../store/app'
 import { useGraph, type FlowEdge, type FlowNode } from '../../store/graph'
-import { currentView, useView } from '../../store/view'
+import { currentView, revealNode, useView } from '../../store/view'
 import { bundleId, computeView, type Bundle } from '../../lib/collapse'
-import { DENSE_NODES, useCanvas } from '../../store/canvas'
+import { analysisGraph, clearPath, showShortestPath, useAnalysis } from '../../store/analysis'
+import { COMMUNITY_COLORS, DENSE_NODES, useCanvas } from '../../store/canvas'
+import { useViewFilter } from '../../store/filters'
 import { confirmDialog } from '../ui'
 import { DrawLayer } from './DrawLayer'
 import { MasintEdge } from './edges/MasintEdge'
@@ -53,6 +58,8 @@ const minimapStyle = { width: 190, height: 130, marginLeft: 16, marginBottom: 16
 const minimapNodeColor = (n: Node): string => ((n as FlowNode).data.node.kind === 'entity' ? 'var(--accent)' : 'var(--faint)')
 /** Au-delà de ce nombre de nœuds, seuls les éléments visibles sont rendus. */
 const VISIBLE_ONLY_MIN = 300
+/** Communautés colorées : à partir de cette taille (les plus petites restent neutres). */
+const COMMUNITY_MIN_SIZE = 3
 
 /** Nœud d'affichage d'un groupe, réutilisé tant que ce dont il dépend ne change pas. */
 type BundleEntry = { bundle: Bundle; st: unknown; node: GraphNode; x: number; y: number; flow: FlowNode }
@@ -83,14 +90,44 @@ export function GraphCanvas(): React.JSX.Element {
   const [quickAdd, setQuickAdd] = useState<{ x: number; y: number; flow: { x: number; y: number } } | null>(null)
   const wrapper = useRef<HTMLDivElement>(null)
 
-  // Recadrage à l'ouverture d'une enquête, une fois les nœuds mesurés.
+  // Le canevas s'annonce : palette, tableau et recherche globale peuvent y centrer un nœud.
+  useEffect(() => {
+    registerCanvas(rf)
+    return () => registerCanvas(null)
+  }, [rf])
+
+  // Recadrage à l'ouverture d'une enquête, une fois les nœuds mesurés ; ou nœud demandé
+  // ailleurs (tableau, recherche globale, autre enquête) montré dès que le canevas est prêt.
   const initialized = useNodesInitialized()
   useEffect(() => {
     // Enquête vide : on attend son premier nœud pour le centrer.
-    if (!investigation || !nodes.length || !initialized || fittedInvestigation === investigation.id) return
+    if (!investigation || !nodes.length || !initialized) return
+    const pending = takePendingFocus()
+    if (pending?.ids) {
+      fittedInvestigation = investigation.id
+      requestAnimationFrame(() => fitNodes(pending.ids, 0))
+      return
+    }
+    const target = pending?.id
+    if (target && useGraph.getState().nodes.some((n) => n.id === target)) {
+      fittedInvestigation = investigation.id
+      void revealNode(target).then(() => {
+        useGraph.getState().select([target])
+        // Après le rendu des nœuds dépliés : leur position est connue.
+        requestAnimationFrame(() => centerOn(target, { zoom: pending.zoom ?? 1.2, duration: 0 }))
+      })
+      return
+    }
+    if (fittedInvestigation === investigation.id) return
     fittedInvestigation = investigation.id
     fitGraph(rf, 0, 1)
   }, [investigation, initialized, nodes.length, rf])
+
+  // Mise en évidence et couleurs d'analyse propres à l'enquête : effacées en la quittant.
+  useEffect(() => {
+    clearPath()
+    useCanvas.setState({ community: null })
+  }, [investigation?.id])
 
   // Premier enrichissement d'une enquête presque vide : on recadre quand il se termine.
   const jobs = useApp((s) => s.jobs)
@@ -114,16 +151,37 @@ export function GraphCanvas(): React.JSX.Element {
     if (investigation) useView.getState().load(investigation.id)
   }, [investigation])
 
-  // Affichage : descendance des nœuds repliés masquée, feuilles semblables regroupées.
+  // Affichage : filtre, descendance des nœuds repliés masquée, feuilles semblables regroupées.
+  const filter = useViewFilter()
   const view = useMemo(
     () =>
       computeView(
         nodes.map((n) => n.data.node),
         edges.map((e) => e.data!.edge),
-        expanded
+        expanded,
+        { filter }
       ),
-    [nodes, edges, expanded]
+    [nodes, edges, expanded, filter]
   )
+
+  // Coloration par communauté : recalculée quand la structure change (pas pendant un glisser :
+  // la vue mémorisée reste la même), dans un Worker sur les grands graphes.
+  const colorByCommunity = useAnalysis((s) => s.colorByCommunity)
+  useEffect(() => {
+    if (!colorByCommunity) return
+    let live = true
+    void communitiesAsync(analysisGraph(view)).then((c) => {
+      if (!live) return
+      const of = new Map<string, number>()
+      c.members.forEach((members, i) => {
+        if (i < COMMUNITY_COLORS.length && members.length >= COMMUNITY_MIN_SIZE) for (const id of members) of.set(id, i)
+      })
+      useCanvas.setState({ community: of })
+    })
+    return () => {
+      live = false
+    }
+  }, [colorByCommunity, view])
   // Objets réutilisés d'un rendu à l'autre (nœuds masqués, groupes) : pendant un glisser, React
   // Flow ne voit changer que le nœud déplacé.
   const hiddenCopies = useRef(new WeakMap<FlowNode, FlowNode>())
@@ -219,8 +277,8 @@ export function GraphCanvas(): React.JSX.Element {
   // quand elles changent (pas à chaque image d'un glisser).
   const dense = nodes.length > DENSE_NODES
   useLayoutEffect(() => {
-    useCanvas.setState({ outDegree, reviewCount, collapsedCount: view.collapsedCount, selected: selectedNodes, dense })
-  }, [outDegree, reviewCount, view.collapsedCount, selectedNodes, dense])
+    useCanvas.setState({ outDegree, reviewCount, collapsedCount: view.collapsedCount, selected: selectedNodes, dense, dimmed: view.dimmed })
+  }, [outDegree, reviewCount, view.collapsedCount, selectedNodes, dense, view.dimmed])
   const capturing = useCanvas((s) => s.capturing)
 
   // Sauvegarde du point de vue (déplacement, zoom) avec un léger différé.
@@ -331,17 +389,36 @@ export function GraphCanvas(): React.JSX.Element {
       } else if (mod && e.key.toLowerCase() === 'e') {
         e.preventDefault()
         void enrichNodes(useGraph.getState().selectedNodes())
-      } else if (e.key === 'f' && !mod) {
+      } else if (e.key === 'f' && !mod && !e.altKey) {
         fitGraph(rf)
+      } else if (e.altKey && !mod && ARROWS[e.key]) {
+        // Alt + flèche : du nœud sélectionné au voisin situé dans cette direction.
+        e.preventDefault()
+        const next = neighborToward(ARROWS[e.key])
+        if (next) {
+          useGraph.getState().select([next.id])
+          keepInView(rf, next)
+        }
       } else if (e.key === 'Escape') {
         useGraph.getState().setTool('select')
         setMenu(null)
         setQuickAdd(null)
+        clearPath()
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [rf])
+
+  // Palette de commandes : « Ajouter une entité » ouvre la saisie rapide au centre de la vue.
+  useUiEvent('quick-add', () => {
+    const box = wrapper.current?.getBoundingClientRect()
+    if (!box) return
+    const i = canvasInsets()
+    const x = i.left + (box.width - i.left - i.right) / 2 - 150
+    const y = i.top + (box.height - i.top - i.bottom) / 2 - 20
+    setQuickAdd({ x, y, flow: rf.screenToFlowPosition({ x: box.left + x + 150, y: box.top + y + 20 }) })
+  })
 
   const onPaneDoubleClick = (e: React.MouseEvent): void => {
     if (tool !== 'select') return
@@ -605,6 +682,8 @@ function ContextMenu({
         })}
       {folded.length > 0 && item('UnfoldVertical', t('collapse.expand'), () => void setCollapsed(folded, false))}
       {regroupable && item('Group', t('collapse.regroup'), () => useView.getState().regroup(regroupable))}
+      {selected.length === 2 &&
+        item('Route', t('analysis.shortestPath'), () => void showShortestPath(selected[0].id, selected[1].id))}
       {item('GitFork', t('canvas.selectChildren'), () => {
         const { edges, select } = useGraph.getState()
         const ids = new Set(selected.map((s) => s.id))
@@ -658,4 +737,65 @@ function countDescendants(ids: string[]): number {
       }
   }
   return count
+}
+
+/** Directions des flèches (Alt + flèche). */
+const ARROWS: Record<string, { x: number; y: number }> = {
+  ArrowLeft: { x: -1, y: 0 },
+  ArrowRight: { x: 1, y: 0 },
+  ArrowUp: { x: 0, y: -1 },
+  ArrowDown: { x: 0, y: 1 }
+}
+
+/**
+ * Voisin (relié par un lien, affiché) du nœud sélectionné le plus proche dans une direction :
+ * l'écart à l'axe pèse plus que la distance, pour que « droite » ne choisisse pas un voisin
+ * presque au-dessus.
+ */
+function neighborToward(dir: { x: number; y: number }): FlowNode | null {
+  const { nodes, edges } = useGraph.getState()
+  const selected = nodes.filter((n) => n.selected)
+  if (selected.length !== 1) return null
+  const from = selected[0]
+  const view = currentView()
+  const ids = new Set<string>()
+  for (const e of edges) {
+    if (e.source === from.id) ids.add(e.target)
+    if (e.target === from.id) ids.add(e.source)
+  }
+  const center = (n: FlowNode): { x: number; y: number } => ({
+    x: n.position.x + (n.measured?.width ?? 196) / 2,
+    y: n.position.y + (n.measured?.height ?? 52) / 2
+  })
+  const c0 = center(from)
+  let best: FlowNode | null = null
+  let bestScore = Infinity
+  for (const n of nodes) {
+    if (!ids.has(n.id) || view.hidden.has(n.id)) continue
+    const c = center(n)
+    const dx = c.x - c0.x
+    const dy = c.y - c0.y
+    const along = dx * dir.x + dy * dir.y
+    if (along <= 0) continue
+    const across = Math.abs(dx * dir.y - dy * dir.x)
+    // Hors d'un cône de 60° de part et d'autre de la direction : ignoré.
+    if (across > along * 1.75) continue
+    const score = along + across * 2
+    if (score < bestScore) {
+      best = n
+      bestScore = score
+    }
+  }
+  return best
+}
+
+/** Recentre la vue sur un nœud seulement s'il sort de l'écran. */
+function keepInView(rf: ReturnType<typeof useReactFlow<FlowNode, FlowEdge>>, n: FlowNode): void {
+  const el = document.querySelector('.react-flow')
+  if (!el) return
+  const box = el.getBoundingClientRect()
+  const p = rf.flowToScreenPosition(n.position)
+  const margin = 80
+  if (p.x < box.left + margin || p.x > box.right - margin * 3 || p.y < box.top + margin || p.y > box.bottom - margin * 2)
+    centerOn(n.id, { zoom: rf.getZoom(), duration: 250 })
 }

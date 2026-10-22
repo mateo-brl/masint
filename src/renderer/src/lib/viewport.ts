@@ -14,10 +14,13 @@ export function canvasInsets(): { top: number; right: number; bottom: number; le
   const base = { top: 84, right: 32, bottom: 84, left: 32 }
   if (!flow) return base
   const catalog = document.querySelector('[data-panel="catalog"]')?.getBoundingClientRect()
+  const analysis = document.querySelector('[data-panel="analysis"]')?.getBoundingClientRect()
   const props = document.querySelector('[data-panel="properties"]')?.getBoundingClientRect()
+  // Panneau le plus à droite des panneaux de gauche (catalogue, analyse).
+  const leftPanel = Math.max(catalog?.width ? catalog.right : 0, analysis?.width ? analysis.right : 0)
   return {
     ...base,
-    left: catalog?.width ? Math.max(base.left, catalog.right - flow.left + 32) : base.left,
+    left: leftPanel ? Math.max(base.left, leftPanel - flow.left + 32) : base.left,
     right: props?.width ? Math.max(base.right, flow.right - props.left + 32) : base.right
   }
 }

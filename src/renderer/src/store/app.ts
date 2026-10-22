@@ -3,9 +3,10 @@ import type { Investigation, JobProgress, ModuleInfo, SecretStatus, Settings, Up
 import { api, onEvent } from '../lib/api'
 import { loadPref, savePref } from '../lib/prefs'
 import { setLanguage } from '../lib/i18n'
+import { useFilters } from './filters'
 import { useGraph } from './graph'
 
-export type View = 'graph' | 'map' | 'timeline' | 'modules' | 'notes'
+export type View = 'graph' | 'map' | 'timeline' | 'modules' | 'notes' | 'table'
 
 export interface ToastAction {
   label: string
@@ -45,6 +46,11 @@ interface AppState {
   importSeed: ImportSeed | null
   update: UpdateStatus
   toasts: Toast[]
+  /** Palette de commandes (Ctrl+K). */
+  paletteOpen: boolean
+  /** Panneaux du canevas : filtres et calques, analyse du graphe. */
+  filtersOpen: boolean
+  analysisOpen: boolean
 
   init(): Promise<void>
   refreshInvestigations(): Promise<void>
@@ -61,6 +67,8 @@ interface AppState {
   setImportOpen(open: boolean, seed?: ImportSeed | null): void
   toast(kind: Toast['kind'], text: string, actions?: ToastAction[]): void
   dismissToast(id: number): void
+  setPaletteOpen(open: boolean): void
+  togglePanel(panel: 'filtersOpen' | 'analysisOpen', open?: boolean): void
 }
 
 let toastSeq = 0
@@ -82,6 +90,9 @@ export const useApp = create<AppState>((set, get) => ({
   importSeed: null,
   update: { state: 'idle' },
   toasts: [],
+  paletteOpen: false,
+  filtersOpen: false,
+  analysisOpen: false,
 
   async init() {
     const [settings, modules, jobs, investigations, secrets] = await Promise.all([
@@ -157,6 +168,8 @@ export const useApp = create<AppState>((set, get) => ({
 
   async openInvestigation(id) {
     await useGraph.getState().load(id)
+    // Filtre et calques de l'enquête prêts avant le premier affichage du canevas.
+    useFilters.getState().load(id)
     set({ currentId: id, view: 'graph' })
   },
 
@@ -203,5 +216,13 @@ export const useApp = create<AppState>((set, get) => ({
 
   dismissToast(id) {
     set({ toasts: get().toasts.filter((t) => t.id !== id) })
+  },
+
+  setPaletteOpen(open) {
+    set({ paletteOpen: open })
+  },
+
+  togglePanel(panel, open) {
+    set({ [panel]: open ?? !get()[panel] } as Pick<AppState, typeof panel>)
   }
 }))

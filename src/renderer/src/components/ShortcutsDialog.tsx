@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useUiEvent } from '../lib/uiEvents'
 import { Dialog } from './ui'
 
 const SHORTCUTS: Array<[string, string]> = [
+  ['Ctrl+K', 'palette'],
+  ['Ctrl+F', 'search'],
+  ['Ctrl+1 … Ctrl+6', 'views'],
+  ['Alt + ← ↑ → ↓', 'neighbors'],
   ['Ctrl+Z', 'undo'],
   ['Ctrl+Y / Ctrl+Shift+Z', 'redo'],
   ['Ctrl+V', 'paste'],
@@ -30,6 +35,8 @@ export function ShortcutsDialog(): React.JSX.Element {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+  // Ouverture depuis la palette de commandes.
+  useUiEvent('shortcuts', () => setOpen(true))
   return (
     <Dialog open={open} onClose={() => setOpen(false)} title={t('shortcuts.title')} width={480}>
       <div className="flex flex-col">

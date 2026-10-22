@@ -6,6 +6,7 @@ import { Home } from './components/home/Home'
 import { Workspace } from './components/Workspace'
 import { LangSwitch } from './components/LangSwitch'
 import { ShortcutsDialog } from './components/ShortcutsDialog'
+import { CommandPalette } from './components/CommandPalette'
 import { SettingsDialog } from './components/settings/SettingsDialog'
 import { useApp } from './store/app'
 
@@ -32,6 +33,7 @@ export default function App(): React.JSX.Element {
       <main className="relative min-w-0 flex-1">{currentId ? <Workspace key={currentId} /> : <Home />}</main>
       <LangSwitch />
       <ShortcutsDialog />
+      <CommandPalette />
       <SettingsDialog />
       <Toasts />
       <ConfirmHost okLabel={t('common.confirm')} cancelLabel={t('common.cancel')} />

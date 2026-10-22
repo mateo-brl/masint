@@ -5,6 +5,7 @@ import { icons } from 'lucide-react'
 import type { GraphEdge, GraphNode, Investigation } from '@shared/types'
 import { api } from '../../lib/api'
 import { useGraph } from '../../store/graph'
+import { currentView } from '../../store/view'
 import { escapeHtml } from './format'
 
 type IconNode = Array<[string, Record<string, string | number>]>
@@ -46,10 +47,16 @@ export interface GraphSnapshot {
   sizes: Record<string, { width: number; height: number }>
 }
 
-/** État courant du graphe, positions du canevas comprises. */
+/**
+ * État courant du graphe, positions du canevas comprises. Un filtre en mode « masquer » vaut
+ * aussi pour l'export : seuls les nœuds affichés partent (les nœuds repliés ou regroupés, eux,
+ * restent des données de l'enquête et sont exportés).
+ */
 export function graphSnapshot(): GraphSnapshot | null {
-  const { investigation, nodes, edges } = useGraph.getState()
+  const { investigation, nodes: all, edges } = useGraph.getState()
   if (!investigation) return null
+  const filtered = currentView().filtered
+  const nodes = filtered.size ? all.filter((n) => !filtered.has(n.id)) : all
   const sizes: GraphSnapshot['sizes'] = {}
   const list = nodes.map((n) => {
     const w = n.measured?.width ?? n.width

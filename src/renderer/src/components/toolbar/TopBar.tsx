@@ -6,16 +6,19 @@ import { api } from '../../lib/api'
 import { errorMessage } from '../../lib/errors'
 import { useLang } from '../../lib/i18n'
 import { EntityBadge, Icon } from '../../lib/icons'
-import type { LayoutKind } from '../../lib/layout'
-import { computeLayoutAsync } from '../../lib/layoutAsync'
+import { runLayout, useLayoutState } from '../../lib/layoutActions'
 import { searchNodes } from '../../lib/search'
+import { useSearchFocus } from '../../lib/uiEvents'
 import { useApp } from '../../store/app'
 import { useGraph, type FlowEdge, type FlowNode } from '../../store/graph'
 import { fitGraph } from '../../lib/viewport'
-import { currentView, revealNode, useView } from '../../store/view'
+import { isFilterActive } from '../../lib/filters'
+import { useFilters } from '../../store/filters'
+import { revealNode } from '../../store/view'
 import { exportGraph, type ExportFormat } from '../export/exporters'
 import { Dialog, Dropdown, Spinner } from '../ui'
 import { ReviewAll } from '../panels/ReviewList'
+import { FilterPanel } from '../panels/FilterPanel'
 
 /** Barre flottante du haut : disposition, export, rapport, nombre de liens, recherche. */
 export function TopBar(): React.JSX.Element {
@@ -38,56 +41,20 @@ export function TopBar(): React.JSX.Element {
   const pendingReview = useGraph((s) => s.suggestions.filter((x) => x.status === 'pending').length)
   const canUndo = useGraph((s) => s.canUndo)
   const canRedo = useGraph((s) => s.canRedo)
-  const [layingOut, setLayingOut] = useState(false)
-
-  const layout = async (kind: LayoutKind): Promise<void> => {
-    if (layingOut) return
-    const { nodes, edges, investigation: inv } = useGraph.getState()
-    // Disposition de ce qui est affiché : nœuds masqués exclus, groupes traités comme un nœud.
-    const view = currentView()
-    const bundleState = useView.getState().bundles
-    const selected = nodes.filter((n) => n.selected)
-    const scope = (selected.length > 1 ? selected : nodes).filter((n) => n.data.node.kind === 'entity' && !view.hidden.has(n.id))
-    const items = scope.map((n) => ({
-      id: n.id,
-      x: n.position.x,
-      y: n.position.y,
-      width: n.measured?.width ?? 196,
-      height: n.measured?.height ?? 40
-    }))
-    const byId = new Map(nodes.map((n) => [n.id, n]))
-    if (selected.length <= 1)
-      for (const b of view.bundles) {
-        const st = bundleState[b.id]
-        const first = byId.get(b.members[0])!.position
-        items.push({ id: b.id, x: st?.position?.x ?? first.x, y: st?.position?.y ?? first.y, width: st?.measured?.width ?? 212, height: st?.measured?.height ?? 48 })
-      }
-    const links = [
-      ...edges.filter((e) => !view.hidden.has(e.source) && !view.hidden.has(e.target)).map((e) => ({ source: e.source, target: e.target })),
-      ...view.bundles.map((b) => ({ source: b.parentId, target: b.id }))
-    ]
-    // Calcul dans un Worker : l'interface reste utilisable, un indicateur signale le calcul.
-    setLayingOut(true)
-    let all: Record<string, { x: number; y: number }>
-    try {
-      all = await computeLayoutAsync(kind, items, links)
-    } catch (e) {
-      toast('error', errorMessage(e))
-      return
-    } finally {
-      setLayingOut(false)
-    }
-    // Le graphe a pu changer pendant le calcul : on ignore une autre enquête et les nœuds supprimés.
-    const current = useGraph.getState()
-    if (current.investigation?.id !== inv?.id) return
-    const present = new Set(current.nodes.map((n) => n.id))
-    const pos: Record<string, { x: number; y: number }> = {}
-    for (const [id, p] of Object.entries(all)) {
-      if (id.startsWith('bundle:')) useView.getState().patchBundle(id, { position: p }, true)
-      else if (present.has(id)) pos[id] = p
-    }
-    void current.setPositions(pos).then(() => setTimeout(() => fitGraph(rf, 400), 50))
-  }
+  // Disposition calculée dans un Worker : l'interface reste utilisable, un indicateur le signale.
+  const layingOut = useLayoutState((s) => s.running)
+  const layout = runLayout
+  const filtersOpen = useApp((s) => s.filtersOpen)
+  const analysisOpen = useApp((s) => s.analysisOpen)
+  const togglePanel = useApp((s) => s.togglePanel)
+  const filterActive = useFilters((s) => isFilterActive(s.filter))
+  const filterMode = useFilters((s) => s.mode)
+  // Ctrl+F (ou palette) : ouvre la recherche dans le graphe et y place le curseur.
+  const [searchSeq, setSearchSeq] = useState(0)
+  useSearchFocus(() => {
+    setSearching(true)
+    setSearchSeq((n) => n + 1)
+  })
 
   const doExport = async (format: ExportFormat): Promise<void> => {
     try {
@@ -105,6 +72,7 @@ export function TopBar(): React.JSX.Element {
           onClick={() => toggleCatalog()}
           className="rounded-lg p-1.5 text-muted hover:bg-panel-3 hover:text-fg"
           title={catalogOpen ? t('topbar.hideCatalog') : t('topbar.showCatalog')}
+          aria-label={catalogOpen ? t('topbar.hideCatalog') : t('topbar.showCatalog')}
         >
           <Icon name={catalogOpen ? 'PanelLeftClose' : 'PanelLeftOpen'} size={15} />
         </button>
@@ -113,6 +81,7 @@ export function TopBar(): React.JSX.Element {
           disabled={!canUndo}
           className="rounded-lg p-1.5 text-muted hover:bg-panel-3 hover:text-fg disabled:opacity-30"
           title={`${t('topbar.undo')} (Ctrl+Z)`}
+          aria-label={t('topbar.undo')}
         >
           <Icon name="Undo2" size={15} />
         </button>
@@ -121,6 +90,7 @@ export function TopBar(): React.JSX.Element {
           disabled={!canRedo}
           className="rounded-lg p-1.5 text-muted hover:bg-panel-3 hover:text-fg disabled:opacity-30"
           title={`${t('topbar.redo')} (Ctrl+Y)`}
+          aria-label={t('topbar.redo')}
         >
           <Icon name="Redo2" size={15} />
         </button>
@@ -148,6 +118,10 @@ export function TopBar(): React.JSX.Element {
           width={280}
           trigger={() => <ToolbarButton icon="Download" label={t('topbar.export')} />}
           items={[
+            // Filtre en mode « masquer » : l'export ne contient que ce qui est affiché.
+            ...(filterActive && filterMode === 'hide'
+              ? [{ label: <span className="text-[11.5px] text-warning">{t('filters.exportHint')}</span>, icon: 'Funnel', disabled: true }, { separator: true, label: '' }]
+              : []),
             { label: t('export.png'), icon: 'Image', onClick: () => void doExport('png') },
             { label: t('export.svg'), icon: 'PenTool', onClick: () => void doExport('svg') },
             { label: t('export.html'), icon: 'Globe', onClick: () => void doExport('html') },
@@ -171,6 +145,9 @@ export function TopBar(): React.JSX.Element {
         />
         <ToolbarButton icon="FileText" label={t('topbar.report')} onClick={() => setReportOpen(true)} />
         <div className="mx-1 h-5 w-px bg-line" />
+        <IconToggle icon="Funnel" label={t('filters.title')} active={filtersOpen} badge={filterActive} onClick={() => togglePanel('filtersOpen')} />
+        <IconToggle icon="ChartNetwork" label={t('analysis.title')} active={analysisOpen} onClick={() => togglePanel('analysisOpen')} />
+        <div className="mx-1 h-5 w-px bg-line" />
         <div className="flex items-center gap-1.5 pl-2 text-[12.5px] font-semibold text-muted" title={t('topbar.nodes')}>
           <Icon name="Waypoints" size={14} /> <span className="text-fg">{nodesCount}</span>
         </div>
@@ -182,11 +159,18 @@ export function TopBar(): React.JSX.Element {
             onClick={() => setReviewOpen(true)}
             className="ml-1 flex items-center gap-1.5 rounded-lg bg-warning/15 px-2 py-1 text-[12px] font-semibold text-warning hover:bg-warning/25"
             title={t('review.title')}
+            aria-label={`${t('review.title')} : ${pendingReview}`}
           >
             <Icon name="ListTodo" size={14} /> {pendingReview}
           </button>
         )}
-        <button onClick={() => setSearching(!searching)} className="rounded-lg p-1.5 text-muted hover:bg-panel-3 hover:text-fg" title={t('topbar.search')}>
+        <button
+          onClick={() => setSearching(!searching)}
+          className="rounded-lg p-1.5 text-muted hover:bg-panel-3 hover:text-fg"
+          title={`${t('topbar.search')} (Ctrl+F)`}
+          aria-label={t('topbar.search')}
+          aria-expanded={searching}
+        >
           <Icon name="Search" size={15} />
         </button>
       </div>
@@ -196,7 +180,8 @@ export function TopBar(): React.JSX.Element {
           {t('layout.running')}
         </div>
       )}
-      {searching && <GraphSearch onClose={() => setSearching(false)} />}
+      {searching && <GraphSearch key={searchSeq} onClose={() => setSearching(false)} />}
+      {filtersOpen && <FilterPanel onClose={() => togglePanel('filtersOpen', false)} />}
       <Dialog open={reviewOpen} onClose={() => setReviewOpen(false)} title={t('review.title')} width={620}>
         <ReviewAll
           onPick={async (id) => {
@@ -219,6 +204,22 @@ function ToolbarButton({ icon, label, onClick }: { icon: string; label: string; 
     <button onClick={onClick} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12.5px] font-medium hover:bg-panel-3">
       <Icon name={icon} size={14} className="text-muted" />
       {label}
+    </button>
+  )
+}
+
+/** Bouton à icône qui ouvre un panneau (filtres, analyse) ; pastille quand un réglage est actif. */
+function IconToggle({ icon, label, onClick, active, badge }: { icon: string; label: string; onClick: () => void; active: boolean; badge?: boolean }): React.JSX.Element {
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={active}
+      aria-label={label}
+      title={label}
+      className={`relative rounded-lg p-1.5 ${active ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-panel-3 hover:text-fg'}`}
+    >
+      <Icon name={icon} size={15} />
+      {badge && <span className="absolute top-0.5 right-0.5 h-1.5 w-1.5 rounded-full bg-accent" />}
     </button>
   )
 }
@@ -249,6 +250,7 @@ function GraphSearch({ onClose }: { onClose: () => void }): React.JSX.Element {
     <div className="glass w-96 rounded-xl p-1.5">
       <input
         autoFocus
+        aria-label={t('topbar.search')}
         value={q}
         onChange={(e) => setQ(e.target.value)}
         onKeyDown={(e) => {
@@ -329,11 +331,22 @@ function JobPill({ job: j }: { job: JobProgress }): React.JSX.Element {
           {(j.review ?? 0) > 0 && <span className="text-warning"> · {t('review.count', { count: j.review })}</span>}
           {j.errors > 0 && <span className="text-accent"> · {t('runs.nErrors', { count: j.errors })}</span>}
         </span>
-        <button onClick={() => setOpen(!open)} className="rounded-full p-1 text-muted hover:bg-panel-3 hover:text-fg" title={t('jobs.details')}>
+        <button
+          onClick={() => setOpen(!open)}
+          className="rounded-full p-1 text-muted hover:bg-panel-3 hover:text-fg"
+          title={t('jobs.details')}
+          aria-label={t('jobs.details')}
+          aria-expanded={open}
+        >
           <Icon name={open ? 'ChevronUp' : 'ChevronDown'} size={13} />
         </button>
         {!j.finished && (
-          <button onClick={() => void api('modules:cancel', j.jobId)} className="rounded-full p-1 text-muted hover:bg-panel-3 hover:text-fg" title={t('common.cancel')}>
+          <button
+            onClick={() => void api('modules:cancel', j.jobId)}
+            className="rounded-full p-1 text-muted hover:bg-panel-3 hover:text-fg"
+            title={t('common.cancel')}
+            aria-label={t('common.cancel')}
+          >
             <Icon name="X" size={12} />
           </button>
         )}

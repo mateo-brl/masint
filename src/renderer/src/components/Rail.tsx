@@ -1,17 +1,10 @@
 import { useTranslation } from 'react-i18next'
-import { useApp, type View } from '../store/app'
+import { VIEW_ICONS, VIEW_ORDER, viewShortcut } from '../lib/commands'
+import { useApp } from '../store/app'
 import { Logo } from './Logo'
 import { IconButton } from './ui'
 
-const VIEWS: Array<{ id: View; icon: string }> = [
-  { id: 'graph', icon: 'Share2' },
-  { id: 'map', icon: 'Map' },
-  { id: 'timeline', icon: 'CalendarDays' },
-  { id: 'modules', icon: 'Puzzle' },
-  { id: 'notes', icon: 'NotebookPen' }
-]
-
-/** Barre verticale de gauche : accueil, vues de l'enquête, paramètres. */
+/** Barre verticale de gauche : accueil, vues de l'enquête (Ctrl+1 à Ctrl+6), paramètres. */
 export function Rail(): React.JSX.Element {
   const { t } = useTranslation()
   const currentId = useApp((s) => s.currentId)
@@ -22,17 +15,22 @@ export function Rail(): React.JSX.Element {
   const update = useApp((s) => s.update)
 
   return (
-    <nav className="flex w-[52px] shrink-0 flex-col items-center gap-1.5 border-r border-line bg-app py-3">
-      <button
-        onClick={goHome}
-        title={t('rail.home')}
-        className="mb-2 rounded-lg transition hover:scale-105"
-      >
+    <nav aria-label={t('rail.nav')} className="flex w-[52px] shrink-0 flex-col items-center gap-1.5 border-r border-line bg-app py-3">
+      <button onClick={goHome} title={t('rail.home')} aria-label={t('rail.home')} className="mb-2 rounded-lg transition hover:scale-105">
         <Logo size={32} />
       </button>
       {currentId &&
-        VIEWS.map((v) => (
-          <IconButton key={v.id} icon={v.icon} title={t(`rail.${v.id}`)} active={view === v.id} onClick={() => setView(v.id)} />
+        VIEW_ORDER.map((id) => (
+          <IconButton
+            key={id}
+            icon={VIEW_ICONS[id]}
+            // Raccourci dans l'infobulle ; libellé seul pour les lecteurs d'écran.
+            title={`${t(`rail.${id}`)} (${viewShortcut(id)})`}
+            aria-label={t(`rail.${id}`)}
+            aria-current={view === id ? 'page' : undefined}
+            active={view === id}
+            onClick={() => setView(id)}
+          />
         ))}
       <div className="flex-1" />
       {update.state === 'ready' && (
