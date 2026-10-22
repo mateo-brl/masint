@@ -1,0 +1,53 @@
+{
+ "total_count": 2317,
+ "results": [
+  {
+   "id": "199100030901",
+   "source": "joafe",
+   "dateparution": "1991-01-16",
+   "annonce_type_facette": "Associations loi du 1er juillet 1901/Modification/Initial",
+   "typeavis": "Modification",
+   "numero_rna": "ASS00901",
+   "titre": null,
+   "titre_nouveau": "RESTAURANTS DU COEUR ET RELAIS DU COEUR",
+   "titre_ancien": "RESTAURANT DU COEUR",
+   "objet": null,
+   "siteweb": null,
+   "adresse_actuelle": "43, boulevard Gustave-Roch,",
+   "codepostal_actuel": "44200",
+   "commune_actuelle": "Nantes",
+   "geo_point": {
+    "lon": -1.553253,
+    "lat": 47.202388
+   },
+   "datedeclaration": "1990-12-10",
+   "dca_datecloture": null,
+   "dca_siren": null,
+   "lieupref": "Loire-Atlantique"
+  },
+  {
+   "id": "198700050306",
+   "source": "joafe",
+   "dateparution": "1987-02-04",
+   "annonce_type_facette": "Associations loi du 1er juillet 1901/Création/Initial",
+   "typeavis": "Création",
+   "numero_rna": "ASS00306",
+   "titre": "Restaurant du Coeur",
+   "titre_nouveau": null,
+   "titre_ancien": null,
+   "objet": "ouverture de Restaurants du Coeur en Eure-et-Loir",
+   "siteweb": null,
+   "adresse_actuelle": "mairie, 2, place du 18-Octobre,",
+   "codepostal_actuel": "28200",
+   "commune_actuelle": "Châteaudun",
+   "geo_point": {
+    "lon": 1.328055,
+    "lat": 48.070497
+   },
+   "datedeclaration": "1987-01-08",
+   "dca_datecloture": null,
+   "dca_siren": null,
+   "lieupref": null
+  }
+ ]
+}

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<export xmlns="http://eu.europa.ec/fpi/fsd/export" generationDate="2026-10-15T12:10:34.160+02:00">
+    <sanctionEntity designationDate="2022-02-25" designationDetails="" unitedNationId="" euReferenceNumber="EU.7510.16" logicalId="135909">
+        <regulation regulationType="amendment" organisationType="council" publicationDate="2022-02-25" entryIntoForceDate="2022-02-25" numberTitle="2022/332 (OJ L53)" programme="UKR" logicalId="149145">
+            <publicationUrl>https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=uriserv%3AOJ.L_.2022.053.01.0001.01.ENG&amp;toc=OJ%3AL%3A2022%3A053%3ATOC</publicationUrl>
+        </regulation>
+        <subjectType code="person" classificationCode="P"/>
+        <nameAlias firstName="" middleName="" lastName="" wholeName="Vladimir Vladimirovitj PUTIN" function="" gender="M" title="" nameLanguage="SV" strong="true" regulationLanguage="en" logicalId="136017">
+        </nameAlias>
+        <nameAlias firstName="" middleName="" lastName="" wholeName="Vladimir Vladimirovich POUTINE" function="" gender="M" title="" nameLanguage="FR" strong="true" regulationLanguage="en" logicalId="136016">
+        </nameAlias>
+        <nameAlias firstName="" middleName="" lastName="" wholeName="Влади́мир Влади́мирович ПУ́ТИН" function="" gender="M" title="" nameLanguage="" strong="true" regulationLanguage="en" logicalId="135911">
+        </nameAlias>
+        <nameAlias firstName="" middleName="" lastName="" wholeName="Vladimir Vladimirovich PUTIN" function="President of the Russian Federation" gender="M" title="" nameLanguage="" strong="true" regulationLanguage="en" logicalId="135912">
+        </nameAlias>
+        <birthdate circa="false" calendarType="GREGORIAN" city="Leningrad (now Saint-Petersburg)" zipCode="" birthdate="1952-10-07" dayOfMonth="7" monthOfYear="10" year="1952" region="" place="" countryIso2Code="RU" countryDescription="RUSSIAN FEDERATION" regulationLanguage="en" logicalId="135910">
+            <remark>Leningrad (now Saint-Petersburg), ex USSR (now Russian Federation)</remark>
+        </birthdate>
+    </sanctionEntity>
+    <sanctionEntity designationDate="2024-12-16" designationDetails="" unitedNationId="" euReferenceNumber="EU.12598.59" logicalId="171599">
+        <remark>Corrigendum 2024/3183 (OJ L16122024) [corr. 07/02/2025-1]</remark>
+        <regulation regulationType="amendment" organisationType="council" publicationDate="2024-12-16" entryIntoForceDate="2024-12-16" numberTitle="2024/3183 (OJ L16122024)" programme="UKR" logicalId="205500">
+            <publicationUrl>https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=OJ:L_202403183</publicationUrl>
+        </regulation>
+        <subjectType code="enterprise" classificationCode="E"/>
+        <nameAlias firstName="" middleName="" lastName="" wholeName="JSC Gruppa Kremniy El" function="JSC Gruppa Kremniy El is the second-largest microelectronics manufacturer in Russia." title="" nameLanguage="EN" strong="true" regulationLanguage="en" logicalId="171602">
+            <remark>Principal place of business: Russian Federation.
+Type of entity: Joint Stock Company.</remark>
+        </nameAlias>
+        <nameAlias firstName="" middleName="" lastName="" wholeName="Gruppa Kremnij El Rt." function="" title="" nameLanguage="HU" strong="true" regulationLanguage="en" logicalId="172199">
+        </nameAlias>
+        <nameAlias firstName="" middleName="" lastName="" wholeName="АО Группа Кремний Эл" function="" title="" nameLanguage="RU" strong="true" regulationLanguage="en" logicalId="171601">
+        </nameAlias>
+        <address city="Bryansk" street="Krasnoarmeyskaya Str. 103," poBox="" zipCode="241050" region="Bryanskaya Oblast" place="" asAtListingTime="false" countryIso2Code="RU" countryDescription="RUSSIAN FEDERATION" regulationLanguage="en" logicalId="171600">
+            <contactInfo key="WEB" value="https://group-kremny.ru/"/>
+            <contactInfo key="PHONE" value="+7 (4832) 41-43-11, +7 (4832) 41-42-34"/>
+            <contactInfo key="EMAIL" value="group@kremny.032.ru"/>
+        </address>
+        <identification diplomatic="false" knownExpired="false" knownFalse="false" reportedLost="false" revokedByIssuer="false" issuedBy="" latinNumber="" nameOnDocument="" number="3234043140" region="" identificationTypeCode="fiscalcode" identificationTypeDescription="National Fiscal Code" countryIso2Code="RU" countryDescription="RUSSIAN FEDERATION" regulationLanguage="en" logicalId="172200">
+            <remark>Tax Identification Number</remark>
+        </identification>
+        <identification diplomatic="false" knownExpired="false" knownFalse="false" reportedLost="false" revokedByIssuer="false" issuedBy="" latinNumber="" nameOnDocument="" number="1023202741781" region="" identificationTypeCode="regnumber" identificationTypeDescription="Registration Number" countryIso2Code="RU" countryDescription="RUSSIAN FEDERATION" regulationLanguage="en" logicalId="172201">
+        </identification>
+    </sanctionEntity>
+</export>

@@ -1,0 +1,20 @@
+{
+ "total_count": 1,
+ "results": [
+  {
+   "id": "A202302171561",
+   "dateparution": "2023-11-10",
+   "familleavis": "collective",
+   "familleavis_lib": "Procédures collectives",
+   "tribunal": "Greffe du Tribunal de Commerce de Paris",
+   "commercant": "CASINO, GUICHARD PERRACHON",
+   "registre": [
+    "554 501 171",
+    "554501171"
+   ],
+   "listepersonnes": "{\"personne\": {\"typePersonne\": \"pm\", \"numeroImmatriculation\": {\"numeroIdentification\": \"554 501 171\", \"codeRCS\": \"RCS\", \"nomGreffeImmat\": \"Saint-Étienne\"}, \"denomination\": \"CASINO, GUICHARD PERRACHON\", \"activite\": \"Activités administratives et commerciales\", \"formeJuridique\": \"Société anonyme\", \"adresseSiegeSocial\": {\"numeroVoie\": \"1\", \"typeVoie\": \"cours\", \"nomVoie\": \"Antoine Guichard\", \"codePostal\": \"42000\", \"ville\": \"Saint-Étienne\"}}}",
+   "jugement": "{\"type\":\"initial\",\"famille\":\"Jugement d'ouverture\",\"nature\":\"Jugement d'ouverture d'une procédure de sauvegarde\",\"date\":\"2023-10-25\",\"complementJugement\":\"Le Tribunal de Commerce de Paris a prononcé en date du 25 octobre 2023 l'ouverture d'une procédure de sauvegarde accélérée sous le numéro P202302888 e\"}",
+   "url_complete": "https://www.bodacc.fr/pages/annonces-commerciales-detail/?q.id=id:A202302171561"
+  }
+ ]
+}

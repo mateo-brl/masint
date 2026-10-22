@@ -72,12 +72,19 @@ export interface ReResponse {
   total_pages: number
 }
 
+/** Nom sans accents, tirets ni apostrophes (« Saint-Affrique » et « SAINT AFFRIQUE » se valent). */
+const flatName = (s: string): string =>
+  fold(s)
+    .replace(/[-'’]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
 /** Le dirigeant correspond-il au nom cherché (nom contenu, premier prénom présent) ? */
 export function matchesPerson(d: ReDirigeant, name: PersonName): boolean {
   if (d.type_dirigeant && d.type_dirigeant !== 'personne physique') return false
-  const nom = fold(d.nom ?? '')
+  const nom = flatName(d.nom ?? '')
   const prenoms = fold(d.prenoms ?? '').split(/[\s,-]+/)
-  const last = fold(name.lastName)
+  const last = flatName(name.lastName)
   const firstParts = fold(name.firstNames[0] ?? '').split(/[\s-]+/)
   return !!nom && nom.includes(last) && firstParts.every((p) => prenoms.includes(p))
 }
@@ -151,7 +158,7 @@ export function mandateConsistency(r: ReResult, d: ReDirigeant, id: KnownIdentit
 function relevance(d: ReDirigeant, name: PersonName): number {
   const prenoms = fold(d.prenoms ?? '').split(/[\s,]+/).filter(Boolean)
   const firstExact = prenoms[0] === fold(name.firstNames[0] ?? '')
-  const lastExact = fold(d.nom ?? '').replace(/\s*\(.*\)\s*$/, '').trim() === fold(name.lastName)
+  const lastExact = flatName((d.nom ?? '').replace(/\s*\(.*\)\s*$/, '')) === flatName(name.lastName)
   return (firstExact ? 2 : 0) + (lastExact ? 1 : 0)
 }
 
@@ -244,11 +251,25 @@ export function companiesFor(results: ReResult[], name: PersonName, id: KnownIde
     .map((c) => companyEntity(c, lang))
 }
 
-async function page(ctx: ModuleContext, name: PersonName, n: number): Promise<ReResponse> {
+/**
+ * Bornes de date de naissance à transmettre à l'API (filtre côté serveur) : le mois connu,
+ * sinon l'année. Le registre ne publie que le mois : un jour connu n'affine pas davantage.
+ */
+export function birthRange(birth: PartialDate | null | undefined): { date_naissance_personne_min: string; date_naissance_personne_max: string } | null {
+  if (!birth || birth.year < 1900) return null
+  const y = String(birth.year)
+  if (!birth.month) return { date_naissance_personne_min: `${y}-01-01`, date_naissance_personne_max: `${y}-12-31` }
+  const m = String(birth.month).padStart(2, '0')
+  const last = new Date(Date.UTC(birth.year, birth.month, 0)).getUTCDate()
+  return { date_naissance_personne_min: `${y}-${m}-01`, date_naissance_personne_max: `${y}-${m}-${last}` }
+}
+
+async function page(ctx: ModuleContext, name: PersonName, n: number, birth?: PartialDate | null): Promise<ReResponse> {
   const query = {
     nom_personne: name.lastName,
     prenoms_personne: name.firstNames[0],
     type_personne: 'dirigeant',
+    ...birthRange(birth),
     per_page: PER_PAGE,
     page: n
   }
@@ -273,8 +294,8 @@ export default defineModule({
   id: 'person.fr_dirigeants',
   name: { fr: 'Mandats de dirigeant (France)', en: 'Company officer roles (France)' },
   description: {
-    fr: 'Cherche la personne parmi les dirigeants d’entreprises françaises (API Recherche d’entreprises de l’État, sans clé) : 10 entreprises au plus, avec la fonction et le mois de naissance déclaré. Les mandats incompatibles avec la date de naissance ou de décès connue sont écartés ; sans date de naissance concordante, l’entreprise est mise de côté dans « À vérifier » (homonyme possible).',
-    en: 'Looks the person up among French company officers (government Company Search API, no key): up to 10 companies, with the role and declared birth month. Roles inconsistent with the known birth or death date are dropped; without a matching birth date, the company is put aside in "To review" (possible namesake).'
+    fr: 'Cherche la personne parmi les dirigeants d’entreprises françaises (API Recherche d’entreprises de l’État, sans clé) : 10 entreprises au plus, avec la fonction et le mois de naissance déclaré. Si la date de naissance est connue, la recherche est filtrée par l’API sur ce mois. Les mandats incompatibles avec la date de naissance ou de décès connue sont écartés ; sans date de naissance concordante, l’entreprise est mise de côté dans « À vérifier » (homonyme possible).',
+    en: 'Looks the person up among French company officers (government Company Search API, no key): up to 10 companies, with the role and declared birth month. When the birth date is known, the API filters on that month. Roles inconsistent with the known birth or death date are dropped; without a matching birth date, the company is put aside in "To review" (possible namesake).'
   },
   category: 'person',
   inputTypes: ['person'],
@@ -282,10 +303,11 @@ export default defineModule({
   async run(input, ctx) {
     const name = splitName(input)
     if (!name) throw new ModuleError('Indiquer au moins un prénom et un nom', 'invalid_input')
-    const first = await page(ctx, name, 1)
-    const results = [...first.results]
-    for (let n = 2; n <= Math.min(first.total_pages, MAX_PAGES); n++) results.push(...(await page(ctx, name, n)).results)
     const id: KnownIdentity = { birth: parsePartialDate(input.data.birth_date), death: parsePartialDate(input.data.death_date) }
+    // Date de naissance connue : l'API ne renvoie que les mandats du même mois (ou de la même année).
+    const first = await page(ctx, name, 1, id.birth)
+    const results = [...first.results]
+    for (let n = 2; n <= Math.min(first.total_pages, MAX_PAGES); n++) results.push(...(await page(ctx, name, n, id.birth)).results)
     const { kept, excluded } = selectMandates(results, name, id)
     const entities = kept.slice(0, MAX_COMPANIES).map((c) => companyEntity(c, ctx.lang))
     return {
@@ -295,7 +317,7 @@ export default defineModule({
         officer_companies_excluded: excluded.length || undefined
       }),
       raw: {
-        query: { nom: name.lastName, prenom: name.firstNames[0] },
+        query: { nom: name.lastName, prenom: name.firstNames[0], ...birthRange(id.birth) },
         identity: id,
         total_results: first.total_results,
         fetched: results.length,
