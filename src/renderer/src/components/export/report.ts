@@ -4,6 +4,7 @@
 import { canonicalKey } from '@shared/canonical'
 import { CATEGORIES, ENTITY_TYPES, getEntityType, type CategoryId } from '@shared/entityTypes'
 import { propertyLabel } from '@shared/propertyLabels'
+import { ADMIRALTY_KEY, parseAdmiralty } from '@shared/provenance'
 import type { Attachment, GraphEdge, GraphNode, Investigation, Lang, ModuleInfo, ModuleRun, ModuleRunStats } from '@shared/types'
 import { collectEvents, formatEventDate } from '../../lib/timeline'
 import { entityBadgeHtml, iconSvg, logoHtml, type IconMarkup } from './badges'
@@ -313,8 +314,18 @@ ${notes ? `<div class="prose">${renderMarkdown(notes, 3)}</div>` : `<p class="mu
         })
       return items.length ? `<div class="card-links"><div class="card-sub">${e(S.connections)} (${items.length})</div><ul>${items.join('')}</ul></div>` : ''
     }
+    // Cotation de l'enquêteur (Amirauté) : code et sens, en tête de fiche.
+    const rating = (n: GraphNode): string => {
+      const a = parseAdmiralty(n.data?.[ADMIRALTY_KEY])
+      if (!a) return ''
+      const parts = [
+        a.reliability ? `${e(S.ratingSource)} : ${e(S.reliability[a.reliability] ?? a.reliability)}` : '',
+        a.credibility ? `${e(S.ratingInfo)} : ${e(S.credibility[String(a.credibility)] ?? String(a.credibility))}` : ''
+      ].filter(Boolean)
+      return `<div class="card-rating"><span class="rating-code">${e(`${a.reliability ?? ''}${a.credibility ?? ''}`)}</span>${e(S.rating)} · ${parts.join(' · ')}</div>`
+    }
     const card = (n: GraphNode): string => {
-      const props = orderedProps(n, lang)
+      const props = orderedProps(n, lang).filter((p) => p.key !== ADMIRALTY_KEY)
       const img = n.imageId ? images[n.imageId] : undefined
       const plat = platformName(n.platform)
       const kicker = [typeLabel(n.type, lang), plat].filter(Boolean).join(' · ')
@@ -337,6 +348,7 @@ ${notes ? `<div class="prose">${renderMarkdown(notes, 3)}</div>` : `<p class="mu
 <div class="card-body${img && isImageDataUrl(img) ? ' has-img' : ''}">
 ${img && isImageDataUrl(img) ? `<img class="card-img" src="${img}" alt="">` : ''}
 <div class="card-main">
+${rating(n)}
 ${rows ? `<table class="props"><tbody>${rows}</tbody></table>` : `<p class="muted small">${e(S.noProperties)}</p>`}
 ${n.notes?.trim() ? `<div class="card-notes"><div class="card-sub">${e(S.entityNotes)}</div><div class="notes-text">${e(n.notes.trim())}</div></div>` : ''}
 ${links(n)}
@@ -714,6 +726,8 @@ table.props td{padding:1mm 0;overflow-wrap:anywhere;vertical-align:top;border-bo
 .card-links .dir{color:#a1a1aa;margin-right:4px}
 .card-links .rel{color:#52525b;font-style:italic;margin-right:5px}
 .card-meta{font-size:7pt;color:#a1a1aa;padding:1.5mm 3mm;border-top:1px solid #f1f1f3}
+.card-rating{font-size:7.5pt;color:#52525b;margin:0 0 1.5mm}
+.rating-code{display:inline-block;font-family:'JetBrains Mono',Consolas,ui-monospace,monospace;font-weight:700;font-size:8pt;color:#18181b;background:#f4f4f5;border:1px solid #e4e4e7;border-radius:3px;padding:0 4px;margin-right:4px}
 .card.annotation .card-body{display:block}
 
 /* Annexe */

@@ -170,6 +170,25 @@ const fr = {
       connections: 'Liens',
       properties: 'Propriétés',
       noProperties: 'Aucune propriété renseignée.',
+      rating: 'Cotation',
+      ratingSource: 'source',
+      ratingInfo: 'information',
+      reliability: {
+        A: 'complètement fiable',
+        B: 'habituellement fiable',
+        C: 'assez fiable',
+        D: 'pas toujours fiable',
+        E: 'pas fiable',
+        F: 'fiabilité impossible à évaluer'
+      } as Record<string, string>,
+      credibility: {
+        '1': 'confirmée par d’autres sources',
+        '2': 'probablement vraie',
+        '3': 'possiblement vraie',
+        '4': 'douteuse',
+        '5': 'improbable',
+        '6': 'véracité impossible à évaluer'
+      } as Record<string, string>,
       entityNotes: 'Notes',
       outgoing: 'vers',
       incoming: 'depuis',
@@ -408,6 +427,25 @@ const en: typeof fr = {
       connections: 'Links',
       properties: 'Properties',
       noProperties: 'No properties recorded.',
+      rating: 'Rating',
+      ratingSource: 'source',
+      ratingInfo: 'information',
+      reliability: {
+        A: 'completely reliable',
+        B: 'usually reliable',
+        C: 'fairly reliable',
+        D: 'not usually reliable',
+        E: 'unreliable',
+        F: 'reliability cannot be judged'
+      },
+      credibility: {
+        '1': 'confirmed by other sources',
+        '2': 'probably true',
+        '3': 'possibly true',
+        '4': 'doubtful',
+        '5': 'improbable',
+        '6': 'truth cannot be judged'
+      },
       entityNotes: 'Notes',
       outgoing: 'to',
       incoming: 'from',

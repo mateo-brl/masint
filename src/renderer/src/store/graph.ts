@@ -8,7 +8,7 @@ import {
   type NodeChange
 } from '@xyflow/react'
 import { create } from 'zustand'
-import type { EdgeInput, GraphChange, GraphEdge, GraphNode, Investigation, NodeInput, SavedNode, Suggestion } from '@shared/types'
+import type { Corroboration, EdgeInput, GraphChange, GraphEdge, GraphNode, Investigation, NodeInput, SavedNode, Suggestion } from '@shared/types'
 import { api } from '../lib/api'
 import type { Bundle } from '../lib/collapse'
 
@@ -173,6 +173,11 @@ interface GraphState {
   canRedo: boolean
   /** Résultats à vérifier de l'enquête ouverte (tous états). */
   suggestions: Suggestion[]
+  /**
+   * Nombre de modules distincts qui ont observé chaque nœud et chaque lien. Lu nœud par nœud
+   * (`s.corroboration.nodes[id]`) : un score qui change ne redessine que son élément.
+   */
+  corroboration: Corroboration
 
   refreshSuggestions(): Promise<void>
   undo(): Promise<void>
@@ -210,6 +215,7 @@ export const useGraph = create<GraphState>((set, get) => ({
   edges: [],
   loading: false,
   suggestions: [],
+  corroboration: { nodes: {}, edges: {} },
 
   async refreshSuggestions() {
     const inv = get().investigation
@@ -260,14 +266,15 @@ export const useGraph = create<GraphState>((set, get) => ({
       edges: bundle.edges.map((e) => toFlowEdge(e)),
       loading: false,
       tool: 'select',
-      suggestions: []
+      suggestions: [],
+      corroboration: bundle.corroboration ?? { nodes: {}, edges: {} }
     })
     void get().refreshSuggestions()
   },
 
   close() {
     resetHistory()
-    set({ investigation: null, nodes: [], edges: [], canUndo: false, canRedo: false, suggestions: [] })
+    set({ investigation: null, nodes: [], edges: [], canUndo: false, canRedo: false, suggestions: [], corroboration: { nodes: {}, edges: {} } })
   },
 
   setTool(tool) {
@@ -468,9 +475,12 @@ export const useGraph = create<GraphState>((set, get) => ({
     for (const { duplicateOf: _dup, ...n } of change.nodes as SavedNode[]) nodes.set(n.id, toFlowNode(n, nodes.get(n.id)))
     const edges = new Map(get().edges.filter((e) => !delEdges.has(e.id)).map((e) => [e.id, e]))
     for (const e of change.edges) if (e) edges.set(e.id, toFlowEdge(e, edges.get(e.id)))
+    const c = change.corroboration
+    const corroboration = c ? { nodes: { ...get().corroboration.nodes, ...c.nodes }, edges: { ...get().corroboration.edges, ...c.edges } } : get().corroboration
     set({
       nodes: Array.from(nodes.values()),
-      edges: Array.from(edges.values()).filter((e) => nodes.has(e.source) && nodes.has(e.target))
+      edges: Array.from(edges.values()).filter((e) => nodes.has(e.source) && nodes.has(e.target)),
+      corroboration
     })
   },
 
