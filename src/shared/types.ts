@@ -106,6 +106,18 @@ export interface InvestigationBundle {
 export type NodeInput = Partial<Omit<GraphNode, 'investigationId' | 'createdAt' | 'updatedAt'>> & {
   id?: string
 }
+
+/** Nœud enregistré. `duplicateOf` : entité de même valeur canonique déjà présente dans l'enquête. */
+export type SavedNode = GraphNode & { duplicateOf?: string }
+
+/** Options d'écriture des nœuds et liens. */
+export interface UpsertOptions {
+  /**
+   * Mise à jour seule : un patch (position, style, données) qui vise un élément absent ou
+   * supprimé est ignoré au lieu de le recréer. Sert aux modifications et à l'annulation.
+   */
+  updateOnly?: boolean
+}
 export type EdgeInput = Partial<Omit<GraphEdge, 'investigationId' | 'createdAt' | 'updatedAt'>> & {
   source: string
   target: string
@@ -177,6 +189,14 @@ export interface ModuleRun {
   error: string | null
   startedAt: number | null
   finishedAt: number | null
+}
+
+/** Statistiques d'exécution d'un module dans une enquête (requête d'agrégat, sans limite). */
+export interface ModuleRunStats {
+  moduleId: string
+  runs: number
+  results: number
+  errors: number
 }
 
 export interface JobProgress {
@@ -254,17 +274,35 @@ export interface ProxySettings {
   perModule: Record<string, ModuleRoute>
 }
 
+/**
+ * Ouverture des liens d'enquête : `internal` dans le navigateur d'enquête de MASINT (proxy ou
+ * Tor, session isolée), `external` dans le navigateur de l'enquêteur, `auto` en interne dès
+ * qu'un proxy ou Tor est actif.
+ */
+export type LinkOpening = 'auto' | 'internal' | 'external'
+
 export interface Settings {
   lang: Lang
   theme: 'dark' | 'light'
   proxy: ProxySettings
+  /** En-tête navigateur des requêtes et du navigateur intégré (calculé d'après le système si vide). */
   userAgent: string
   /** Modules exécutés en parallèle pour un même nœud. */
   concurrency: number
+  /** Modules exécutés en parallèle au total, tous nœuds confondus. */
+  globalConcurrency: number
   timeoutMs: number
   disabledModules: string[]
   /** Lancer automatiquement les modules applicables à la création d'un nœud. */
   autoEnrich: boolean
+  /** Mode passif : les modules qui contactent la cible (`noisy`) ne partent pas avec « Enrichir ». */
+  passiveMode: boolean
+  linkOpening: LinkOpening
+  /**
+   * Sel de l'identifiant SOCKS envoyé à Tor (`masint-<enquête>`) : le changer (« Nouvelle
+   * identité Tor ») fait ouvrir de nouveaux circuits.
+   */
+  torSalt: string
   autoUpdate: boolean
   edgeStyle: 'bezier' | 'smoothstep' | 'straight'
   /** `auto` : libellés masqués autour des nœuds très reliés, sauf pour la sélection. */

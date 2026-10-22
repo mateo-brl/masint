@@ -1,15 +1,18 @@
+import { randomBytes } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, dirname, extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { app, BrowserWindow, clipboard, dialog, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, ipcMain, session, shell } from 'electron'
 import exifr from 'exifr'
 import type { ApiChannel, ApiMap } from '@shared/api'
 import type { GraphEdge, GraphNode, Settings } from '@shared/types'
 import { buildArchive, duplicateInvestigation, importArchive } from './archive'
 import { mergeData } from './merge'
-import { assistedSearch, needlesFor } from './assist'
+import { applyAssistIdentity, assistedSearch, assistSession, needlesFor } from './assist'
+import { openInvestigationBrowser, openLink } from './browser'
+import { compactLater } from './db/database'
 import type { Repo } from './db/repo'
 import { createFetch, resetDispatchers } from './engine/http'
 import { allModules, knownKeyIds, moduleInfo } from './engine/registry'
@@ -66,7 +69,11 @@ export function registerIpc(deps: IpcDeps): void {
   handle('investigations:list', () => repo.listInvestigations())
   handle('investigations:create', (input) => repo.createInvestigation(input))
   handle('investigations:update', (id, patch) => repo.updateInvestigation(id, patch))
-  handle('investigations:delete', (id) => repo.deleteInvestigation(id))
+  handle('investigations:delete', (id) => {
+    repo.deleteInvestigation(id)
+    // Journal WAL vidé et fichier reconstruit après la réponse : rien ne reste de l'enquête.
+    compactLater(repo.db)
+  })
   handle('investigations:open', (id) => repo.getBundle(id))
   handle('investigations:duplicate', (id) => duplicateInvestigation(repo, id))
   handle('investigations:exportArchive', async (id) => {
@@ -97,11 +104,11 @@ export function registerIpc(deps: IpcDeps): void {
   })
 
   // Graphe -------------------------------------------------------------------
-  handle('graph:upsertNodes', (invId, nodes) => repo.upsertNodes(invId, nodes))
+  handle('graph:upsertNodes', (invId, nodes, opts) => repo.upsertNodes(invId, nodes, opts))
   handle('graph:deleteNodes', (invId, ids) => {
     repo.deleteNodes(invId, ids)
   })
-  handle('graph:upsertEdges', (invId, edges) => repo.upsertEdges(invId, edges))
+  handle('graph:upsertEdges', (invId, edges, opts) => repo.upsertEdges(invId, edges, opts))
   handle('graph:deleteEdges', (invId, ids) => repo.deleteEdges(invId, ids))
   handle('graph:mergeNodes', (invId, targetId, otherIds) => {
     const target = repo.getNode(targetId)
@@ -129,6 +136,7 @@ export function registerIpc(deps: IpcDeps): void {
       }
       edges.push(...repo.upsertEdges(invId, [{ ...e, id: undefined, source, target: target2 }]))
     }
+    repo.reassignNodeHistory(invId, Array.from(otherSet), targetId)
     const deletedEdgeIds = repo.deleteNodes(invId, Array.from(otherSet))
     const change = { investigationId: invId, nodes: [merged] as GraphNode[], edges, deletedNodeIds: Array.from(otherSet), deletedEdgeIds }
     return change
@@ -202,6 +210,7 @@ export function registerIpc(deps: IpcDeps): void {
   handle('modules:enrich', (invId, nodeId, moduleIds) => engine.enrich(invId, nodeId, moduleIds))
   handle('modules:cancel', (jobId) => engine.cancel(jobId))
   handle('modules:runs', (invId, nodeId) => repo.listRuns(invId, nodeId))
+  handle('modules:runStats', (invId) => repo.runStats(invId))
   handle('modules:jobs', () => engine.listJobs())
   handle('suggestions:list', (invId, nodeId) => repo.listSuggestions(invId, nodeId))
   handle('suggestions:resolve', (id, action, found) => engine.resolveSuggestion(id, action, found))
@@ -237,6 +246,15 @@ export function registerIpc(deps: IpcDeps): void {
       resetDispatchers()
       await deps.applySessionProxy(next)
     }
+    if (patch.userAgent !== undefined || patch.lang) applyAssistIdentity(next)
+    if (patch.globalConcurrency !== undefined) engine.slots.drain()
+    return next
+  })
+  handle('proxy:newTorIdentity', async () => {
+    const next = settings.set({ torSalt: randomBytes(8).toString('hex') })
+    // Connexions gardées ouvertes fermées : elles resteraient sur les anciens circuits.
+    resetDispatchers()
+    await Promise.all([assistSession().closeAllConnections(), session.defaultSession.closeAllConnections()]).catch(() => undefined)
     return next
   })
   handle('secrets:list', () => settings.listSecrets(knownKeyIds()))
@@ -334,6 +352,10 @@ export function registerIpc(deps: IpcDeps): void {
   handle('app:info', () => ({ version: app.getVersion(), platform: process.platform, dataPath: app.getPath('userData') }))
   handle('app:openExternal', (url) => {
     if (/^https?:\/\//i.test(url)) void shell.openExternal(url)
+  })
+  handle('app:openLink', (url) => openLink(url, settings.get()))
+  handle('browser:open', (url) => {
+    openInvestigationBrowser(url, settings.get())
   })
   handle('app:showInFolder', (path) => shell.showItemInFolder(path))
   handle('app:takePendingOpen', () => takePendingOpen())

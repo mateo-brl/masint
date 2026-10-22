@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { KeyRequirement, ProxyMode, ProxyTestResult, RosoStatus, Settings } from '@shared/types'
+import type { KeyRequirement, LinkOpening, ProxyMode, ProxyTestResult, RosoStatus, Settings } from '@shared/types'
 import { api, openExternal } from '../../lib/api'
 import { useLang } from '../../lib/i18n'
 import { Icon } from '../../lib/icons'
@@ -85,6 +85,9 @@ function GeneralTab(): React.JSX.Element | null {
       <Row label={t('settings.autoEnrich')} hint={t('settings.autoEnrichHint')}>
         <Switch checked={settings.autoEnrich} onChange={(v) => void update({ autoEnrich: v })} />
       </Row>
+      <Row label={t('settings.passiveMode')} hint={t('settings.passiveModeHint')}>
+        <Switch checked={settings.passiveMode} onChange={(v) => void update({ passiveMode: v })} />
+      </Row>
       <Row label={t('settings.concurrency')} hint={t('settings.concurrencyHint')}>
         <input
           type="number"
@@ -92,6 +95,16 @@ function GeneralTab(): React.JSX.Element | null {
           max={32}
           defaultValue={settings.concurrency}
           onBlur={(e) => void update({ concurrency: Number(e.target.value) })}
+          className="field !w-24"
+        />
+      </Row>
+      <Row label={t('settings.globalConcurrency')} hint={t('settings.globalConcurrencyHint')}>
+        <input
+          type="number"
+          min={1}
+          max={64}
+          defaultValue={settings.globalConcurrency}
+          onBlur={(e) => void update({ globalConcurrency: Number(e.target.value) })}
           className="field !w-24"
         />
       </Row>
@@ -106,8 +119,20 @@ function GeneralTab(): React.JSX.Element | null {
         />
       </Row>
       <div className="py-3">
-        <div className="mb-1.5 text-[13px]">{t('settings.userAgent')}</div>
-        <input defaultValue={settings.userAgent} onBlur={(e) => void update({ userAgent: e.target.value })} className="field font-mono !text-[11.5px]" />
+        <div className="mb-1.5 flex items-center gap-2">
+          <span className="flex-1 text-[13px]">{t('settings.userAgent')}</span>
+          <button onClick={() => void update({ userAgent: '' })} className="text-[11.5px] text-muted hover:text-fg">
+            {t('settings.userAgentAuto')}
+          </button>
+        </div>
+        {/* `key` : le champ reprend la valeur enregistrée après un retour à l'en-tête automatique. */}
+        <input
+          key={settings.userAgent}
+          defaultValue={settings.userAgent}
+          onBlur={(e) => e.target.value !== settings.userAgent && void update({ userAgent: e.target.value })}
+          className="field font-mono !text-[11.5px]"
+        />
+        <div className="mt-1 text-[11.5px] text-muted">{t('settings.userAgentHint')}</div>
       </div>
     </div>
   )
@@ -120,8 +145,14 @@ function NetworkTab(): React.JSX.Element | null {
   const [url, setUrl] = useState(settings?.proxy.url ?? '')
   const [testing, setTesting] = useState(false)
   const [result, setResult] = useState<ProxyTestResult | null>(null)
+  const [renewed, setRenewed] = useState(false)
   if (!settings) return null
   const p = settings.proxy
+  const newTorIdentity = async (): Promise<void> => {
+    useApp.setState({ settings: await api('proxy:newTorIdentity') })
+    setResult(null)
+    setRenewed(true)
+  }
   const setMode = (mode: ProxyMode): void => {
     setResult(null)
     void update({ proxy: { ...p, mode } })
@@ -181,6 +212,11 @@ function NetworkTab(): React.JSX.Element | null {
             />
           </Row>
           <div className="rounded-xl border border-line bg-panel-2 p-3 text-[12px] text-muted">{t('settings.torHelp')}</div>
+          <Row label={t('settings.torIdentity')} hint={renewed ? t('settings.torIdentityDone') : t('settings.torIdentityHint')}>
+            <Button icon="RefreshCw" onClick={() => void newTorIdentity()}>
+              {t('settings.torIdentityButton')}
+            </Button>
+          </Row>
         </div>
       )}
       <div className="flex items-center gap-3">
@@ -198,6 +234,19 @@ function NetworkTab(): React.JSX.Element | null {
           ))}
       </div>
       <p className="text-[11.5px] text-faint">{t('settings.proxyNote')}</p>
+      <Row label={t('settings.linkOpening')} hint={t(`settings.linkOpeningHint.${settings.linkOpening}`)}>
+        <select
+          value={settings.linkOpening}
+          onChange={(e) => void update({ linkOpening: e.target.value as LinkOpening })}
+          className="field !w-56"
+        >
+          {(['auto', 'internal', 'external'] as const).map((v) => (
+            <option key={v} value={v}>
+              {t(`settings.linkOpeningMode.${v}`)}
+            </option>
+          ))}
+        </select>
+      </Row>
     </div>
   )
 }

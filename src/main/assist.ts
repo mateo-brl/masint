@@ -5,11 +5,21 @@
 // reste cachée tant que la page se charge seule ; elle s'affiche si un captcha, un bandeau de
 // consentement récalcitrant ou une connexion demande une action, puis la recherche reprend.
 
-import { BrowserWindow, session, type ProxyConfig } from 'electron'
+import { app, BrowserWindow, session, type ProxyConfig, type WebContents } from 'electron'
+import { browserLanguages } from '@shared/network'
 import type { AssistResult, Settings } from '@shared/types'
 export { needlesFor } from '@shared/needles'
 
+/** Partition du navigateur intégré : recherche assistée et navigateur d'enquête. */
 export const ASSIST_PARTITION = 'persist:masint-assist'
+
+/**
+ * WebRTC n'utilise que le proxy : sans cela, une page qui crée un `RTCPeerConnection` lit les
+ * adresses IP locales (et l'IP publique par STUN en UDP) même derrière Tor.
+ */
+export function hardenWebContents(wc: WebContents): void {
+  wc.setWebRTCIPHandlingPolicy('disable_non_proxied_udp')
+}
 
 export function proxyConfig(s: Settings): ProxyConfig {
   const p = s.proxy
@@ -27,15 +37,31 @@ const ACTION_TIMEOUT = 4 * 60_000
 const LOAD_TIMEOUT = 45_000
 
 let hardened = false
-/** Session dédiée : aucune permission (caméra, notifications...), aucun téléchargement. */
-function assistSession(): Electron.Session {
+/**
+ * Session dédiée : aucune permission (caméra, notifications, ouverture d'applications
+ * externes...), aucun téléchargement, WebRTC limité au proxy pour toute page qui s'y ouvre.
+ */
+export function assistSession(): Electron.Session {
   const ses = session.fromPartition(ASSIST_PARTITION)
   if (!hardened) {
     ses.setPermissionRequestHandler((_wc, _perm, cb) => cb(false))
+    ses.setPermissionCheckHandler(() => false)
     ses.on('will-download', (e) => e.preventDefault())
+    // Toute page de la partition, y compris une fenêtre qui ne passerait pas par nos fonctions.
+    app.on('web-contents-created', (_e, wc) => {
+      if (wc.session === ses) hardenWebContents(wc)
+    })
     hardened = true
   }
   return ses
+}
+
+/**
+ * En-tête navigateur et langues de la session : les mêmes que les requêtes des modules,
+ * construits d'après le vrai système (voir `buildUserAgent`), pour une empreinte cohérente.
+ */
+export function applyAssistIdentity(s: Settings): void {
+  assistSession().setUserAgent(s.userAgent, browserLanguages(s.lang))
 }
 
 // Script exécuté dans la page : accepte ou refuse un bandeau de consentement courant et dit
@@ -123,6 +149,7 @@ export async function assistedSearch(opts: {
   })
   let closed = false
   win.on('closed', () => (closed = true))
+  hardenWebContents(win.webContents)
   win.webContents.setUserAgent(opts.userAgent)
   win.webContents.setWindowOpenHandler(({ url }) => {
     void win.loadURL(url)

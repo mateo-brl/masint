@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { detectEntity } from '@shared/detect'
 import { getEntityType } from '@shared/entityTypes'
 import type { PropValue, Suggestion } from '@shared/types'
-import { api, openExternal } from '../../lib/api'
+import { api, openLink } from '../../lib/api'
 import { errorMessage } from '../../lib/errors'
 import { useLang } from '../../lib/i18n'
 import { EntityBadge, Icon } from '../../lib/icons'
@@ -82,7 +82,7 @@ function EntityRow({ s }: { s: Suggestion }): React.JSX.Element {
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-0.5">
-        {s.url && <RowButton icon="ExternalLink" title={t('review.open')} onClick={() => openExternal(s.url!)} />}
+        {s.url && <RowButton icon="ExternalLink" title={t('review.open')} onClick={() => openLink(s.url!)} />}
         <RowButton label={t('review.rejectShort')} title={t('review.reject')} onClick={() => void resolve(s.id, 'reject')} />
         <RowButton icon="Check" label={t('review.acceptShort')} title={t('review.accept')} strong onClick={() => void resolve(s.id, 'accept')} />
       </div>
@@ -121,7 +121,7 @@ function ManualRow({ s }: { s: Suggestion }): React.JSX.Element {
           strong
           onClick={() => void useAssist.getState().run(s.id)}
         />
-        <RowButton icon="ExternalLink" label={t('review.openShort')} title={t('review.open')} onClick={() => s.url && openExternal(s.url)} />
+        <RowButton icon="ExternalLink" label={t('review.openShort')} title={t('review.open')} onClick={() => s.url && openLink(s.url)} />
         <RowButton label={t('review.nothingShort')} title={t('review.nothing')} onClick={() => void resolve(s.id, 'checked')} />
         <RowButton icon="Plus" label={t('review.foundShort')} title={t('review.found')} onClick={() => setFinding(!finding)} />
       </div>
@@ -167,7 +167,7 @@ function AssistResults({ s }: { s: Suggestion }): React.JSX.Element | null {
       {r.matches.length > 0 && <div className="text-[11px] text-muted">{t('assist.found', { count: r.matches.length })}</div>}
       {list.map((m) => (
         <div key={m.url} className="rounded-md bg-panel-2 px-2 py-1.5">
-          <button onClick={() => openExternal(m.url)} className="block w-full truncate text-left text-[12px] font-medium hover:underline" title={m.url}>
+          <button onClick={() => openLink(m.url)} className="block w-full truncate text-left text-[12px] font-medium hover:underline" title={m.url}>
             {m.title}
           </button>
           <div className="line-clamp-3 text-[11px] [overflow-wrap:anywhere] text-muted">{m.snippet}</div>
