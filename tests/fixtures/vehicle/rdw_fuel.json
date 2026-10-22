@@ -1,0 +1,15 @@
+[
+ {
+  "kenteken": "00ZZZ0",
+  "brandstof_volgnummer": "1",
+  "brandstof_omschrijving": "Benzine",
+  "brandstofverbruik_gecombineerd": "4.50",
+  "co2_uitstoot_gecombineerd": "106",
+  "geluidsniveau_stationair": "80",
+  "emissiecode_omschrijving": "4",
+  "milieuklasse_eg_goedkeuring_licht": "70/220*2003/76B",
+  "nettomaximumvermogen": "50.00",
+  "toerental_geluidsniveau": "4500",
+  "uitlaatemissieniveau": "EURO 4"
+ }
+]

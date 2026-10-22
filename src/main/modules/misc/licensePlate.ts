@@ -1,6 +1,6 @@
 // Analyse locale d'une plaque d'immatriculation : format (SIV, FNI...), pays probable et
 // informations déductibles du numéro (département FNI, région et période britanniques,
-// canton suisse, ville allemande). Aucun service tiers n'est interrogé.
+// canton suisse, ville allemande, série néerlandaise). Aucun service tiers n'est interrogé.
 
 import { defineModule, type ModuleContext, type ModuleOutput } from '@shared/modules'
 import { compact, tr } from './_util'
@@ -72,6 +72,41 @@ const DE = /^([A-ZÄÖÜ]{1,3})[-\s]([A-Z]{1,2})\s?(\d{1,4})([EH]?)$/
 const UK = /^([A-HJ-PR-Y])([A-HJ-PR-Y])(\d{2})\s?([A-HJ-PR-Z]{3})$/
 const CH = /^([A-Z]{2})\s?(\d{1,6})$/
 
+// Séries néerlandaises (« sidecodes ») : lettres (L) et chiffres (D) sur six caractères, en
+// trois groupes. La forme sans tiret suffit à retrouver la série, toutes sont distinctes.
+const NL_SIDECODES: Array<[string, number[]]> = [
+  ['LLDDDD', [2, 2, 2]],
+  ['DDDDLL', [2, 2, 2]],
+  ['DDLLDD', [2, 2, 2]],
+  ['LLDDLL', [2, 2, 2]],
+  ['LLLLDD', [2, 2, 2]],
+  ['DDLLLL', [2, 2, 2]],
+  ['DDLLLD', [2, 3, 1]],
+  ['DLLLDD', [1, 3, 2]],
+  ['LLDDDL', [2, 3, 1]],
+  ['LDDDLL', [1, 3, 2]],
+  ['LLLDDL', [3, 2, 1]],
+  ['LDDLLL', [1, 2, 3]],
+  ['DLLDDD', [1, 2, 3]],
+  ['DDDLLD', [3, 2, 1]]
+]
+
+/**
+ * Plaque néerlandaise plausible : `{ kenteken: '54JSG5', formatted: '54-JSG-5', sidecode: 7 }`
+ * (le `kenteken` est la forme attendue par le RDW : majuscules, sans tiret), sinon `null`.
+ */
+export function dutchPlate(raw: string): { kenteken: string; formatted: string; sidecode: number } | null {
+  const bare = raw.trim().toUpperCase().replace(/^NL[\s-]+/, '').replace(/[\s.-]/g, '')
+  if (!/^[A-Z0-9]{6}$/.test(bare)) return null
+  const shape = bare.replace(/[A-Z]/g, 'L').replace(/\d/g, 'D')
+  const i = NL_SIDECODES.findIndex(([s]) => s === shape)
+  if (i < 0) return null
+  // Pas de voyelle dans les séries récentes (depuis 1978) : on écarte les combinaisons avec voyelle.
+  if (i >= 3 && /[AEIOU]/.test(bare)) return null
+  const [a, b] = NL_SIDECODES[i][1]
+  return { kenteken: bare, formatted: `${bare.slice(0, a)}-${bare.slice(a, a + b)}-${bare.slice(a + b)}`, sidecode: i + 1 }
+}
+
 export function analyzePlate(raw: string): { normalized: string; matches: PlateMatch[] } {
   const spaced = raw.trim().toUpperCase().replace(/\s+/g, ' ')
   const dashed = spaced.replace(/[\s.]/g, '-').replace(/-+/g, '-')
@@ -118,7 +153,11 @@ export function analyzePlate(raw: string): { normalized: string; matches: PlateM
   if (m && CANTONS[m[1]]) {
     matches.push({ country: 'CH', format: { fr: 'suisse', en: 'Swiss' }, details: { canton: `${CANTONS[m[1]]} (${m[1]})` } })
   }
-  const normalized = matches[0]?.format.fr.startsWith('SIV') ? bare.replace(SIV, '$1-$2-$3') : spaced
+  const nl = dutchPlate(spaced)
+  if (nl) {
+    matches.push({ country: 'NL', format: { fr: `néerlandais (série ${nl.sidecode})`, en: `Dutch (sidecode ${nl.sidecode})` }, details: {} })
+  }
+  const normalized = matches[0]?.format.fr.startsWith('SIV') ? bare.replace(SIV, '$1-$2-$3') : matches[0]?.country === 'NL' && nl ? nl.formatted : spaced
   return { normalized, matches }
 }
 
@@ -150,8 +189,8 @@ export default defineModule({
   id: 'misc.license_plate',
   name: { fr: "Analyse de la plaque d'immatriculation", en: 'License plate analysis' },
   description: {
-    fr: "Reconnaît le format de la plaque (France SIV et FNI, Italie, Espagne, Belgique, Royaume-Uni, Allemagne, Suisse) et en déduit le pays, le département (FNI), la région et la période (Royaume-Uni) ou le canton. Hors ligne.",
-    en: 'Recognizes the plate format (France SIV and FNI, Italy, Spain, Belgium, UK, Germany, Switzerland) and derives the country, department (FNI), region and period (UK) or canton. Offline.'
+    fr: "Reconnaît le format de la plaque (France SIV et FNI, Italie, Espagne, Belgique, Royaume-Uni, Allemagne, Suisse, Pays-Bas) et en déduit le pays, le département (FNI), la région et la période (Royaume-Uni) ou le canton. Hors ligne.",
+    en: 'Recognizes the plate format (France SIV and FNI, Italy, Spain, Belgium, UK, Germany, Switzerland, Netherlands) and derives the country, department (FNI), region and period (UK) or canton. Offline.'
   },
   category: 'misc',
   inputTypes: ['license_plate'],
