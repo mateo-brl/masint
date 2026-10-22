@@ -3,7 +3,7 @@
 <!-- Fichier généré : ne pas modifier à la main. -->
 <!-- Régénérer avec : node build/scripts/list-modules.mjs > docs/modules-list.md -->
 
-179 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
+187 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
 
 Légende des remarques : **à la demande** (lancé seulement sur demande explicite, service à crédits), **bruyant** (peut alerter la personne recherchée), **expérimental** (résultats à vérifier). Une clé suivie de « (facultative) » améliore les résultats sans être obligatoire.
 
@@ -12,13 +12,13 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | [Téléphone](#phone) | 9 |
 | [Email](#email) | 39 |
 | [Pseudo](#username) | 3 |
-| [Personne](#person) | 7 |
+| [Personne](#person) | 9 |
 | [Domaine](#domain) | 17 |
 | [Adresse IP](#ip) | 14 |
 | [Site web](#web) | 8 |
 | [Crypto](#crypto) | 14 |
-| [Finance](#finance) | 2 |
-| [Entreprise](#company) | 5 |
+| [Finance](#finance) | 4 |
+| [Entreprise](#company) | 9 |
 | [Localisation](#location) | 3 |
 | [Image](#image) | 4 |
 | [Messagerie](#messaging) | 2 |
@@ -108,6 +108,8 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `person.bodacc` | Annonces BODACC (France) | `person` |  |  |
 | `person.fr_deces` | Décès en France (INSEE) | `person` |  |  |
 | `person.fr_dirigeants` | Mandats de dirigeant (France) | `person` |  |  |
+| `person.fr_elus` | Mandats d’élu local (France) | `person` |  |  |
+| `person.hatvp` | Déclarations à la HATVP | `person` |  | expérimental |
 | `person.jorf` | Journal officiel (France) | `person` |  |  |
 | `person.search_links` | Recherches manuelles (personne) | `person` |  |  |
 | `person.usernames` | Pseudos possibles (vérifiés) | `person` |  |  |
@@ -200,8 +202,10 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
+| `finance.amf_blacklist` | Listes noires de l’AMF | `domain`, `website`, `email`, `company`, `organization` |  |  |
 | `finance.iban` | Analyse de l'IBAN | `iban` |  |  |
 | `finance.openiban` | Banque et BIC (OpenIBAN) | `iban` |  |  |
+| `finance.sanctions` | Sanctions et gel des avoirs (France, UE, OFAC) | `person`, `company`, `organization`, `email`, `phone`, `domain`, `website`, `crypto_wallet` |  |  |
 
 <a id="company"></a>
 
@@ -209,8 +213,12 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
+| `company.bodacc` | Annonces BODACC et BALO (entreprise) | `company`, `organization` |  |  |
 | `company.companies_house` | Société britannique (Companies House) | `company` | `companies_house` | expérimental |
 | `company.fr_registry` | Entreprise française (annuaire officiel) | `company` |  |  |
+| `company.gleif` | LEI et liens de groupe (GLEIF) | `company`, `organization` |  |  |
+| `company.hatvp_lobbying` | Représentant d’intérêts (HATVP) | `company`, `organization` |  | expérimental |
+| `company.jo_associations` | Journal officiel des associations | `organization`, `company` |  |  |
 | `company.opencorporates` | Registres mondiaux (OpenCorporates) | `company` | `opencorporates` | expérimental |
 | `company.vies` | TVA intracommunautaire (VIES) | `vat` |  |  |
 | `company.wikidata` | Wikidata (organisation) | `company`, `organization` |  | expérimental |

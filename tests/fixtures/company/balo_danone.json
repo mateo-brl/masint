@@ -1,0 +1,31 @@
+{
+ "total_count": 125,
+ "results": [
+  {
+   "id_annonce": "20260513260152057",
+   "dateparution": "2026-05-13",
+   "societes_noms": [
+    "DANONE"
+   ],
+   "siren": [
+    "552032534"
+   ],
+   "facette_categorie_libelle": "PUBLICATIONS PERIODIQUES##Comptes annuels",
+   "fichiers_joints_fichier_pdf_text": "202605132601520.pdf",
+   "ftcontent": "DANONE Société Anonyme au capital de  1 70 348 620 ,  7 5   € Siège social :  59-6 1 , rue La Fayette  - 75009 Paris 552 032 534 R.C.S. PARIS Les comptes annuels et les comptes consolidés, accompagnés"
+  },
+  {
+   "id_annonce": "20260401260048939",
+   "dateparution": "2026-04-01",
+   "societes_noms": [
+    "Danone"
+   ],
+   "siren": [
+    "552032534"
+   ],
+   "facette_categorie_libelle": "AVIS DE CONVOCATION/AVIS DE REUNION##",
+   "fichiers_joints_fichier_pdf_text": "202604012600489.pdf",
+   "ftcontent": "DANONE Société anonyme au capital de  170 348 620,75   € Siège social :  59-61, rue La Fayette , 75009 Paris 552 032 534 R.C.S. Paris Avis de convocation Les actionnaires de la société Danone (la “Soc"
+  }
+ ]
+}

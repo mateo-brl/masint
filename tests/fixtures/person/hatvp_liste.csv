@@ -1,0 +1,5 @@
+"civilite";"prenom";"nom";"classement";"type_mandat";"qualite";"type_document";"departement";"date_publication";"date_depot";"nom_fichier";"url_dossier";"open_data";"statut_publication"
+"M.";"Jean";"Exemple";"exemple-jean";"depute";"Député de la 1re circonscription d'Exemple";"di";"99";"2024-07-30";"2024-07-15";"di-exemple-jean-depute-1.pdf";"/pages_nominatives/exemple-jean";"exemple-jean-di.xml";"Livrée"
+"M.";"Jean";"Exemple";"exemple-jean";"depute";"Député de la 1re circonscription d'Exemple";"dsp";"99";"2024-10-02";"2024-09-12";"dsp-exemple-jean-depute-1.pdf";"/pages_nominatives/exemple-jean";"";"Livrée"
+"Mme";"Jeanne";"Exemple";"exemple-jeanne";"commune";"Maire d'Exempleville";"di";"99";"2020-11-20";"2020-09-01";"di-exemple-jeanne-commune.pdf";"/pages_nominatives/exemple-jeanne";"";"Livrée"
+"M.";"Jean";"Modele";"modele-jean";"senateur";"Sénateur d'Exemple";"di";"98";"2023-12-01";"2023-11-01";"di-modele-jean.pdf";"/pages_nominatives/modele-jean";"";"Non publiée"
