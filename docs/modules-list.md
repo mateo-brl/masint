@@ -3,7 +3,7 @@
 <!-- Fichier généré : ne pas modifier à la main. -->
 <!-- Régénérer avec : node build/scripts/list-modules.mjs > docs/modules-list.md -->
 
-146 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
+158 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
 
 Légende des remarques : **à la demande** (lancé seulement sur demande explicite, service à crédits), **bruyant** (peut alerter la personne recherchée), **expérimental** (résultats à vérifier). Une clé suivie de « (facultative) » améliore les résultats sans être obligatoire.
 
@@ -12,13 +12,13 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | [Téléphone](#phone) | 9 |
 | [Email](#email) | 26 |
 | [Pseudo](#username) | 2 |
-| [Personne](#person) | 7 |
+| [Personne](#person) | 11 |
 | [Domaine](#domain) | 14 |
 | [Adresse IP](#ip) | 13 |
 | [Site web](#web) | 5 |
 | [Crypto](#crypto) | 11 |
 | [Finance](#finance) | 2 |
-| [Entreprise](#company) | 4 |
+| [Entreprise](#company) | 12 |
 | [Localisation](#location) | 3 |
 | [Image](#image) | 3 |
 | [Messagerie](#messaging) | 2 |
@@ -91,11 +91,15 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
+| `person.avocats` | Avocat (annuaire du CNB) | `person` |  |  |
 | `person.bodacc` | Annonces BODACC (France) | `person` |  |  |
 | `person.fr_deces` | Décès en France (INSEE) | `person` |  |  |
 | `person.fr_dirigeants` | Mandats de dirigeant (France) | `person` |  |  |
 | `person.jorf` | Journal officiel (France) | `person` |  |  |
+| `person.rne_elus` | Répertoire national des élus | `person` |  |  |
+| `person.rpps` | Professionnel de santé (RPPS) | `person`, `id_document` |  |  |
 | `person.search_links` | Recherches manuelles (personne) | `person` |  |  |
+| `person.transparence_sante` | Liens avec l’industrie (Transparence Santé) | `person`, `id_document` |  |  |
 | `person.usernames` | Pseudos possibles (vérifiés) | `person` |  |  |
 | `person.wikidata` | Wikidata (personnalité publique) | `person` |  | expérimental |
 
@@ -185,9 +189,17 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
+| `company.aides` | Aides de minimis | `company` |  |  |
+| `company.avocats` | Cabinet d'avocats (annuaire du CNB) | `company` |  |  |
+| `company.avocats_liste` | Avocats d'un cabinet (liste) | `company` |  | à la demande |
+| `company.boamp` | Avis d'attribution (BOAMP) | `company` |  |  |
 | `company.companies_house` | Société britannique (Companies House) | `company` | `companies_house` | expérimental |
 | `company.fr_registry` | Entreprise française (annuaire officiel) | `company` |  |  |
+| `company.icpe` | Installations classées (Géorisques) | `company` |  |  |
+| `company.marches_publics` | Marchés publics (DECP) | `company` |  |  |
 | `company.opencorporates` | Registres mondiaux (OpenCorporates) | `company` | `opencorporates` | expérimental |
+| `company.ted` | Marchés européens (TED) | `company` |  |  |
+| `company.transparence_sante` | Versements aux professionnels de santé (Transparence Santé) | `company` |  |  |
 | `company.vies` | TVA intracommunautaire (VIES) | `vat` |  |  |
 
 <a id="location"></a>
