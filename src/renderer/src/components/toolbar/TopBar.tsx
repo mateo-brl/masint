@@ -159,7 +159,7 @@ export function TopBar(): React.JSX.Element {
             onClick={() => setReviewOpen(true)}
             className="ml-1 flex items-center gap-1.5 rounded-lg bg-warning/15 px-2 py-1 text-[12px] font-semibold text-warning hover:bg-warning/25"
             title={t('review.title')}
-            aria-label={`${t('review.title')} : ${pendingReview}`}
+            aria-label={t('review.count', { count: pendingReview })}
           >
             <Icon name="ListTodo" size={14} /> {pendingReview}
           </button>
