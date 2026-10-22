@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import Database from 'better-sqlite3'
 
 export type DB = Database.Database
@@ -127,8 +128,120 @@ export function openDatabase(file: string): DB {
   const db = new Database(file)
   db.pragma('journal_mode = WAL')
   db.pragma('foreign_keys = ON')
+  // Contenu supprimé (enquête, nœud, pièce jointe) écrasé par des zéros, pas seulement libéré.
+  db.pragma('secure_delete = ON')
   migrate(db)
+  closeInterruptedRuns(db)
   return db
+}
+
+/**
+ * Langue enregistrée, lue avant le démarrage d'Electron (lecture seule, sans créer la base) :
+ * elle fixe la langue de Chromium, que l'on ne peut plus changer ensuite.
+ */
+export function readStoredLang(file: string): 'fr' | 'en' | null {
+  if (!existsSync(file)) return null
+  try {
+    const db = new Database(file, { readonly: true, fileMustExist: true })
+    try {
+      const row = db.prepare("SELECT value FROM settings WHERE key = 'settings'").get() as { value: string } | undefined
+      const lang = row ? (JSON.parse(row.value) as { lang?: unknown }).lang : null
+      return lang === 'fr' || lang === 'en' ? lang : null
+    } finally {
+      db.close()
+    }
+  } catch {
+    return null
+  }
+}
+
+/** Message des exécutions interrompues par la fermeture de l'application. */
+export const INTERRUPTED_RUN = 'Interrompu : MASINT a été fermé pendant l’exécution'
+
+/**
+ * Exécutions restées « en cours » ou « en attente » après une fermeture de l'application
+ * pendant un module : elles ne se termineront jamais, on les marque annulées au démarrage.
+ */
+export function closeInterruptedRuns(db: DB, at = Date.now()): number {
+  return db
+    .prepare("UPDATE module_runs SET status = 'cancelled', error = COALESCE(error, ?), finished_at = COALESCE(finished_at, ?) WHERE status IN ('running', 'queued')")
+    .run(INTERRUPTED_RUN, at).changes
+}
+
+/**
+ * Au-delà, le VACUUM attend la fermeture de l'application. Mesuré en test : 240 ms pour
+ * 16 Mo de données restantes, 590 ms pour 48 Mo, 1,5 s pour 128 Mo (environ 85 Mo/s).
+ * 32 Mo garde une marge sous la seconde sur une machine deux fois plus lente.
+ */
+const VACUUM_NOW_MAX_BYTES = 32 * 1024 * 1024
+
+export interface CompactResult {
+  /** Durées mesurées en millisecondes. */
+  checkpointMs: number
+  vacuumMs: number | null
+  /** Compactage reporté à la fermeture : base trop grosse pour le faire sans bloquer. */
+  deferred: boolean
+  bytesBefore: number
+  bytesAfter: number
+}
+
+let vacuumPending = false
+
+function dbBytes(db: DB): number {
+  const pages = db.pragma('page_count', { simple: true }) as number
+  const size = db.pragma('page_size', { simple: true }) as number
+  return pages * size
+}
+
+/**
+ * Après une suppression : vide le journal WAL dans la base (et le tronque), puis reconstruit
+ * le fichier (VACUUM) pour qu'il ne garde ni pages libres ni anciennes copies de pages.
+ * Sur une grosse base, le VACUUM bloquerait plus d'une seconde : il est reporté à la
+ * fermeture (`vacuumIfPending`).
+ */
+export function compactDatabase(db: DB, opts: { maxBytes?: number; force?: boolean } = {}): CompactResult {
+  const t0 = performance.now()
+  db.pragma('wal_checkpoint(TRUNCATE)')
+  const checkpointMs = performance.now() - t0
+  const bytesBefore = dbBytes(db)
+  if (!opts.force && bytesBefore > (opts.maxBytes ?? VACUUM_NOW_MAX_BYTES)) {
+    vacuumPending = true
+    return { checkpointMs, vacuumMs: null, deferred: true, bytesBefore, bytesAfter: bytesBefore }
+  }
+  const t1 = performance.now()
+  db.exec('VACUUM')
+  // En mode WAL, le VACUUM réécrit toute la base dans le journal : on le vide de nouveau.
+  db.pragma('wal_checkpoint(TRUNCATE)')
+  vacuumPending = false
+  return { checkpointMs, vacuumMs: performance.now() - t1, deferred: false, bytesBefore, bytesAfter: dbBytes(db) }
+}
+
+/** Planifie le compactage après la réponse à l'interface (suppression d'une enquête). */
+export function compactLater(db: DB, delayMs = 250): void {
+  setTimeout(() => {
+    if (!db.open) return
+    try {
+      const r = compactDatabase(db)
+      const mb = (n: number): string => (n / 1048576).toFixed(1)
+      console.log(
+        `[db] compactage : checkpoint ${r.checkpointMs.toFixed(0)} ms, ` +
+          (r.deferred ? `VACUUM reporté à la fermeture (${mb(r.bytesBefore)} Mo)` : `VACUUM ${r.vacuumMs!.toFixed(0)} ms, ${mb(r.bytesBefore)} → ${mb(r.bytesAfter)} Mo`)
+      )
+    } catch (e) {
+      console.error('[db] compactage impossible', e)
+    }
+  }, delayMs)
+}
+
+/** À la fermeture : compactage reporté d'une grosse base. */
+export function vacuumIfPending(db: DB): void {
+  if (!vacuumPending || !db.open) return
+  try {
+    const r = compactDatabase(db, { force: true })
+    console.log(`[db] VACUUM à la fermeture : ${r.vacuumMs?.toFixed(0)} ms`)
+  } catch (e) {
+    console.error('[db] compactage impossible', e)
+  }
 }
 
 function migrate(db: DB): void {
