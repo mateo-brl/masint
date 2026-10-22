@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { defineModule, type ModuleContext } from '@shared/modules'
 import type { GraphChange } from '@shared/types'
 import { buildArchive, duplicateInvestigation, importArchive, openArchiveOnce } from '../../src/main/archive'
+import { moveNoiseToReview } from '../../src/main/cleanup'
 import { openDatabase, type DB } from '../../src/main/db/database'
 import { dedupKey, Repo } from '../../src/main/db/repo'
 import { Engine } from '../../src/main/engine/runner'
@@ -141,6 +142,122 @@ describe('Engine.applyOutput', () => {
   })
 })
 
+describe('Résultats à vérifier', () => {
+  const mod = defineModule({
+    id: 'test.review',
+    name: { fr: 'Test', en: 'Test' },
+    description: { fr: '', en: '' },
+    category: 'person',
+    inputTypes: ['person'],
+    run: async () => ({})
+  })
+
+  it('met les hypothèses et les recherches manuelles de côté, hors du graphe', async () => {
+    const inv = repo.createInvestigation({ name: 'Revue' })
+    const [input] = repo.upsertNodes(inv.id, [{ type: 'person', label: 'Jean Test' }])
+    const stats = { review: 0 }
+    const count = await engine.applyOutput(
+      input,
+      mod,
+      {
+        entities: [
+          { ref: 'p', type: 'username', label: 'jeantest', review: true, reviewReason: 'pseudo généré', linkLabel: 'pseudo possible' },
+          { type: 'account', label: 'jeantest', platform: 'github', from: 'p' },
+          { type: 'company', label: 'Société sûre' }
+        ],
+        manual: [{ label: 'Pages Blanches', url: 'https://www.pagesblanches.fr/?q=Jean+Test', hint: 'adresse' }]
+      },
+      fakeCtx,
+      stats
+    )
+    expect(count).toBe(1)
+    expect(stats.review).toBe(3)
+    expect(repo.listNodes(inv.id).map((n) => n.label).sort()).toEqual(['Jean Test', 'Société sûre'])
+    const list = repo.listSuggestions(inv.id, input.id)
+    expect(list.map((s) => `${s.kind}:${s.type}:${s.label}`).sort()).toEqual([
+      'entity:account:jeantest',
+      'entity:username:jeantest',
+      'manual:search_link:Pages Blanches'
+    ])
+    expect(list.find((s) => s.type === 'username')!.reason).toBe('pseudo généré')
+  })
+
+  it('ne repropose pas une suggestion écartée', async () => {
+    const inv = repo.createInvestigation({ name: 'Revue' })
+    const [input] = repo.upsertNodes(inv.id, [{ type: 'person', label: 'Jean Test' }])
+    const out = { entities: [{ type: 'username', label: 'jeantest', review: true }] }
+    await engine.applyOutput(input, mod, out, fakeCtx)
+    const [s] = repo.listSuggestions(inv.id)
+    await engine.resolveSuggestion(s.id, 'reject')
+    const stats = { review: 0 }
+    await engine.applyOutput(input, mod, out, fakeCtx, stats)
+    expect(stats.review).toBe(0)
+    expect(repo.listSuggestions(inv.id)).toHaveLength(1)
+    expect(repo.getSuggestion(s.id)!.status).toBe('rejected')
+  })
+
+  it('relie directement une hypothèse déjà présente dans le graphe', async () => {
+    const inv = repo.createInvestigation({ name: 'Revue' })
+    const [input] = repo.upsertNodes(inv.id, [{ type: 'person', label: 'Jean Test' }])
+    repo.upsertNodes(inv.id, [{ type: 'username', label: 'jeantest' }])
+    const stats = { review: 0 }
+    await engine.applyOutput(input, mod, { entities: [{ type: 'username', label: 'JeanTest', review: true }] }, fakeCtx, stats)
+    expect(stats.review).toBe(0)
+    expect(repo.listEdges(inv.id)).toHaveLength(1)
+  })
+
+  it('valide une suggestion : le nœud entre dans le graphe, relié au nœud d’origine', async () => {
+    const inv = repo.createInvestigation({ name: 'Revue' })
+    const [input] = repo.upsertNodes(inv.id, [{ type: 'person', label: 'Jean Test' }])
+    await engine.applyOutput(
+      input,
+      mod,
+      { entities: [{ type: 'username', label: 'jeantest', review: true, linkLabel: 'pseudo possible' }], manual: [{ label: 'Truecaller', url: 'https://www.truecaller.com/' }] },
+      fakeCtx
+    )
+    const [pseudo, manual] = repo.listSuggestions(inv.id)
+    await engine.resolveSuggestion(pseudo.id, 'accept')
+    const node = repo.listNodes(inv.id).find((n) => n.type === 'username')!
+    expect(node.source).toBe('test.review')
+    expect(repo.listEdges(inv.id).find((e) => e.target === node.id)!.label).toBe('pseudo possible')
+    expect(repo.getSuggestion(pseudo.id)!.status).toBe('accepted')
+    // Recherche manuelle : ce que l'enquêteur a trouvé devient une entité.
+    await engine.resolveSuggestion(manual.id, 'accept', { type: 'email', label: 'jean@example.org' })
+    const email = repo.listNodes(inv.id).find((n) => n.type === 'email')!
+    expect(email.data.source_url).toBe('https://www.truecaller.com/')
+    expect(repo.listEdges(inv.id).find((e) => e.target === email.id)!.label).toBe('Truecaller')
+    await engine.resolveSuggestion(manual.id, 'reopen')
+    expect(repo.getSuggestion(manual.id)!.status).toBe('pending')
+  })
+})
+
+describe('Rangement des anciennes enquêtes', () => {
+  it('déplace les liens de recherche et pseudos générés intacts dans « À vérifier »', () => {
+    const inv = repo.createInvestigation({ name: 'Ancienne' })
+    const [p, link, pseudo, kept, touched] = repo.upsertNodes(inv.id, [
+      { type: 'person', label: 'Jean Test' },
+      { type: 'search_link', label: 'Google : Jean Test', data: { url: 'https://google.com/?q=x', engine: 'Google' }, source: 'person.search_links' },
+      { type: 'username', label: 'jeantest', source: 'person.usernames' },
+      { type: 'search_link', label: 'Bing : Jean Test', data: { url: 'https://bing.com/?q=x', engine: 'Bing' }, source: 'person.search_links' },
+      { type: 'username', label: 'jtest', source: 'person.usernames', notes: 'vu sur un forum' }
+    ])
+    repo.upsertEdges(inv.id, [
+      { source: p.id, target: link.id, label: 'recherche' },
+      { source: p.id, target: pseudo.id, label: 'pseudo possible' },
+      { source: p.id, target: kept.id, label: 'recherche' },
+      { source: p.id, target: touched.id, label: 'pseudo possible' }
+    ])
+    // Un lien qui a des enfants a été exploité : on le garde.
+    const [child] = repo.upsertNodes(inv.id, [{ type: 'url', label: 'https://exemple.org' }])
+    repo.upsertEdges(inv.id, [{ source: kept.id, target: child.id, label: 'trouvé' }])
+    expect(moveNoiseToReview(repo)).toBe(2)
+    expect(repo.listNodes(inv.id).map((n) => n.label).sort()).toEqual(['Bing : Jean Test', 'Jean Test', 'https://exemple.org', 'jtest'])
+    const list = repo.listSuggestions(inv.id)
+    expect(list.map((s) => `${s.kind}:${s.label}:${s.url ?? ''}`).sort()).toEqual(['entity:jeantest:', 'manual:Google:https://google.com/?q=x'])
+    expect(list.every((s) => s.nodeId === p.id)).toBe(true)
+  })
+})
+
 describe('Engine.enrich', () => {
   it('termine immédiatement sans module applicable', () => {
     const inv = repo.createInvestigation({ name: 'Test' })
@@ -169,6 +286,19 @@ describe('Archives .masint', () => {
     const person = nodes.find((n) => n.type === 'person')!
     expect(repo.getAttachmentData(person.imageId!)!.data).toEqual(Buffer.from([1, 2, 3]))
     expect(repo.listEdges(copy.id)[0].label).toBe('utilise')
+  })
+
+  it('conserve les résultats à vérifier et leur état', async () => {
+    const inv = repo.createInvestigation({ name: 'Archive revue' })
+    const [p] = repo.upsertNodes(inv.id, [{ type: 'person', label: 'Jean Dupont' }])
+    const base = { investigationId: inv.id, nodeId: p.id, moduleId: 'm', platform: null, data: {}, linkLabel: '', reason: '' }
+    repo.addSuggestion({ ...base, kind: 'entity', type: 'username', label: 'jdupont', url: null })
+    const manual = repo.addSuggestion({ ...base, kind: 'manual', type: 'search_link', label: 'Truecaller', url: 'https://truecaller.com/x' })!
+    repo.setSuggestionStatus(manual.id, 'checked')
+    const copy = await importArchive(repo, await buildArchive(repo, inv.id))
+    const list = repo.listSuggestions(copy.id)
+    expect(list.map((s) => `${s.label}:${s.status}`).sort()).toEqual(['Truecaller:checked', 'jdupont:pending'])
+    expect(list[0].nodeId).toBe(repo.listNodes(copy.id)[0].id)
   })
 })
 

@@ -3,7 +3,7 @@
 
 import { createHash, randomUUID } from 'node:crypto'
 import JSZip from 'jszip'
-import type { Attachment, GraphEdge, GraphNode, Investigation } from '@shared/types'
+import type { Attachment, GraphEdge, GraphNode, Investigation, Suggestion } from '@shared/types'
 import type { Repo } from './db/repo'
 
 export const ARCHIVE_FORMAT = 'masint'
@@ -17,6 +17,8 @@ interface Manifest {
   nodes: GraphNode[]
   edges: GraphEdge[]
   attachments: Attachment[]
+  /** Résultats à vérifier (absents des archives créées avant leur apparition). */
+  suggestions?: Suggestion[]
 }
 
 export async function buildArchive(repo: Repo, investigationId: string): Promise<Buffer> {
@@ -29,7 +31,8 @@ export async function buildArchive(repo: Repo, investigationId: string): Promise
     investigation: bundle.investigation,
     nodes: bundle.nodes,
     edges: bundle.edges,
-    attachments
+    attachments,
+    suggestions: repo.listSuggestions(investigationId)
   }
   const zip = new JSZip()
   zip.file('manifest.json', JSON.stringify(manifest, null, 2))
@@ -103,6 +106,13 @@ export async function importArchive(repo: Repo, buf: Buffer): Promise<Investigat
       .filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target))
       .map((e) => ({ ...e, id: randomUUID(), source: nodeIds.get(e.source)!, target: nodeIds.get(e.target)! }))
   )
+  for (const s of manifest.suggestions ?? []) {
+    const nodeId = nodeIds.get(s.nodeId)
+    if (!nodeId) continue
+    const { id: _old, status, createdAt: _c, updatedAt: _u, ...rest } = s
+    const created = repo.addSuggestion({ ...rest, investigationId: inv.id, nodeId })
+    if (created && status !== 'pending') repo.setSuggestionStatus(created.id, status)
+  }
   if (manifest.investigation.viewport) repo.updateInvestigation(inv.id, { viewport: manifest.investigation.viewport })
   return repo.getInvestigation(inv.id)!
 }

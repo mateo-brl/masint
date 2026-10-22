@@ -8,7 +8,7 @@ import {
   type NodeChange
 } from '@xyflow/react'
 import { create } from 'zustand'
-import type { EdgeInput, GraphChange, GraphEdge, GraphNode, Investigation, NodeInput } from '@shared/types'
+import type { EdgeInput, GraphChange, GraphEdge, GraphNode, Investigation, NodeInput, Suggestion } from '@shared/types'
 import { api } from '../lib/api'
 
 export type FlowNode = Node<{ node: GraphNode }>
@@ -109,7 +109,10 @@ interface GraphState {
   drawWidth: number
   canUndo: boolean
   canRedo: boolean
+  /** Résultats à vérifier de l'enquête ouverte (tous états). */
+  suggestions: Suggestion[]
 
+  refreshSuggestions(): Promise<void>
   undo(): Promise<void>
   redo(): Promise<void>
   load(id: string): Promise<void>
@@ -138,6 +141,14 @@ export const useGraph = create<GraphState>((set, get) => ({
   nodes: [],
   edges: [],
   loading: false,
+  suggestions: [],
+
+  async refreshSuggestions() {
+    const inv = get().investigation
+    if (!inv) return set({ suggestions: [] })
+    const list = await api('suggestions:list', inv.id)
+    if (get().investigation?.id === inv.id) set({ suggestions: list })
+  },
   tool: 'select',
   drawColor: '#e5484d',
   drawWidth: 4,
@@ -180,13 +191,15 @@ export const useGraph = create<GraphState>((set, get) => ({
       nodes: bundle.nodes.map((n) => toFlowNode(n)),
       edges: bundle.edges.map((e) => toFlowEdge(e)),
       loading: false,
-      tool: 'select'
+      tool: 'select',
+      suggestions: []
     })
+    void get().refreshSuggestions()
   },
 
   close() {
     resetHistory()
-    set({ investigation: null, nodes: [], edges: [], canUndo: false, canRedo: false })
+    set({ investigation: null, nodes: [], edges: [], canUndo: false, canRedo: false, suggestions: [] })
   },
 
   setTool(tool) {

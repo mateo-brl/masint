@@ -30,6 +30,26 @@ export interface OutEntity {
   from?: string
   /** Libellé du lien créé depuis le parent. */
   linkLabel?: string
+  /**
+   * Résultat non vérifié (pseudo généré, homonyme possible, correspondance approximative).
+   * Il n'entre pas dans le graphe : il attend dans « À vérifier » que l'enquêteur le valide.
+   * Une entité qui existe déjà dans l'enquête est reliée directement.
+   */
+  review?: boolean
+  /** Pourquoi le résultat est à vérifier, affiché à l'enquêteur (« homonyme possible »...). */
+  reviewReason?: string
+}
+
+/**
+ * Recherche que MASINT ne peut pas faire seul (service sans API, compte requis, captcha).
+ * Proposée dans « À vérifier » avec un bouton d'ouverture, jamais ajoutée au graphe.
+ */
+export interface OutManualCheck {
+  /** Service ou moteur (« Truecaller », « Pages Blanches »). */
+  label: string
+  url: string
+  /** Ce qu'il faut regarder sur la page, si utile. */
+  hint?: string
 }
 
 export interface OutLink {
@@ -41,6 +61,8 @@ export interface OutLink {
 export interface ModuleOutput {
   entities?: OutEntity[]
   links?: OutLink[]
+  /** Recherches à faire à la main, proposées dans « À vérifier ». */
+  manual?: OutManualCheck[]
   /** Propriétés fusionnées dans l'entité d'entrée. */
   properties?: Record<string, PropValue>
   /**
@@ -82,6 +104,11 @@ export interface ModuleContext {
   userAgent: string
   lang: 'fr' | 'en'
   log(message: string): void
+  /**
+   * Avancement interne d'un module long (« 23 / 57 plateformes · WhatsApp »), affiché dans la
+   * pastille de progression. Appels fréquents sans risque : l'envoi est espacé par le moteur.
+   */
+  progress(done: number, total: number, detail?: string): void
 }
 
 export interface OsintModule {

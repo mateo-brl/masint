@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto'
 import { emailProvider } from '@shared/platforms'
 import { childSlot, nodeBox } from '@shared/placement'
-import type { InputEntity, ModuleContext, ModuleOutput, OsintModule } from '@shared/modules'
-import type { GraphChange, GraphEdge, GraphNode, JobProgress, ModuleRun, PropValue } from '@shared/types'
+import type { EventMap } from '@shared/api'
+import type { InputEntity, ModuleContext, ModuleOutput, OsintModule, OutEntity } from '@shared/modules'
+import type { GraphEdge, GraphNode, JobProgress, ModuleRun, PropValue, Suggestion } from '@shared/types'
 import { dedupKey, type Repo } from '../db/repo'
 import type { SettingsService } from '../settings'
 import { createDohResolver, createFetch, jsonHelpers, type FetchFn } from './http'
@@ -12,10 +13,7 @@ const MAX_RAW = 200_000
 const MAX_IMAGE = 4 * 1024 * 1024
 const MODULE_HARD_TIMEOUT = 180_000
 
-export type Emit = <E extends 'graph:changed' | 'job:progress'>(
-  event: E,
-  payload: E extends 'graph:changed' ? GraphChange : JobProgress
-) => void
+export type Emit = <E extends 'graph:changed' | 'job:progress' | 'suggestions:changed'>(event: E, payload: EventMap[E]) => void
 
 /** Réponse HTTP en échec gardée pour le diagnostic d'un module en erreur. */
 interface HttpTrace {
@@ -218,12 +216,24 @@ export class Engine {
     job.controller.signal.addEventListener('abort', onAbort)
     const hardTimeout = setTimeout(() => controller.abort(), Math.max(m.timeoutMs ?? 0, MODULE_HARD_TIMEOUT))
 
+    // Avancement interne du module, envoyé au plus toutes les 250 ms.
+    let lastEmit = 0
+    const onProgress = (done: number, total: number, detail?: string): void => {
+      job.progress.steps = { ...job.progress.steps, [m.id]: { done, total, detail } }
+      const t = Date.now()
+      if (t - lastEmit < 250 && done < total) return
+      lastEmit = t
+      this.emit('job:progress', { ...job.progress, running: [...job.progress.running] })
+    }
+
     try {
-      const ctx = this.createContext(m, controller.signal, trace)
+      const ctx = this.createContext(m, controller.signal, trace, onProgress)
       // Relire le nœud : un module précédent a pu enrichir ses propriétés.
       const fresh = this.repo.getNode(node.id) ?? node
       const output = await m.run(toInput(fresh, this.imageOrigin(fresh)), ctx)
-      const count = await this.applyOutput(fresh, m, output, ctx)
+      const stats = { review: 0 }
+      const count = await this.applyOutput(fresh, m, output, ctx, stats)
+      job.progress.review = (job.progress.review ?? 0) + stats.review
       this.repo.updateRun(run.id, {
         status: 'done',
         found: output.found ?? null,
@@ -250,6 +260,11 @@ export class Engine {
       job.controller.signal.removeEventListener('abort', onAbort)
       job.progress.done += 1
       job.progress.running = job.progress.running.filter((id) => id !== m.id)
+      if (job.progress.steps?.[m.id]) {
+        const rest = { ...job.progress.steps }
+        delete rest[m.id]
+        job.progress.steps = rest
+      }
       this.emit('job:progress', { ...job.progress, running: [...job.progress.running] })
     }
   }
@@ -258,7 +273,12 @@ export class Engine {
     return node.imageId ? (this.repo.getAttachment(node.imageId)?.origin ?? null) : null
   }
 
-  createContext(m: OsintModule, signal: AbortSignal, trace: HttpTrace[] = []): ModuleContext {
+  createContext(
+    m: Pick<OsintModule, 'id'>,
+    signal: AbortSignal,
+    trace: HttpTrace[] = [],
+    onProgress: ModuleContext['progress'] = () => undefined
+  ): ModuleContext {
     const settings = this.settings.get()
     const baseFetch = createFetch({ settings, moduleId: m.id, signal })
     const fetchFn = traceFetch(baseFetch, trace)
@@ -278,15 +298,28 @@ export class Engine {
       signal,
       userAgent: settings.userAgent,
       lang: settings.lang,
-      log: (msg) => console.log(`[${m.id}] ${msg}`)
+      log: (msg) => console.log(`[${m.id}] ${msg}`),
+      progress: onProgress
     }
   }
 
   /** Persiste le résultat d'un module : propriétés, entités dédoublonnées, liens, images. */
-  async applyOutput(input: GraphNode, m: OsintModule, output: ModuleOutput, ctx: ModuleContext): Promise<number> {
+  async applyOutput(
+    input: GraphNode,
+    m: Pick<OsintModule, 'id'>,
+    output: ModuleOutput,
+    ctx: ModuleContext,
+    stats: { review: number } = { review: 0 }
+  ): Promise<number> {
     const invId = input.investigationId
     const changedNodes = new Map<string, GraphNode>()
     const changedEdges: GraphEdge[] = []
+    // Références des entités mises de côté : leurs enfants le sont aussi.
+    const reviewRefs = new Set<string>()
+    let inGraph = 0
+    const suggest = (s: Omit<Suggestion, 'id' | 'status' | 'createdAt' | 'updatedAt' | 'investigationId' | 'nodeId' | 'moduleId'>): void => {
+      if (this.repo.addSuggestion({ ...s, investigationId: invId, nodeId: input.id, moduleId: m.id })) stats.review++
+    }
 
     if (output.properties && Object.keys(output.properties).length) {
       const updated = this.repo.mergeNodeData(input.id, output.properties, false)
@@ -300,9 +333,24 @@ export class Engine {
       const label = String(ent.label ?? '').trim()
       if (!label) continue
       const platform = ent.platform ?? (ent.type === 'email' ? (emailProvider(label)?.id ?? null) : null)
-      const parent = refs.get(ent.from ?? '$input') ?? refs.get('$input')!
       const key = dedupKey(ent.type, label, platform)
       let node = this.repo.findNodeByDedup(invId, key)
+      // Résultat non vérifié et absent du graphe : il attend dans « À vérifier ».
+      if (!node && (ent.review || (ent.from !== undefined && reviewRefs.has(ent.from)))) {
+        if (ent.ref) reviewRefs.add(ent.ref)
+        suggest({
+          kind: 'entity',
+          type: ent.type,
+          label,
+          platform,
+          data: cleanData({ ...(ent.data ?? {}), ...(ent.image ? { __image: ent.image } : {}) }),
+          linkLabel: ent.linkLabel ?? '',
+          url: typeof ent.data?.url === 'string' ? ent.data.url : null,
+          reason: ent.reviewReason ?? ''
+        })
+        continue
+      }
+      const parent = refs.get(ent.from ?? '$input') ?? refs.get('$input')!
       if (node) {
         if (ent.data && Object.keys(ent.data).length) node = this.repo.mergeNodeData(node.id, ent.data, false) ?? node
       } else {
@@ -322,6 +370,7 @@ export class Engine {
       }
       if (ent.ref) refs.set(ent.ref, node)
       changedNodes.set(node.id, node)
+      inGraph++
       if (node.id !== parent.id && !this.repo.findEdge(invId, parent.id, node.id)) {
         const [edge] = this.repo.upsertEdges(invId, [
           { source: parent.id, target: node.id, label: ent.linkLabel ?? '', sourceModule: m.id }
@@ -339,6 +388,12 @@ export class Engine {
       changedEdges.push(edge)
     }
 
+    for (const check of output.manual ?? []) {
+      if (!check.url || !check.label) continue
+      suggest({ kind: 'manual', type: 'search_link', label: check.label, platform: null, data: {}, linkLabel: check.label, url: check.url, reason: check.hint ?? '' })
+    }
+    if (stats.review) this.emit('suggestions:changed', { investigationId: invId, nodeId: input.id })
+
     for (const p of pending) {
       const updated = await this.attachImage(p.node, p.image!, ctx).catch(() => null)
       if (updated) changedNodes.set(updated.id, updated)
@@ -347,7 +402,7 @@ export class Engine {
     if (changedNodes.size || changedEdges.length) {
       this.emit('graph:changed', { investigationId: invId, nodes: Array.from(changedNodes.values()), edges: changedEdges })
     }
-    return (output.entities?.length ?? 0) + Object.keys(output.properties ?? {}).length
+    return inGraph + Object.keys(output.properties ?? {}).length
   }
 
   private async attachImage(node: GraphNode, url: string, ctx: ModuleContext): Promise<GraphNode | null> {
@@ -375,6 +430,43 @@ export class Engine {
       origin: url
     })
     return this.repo.upsertNodes(node.investigationId, [{ id: node.id, imageId: att.id }])[0]
+  }
+
+  /**
+   * Décision de l'enquêteur sur un résultat à vérifier :
+   * - `accept` : l'entité entre dans le graphe, reliée au nœud d'origine. Pour une recherche
+   *   manuelle, `found` décrit ce qui a été trouvé ; sans `found`, le lien est gardé dans le graphe ;
+   * - `reject` : écartée, elle ne sera plus proposée ;
+   * - `checked` : recherche manuelle faite, rien trouvé ;
+   * - `reopen` : de nouveau à vérifier.
+   */
+  async resolveSuggestion(
+    id: string,
+    action: 'accept' | 'reject' | 'checked' | 'reopen',
+    found?: { type: string; label: string; platform?: string | null }
+  ): Promise<void> {
+    const s = this.repo.getSuggestion(id)
+    if (!s) return
+    const parent = this.repo.getNode(s.nodeId)
+    const done = (status: Suggestion['status']): void => {
+      this.repo.setSuggestionStatus(id, status)
+      this.emit('suggestions:changed', { investigationId: s.investigationId, nodeId: s.nodeId })
+    }
+    if (action !== 'accept' || !parent) {
+      done(action === 'reopen' ? 'pending' : action === 'checked' ? 'checked' : 'rejected')
+      return
+    }
+    const { __image, ...data } = s.data
+    const entity: OutEntity =
+      s.kind === 'entity'
+        ? { type: s.type, label: s.label, platform: s.platform ?? undefined, data, linkLabel: s.linkLabel, image: typeof __image === 'string' ? __image : undefined }
+        : found
+          ? { type: found.type, label: found.label, platform: found.platform ?? undefined, data: { source_url: s.url }, linkLabel: s.label }
+          : { type: 'search_link', label: `${s.label} : ${parent.label}`, data: { url: s.url, engine: s.label }, linkLabel: s.linkLabel }
+    // Même chemin qu'un résultat de module : dédoublonnage, placement libre, image, événement.
+    const ctx = this.createContext({ id: s.moduleId }, AbortSignal.timeout(30_000))
+    await this.applyOutput(parent, { id: s.moduleId }, { entities: [entity] }, ctx)
+    done('accepted')
   }
 
   /** Position d'un nouvel enfant : rangées centrées sous le parent, sur des cases libres. */

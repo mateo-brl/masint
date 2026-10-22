@@ -30,7 +30,7 @@ import { confirmDialog } from '../ui'
 import { DrawLayer } from './DrawLayer'
 import { MasintEdge } from './edges/MasintEdge'
 import { DrawingNode } from './nodes/DrawingNode'
-import { EntityNode, OutDegreeContext, SelectedNodesContext } from './nodes/EntityNode'
+import { EntityNode, OutDegreeContext, ReviewCountContext, SelectedNodesContext } from './nodes/EntityNode'
 import { ImageNode } from './nodes/ImageNode'
 import { MapNode } from './nodes/MapNode'
 import { TextNode } from './nodes/TextNode'
@@ -88,6 +88,13 @@ export function GraphCanvas(): React.JSX.Element {
     .map((n) => n.id)
     .join('|')
   const selectedNodes = useMemo(() => new Set(selectedKey ? selectedKey.split('|') : []), [selectedKey])
+
+  const suggestions = useGraph((s) => s.suggestions)
+  const reviewCount = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const s of suggestions) if (s.status === 'pending') m.set(s.nodeId, (m.get(s.nodeId) ?? 0) + 1)
+    return m
+  }, [suggestions])
 
   const outDegree = useMemo(() => {
     const m = new Map<string, number>()
@@ -197,66 +204,68 @@ export function GraphCanvas(): React.JSX.Element {
     <div ref={wrapper} className="absolute inset-0" onDoubleClick={onPaneDoubleClick}>
       <OutDegreeContext.Provider value={outDegree}>
         <SelectedNodesContext.Provider value={selectedNodes}>
-          <ReactFlow<FlowNode, FlowEdge>
-            // `isolate` : les calques Leaflet des blocs Carte (z-index 400 à 1000) restent sous les barres et menus.
-            className="isolate"
-            nodes={nodes}
-            edges={edges}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            defaultEdgeOptions={defaultEdgeOptions}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onMoveEnd={onMoveEnd}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            onNodeContextMenu={(e, node) => {
-              e.preventDefault()
-              if (!node.selected) useGraph.getState().select([node.id])
-              setMenu({ kind: 'node', x: e.clientX, y: e.clientY, nodeId: node.id })
-            }}
-            onPaneContextMenu={(e) => {
-              e.preventDefault()
-              setMenu({ kind: 'pane', x: e.clientX, y: e.clientY, flow: rf.screenToFlowPosition({ x: e.clientX, y: e.clientY }) })
-            }}
-            onPaneClick={() => {
-              setMenu(null)
-              setQuickAdd(null)
-            }}
-            onNodeDoubleClick={(_, node) => {
-              const n = node.data.node
-              if (canEnrich(n)) void enrichNode(n.id)
-            }}
-            defaultViewport={investigation?.viewport ?? { x: 0, y: 0, zoom: 1 }}
-            minZoom={0.05}
-            maxZoom={3}
-            connectionMode={ConnectionMode.Loose}
-            selectionMode={SelectionMode.Partial}
-            panOnDrag={tool === 'select'}
-            panOnScroll={false}
-            zoomOnDoubleClick={false}
-            deleteKeyCode={['Delete', 'Backspace']}
-            multiSelectionKeyCode={['Meta', 'Control']}
-            elementsSelectable={tool === 'select'}
-            nodesDraggable={tool === 'select'}
-            proOptions={{ hideAttribution: true }}
-            colorMode={settings?.theme === 'light' ? 'light' : 'dark'}
-          >
-            <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="var(--canvas-dot)" />
-            {settings?.showMinimap !== false && (
-              <MiniMap
-                position="bottom-left"
-                pannable
-                zoomable
-                nodeColor={(n) => ((n as FlowNode).data.node.kind === 'entity' ? 'var(--accent)' : 'var(--faint)')}
-                nodeStrokeWidth={0}
-                nodeBorderRadius={2}
-                style={{ width: 190, height: 130, marginLeft: 16, marginBottom: 16 }}
-              />
-            )}
-            {tool === 'draw' && <DrawLayer />}
-          </ReactFlow>
+          <ReviewCountContext.Provider value={reviewCount}>
+            <ReactFlow<FlowNode, FlowEdge>
+              // `isolate` : les calques Leaflet des blocs Carte (z-index 400 à 1000) restent sous les barres et menus.
+              className="isolate"
+              nodes={nodes}
+              edges={edges}
+              nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
+              defaultEdgeOptions={defaultEdgeOptions}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onMoveEnd={onMoveEnd}
+              onDrop={onDrop}
+              onDragOver={onDragOver}
+              onNodeContextMenu={(e, node) => {
+                e.preventDefault()
+                if (!node.selected) useGraph.getState().select([node.id])
+                setMenu({ kind: 'node', x: e.clientX, y: e.clientY, nodeId: node.id })
+              }}
+              onPaneContextMenu={(e) => {
+                e.preventDefault()
+                setMenu({ kind: 'pane', x: e.clientX, y: e.clientY, flow: rf.screenToFlowPosition({ x: e.clientX, y: e.clientY }) })
+              }}
+              onPaneClick={() => {
+                setMenu(null)
+                setQuickAdd(null)
+              }}
+              onNodeDoubleClick={(_, node) => {
+                const n = node.data.node
+                if (canEnrich(n)) void enrichNode(n.id)
+              }}
+              defaultViewport={investigation?.viewport ?? { x: 0, y: 0, zoom: 1 }}
+              minZoom={0.05}
+              maxZoom={3}
+              connectionMode={ConnectionMode.Loose}
+              selectionMode={SelectionMode.Partial}
+              panOnDrag={tool === 'select'}
+              panOnScroll={false}
+              zoomOnDoubleClick={false}
+              deleteKeyCode={['Delete', 'Backspace']}
+              multiSelectionKeyCode={['Meta', 'Control']}
+              elementsSelectable={tool === 'select'}
+              nodesDraggable={tool === 'select'}
+              proOptions={{ hideAttribution: true }}
+              colorMode={settings?.theme === 'light' ? 'light' : 'dark'}
+            >
+              <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="var(--canvas-dot)" />
+              {settings?.showMinimap !== false && (
+                <MiniMap
+                  position="bottom-left"
+                  pannable
+                  zoomable
+                  nodeColor={(n) => ((n as FlowNode).data.node.kind === 'entity' ? 'var(--accent)' : 'var(--faint)')}
+                  nodeStrokeWidth={0}
+                  nodeBorderRadius={2}
+                  style={{ width: 190, height: 130, marginLeft: 16, marginBottom: 16 }}
+                />
+              )}
+              {tool === 'draw' && <DrawLayer />}
+            </ReactFlow>
+          </ReviewCountContext.Provider>
         </SelectedNodesContext.Provider>
       </OutDegreeContext.Provider>
 

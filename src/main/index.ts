@@ -7,6 +7,7 @@ import type { Settings } from '@shared/types'
 import { openArchiveOnce } from './archive'
 import { openDatabase } from './db/database'
 import { Repo } from './db/repo'
+import { moveNoiseToReview } from './cleanup'
 import { Engine } from './engine/runner'
 import { registerIpc } from './ipc'
 import { queueOpen } from './openQueue'
@@ -141,6 +142,16 @@ void app.whenReady().then(async () => {
   Menu.setApplicationMenu(null)
   const db = openDatabase(join(app.getPath('userData'), 'masint.db'))
   const repo = new Repo(db)
+  // Une seule fois : les liens de recherche et pseudos générés des anciennes enquêtes passent dans « À vérifier ».
+  if (!repo.getSetting('noiseMovedToReview', false)) {
+    try {
+      const moved = moveNoiseToReview(repo)
+      if (moved) console.log(`[masint] ${moved} résultats non vérifiés déplacés dans « À vérifier »`)
+      repo.setSetting('noiseMovedToReview', true)
+    } catch (e) {
+      console.error('[masint] rangement des résultats non vérifiés', e)
+    }
+  }
   const settings = new SettingsService(repo, electronCipher)
   const engine = new Engine(repo, settings, (event, payload) => send(event, payload as never))
 

@@ -15,6 +15,9 @@ const SIZES = { sm: 168, md: 196, lg: 240 }
 /** Nombre de liens sortants par nœud, fourni par le canevas (pastille rouge). */
 export const OutDegreeContext = createContext<Map<string, number>>(new Map())
 
+/** Nombre de résultats à vérifier par nœud d'origine (pastille orange). */
+export const ReviewCountContext = createContext<Map<string, number>>(new Map())
+
 /** Nœuds sélectionnés : leurs liens affichent toujours leur libellé. */
 export const SelectedNodesContext = createContext<Set<string>>(new Set())
 
@@ -31,6 +34,7 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
   const kicker = (platform && def.keepTypeIcon ? `${tx(def.label)} · ${platform.name}` : (platform?.name ?? tx(def.label))).toUpperCase()
   const subtitle = n.style.hideSubtitle ? '' : nodeSubtitle(n)
   const childCount = useContext(OutDegreeContext).get(n.id) ?? 0
+  const reviewCount = useContext(ReviewCountContext).get(n.id) ?? 0
 
   return (
     <div
@@ -66,6 +70,15 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
           style={{ background: 'var(--accent)' }}
         >
           {childCount}
+        </span>
+      )}
+      {reviewCount > 0 && (
+        <span
+          className="absolute -right-1.5 -bottom-1.5 flex h-[15px] min-w-[15px] items-center justify-center rounded-full px-1 text-[8.5px] font-bold text-black"
+          style={{ background: 'var(--warning)' }}
+          title={t('review.count', { count: reviewCount })}
+        >
+          {reviewCount}
         </span>
       )}
       <div className="absolute inset-y-1 left-0 w-[2px] rounded-full" style={{ background: accent, opacity: n.style.color ? 1 : 0 }} />

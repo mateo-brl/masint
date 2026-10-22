@@ -8,7 +8,8 @@ import type {
   InvestigationBundle,
   ModuleRun,
   NodeInput,
-  PropValue
+  PropValue,
+  Suggestion
 } from '@shared/types'
 import type { DB } from './database'
 
@@ -477,6 +478,56 @@ export class Repo {
   }
 
   // -------------------------------------------------------------------------
+  // Résultats à vérifier
+
+  /**
+   * Ajoute une suggestion, sauf si la même (même nœud, même valeur) existe déjà, quel que soit
+   * son état : une suggestion rejetée n'est pas reproposée au prochain enrichissement.
+   * Renvoie la suggestion créée, ou `null` si elle était déjà connue.
+   */
+  addSuggestion(
+    s: Omit<Suggestion, 'id' | 'status' | 'createdAt' | 'updatedAt'>
+  ): Suggestion | null {
+    const key = s.kind === 'manual' ? (s.url ?? s.label).trim() : dedupKey(s.type, s.label, s.platform)
+    const t = now()
+    const id = randomUUID()
+    const res = this.db
+      .prepare(
+        `INSERT OR IGNORE INTO suggestions (id, investigation_id, node_id, module_id, kind, type, label, platform, data, link_label, url, reason, status, dedup_key, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)`
+      )
+      .run(id, s.investigationId, s.nodeId, s.moduleId, s.kind, s.type, s.label, s.platform, JSON.stringify(s.data ?? {}), s.linkLabel, s.url, s.reason, key, t, t)
+    return res.changes ? this.getSuggestion(id) : null
+  }
+
+  getSuggestion(id: string): Suggestion | null {
+    const r = this.db.prepare('SELECT * FROM suggestions WHERE id = ?').get(id) as SuggestionRow | undefined
+    return r ? toSuggestion(r) : null
+  }
+
+  /** Suggestions d'une enquête (ou d'un nœud), dont le nœud d'origine existe encore. */
+  listSuggestions(investigationId: string, nodeId?: string): Suggestion[] {
+    const rows = this.db
+      .prepare(
+        `SELECT s.* FROM suggestions s JOIN nodes n ON n.id = s.node_id AND n.deleted_at IS NULL
+         WHERE s.investigation_id = ? ${nodeId ? 'AND s.node_id = ?' : ''} ORDER BY s.created_at`
+      )
+      .all(...(nodeId ? [investigationId, nodeId] : [investigationId])) as SuggestionRow[]
+    return rows.map(toSuggestion)
+  }
+
+  setSuggestionStatus(id: string, status: Suggestion['status']): Suggestion | null {
+    this.db.prepare('UPDATE suggestions SET status = ?, updated_at = ? WHERE id = ?').run(status, now(), id)
+    return this.getSuggestion(id)
+  }
+
+  /** Remet à l'état « à vérifier » les suggestions écartées d'un nœud (nouvel examen). */
+  resetSuggestions(investigationId: string, nodeId: string): void {
+    this.db
+      .prepare("UPDATE suggestions SET status = 'pending', updated_at = ? WHERE investigation_id = ? AND node_id = ? AND status IN ('rejected', 'checked')")
+      .run(now(), investigationId, nodeId)
+  }
+
   // Exécutions de modules
 
   insertRun(run: ModuleRun): void {
@@ -603,5 +654,43 @@ export class Repo {
 
   listSecretIds(): string[] {
     return (this.db.prepare('SELECT id FROM secrets').all() as { id: string }[]).map((r) => r.id)
+  }
+}
+
+interface SuggestionRow {
+  id: string
+  investigation_id: string
+  node_id: string
+  module_id: string
+  kind: string
+  type: string
+  label: string
+  platform: string | null
+  data: string
+  link_label: string
+  url: string | null
+  reason: string
+  status: string
+  created_at: number
+  updated_at: number
+}
+
+function toSuggestion(r: SuggestionRow): Suggestion {
+  return {
+    id: r.id,
+    investigationId: r.investigation_id,
+    nodeId: r.node_id,
+    moduleId: r.module_id,
+    kind: r.kind === 'manual' ? 'manual' : 'entity',
+    type: r.type,
+    label: r.label,
+    platform: r.platform,
+    data: parse(r.data, {}),
+    linkLabel: r.link_label,
+    url: r.url,
+    reason: r.reason,
+    status: r.status as Suggestion['status'],
+    createdAt: r.created_at,
+    updatedAt: r.updated_at
   }
 }
