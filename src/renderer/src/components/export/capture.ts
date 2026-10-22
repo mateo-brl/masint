@@ -9,6 +9,7 @@ import { attachmentDataUrl } from './collect'
 import { exportStrings } from './format'
 import { currentLang } from '../../lib/i18n'
 import { displayedNodes } from '../../store/view'
+import { withFullRender } from '../../store/canvas'
 
 const PADDING = 48
 // PNG transparent de 1 pixel.
@@ -138,7 +139,9 @@ async function applyTheme(theme: 'light' | 'dark' | undefined): Promise<() => vo
 async function capture(kind: 'png' | 'svg', opts: CaptureOptions = {}): Promise<string> {
   const s = exportStrings(currentLang()).exportx
   if (!displayedNodes().length) throw new Error(s.emptyGraph)
-  return withGraphView(async () => {
+  // Rendu complet le temps de la capture : nœuds hors champ inclus, pas de rendu simplifié à
+  // faible zoom (le canevas l'applique pour rester fluide).
+  return withFullRender(() => withGraphView(async () => {
     const el = viewportElement()
     if (!el) throw new Error(s.canvasHidden)
     // La sélection ne doit pas apparaître sur l'image.
@@ -188,7 +191,7 @@ async function capture(kind: 'png' | 'svg', opts: CaptureOptions = {}): Promise<
       restore()
       if (selected.length) useGraph.getState().select(selected)
     }
-  })
+  }))
 }
 
 /** Graphe complet en PNG haute résolution (data URL). */

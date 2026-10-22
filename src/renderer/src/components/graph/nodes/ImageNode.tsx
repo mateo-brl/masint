@@ -32,7 +32,7 @@ function ImageNodeImpl({ id, data, selected, width }: NodeProps<FlowNode>): Reac
   return (
     <>
       <div
-        className="flex h-full w-full flex-col overflow-hidden rounded-[10px] border transition-shadow"
+        className="flex h-full w-full flex-col overflow-hidden rounded-[10px] border"
         style={{
           padding: PAD,
           background: 'var(--node)',
