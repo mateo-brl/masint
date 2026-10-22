@@ -19,8 +19,8 @@ import { detectEntity } from '@shared/detect'
 import { getEntityType } from '@shared/entityTypes'
 import { getPlatform } from '@shared/platforms'
 import type { GraphNode } from '@shared/types'
-import { addEntityAt, addFromLines, addFromText, addImageFiles, canEnrich, enrichNode, modulesForNode, pasteImages, useApplicable } from '../../lib/actions'
-import { api, openExternal } from '../../lib/api'
+import { addEntityAt, addFromLines, addFromText, addImageFiles, canEnrich, enrichNode, enrichNodes, modulesForNode, pasteImages, useApplicable } from '../../lib/actions'
+import { openLink } from '../../lib/api'
 import { DRAG_MIME } from '../../lib/catalog'
 import { fitGraph, visibleCenter } from '../../lib/viewport'
 import { useLang } from '../../lib/i18n'
@@ -235,7 +235,8 @@ export function GraphCanvas(): React.JSX.Element {
         if (await pasteImages(pos).catch(() => false)) return
         if (files.length) return void addImageFiles(files, pos)
         if (text) {
-          const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).slice(0, 50)
+          // Limite du nombre de lignes et message de troncature : voir addFromLines.
+          const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
           void addFromLines(lines, pos)
         }
       })()
@@ -261,7 +262,7 @@ export function GraphCanvas(): React.JSX.Element {
         void useGraph.getState().redo()
       } else if (mod && e.key.toLowerCase() === 'e') {
         e.preventDefault()
-        for (const n of useGraph.getState().selectedNodes()) void enrichNode(n.id)
+        void enrichNodes(useGraph.getState().selectedNodes())
       } else if (e.key === 'f' && !mod) {
         fitGraph(rf)
       } else if (e.key === 'Escape') {
@@ -545,14 +546,14 @@ function ContextMenu({
       )}
       {many &&
         item('Zap', t('enrich.selection', { count: selected.length }), () => {
-          for (const n of selected) if (n.kind === 'entity') void enrichNode(n.id)
+          void enrichNodes(selected)
         })}
-      {url && item('ExternalLink', t('canvas.openLink'), () => openExternal(url))}
+      {url && item('ExternalLink', t('canvas.openLink'), () => openLink(url))}
       {!many &&
         node.platform &&
         getPlatform(node.platform)?.url &&
         typeof node.data.username === 'string' &&
-        item('ExternalLink', t('canvas.openProfile'), () => openExternal(getPlatform(node.platform)!.url!.replace('{u}', String(node.data.username))))}
+        item('ExternalLink', t('canvas.openProfile'), () => openLink(getPlatform(node.platform)!.url!.replace('{u}', String(node.data.username))))}
       {!many && item('Copy', t('canvas.copyValue'), () => void navigator.clipboard.writeText(node.label))}
       {collapsible.length > 0 &&
         item('FoldVertical', t('collapse.collapse'), () => void setCollapsed(collapsible, true), {
@@ -568,11 +569,10 @@ function ContextMenu({
       })}
       {many &&
         item('Merge', t('canvas.merge'), async () => {
-          const inv = useGraph.getState().investigation
-          if (!inv) return
+          if (!useGraph.getState().investigation) return
           if (!(await confirmDialog(t('canvas.mergeTitle'), t('canvas.mergeBody', { label: node.label }), false))) return
-          const change = await api('graph:mergeNodes', inv.id, node.id, selected.map((s) => s.id))
-          useGraph.getState().applyChange(change)
+          // Fusion annulable (Ctrl+Z) : voir useGraph.mergeNodes.
+          await useGraph.getState().mergeNodes(node.id, selected.map((s) => s.id))
           toast('success', t('canvas.merged'))
         })}
       <div className="my-1 border-t border-line" />

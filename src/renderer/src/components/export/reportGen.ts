@@ -1,6 +1,6 @@
 // Préparation du rapport : collecte des données, capture du graphe, mise en page, impression.
 
-import type { ModuleRun } from '@shared/types'
+import type { Attachment, ModuleRun } from '@shared/types'
 import { api } from '../../lib/api'
 import { useApp } from '../../store/app'
 import { captureGraphPng } from './capture'
@@ -21,11 +21,18 @@ export async function buildReport(options: ReportOptions, onStep: (s: ReportStep
   if (!snap) throw new Error(s.exportx.noInvestigation)
   const { investigation, nodes, edges } = snap
   const generatedAt = new Date()
-  const [runs, info, modules] = await Promise.all([
+  const imageIds = Array.from(new Set(nodes.map((n) => n.imageId).filter((id): id is string => !!id)))
+  const [allRuns, runStats, info, modules, attachments] = await Promise.all([
     api('modules:runs', investigation.id).catch(() => [] as ModuleRun[]),
+    // Chiffres exacts même au-delà des 2000 exécutions renvoyées par la liste.
+    api('modules:runStats', investigation.id).catch(() => undefined),
     api('app:info').catch(() => null),
-    useApp.getState().modules.length ? Promise.resolve(useApp.getState().modules) : api('modules:list').catch(() => [])
+    useApp.getState().modules.length ? Promise.resolve(useApp.getState().modules) : api('modules:list').catch(() => []),
+    Promise.all(imageIds.map((id) => api('attachments:get', id).catch(() => null))).then((list) => list.filter((a): a is Attachment => !!a))
   ])
+  // Comme les statistiques et l'archive : seules les exécutions des nœuds présents.
+  const nodeIds = new Set(nodes.map((n) => n.id))
+  const runs = allRuns.filter((r) => nodeIds.has(r.nodeId))
 
   let rawRuns: Array<{ run: ModuleRun; raw: unknown }> = []
   if (options.sections.raw) {
@@ -57,7 +64,9 @@ export async function buildReport(options: ReportOptions, onStep: (s: ReportStep
   }
 
   onStep('build')
-  const fingerprint = await sha256Hex(fingerprintPayload(investigation, nodes, edges)).catch(() => null)
+  // Images désignées par leur SHA-256 : l'empreinte ne dépend pas des identifiants.
+  const imageHashes = Object.fromEntries(attachments.map((a) => [a.id, a.sha256]))
+  const fingerprint = await sha256Hex(fingerprintPayload(investigation, nodes, edges, imageHashes)).catch(() => null)
   const html = buildReportHtml({
     options,
     investigation,
@@ -72,7 +81,9 @@ export async function buildReport(options: ReportOptions, onStep: (s: ReportStep
     appVersion: info?.version ?? null,
     platform: info?.platform ?? null,
     fingerprint,
-    rawRuns
+    rawRuns,
+    runStats,
+    attachments
   })
   const title = options.title.trim() || investigation.name
   return { html, baseName: exportFileName(title, generatedAt, s.exportx.files.report, 'x').replace(/\.x$/, '') }

@@ -7,6 +7,7 @@ import type { GraphEdge, GraphNode, JobProgress, ModuleRun, PropValue, Suggestio
 import { dedupKey, type Repo } from '../db/repo'
 import type { SettingsService } from '../settings'
 import { createDohResolver, createFetch, jsonHelpers, type FetchFn } from './http'
+import { Semaphore } from './limits'
 import { allModules, isConfigured } from './registry'
 
 const MAX_RAW = 200_000
@@ -55,7 +56,10 @@ interface Job {
   controller: AbortController
 }
 
-/** Modules applicables à un nœud. `explicit` inclut les modules « à la demande ». */
+/**
+ * Modules applicables à un nœud. `explicit` inclut les modules « à la demande » et, en mode
+ * passif, ceux qui contactent la cible (`noisy`) : ils ne partent que choisis un par un.
+ */
 export function applicableModules(
   node: GraphNode,
   settings: SettingsService,
@@ -64,12 +68,13 @@ export function applicableModules(
 ): OsintModule[] {
   if (node.kind !== 'entity') return []
   const input = toInput(node, imageOrigin)
-  const disabled = new Set(settings.get().disabledModules)
+  const { disabledModules, passiveMode } = settings.get()
+  const disabled = new Set(disabledModules)
   return allModules().filter((m) => {
     if (!m.inputTypes.includes(node.type) && !m.inputTypes.includes('*')) return false
     if (m.accepts && !m.accepts(input)) return false
     if (explicit) return explicit.includes(m.id) && isConfigured(m, settings)
-    return !m.ondemand && !disabled.has(m.id) && isConfigured(m, settings)
+    return !m.ondemand && !(passiveMode && m.noisy) && !disabled.has(m.id) && isConfigured(m, settings)
   })
 }
 
@@ -97,12 +102,19 @@ function truncateRaw(raw: unknown): string | null {
 
 export class Engine {
   private jobs = new Map<string, Job>()
+  /**
+   * Places d'exécution communes à toutes les tâches : chaque nœud a sa file (`concurrency`),
+   * mais cent nœuds enrichis ensemble ne lancent pas huit cents modules à la fois.
+   */
+  readonly slots: Semaphore
 
   constructor(
     private readonly repo: Repo,
     private readonly settings: SettingsService,
     private readonly emit: Emit
-  ) {}
+  ) {
+    this.slots = new Semaphore(() => this.settings.get().globalConcurrency)
+  }
 
   /**
    * Modules qui tourneraient pour ce nœud (`auto`) et modules dont le filtre accepte sa valeur
@@ -163,10 +175,20 @@ export class Engine {
   private async runJob(job: Job, node: GraphNode, modules: OsintModule[]): Promise<void> {
     const queue = [...modules]
     const concurrency = this.settings.get().concurrency
+    const signal = job.controller.signal
     const worker = async (): Promise<void> => {
-      while (queue.length && !job.controller.signal.aborted) {
-        const m = queue.shift()!
-        await this.runModule(job, node, m)
+      while (queue.length && !signal.aborted) {
+        // Place globale d'abord : le module reste dans la file (et sera tracé comme annulé)
+        // tant qu'il attend. L'annulation de la tâche interrompt l'attente.
+        const release = await this.slots.acquire(signal).catch(() => null)
+        if (!release) break
+        const m = signal.aborted ? undefined : queue.shift()
+        try {
+          if (m) await this.runModule(job, node, m)
+        } finally {
+          release()
+        }
+        if (!m) break
       }
     }
     await Promise.all(Array.from({ length: Math.min(concurrency, modules.length) }, worker))
@@ -239,7 +261,7 @@ export class Engine {
     }
 
     try {
-      const ctx = this.createContext(m, controller.signal, trace, onProgress)
+      const ctx = this.createContext(m, controller.signal, trace, onProgress, node.investigationId)
       // Relire le nœud : un module précédent a pu enrichir ses propriétés.
       const fresh = this.repo.getNode(node.id) ?? node
       const output = await m.run(toInput(fresh, this.imageOrigin(fresh)), ctx)
@@ -289,10 +311,12 @@ export class Engine {
     m: Pick<OsintModule, 'id'>,
     signal: AbortSignal,
     trace: HttpTrace[] = [],
-    onProgress: ModuleContext['progress'] = () => undefined
+    onProgress: ModuleContext['progress'] = () => undefined,
+    /** Enquête concernée : sous Tor, ses requêtes passent par ses propres circuits. */
+    investigationId?: string
   ): ModuleContext {
     const settings = this.settings.get()
-    const baseFetch = createFetch({ settings, moduleId: m.id, signal })
+    const baseFetch = createFetch({ settings, moduleId: m.id, signal, investigationId })
     const fetchFn = traceFetch(baseFetch, trace)
     const helpers = jsonHelpers(fetchFn)
     const resolve = createDohResolver(baseFetch)
@@ -386,10 +410,8 @@ export class Engine {
       if (node.id !== parent.id) {
         const existing = this.repo.findEdge(invId, parent.id, node.id)
         if (!existing) {
-          const [edge] = this.repo.upsertEdges(invId, [
-            { source: parent.id, target: node.id, label: ent.linkLabel ?? '', sourceModule: m.id }
-          ])
-          changedEdges.push(edge)
+          // Aucun lien si le parent a été supprimé pendant l'exécution (voir Repo.upsertEdges).
+          changedEdges.push(...this.repo.upsertEdges(invId, [{ source: parent.id, target: node.id, label: ent.linkLabel ?? '', sourceModule: m.id }]))
         } else {
           // Lien déjà posé par un autre module : on ajoute ce libellé (« registrar · hébergé chez »).
           const label = joinLabels(existing.label, ent.linkLabel)
@@ -403,8 +425,7 @@ export class Engine {
       const a = refs.get(link.from)
       const b = refs.get(link.to)
       if (!a || !b || a.id === b.id || this.repo.findEdge(invId, a.id, b.id)) continue
-      const [edge] = this.repo.upsertEdges(invId, [{ source: a.id, target: b.id, label: link.label ?? '', sourceModule: m.id }])
-      changedEdges.push(edge)
+      changedEdges.push(...this.repo.upsertEdges(invId, [{ source: a.id, target: b.id, label: link.label ?? '', sourceModule: m.id }]))
     }
 
     for (const check of output.manual ?? []) {
@@ -483,7 +504,7 @@ export class Engine {
           ? { type: found.type, label: found.label, platform: found.platform ?? undefined, data: { source_url: s.url, ...found.data }, linkLabel: s.label }
           : { type: 'search_link', label: `${s.label} : ${parent.label}`, data: { url: s.url, engine: s.label }, linkLabel: s.linkLabel }
     // Même chemin qu'un résultat de module : dédoublonnage, placement libre, image, événement.
-    const ctx = this.createContext({ id: s.moduleId }, AbortSignal.timeout(30_000))
+    const ctx = this.createContext({ id: s.moduleId }, AbortSignal.timeout(30_000), [], undefined, s.investigationId)
     await this.applyOutput(parent, { id: s.moduleId }, { entities: [entity] }, ctx)
     done('accepted')
     // Enrichissement automatique activé : l'entité validée est enrichie à son tour.

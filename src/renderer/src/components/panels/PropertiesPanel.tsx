@@ -5,8 +5,8 @@ import { ENTITY_TYPES, getEntityType, type CategoryId } from '@shared/entityType
 import { propertyLabel } from '@shared/propertyLabels'
 import { emailProvider, getPlatform, PLATFORMS } from '@shared/platforms'
 import type { GraphEdge, GraphNode, ModuleRun, PropValue } from '@shared/types'
-import { canEnrich, enrichNode, fileToBase64, modulesForNode, useApplicable } from '../../lib/actions'
-import { api, openExternal } from '../../lib/api'
+import { canEnrich, enrichNode, enrichNodes, fileToBase64, modulesForNode, useApplicable } from '../../lib/actions'
+import { api, openLink } from '../../lib/api'
 import { useLang } from '../../lib/i18n'
 import { EntityBadge, Icon } from '../../lib/icons'
 import { useApp } from '../../store/app'
@@ -538,7 +538,7 @@ function PropertyRow({
             {str || <span className="text-faint">…</span>}
           </div>
           {isUrl && (
-            <button onClick={() => openExternal(value as string)} className="mt-0.5 text-muted hover:text-fg">
+            <button onClick={() => openLink(value as string)} className="mt-0.5 text-muted hover:text-fg">
               <Icon name="ExternalLink" size={13} />
             </button>
           )}
@@ -560,11 +560,17 @@ function EnrichBlock({ node }: { node: GraphNode }): React.JSX.Element {
   const server = useApplicable(node)
   const accepts = (id: string): boolean => !server || server.accepted.has(id)
   const [checked, setChecked] = useState<Set<string>>(new Set())
+  // Mode passif : les modules qui contactent la cible ne sont pas cochés d'office.
+  const passive = useApp((s) => s.settings?.passiveMode ?? true)
+  const byDefault = useMemo(
+    () => applicable.filter((m) => !m.ondemand && !(passive && m.noisy) && m.enabled && m.configured),
+    [applicable, passive]
+  )
   useEffect(() => {
-    setChecked(server ? new Set(server.auto) : new Set(applicable.filter((m) => !m.ondemand && m.enabled && m.configured).map((m) => m.id)))
-  }, [applicable, server])
+    setChecked(server ? new Set(server.auto) : new Set(byDefault.map((m) => m.id)))
+  }, [byDefault, server])
 
-  const auto = server ? server.auto.size : applicable.filter((m) => !m.ondemand && m.enabled && m.configured).length
+  const auto = server ? server.auto.size : byDefault.length
   const enrichable = canEnrich(node)
 
   return (
@@ -629,6 +635,7 @@ function EnrichBlock({ node }: { node: GraphNode }): React.JSX.Element {
                   {tx(m.name)}
                   {m.ondemand && <span className="rounded bg-accent-soft px-1.5 text-[10px] text-accent">{t('modules.ondemand')}</span>}
                   {m.experimental && <span className="rounded bg-panel-3 px-1.5 text-[10px] text-warning">{t('modules.experimental')}</span>}
+                  {m.noisy && <span className="rounded bg-panel-3 px-1.5 text-[10px] text-warning">{t('modules.noisy')}</span>}
                 </div>
                 <div className="text-[11.5px] text-muted">{tx(m.description)}</div>
                 {!accepts(m.id) && <div className="mt-0.5 text-[11.5px] text-warning">{t('enrich.notApplicable')}</div>}
@@ -955,7 +962,7 @@ function MultiPanel({ nodes }: { nodes: GraphNode[] }): React.JSX.Element {
     <>
       <PanelHeader kicker={t('props.selection')} title={t('props.selectedCount', { count: nodes.length })} />
       <div className="flex flex-col gap-3 border-t border-line px-5 py-4">
-        <Button variant="primary" icon="Zap" disabled={!entities.length} onClick={() => entities.forEach((n) => void enrichNode(n.id))}>
+        <Button variant="primary" icon="Zap" disabled={!entities.length} onClick={() => void enrichNodes(entities)}>
           {t('enrich.selection', { count: entities.length })}
         </Button>
         <div className="flex flex-col gap-2">

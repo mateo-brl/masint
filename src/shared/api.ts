@@ -7,20 +7,22 @@ import type {
   EdgeInput,
   GraphChange,
   GraphEdge,
-  GraphNode,
   Investigation,
   InvestigationBundle,
   JobProgress,
   ModuleInfo,
   ModuleRun,
+  ModuleRunStats,
   NodeInput,
   ProxyTestResult,
   PropValue,
   RosoStatus,
+  SavedNode,
   SecretStatus,
   Suggestion,
   Settings,
-  UpdateStatus
+  UpdateStatus,
+  UpsertOptions
 } from './types'
 
 export interface FileFilter {
@@ -45,9 +47,13 @@ export interface ApiMap {
   'investigations:importArchive': () => Investigation | null
 
   // Graphe
-  'graph:upsertNodes': (investigationId: string, nodes: NodeInput[]) => GraphNode[]
+  /**
+   * Crée ou modifie des nœuds. Avec `updateOnly`, les patchs vers un nœud absent sont ignorés.
+   * `duplicateOf` signale une entité de même valeur déjà présente.
+   */
+  'graph:upsertNodes': (investigationId: string, nodes: NodeInput[], opts?: UpsertOptions) => SavedNode[]
   'graph:deleteNodes': (investigationId: string, ids: string[]) => void
-  'graph:upsertEdges': (investigationId: string, edges: EdgeInput[]) => GraphEdge[]
+  'graph:upsertEdges': (investigationId: string, edges: EdgeInput[], opts?: UpsertOptions) => GraphEdge[]
   'graph:deleteEdges': (investigationId: string, ids: string[]) => void
   /** Fusionne plusieurs nœuds dans le premier (liens et propriétés repris). */
   'graph:mergeNodes': (investigationId: string, targetId: string, otherIds: string[]) => GraphChange
@@ -67,6 +73,8 @@ export interface ApiMap {
   'modules:enrich': (investigationId: string, nodeId: string, moduleIds?: string[]) => { jobId: string }
   'modules:cancel': (jobId: string) => void
   'modules:runs': (investigationId: string, nodeId?: string) => ModuleRun[]
+  /** Statistiques d'exécution par module, sans limite de nombre (rapport). */
+  'modules:runStats': (investigationId: string) => ModuleRunStats[]
   'modules:jobs': () => JobProgress[]
   /** Modules lancés par « Enrichir » pour ce nœud, et modules applicables à sa valeur. */
   /** Résultats à vérifier d'une enquête, ou d'un nœud. */
@@ -93,6 +101,8 @@ export interface ApiMap {
   /** Protection effective des clés : trousseau du système ou stockage faiblement chiffré. */
   'secrets:security': () => { encrypted: boolean; backend: string }
   'proxy:test': () => ProxyTestResult
+  /** Nouvel identifiant SOCKS pour Tor : les requêtes suivantes passent par de nouveaux circuits. */
+  'proxy:newTorIdentity': () => Settings
   /** Vérifie la clé roso.info et lit les crédits restants, sans en consommer. */
   'roso:status': () => RosoStatus
 
@@ -109,7 +119,15 @@ export interface ApiMap {
 
   // Application
   'app:info': () => { version: string; platform: string; dataPath: string }
+  /** Navigateur personnel de l'enquêteur : documentation, GitHub, pages d'inscription aux clés. */
   'app:openExternal': (url: string) => void
+  /** Lien d'enquête : navigateur d'enquête ou navigateur personnel, selon `linkOpening`. */
+  'app:openLink': (url: string) => void
+  /**
+   * Fenêtre visible du navigateur d'enquête : partition, proxy (ou Tor) et durcissement de la
+   * recherche assistée.
+   */
+  'browser:open': (url: string) => void
   'app:showInFolder': (path: string) => void
   /** Enquêtes importées depuis l'explorateur et pas encore ouvertes. */
   'app:takePendingOpen': () => string[]

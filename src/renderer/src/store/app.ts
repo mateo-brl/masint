@@ -7,9 +7,22 @@ import { useGraph } from './graph'
 
 export type View = 'graph' | 'map' | 'timeline' | 'modules' | 'notes'
 
+export interface ToastAction {
+  label: string
+  onClick: () => void
+}
+
 export interface Toast {
   id: number
   kind: 'info' | 'success' | 'error'
+  text: string
+  /** Boutons du message (« Aller au nœud », « Fusionner »...). */
+  actions?: ToastAction[]
+}
+
+/** Fichier ou texte à ouvrir dans la fenêtre d'import (nouvelle enquête depuis un fichier). */
+export interface ImportSeed {
+  name: string
   text: string
 }
 
@@ -27,6 +40,9 @@ interface AppState {
   settingsOpen: boolean
   settingsTab: string
   reportOpen: boolean
+  /** Fenêtre d'import en masse ouverte, avec son contenu de départ éventuel. */
+  importOpen: boolean
+  importSeed: ImportSeed | null
   update: UpdateStatus
   toasts: Toast[]
 
@@ -42,7 +58,8 @@ interface AppState {
   openSettings(tab?: string): void
   closeSettings(): void
   setReportOpen(open: boolean): void
-  toast(kind: Toast['kind'], text: string): void
+  setImportOpen(open: boolean, seed?: ImportSeed | null): void
+  toast(kind: Toast['kind'], text: string, actions?: ToastAction[]): void
   dismissToast(id: number): void
 }
 
@@ -61,6 +78,8 @@ export const useApp = create<AppState>((set, get) => ({
   settingsOpen: false,
   settingsTab: 'general',
   reportOpen: false,
+  importOpen: false,
+  importSeed: null,
   update: { state: 'idle' },
   toasts: [],
 
@@ -171,10 +190,15 @@ export const useApp = create<AppState>((set, get) => ({
     set({ reportOpen: open })
   },
 
-  toast(kind, text) {
+  setImportOpen(open, seed = null) {
+    set({ importOpen: open, importSeed: open ? seed : null })
+  },
+
+  toast(kind, text, actions) {
     const id = ++toastSeq
-    set({ toasts: [...get().toasts, { id, kind, text }] })
-    setTimeout(() => get().dismissToast(id), kind === 'error' ? 7000 : 3500)
+    set({ toasts: [...get().toasts, { id, kind, text, ...(actions?.length ? { actions } : {}) }] })
+    // Un message avec des boutons reste plus longtemps : le temps de lire et de choisir.
+    setTimeout(() => get().dismissToast(id), actions?.length ? 10000 : kind === 'error' ? 7000 : 3500)
   },
 
   dismissToast(id) {

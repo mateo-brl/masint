@@ -3,11 +3,20 @@
 
 import { Agent, ProxyAgent, fetch as undiciFetch, type Dispatcher } from 'undici'
 import { socksDispatcher } from 'fetch-socks'
+import { acceptLanguage } from '@shared/network'
 import type { FetchOptions, HttpError } from '@shared/modules'
 import type { ModuleRoute, ProxySettings, Settings } from '@shared/types'
+import { DEFAULT_USER_AGENT } from '../settings'
+import { HostLimiter } from './limits'
 
 const dispatchers = new Map<string, Dispatcher>()
 const direct = new Agent({ connect: { timeout: 15000 } })
+
+/** Requêtes simultanées par hôte, tous modules confondus. */
+export const PER_HOST_LIMIT = 3
+/** Résolveurs DNS-over-HTTPS : beaucoup de petites requêtes, des services faits pour. */
+const HOST_OVERRIDES: Record<string, number> = { 'cloudflare-dns.com': 8, 'dns.google': 8 }
+export const hostLimiter = new HostLimiter(PER_HOST_LIMIT, HOST_OVERRIDES)
 
 function proxyUrl(proxy: ProxySettings): string | null {
   switch (proxy.mode) {
@@ -20,25 +29,44 @@ function proxyUrl(proxy: ProxySettings): string | null {
   }
 }
 
-export function getDispatcher(proxy: ProxySettings, route: ModuleRoute = 'default'): Dispatcher {
+/** Identifiants SOCKS : Tor ouvre des circuits distincts pour chaque couple (IsolateSOCKSAuth). */
+export interface SocksAuth {
+  userId: string
+  password: string
+}
+
+/**
+ * Identifiants SOCKS envoyés à Tor : `masint-<enquête>`, pour que deux enquêtes ne partagent
+ * jamais un circuit (ni donc une IP de sortie). Le sel, changé par « Nouvelle identité Tor »,
+ * fait ouvrir de nouveaux circuits.
+ */
+export function torAuth(investigationId: string | undefined, salt: string): SocksAuth {
+  return { userId: investigationId ? `masint-${investigationId}` : 'masint', password: salt || 'masint' }
+}
+
+export function getDispatcher(proxy: ProxySettings, route: ModuleRoute = 'default', isolation?: SocksAuth): Dispatcher {
   if (route === 'direct') return direct
   const url = proxyUrl(proxy)
   if (!url) return direct
-  const cached = dispatchers.get(url)
+  // Tor : l'identifiant d'isolement fait partie de la clé, un dispatcher (et ses connexions) par enquête.
+  const auth = proxy.mode === 'tor' ? isolation : undefined
+  const key = auth ? `${url}#${auth.userId}:${auth.password}` : url
+  const cached = dispatchers.get(key)
   if (cached) return cached
   let d: Dispatcher
   if (/^socks/i.test(url)) {
     const u = new URL(url)
+    const credentials = auth ?? (u.username ? { userId: decodeURIComponent(u.username), password: decodeURIComponent(u.password) } : null)
     d = socksDispatcher({
       type: 5,
       host: u.hostname,
       port: Number(u.port || 1080),
-      ...(u.username ? { userId: decodeURIComponent(u.username), password: decodeURIComponent(u.password) } : {})
+      ...(credentials ?? {})
     }) as unknown as Dispatcher
   } else {
     d = new ProxyAgent({ uri: url })
   }
-  dispatchers.set(url, d)
+  dispatchers.set(key, d)
   return d
 }
 
@@ -51,13 +79,23 @@ export interface HttpClientOptions {
   settings: Settings
   moduleId?: string
   signal?: AbortSignal
+  /** Enquête d'origine : sous Tor, chaque enquête a ses propres circuits. */
+  investigationId?: string
 }
 
 export type FetchFn = (url: string, init?: FetchOptions) => Promise<Response>
 
-export function createFetch({ settings, moduleId, signal }: HttpClientOptions): FetchFn {
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname
+  } catch {
+    return url
+  }
+}
+
+export function createFetch({ settings, moduleId, signal, investigationId }: HttpClientOptions): FetchFn {
   const route = moduleId ? (settings.proxy.perModule[moduleId] ?? 'default') : 'default'
-  const dispatcher = getDispatcher(settings.proxy, route)
+  const dispatcher = getDispatcher(settings.proxy, route, torAuth(investigationId, settings.torSalt))
   return async (url, init = {}) => {
     const { timeoutMs, json, query, headers, ...rest } = init
     let target = url
@@ -67,23 +105,30 @@ export function createFetch({ settings, moduleId, signal }: HttpClientOptions): 
       target = u.toString()
     }
     const h = new Headers(headers as ConstructorParameters<typeof Headers>[0])
-    if (!h.has('user-agent')) h.set('user-agent', settings.userAgent)
-    if (!h.has('accept-language')) h.set('accept-language', settings.lang === 'fr' ? 'fr-FR,fr;q=0.9,en;q=0.8' : 'en-US,en;q=0.9')
+    if (!h.has('user-agent')) h.set('user-agent', settings.userAgent || DEFAULT_USER_AGENT)
+    if (!h.has('accept-language')) h.set('accept-language', acceptLanguage(settings.lang))
     let body = rest.body
     if (json !== undefined) {
       body = JSON.stringify(json)
       if (!h.has('content-type')) h.set('content-type', 'application/json')
     }
-    const timeout = AbortSignal.timeout(timeoutMs ?? settings.timeoutMs)
-    const signals = [timeout, ...(signal ? [signal] : []), ...(rest.signal ? [rest.signal] : [])]
-    const res = await undiciFetch(target, {
-      ...(rest as Record<string, unknown>),
-      body: body as never,
-      headers: h as never,
-      signal: AbortSignal.any(signals),
-      dispatcher
-    })
-    return res as unknown as Response
+    const cancel = [...(signal ? [signal] : []), ...(rest.signal ? [rest.signal] : [])]
+    // Place réservée sur l'hôte jusqu'aux en-têtes de la réponse. L'attente cède à
+    // l'annulation ; le délai de la requête ne court qu'une fois la place obtenue.
+    const release = await hostLimiter.acquire(hostOf(target), cancel.length ? AbortSignal.any(cancel) : undefined)
+    try {
+      const timeout = AbortSignal.timeout(timeoutMs ?? settings.timeoutMs)
+      const res = await undiciFetch(target, {
+        ...(rest as Record<string, unknown>),
+        body: body as never,
+        headers: h as never,
+        signal: AbortSignal.any([timeout, ...cancel]),
+        dispatcher
+      })
+      return res as unknown as Response
+    } finally {
+      release()
+    }
   }
 }
 
