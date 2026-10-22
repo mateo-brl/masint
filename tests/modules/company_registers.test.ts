@@ -1,5 +1,5 @@
 // Registres publics des entreprises : compléments de l'annuaire (labels, élus, établissements),
-// GLEIF, BODACC et BALO, Journal officiel des associations.
+// GLEIF, BODACC et BALO, Journal officiel des associations, répertoire de la HATVP.
 
 import { describe, expect, it } from 'vitest'
 import { ModuleError } from '@shared/modules'
@@ -7,10 +7,12 @@ import { complementLabels, complementProperties, electedOfficials, establishment
 import { rnaOf, sirenOf } from '../../src/main/modules/company/_ids'
 import bodacc, { addressKey, announcementsOutput, baloCategory, describe as describeNotice, history, type CompanyBodaccRecord } from '../../src/main/modules/company/bodacc'
 import gleif, { candidatesOutput as gleifCandidates, gleifOutput, isLei, type GleifRecord } from '../../src/main/modules/company/gleif'
+import hatvpLobbying from '../../src/main/modules/company/hatvpLobbying'
 import joAssociations, { annonceType, associationOutput, candidatesOutput as joaCandidates, type JoaRecord } from '../../src/main/modules/company/joAssociations'
 import registry, { companyOutput, type ReResult } from '../../src/main/modules/company/recherche'
+import { lobbyingOutput, parseAgora, resetHatvpCache } from '../../src/main/modules/person/_hatvp'
 import { entity, LIVE, makeContext, runModule } from '../helpers/context'
-import { fakeContext, fixtureJson } from './social_helpers'
+import { fakeContext, fixture, fixtureJson } from './social_helpers'
 
 const fr = { lang: 'fr' as const }
 const company = (label: string, data = {}) => entity('company', label, { data })
@@ -180,6 +182,29 @@ describe('company.jo_associations', () => {
   })
 })
 
+describe('company.hatvp_lobbying', () => {
+  const list = parseAgora(JSON.parse(fixture('company/hatvp_agora.json')))
+
+  it('lit le répertoire et résume le dernier exercice', () => {
+    expect(list[0]).toMatchObject({ id: '123456782', category: 'Société commerciale', registeredAt: '2018-03-15', period: '01/01/2024 - 31/12/2024', staff: 2, activities: 1 })
+    expect(list[0].topics).toEqual(['Numérique', 'Économie'])
+  })
+
+  it('SIREN identique : propriétés ; nom seul : à vérifier', () => {
+    const direct = lobbyingOutput(fr, list, { label: 'Exemple Conseil SAS', data: { siren: '123456782' } })
+    expect(direct.properties).toMatchObject({ hatvp_lobbyist: true, hatvp_lobbying_expenses: '>= 100 000 € et < 200 000 €' })
+    const byName = lobbyingOutput(fr, list, { label: 'Exemple Conseil', data: {} })
+    expect(byName.entities?.[0]).toMatchObject({ review: true })
+    expect(lobbyingOutput(fr, list, { label: 'Autre', data: {} }).properties).toEqual({ hatvp_lobbyist: false })
+  })
+
+  it('module : page de maintenance signalée comme indisponibilité', async () => {
+    resetHatvpCache()
+    const ctx = fakeContext([[/agora_repertoire/, { status: 200, body: '<!DOCTYPE html><html>maintenance</html>' }]])
+    await expect(runModule(hatvpLobbying, company('Danone', { siren: '552032534' }), ctx)).rejects.toMatchObject({ code: 'unavailable' })
+  }, 15000)
+})
+
 describe.skipIf(!LIVE)('registres des entreprises (live)', () => {
   const live = (name: string, fn: () => Promise<void>, timeout = 120000): void => {
     it(name, async (t) => {
@@ -216,4 +241,10 @@ describe.skipIf(!LIVE)('registres des entreprises (live)', () => {
     const out = await runModule(joAssociations, entity('organization', 'W521000703'), makeContext())
     expect(out.properties?.siren).toBe('439687765')
   })
+
+  live('HATVP : répertoire des représentants d’intérêts', async () => {
+    resetHatvpCache()
+    const out = await runModule(hatvpLobbying, company('Danone', { siren: '552032534' }), makeContext())
+    expect(out.properties?.hatvp_lobbyist).toBe(true)
+  }, 300000)
 })

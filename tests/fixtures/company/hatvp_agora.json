@@ -1,0 +1,49 @@
+{
+ "publications": [
+  {
+   "denomination": "EXEMPLE CONSEIL",
+   "nomUsageHatvp": "Exemple Conseil",
+   "sigleHatvp": "EXC",
+   "identifiantNational": "123456782",
+   "typeIdentifiantNational": "SIREN",
+   "categorieOrganisation": { "code": "SOCI", "label": "Société commerciale" },
+   "adresse": "1 rue de l'Exemple",
+   "codePostal": "75001",
+   "ville": "PARIS",
+   "pays": "FRANCE",
+   "lienSiteWeb": "https://exemple.org",
+   "datePremierePublication": "15/03/2018",
+   "exercices": [
+    {
+     "publicationCourante": {
+      "dateDebut": "01-01-2024",
+      "dateFin": "31-12-2024",
+      "montantDepense": ">= 100 000 € et < 200 000 €",
+      "nombreSalaries": 2,
+      "nombreActivite": 1,
+      "activites": [
+       { "publicationCourante": { "objet": "Faire connaître la position de l'entreprise sur un projet de loi", "domainesIntervention": ["Numérique", "Économie"] } }
+      ]
+     }
+    },
+    {
+     "publicationCourante": {
+      "dateDebut": "01-01-2023",
+      "dateFin": "31-12-2023",
+      "montantDepense": "< 10 000 €",
+      "nombreSalaries": 1,
+      "activites": []
+     }
+    }
+   ]
+  },
+  {
+   "denomination": "ASSOCIATION MODELE",
+   "identifiantNational": "H123456789",
+   "typeIdentifiantNational": "HATVP",
+   "categorieOrganisation": { "label": "Association" },
+   "datePremierePublication": "01/06/2020",
+   "exercices": []
+  }
+ ]
+}

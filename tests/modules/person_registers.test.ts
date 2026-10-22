@@ -1,15 +1,18 @@
 // Registres publics des personnes : mandats d'élu local, filtre de naissance côté serveur
-// pour les mandats de dirigeant.
+// pour les mandats de dirigeant, déclarations à la HATVP.
 
 import { describe, expect, it } from 'vitest'
 import { ModuleError } from '@shared/modules'
 import frDirigeants, { birthRange, matchesPerson } from '../../src/main/modules/person/frDirigeants'
 import frElus, { eluVerdict, matchesElu, selectMandates, type ReCollectivite } from '../../src/main/modules/person/frElus'
+import hatvp from '../../src/main/modules/person/hatvp'
+import { declarationsOutput, documentLabel, parseListe, resetHatvpCache } from '../../src/main/modules/person/_hatvp'
 import { splitName } from '../../src/main/modules/person/_name'
 import { entity, LIVE, makeContext, runModule } from '../helpers/context'
-import { fakeContext, fixtureJson } from './social_helpers'
+import { fakeContext, fixture, fixtureJson } from './social_helpers'
 
 const person = (label: string, data = {}) => entity('person', label, { data })
+const fr = { lang: 'fr' as const }
 
 const skippable = (e: unknown): boolean =>
   (e instanceof ModuleError && ['rate_limited', 'unavailable', 'blocked'].includes(e.code)) || (e instanceof Error && /fetch failed/.test(e.message))
@@ -81,6 +84,37 @@ describe('person.fr_elus', () => {
   })
 })
 
+describe('person.hatvp', () => {
+  const list = parseListe(fixture('person/hatvp_liste.csv'))
+
+  it('lit liste.csv sans les déclarations non publiées', () => {
+    expect(list).toHaveLength(3)
+    expect(list[0]).toMatchObject({ prenom: 'Jean', nom: 'Exemple', typeMandat: 'depute', datePublication: '2024-07-30', urlDossier: '/pages_nominatives/exemple-jean' })
+    expect(documentLabel('dsp')).toBe('Déclaration de situation patrimoniale')
+  })
+
+  it('un responsable par page nominative, toujours à vérifier', () => {
+    const out = declarationsOutput(fr, list, splitName({ label: 'Jean Exemple', data: {} })!)
+    expect(out.properties).toEqual({ hatvp_declarations: 2 })
+    expect(out.entities).toHaveLength(1)
+    expect(out.entities?.[0]).toMatchObject({
+      type: 'document',
+      review: true,
+      data: { url: 'https://www.hatvp.fr/pages_nominatives/exemple-jean', hatvp_mandates: ['Député'], hatvp_documents_count: 2 }
+    })
+    expect(declarationsOutput(fr, list, splitName({ label: 'Jean Modele', data: {} })!).properties).toEqual({ hatvp_declarations: 0 })
+  })
+
+  it('module : fichier téléchargé une fois', async () => {
+    resetHatvpCache()
+    const ctx = fakeContext([[/liste\.csv/, { body: fixture('person/hatvp_liste.csv') }]])
+    await runModule(hatvp, person('Jean Exemple'), ctx)
+    const out = await runModule(hatvp, person('Jeanne Exemple'), ctx)
+    expect(out.entities?.[0].label).toBe('HATVP : Jeanne Exemple (Maire d’Exempleville)'.replace('’', "'"))
+    expect(ctx.calls).toHaveLength(1)
+  })
+})
+
 describe.skipIf(!LIVE)('registres des personnes (live)', () => {
   const live = (name: string, fn: () => Promise<void>, timeout = 120000): void => {
     it(name, async (t) => {
@@ -105,4 +139,14 @@ describe.skipIf(!LIVE)('registres des personnes (live)', () => {
     const out = await runModule(frDirigeants, person('Antoine de Saint-Affrique', { birth_date: '1964-12' }), makeContext())
     expect(out.entities?.some((e) => e.data?.siren === '552032534')).toBe(true)
   })
+
+  live(
+    'HATVP : déclarations publiées',
+    async () => {
+      resetHatvpCache()
+      const out = await runModule(hatvp, person('Emmanuel Grégoire'), makeContext())
+      expect(Number(out.properties?.hatvp_declarations)).toBeGreaterThan(0)
+    },
+    240000
+  )
 })

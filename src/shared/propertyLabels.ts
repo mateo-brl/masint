@@ -1019,6 +1019,23 @@ export const PROPERTY_LABELS: Record<string, { fr: string; en: string }> = {
   jo_name_matches: { fr: 'Associations de même nom (JO)', en: 'Associations with the same name (Official Journal)' },
   osop_accounts: { fr: 'Comptes publiés (OSOP)', en: 'Published accounts (OSOP)' },
 
+  // HATVP (person.hatvp, company.hatvp_lobbying)
+  hatvp_declarations: { fr: 'Déclarations HATVP (homonymes possibles)', en: 'HATVP declarations (possible namesakes)' },
+  hatvp_mandates: { fr: 'Mandats déclarés (HATVP)', en: 'Declared mandates (HATVP)' },
+  hatvp_qualities: { fr: 'Qualités (HATVP)', en: 'Roles (HATVP)' },
+  hatvp_documents: { fr: 'Déclarations publiées (HATVP)', en: 'Published declarations (HATVP)' },
+  hatvp_documents_count: { fr: 'Nombre de déclarations publiées (HATVP)', en: 'Published declarations count (HATVP)' },
+  hatvp_lobbyist: { fr: "Représentant d'intérêts inscrit (HATVP)", en: 'Registered lobbyist (HATVP)' },
+  hatvp_category: { fr: "Catégorie de représentant d'intérêts", en: 'Lobbyist category' },
+  hatvp_registered_at: { fr: 'Inscription au répertoire (HATVP)', en: 'Registered with the HATVP' },
+  hatvp_period: { fr: 'Dernier exercice déclaré (HATVP)', en: 'Latest declared year (HATVP)' },
+  hatvp_lobbying_expenses: { fr: 'Dépenses de représentation d’intérêts', en: 'Lobbying spending' },
+  hatvp_lobbying_staff: { fr: "Salariés affectés à la représentation d'intérêts", en: 'Lobbying staff' },
+  hatvp_lobbying_activities: { fr: 'Actions de représentation déclarées', en: 'Declared lobbying actions' },
+  hatvp_lobbying_topics: { fr: "Domaines d'intervention (HATVP)", en: 'Policy areas (HATVP)' },
+  hatvp_lobbying_objects: { fr: 'Objets des actions (HATVP)', en: 'Purposes of actions (HATVP)' },
+  hatvp_url: { fr: 'Fiche au répertoire HATVP', en: 'HATVP register record' },
+
   // roso.info
   roso_credits_left: { fr: 'Crédits roso.info restants', en: 'roso.info credits left' },
   roso_tier: { fr: 'Formule roso.info', en: 'roso.info plan' },
