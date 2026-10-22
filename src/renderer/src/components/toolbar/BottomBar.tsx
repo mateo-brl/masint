@@ -102,6 +102,8 @@ export function BottomBar(): React.JSX.Element {
               <button
                 key={c}
                 onClick={() => setDrawStyle(c, drawWidth)}
+                aria-label={`${t('style.color')} ${c}`}
+                aria-pressed={drawColor === c}
                 className="h-5 w-5 rounded-full"
                 style={{ background: c, outline: drawColor === c ? `2px solid ${c}` : 'none', outlineOffset: 2 }}
               />
@@ -111,6 +113,8 @@ export function BottomBar(): React.JSX.Element {
               <button
                 key={w}
                 onClick={() => setDrawStyle(drawColor, w)}
+                aria-label={`${t('style.strokeWidth')} ${w}`}
+                aria-pressed={drawWidth === w}
                 className={`flex h-6 w-6 items-center justify-center rounded-md ${drawWidth === w ? 'bg-panel-3' : ''}`}
               >
                 <span className="rounded-full bg-fg" style={{ width: Math.min(14, w + 2), height: Math.min(14, w + 2) }} />

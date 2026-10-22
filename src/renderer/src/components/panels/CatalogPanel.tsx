@@ -51,7 +51,7 @@ export function CatalogPanel(): React.JSX.Element {
         <span className="font-semibold">{t('catalog.title')}</span>
         <span className="text-[11px] text-faint">{CATALOG.length}</span>
         <div className="flex-1" />
-        <button onClick={() => toggle(false)} className="rounded-md p-1 text-muted hover:bg-panel-3 hover:text-fg" title={t('common.collapse')}>
+        <button onClick={() => toggle(false)} className="rounded-md p-1 text-muted hover:bg-panel-3 hover:text-fg" title={t('common.collapse')} aria-label={t('common.collapse')}>
           <Icon name="ChevronLeft" size={16} />
         </button>
       </div>

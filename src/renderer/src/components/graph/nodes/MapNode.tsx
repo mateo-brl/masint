@@ -58,6 +58,7 @@ function MapNodeImpl({ id, data, selected }: NodeProps<FlowNode>): React.JSX.Ele
           <button
             onClick={cycleBasemap}
             title={t('canvas2.basemap', { name: t(`map.basemaps.${next.id}`) })}
+            aria-label={t('canvas2.basemap', { name: t(`map.basemaps.${next.id}`) })}
             className="nodrag flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted hover:bg-panel-3 hover:text-fg"
           >
             <Icon name="Layers" size={13} />
