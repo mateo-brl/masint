@@ -93,6 +93,8 @@ export interface ApiMap {
   /** Protection effective des clés : trousseau du système ou stockage faiblement chiffré. */
   'secrets:security': () => { encrypted: boolean; backend: string }
   'proxy:test': () => ProxyTestResult
+  /** Nouvel identifiant SOCKS pour Tor : les requêtes suivantes passent par de nouveaux circuits. */
+  'proxy:newTorIdentity': () => Settings
   /** Vérifie la clé roso.info et lit les crédits restants, sans en consommer. */
   'roso:status': () => RosoStatus
 
@@ -109,7 +111,15 @@ export interface ApiMap {
 
   // Application
   'app:info': () => { version: string; platform: string; dataPath: string }
+  /** Navigateur personnel de l'enquêteur : documentation, GitHub, pages d'inscription aux clés. */
   'app:openExternal': (url: string) => void
+  /** Lien d'enquête : navigateur d'enquête ou navigateur personnel, selon `linkOpening`. */
+  'app:openLink': (url: string) => void
+  /**
+   * Fenêtre visible du navigateur d'enquête : partition, proxy (ou Tor) et durcissement de la
+   * recherche assistée.
+   */
+  'browser:open': (url: string) => void
   'app:showInFolder': (path: string) => void
   /** Enquêtes importées depuis l'explorateur et pas encore ouvertes. */
   'app:takePendingOpen': () => string[]
