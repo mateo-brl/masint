@@ -30,6 +30,11 @@ interface SnapNext {
   }
 }
 
+/** Snapcode (QR code du compte) : image publique qui identifie le compte même après un changement de nom affiché. */
+function snapcodeUrl(u: string | undefined): string | undefined {
+  return u && /^https:\/\//.test(u) ? u : undefined
+}
+
 /** Profil public (créateur) ou profil simple (nom affiché, Bitmoji) depuis `__NEXT_DATA__`. */
 export function parseSnapchat(html: string, lang: Lang): Parsed | null {
   const next = scriptJson<SnapNext>(html, '__NEXT_DATA__')
@@ -51,7 +56,8 @@ export function parseSnapchat(html: string, lang: Lang): Parsed | null {
           followers: toNumber(p.subscriberCount),
           profile_type: lang === 'fr' ? 'profil public' : 'public profile',
           category: sub,
-          verified: p.badge === 1 || undefined
+          verified: p.badge === 1 || undefined,
+          snapcode_url: snapcodeUrl(p.snapcodeImageUrl)
         }
       },
       children: linkedEntities({ text: p.bio, urls: [p.websiteUrl], lang, self: { platform: 'snapchat', username: p.username } })
@@ -64,7 +70,11 @@ export function parseSnapchat(html: string, lang: Lang): Parsed | null {
         username: u.username,
         url: `https://www.snapchat.com/@${u.username}`,
         image: u.bitmoji3d?.avatarImage?.url ?? metaContent(html, 'og:image'),
-        data: { display_name: u.displayName, profile_type: lang === 'fr' ? 'profil personnel' : 'personal profile' }
+        data: {
+          display_name: u.displayName,
+          profile_type: lang === 'fr' ? 'profil personnel' : 'personal profile',
+          snapcode_url: snapcodeUrl(u.snapcodeImageUrl)
+        }
       },
       children: []
     }

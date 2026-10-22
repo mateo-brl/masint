@@ -3,15 +3,15 @@
 <!-- Fichier généré : ne pas modifier à la main. -->
 <!-- Régénérer avec : node build/scripts/list-modules.mjs > docs/modules-list.md -->
 
-162 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
+179 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
 
 Légende des remarques : **à la demande** (lancé seulement sur demande explicite, service à crédits), **bruyant** (peut alerter la personne recherchée), **expérimental** (résultats à vérifier). Une clé suivie de « (facultative) » améliore les résultats sans être obligatoire.
 
 | Catégorie | Modules |
 | --- | ---: |
 | [Téléphone](#phone) | 9 |
-| [Email](#email) | 26 |
-| [Pseudo](#username) | 2 |
+| [Email](#email) | 39 |
+| [Pseudo](#username) | 3 |
 | [Personne](#person) | 7 |
 | [Domaine](#domain) | 17 |
 | [Adresse IP](#ip) | 14 |
@@ -22,7 +22,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | [Localisation](#location) | 3 |
 | [Image](#image) | 4 |
 | [Messagerie](#messaging) | 2 |
-| [Réseaux sociaux](#social) | 29 |
+| [Réseaux sociaux](#social) | 32 |
 | [Forensic / IOC](#forensic) | 8 |
 | [Divers](#misc) | 3 |
 | [roso.info](#roso) | 9 |
@@ -51,28 +51,41 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | --- | --- | --- | --- | --- |
 | `email.adobe` | Compte Adobe | `email` |  |  |
 | `email.amazon` | Compte Amazon | `email` |  |  |
+| `email.anydo` | Compte Any.do | `email` |  |  |
 | `email.chesscom` | Compte Chess.com | `email` |  |  |
+| `email.codecademy` | Compte Codecademy | `email` |  |  |
 | `email.deezer` | Compte Deezer | `email` |  |  |
+| `email.diigo` | Compte Diigo | `email` |  |  |
 | `email.duolingo` | Compte Duolingo | `email` |  |  |
 | `email.emailrep` | Réputation (EmailRep) | `email` | `emailrep` | expérimental |
 | `email.eventbrite` | Compte Eventbrite | `email` |  |  |
+| `email.firefox` | Compte Mozilla (Firefox) | `email` |  |  |
+| `email.flickr` | Compte Flickr | `email` |  |  |
 | `email.freelancer` | Compte Freelancer | `email` |  |  |
 | `email.github` | Commits GitHub | `email` | `github` (facultative) | expérimental |
+| `email.google_calendar` | Agenda Google public | `email` |  |  |
 | `email.gravatar` | Profil Gravatar | `email` |  |  |
 | `email.hibp` | Have I Been Pwned | `email` | `hibp` |  |
 | `email.hudsonrock` | Infostealers (Hudson Rock) | `email` |  |  |
 | `email.info` | Analyse de l'adresse | `email` |  |  |
+| `email.insightly` | Compte Insightly | `email` |  |  |
 | `email.lastpass` | Compte LastPass | `email` |  |  |
 | `email.leakcheck` | Fuites de données (LeakCheck) | `email` |  |  |
 | `email.links` | Recherches manuelles (email) | `email` |  |  |
 | `email.mailru` | Boîte Mail.ru existante | `email` |  |  |
 | `email.microsoft` | Compte Microsoft personnel | `email` |  |  |
+| `email.myspace` | Compte Myspace | `email` |  |  |
 | `email.office365` | Compte Microsoft 365 (pro) | `email` |  |  |
+| `email.pgp` | Clés PGP publiques | `email` |  |  |
+| `email.plurk` | Compte Plurk | `email` |  |  |
+| `email.proton` | Adresse hébergée chez Proton | `email` |  | expérimental |
+| `email.rambler` | Compte Rambler | `email` |  |  |
 | `email.snapchat` | Compte Snapchat / Bitmoji | `email` |  |  |
 | `email.spotify` | Compte Spotify | `email` |  |  |
 | `email.twitter` | Compte X (Twitter) | `email` |  |  |
 | `email.wordpress` | Compte WordPress.com | `email` |  |  |
 | `email.xposedornot` | Fuites de données (XposedOrNot) | `email` |  |  |
+| `email.xvideos` | Compte XVideos (adulte) | `email` |  | à la demande |
 | `hints.crossmatch` | Recoupement des indices masqués | `*` |  |  |
 | `hints.recovery` | Indices de récupération masqués | `email`, `phone` |  | à la demande, bruyant, expérimental |
 
@@ -83,6 +96,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
 | `username.sites` | Pseudo sur des centaines de sites | `username` |  |  |
+| `username.sites_extended` | Pseudo sur des milliers de sites | `username` |  | à la demande |
 | `username.sites_nsfw` | Pseudo sur les sites adultes | `username` |  | à la demande |
 
 <a id="person"></a>
@@ -251,6 +265,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `social.keybase` | Profil Keybase | `username`, `account` |  |  |
 | `social.kick` | Chaîne Kick | `username`, `account` |  |  |
 | `social.lichess` | Profil Lichess | `username`, `account` |  |  |
+| `social.linkinbio` | Page « lien en bio » | `url`, `website`, `account` |  |  |
 | `social.linktree` | Page Linktree | `username`, `account` |  |  |
 | `social.mastodon` | Comptes Mastodon | `username`, `account` |  |  |
 | `social.minecraft` | Compte Minecraft | `username`, `account` |  |  |
@@ -261,10 +276,12 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `social.snapchat` | Profil Snapchat | `username`, `account` |  |  |
 | `social.steam` | Profil Steam | `username`, `account` |  |  |
 | `social.strava` | Athlète Strava | `username`, `account` |  |  |
+| `social.threads` | Profil Threads (et Instagram) | `username`, `account` |  | expérimental |
 | `social.tiktok` | Profil TikTok | `username`, `account` |  |  |
 | `social.twitch` | Chaîne Twitch | `username`, `account` |  |  |
 | `social.wikimedia` | Compte Wikipédia / Wikimedia | `username`, `account` |  |  |
 | `social.x` | Profil X (Twitter) | `username`, `account` |  |  |
+| `social.x_history` | Historique des pseudos X (memory.lol) | `username`, `account` |  |  |
 | `social.youtube` | Chaîne YouTube | `username`, `account` |  |  |
 
 <a id="forensic"></a>
