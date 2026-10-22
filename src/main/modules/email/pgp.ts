@@ -54,6 +54,8 @@ export function buildPgpOutput(
     label: address,
     data: { pgp_fingerprint: o.fingerprint },
     linkLabel: fr ? 'même clé PGP' : 'same PGP key',
+    // Adresse vérifiée par le serveur de clés : même identité ; sinon, n'importe qui a pu l'ajouter.
+    strength: o.verified ? 'same' : 'weak',
     ...(o.verified
       ? {}
       : {

@@ -80,6 +80,8 @@ export function accountEntity(
     ...(platform ? { platform } : {}),
     data: { username, site: name, ...(url ? { url } : {}), site_url: site.urlMain },
     linkLabel: fr ? `présent sur ${name}` : `found on ${name}`,
+    // Même pseudo sur un autre site : rien ne dit que c'est la même personne.
+    strength: 'weak',
     ...(site.similar
       ? {
           review: true,

@@ -38,13 +38,13 @@ export function parseKeybase(u: KeybaseUser, lang: Lang): Parsed {
     if (p.state !== undefined && p.state !== 1) continue
     const platform = PROOF_PLATFORMS[p.proof_type]
     if (platform) {
-      children.push({ type: 'account', label: p.nametag, platform, data: compact({ username: p.nametag, url: p.service_url, proof_url: p.human_url }), linkLabel: proven })
+      children.push({ type: 'account', label: p.nametag, platform, data: compact({ username: p.nametag, url: p.service_url, proof_url: p.human_url }), linkLabel: proven, strength: 'same' })
     } else if (p.proof_type === 'dns') {
-      children.push({ type: 'domain', label: p.nametag.toLowerCase(), linkLabel: lang === 'fr' ? 'domaine prouvé' : 'proven domain' })
+      children.push({ type: 'domain', label: p.nametag.toLowerCase(), linkLabel: lang === 'fr' ? 'domaine prouvé' : 'proven domain', strength: 'same' })
     } else if (p.proof_type === 'generic_web_site' && p.service_url) {
-      children.push({ type: 'url', label: p.service_url, data: { url: p.service_url }, linkLabel: lang === 'fr' ? 'site prouvé' : 'proven website' })
+      children.push({ type: 'url', label: p.service_url, data: { url: p.service_url }, linkLabel: lang === 'fr' ? 'site prouvé' : 'proven website', strength: 'same' })
     } else if (p.service_url) {
-      children.push({ type: 'url', label: p.service_url, data: { url: p.service_url, service: p.proof_type }, linkLabel: proven })
+      children.push({ type: 'url', label: p.service_url, data: { url: p.service_url, service: p.proof_type }, linkLabel: proven, strength: 'same' })
     }
   }
   for (const [chain, list] of Object.entries(u.cryptocurrency_addresses ?? {})) {
@@ -54,12 +54,13 @@ export function parseKeybase(u: KeybaseUser, lang: Lang): Parsed {
         label: a.address,
         platform: CHAINS[chain],
         data: { chain },
-        linkLabel: lang === 'fr' ? 'adresse publiée' : 'published address'
+        linkLabel: lang === 'fr' ? 'adresse publiée' : 'published address',
+        strength: 'declared'
       })
     }
   }
   const stellar = u.stellar?.primary?.account_id
-  if (stellar) children.push({ type: 'crypto_wallet', label: stellar, data: { chain: 'stellar' }, linkLabel: lang === 'fr' ? 'portefeuille Stellar' : 'Stellar wallet' })
+  if (stellar) children.push({ type: 'crypto_wallet', label: stellar, data: { chain: 'stellar' }, linkLabel: lang === 'fr' ? 'portefeuille Stellar' : 'Stellar wallet', strength: 'declared' })
   const username = u.basics?.username ?? ''
   return {
     profile: {

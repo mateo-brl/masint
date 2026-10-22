@@ -101,6 +101,7 @@ export default defineModule({
       label: parsed.profile.username,
       data: { username: parsed.profile.username, url: `https://www.instagram.com/${parsed.profile.username}/` },
       linkLabel: fr ? 'compte Instagram (même pseudo)' : 'Instagram account (same username)',
+      strength: 'same',
       review: true,
       reviewReason: fr ? 'le pseudo Threads est le pseudo Instagram' : 'the Threads username is the Instagram username'
     }

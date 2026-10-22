@@ -30,6 +30,7 @@ describe('aide commune', () => {
         label: 'ancien',
         data: { first_seen: '2019-01-01', last_seen: '2021-01-01', source: 'memory.lol' },
         linkLabel: 'ancien pseudo',
+        strength: 'same',
         review: true,
         reviewReason: "ancien pseudo X (memory.lol), utilisé jusqu'au 2021-01-01"
       }
