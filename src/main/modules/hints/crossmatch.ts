@@ -221,6 +221,8 @@ export function toEntity(c: Candidate, lang: Lang): OutEntity {
   return {
     type: c.type,
     label: c.value,
+    // Adresse ou numéro reconstruit à partir d'indices masqués : hypothèse.
+    strength: 'weak',
     review: true,
     reviewReason: reason(c, lang),
     linkLabel: c.type === 'email' ? t(lang, 'email possible', 'possible email') : t(lang, 'téléphone possible', 'possible phone'),

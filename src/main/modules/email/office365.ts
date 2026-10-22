@@ -32,7 +32,8 @@ export default defineModule({
         // Libellé distinct du compte personnel, qui peut coexister avec la même adresse.
         accountEntity('microsoft', 'Microsoft 365', `${email} (Microsoft 365)`, {
           data: { kind: 'Microsoft 365 / Entra ID' },
-          linkLabel: tr(ctx, 'compte Microsoft 365', 'Microsoft 365 account')
+          linkLabel: tr(ctx, 'compte Microsoft 365', 'Microsoft 365 account'),
+          strength: 'same'
         })
       ],
       raw: r.raw
