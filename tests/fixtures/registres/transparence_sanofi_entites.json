@@ -1,0 +1,50 @@
+{
+ "total_count": 9,
+ "results": [
+  {
+   "raison_sociale": "SANOFI WINTHROP INDUSTRIE",
+   "numero_siren": "775662257",
+   "n": 168535
+  },
+  {
+   "raison_sociale": "SANOFI AVENTIS FRANCE",
+   "numero_siren": "403335904",
+   "n": 131244
+  },
+  {
+   "raison_sociale": "SANOFI-AVENTIS RECHERCHE ET DEVELOPPEMENT",
+   "numero_siren": "713002269",
+   "n": 11853
+  },
+  {
+   "raison_sociale": "SANOFI-AVENTIS RECHERCHE & DEVELOPPEMENT",
+   "numero_siren": "713002269",
+   "n": 7921
+  },
+  {
+   "raison_sociale": "SANOFI PASTEUR",
+   "numero_siren": "349505370",
+   "n": 4501
+  },
+  {
+   "raison_sociale": "SANOFI-AVENTIS GROUPE",
+   "numero_siren": "403335938",
+   "n": 3120
+  },
+  {
+   "raison_sociale": "SANOFI R&D VACCINS",
+   "numero_siren": "349505370",
+   "n": 355
+  },
+  {
+   "raison_sociale": "SANOFI CHIMIE",
+   "numero_siren": "428706204",
+   "n": 93
+  },
+  {
+   "raison_sociale": "SANOFI PASTEUR EUROPE",
+   "numero_siren": "821177425",
+   "n": 82
+  }
+ ]
+}
