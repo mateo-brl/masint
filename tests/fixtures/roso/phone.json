@@ -1,21 +1,110 @@
 {
-  "_source": "Construit d'après le bundle de https://roso.info/app/phone (assets/index-CAOIqV3w.js : phone/log, autocheck/check, twilio/lookup, funstat). Formats des données par plateforme non observés.",
-  "log": { "success": true, "credits": 14 },
+  "_source": "Construit d'après le bundle de https://roso.info/app/phone (assets/index-CAOIqV3w.js : phone/log, autocheck/check, twilio/lookup, funstat). Formats des données par plateforme non observés. Champs Apple (kind, maskedEmail, multipleEmails), Sleeper (maskedEmail, maskedPhone, hasPhone) et Explurger (city, country) d'après l'affichage des cartes du bundle ; valeurs inventées.",
+  "log": {
+    "success": true,
+    "credits": 14
+  },
   "autocheck": {
-    "whatsapp": { "exists": true, "data": { "about": "Disponible", "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/abc.jpg" } },
-    "telegram": { "exists": true, "data": { "userId": "123456789", "username": "jdupont_tg", "firstName": "Jean", "lastName": "Dupont" } },
-    "callapp": { "exists": true, "data": { "name": "Jean Dupont", "photo": "https://s3.callapp.com/photos/abc.jpg" } },
-    "pagesjaunes": { "exists": true, "data": { "name": "Dupont Jean", "address": "12 rue de la Paix", "postalCode": "75002", "city": "Paris" } },
-    "hudsonrock": { "exists": false, "message": "Aucun résultat" },
-    "facebook": { "exists": null, "error": "blocked", "code": "phone_session_required", "message": "Session requise" }
+    "whatsapp": {
+      "exists": true,
+      "data": {
+        "about": "Disponible",
+        "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/abc.jpg"
+      }
+    },
+    "telegram": {
+      "exists": true,
+      "data": {
+        "userId": "123456789",
+        "username": "jdupont_tg",
+        "firstName": "Jean",
+        "lastName": "Dupont"
+      }
+    },
+    "callapp": {
+      "exists": true,
+      "data": {
+        "name": "Jean Dupont",
+        "photo": "https://s3.callapp.com/photos/abc.jpg"
+      }
+    },
+    "pagesjaunes": {
+      "exists": true,
+      "data": {
+        "name": "Dupont Jean",
+        "address": "12 rue de la Paix",
+        "postalCode": "75002",
+        "city": "Paris"
+      }
+    },
+    "hudsonrock": {
+      "exists": false,
+      "message": "Aucun résultat"
+    },
+    "facebook": {
+      "exists": null,
+      "error": "blocked",
+      "code": "phone_session_required",
+      "message": "Session requise"
+    },
+    "apple-iforgot": {
+      "exists": true,
+      "data": {
+        "platform": "Apple ID",
+        "kind": "phone",
+        "maskedEmail": "d•••••@e•••••.com",
+        "multipleEmails": false
+      }
+    },
+    "sleeper": {
+      "exists": true,
+      "data": {
+        "platform": "Sleeper",
+        "displayName": "jdupont_ff",
+        "maskedEmail": "d•••••@e•••••.com",
+        "maskedPhone": "+33 6 •• •• •• 78",
+        "hasEmail": true,
+        "hasPhone": true
+      }
+    },
+    "explurger": {
+      "exists": true,
+      "data": {
+        "platform": "Explurger",
+        "fullName": "Jean Dupont",
+        "handle": "jdupont",
+        "city": "Lyon",
+        "country": "France"
+      }
+    }
   },
   "twilio": {
     "phone_number": "+33612345678",
     "national_format": "06 12 34 56 78",
     "country_code": "FR",
-    "line_type_intelligence": { "type": "mobile", "carrier_name": "Orange", "mobile_country_code": "208", "mobile_network_code": "01" },
-    "line_status": { "status": "active" }
+    "line_type_intelligence": {
+      "type": "mobile",
+      "carrier_name": "Orange",
+      "mobile_country_code": "208",
+      "mobile_network_code": "01"
+    },
+    "line_status": {
+      "status": "active"
+    },
+    "valid": true,
+    "caller_name": null
   },
-  "callfilter": { "success": false, "skipped": true },
-  "funstat": { "found": true, "id": "123456789", "usernames": ["jdupont_tg", "jeand"], "groupsCount": 4 }
+  "callfilter": {
+    "success": false,
+    "skipped": true
+  },
+  "funstat": {
+    "found": true,
+    "id": "123456789",
+    "usernames": [
+      "jdupont_tg",
+      "jeand"
+    ],
+    "groupsCount": 4
+  }
 }

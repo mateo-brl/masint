@@ -4,7 +4,7 @@
 import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
 import { detectCryptoChain } from '@shared/detect'
-import { isFatal, pool, redact, ROSO_COMMON, RosoClient, toRosoError, type Json } from './_client'
+import { isFatal, pool, redact, ROSO_COMMON, RosoClient, scanProgress, toRosoError, type Json } from './_client'
 import {
   accountEntities,
   addGeneric,
@@ -72,18 +72,24 @@ export default defineModule({
     const found: Array<{ mod: string; profile: Json }> = []
     const errors: Record<string, string> = {}
     let notFound = 0
+    const progress = scanProgress(ctx, modules.length, { fr: 'modules', en: 'modules' })
     await pool(modules, POOL, ctx.signal, async (mod) => {
+      let hit = false
       try {
         const r = await c.post(`/api/gateway/crypto/${encodeURIComponent(mod)}`, { address, api_key: c.key }, { timeoutMs: 30000, retries: 1, throwOnError: false, page: PAGE })
         if (r.status === 401) throw toRosoError(401, r.data, 'crypto', ctx.lang)
         const d = r.data
         if (!r.ok) return void (errors[mod] = str(d.error) || `HTTP ${r.status}`)
-        if (d.success === true && d.exists === true) found.push({ mod, profile: asObj(d.profile) })
-        else if (d.success === false && d.error && d.error !== 'invalid_address' && /unavailable|error/.test(str(d.error))) errors[mod] = str(d.error)
+        if (d.success === true && d.exists === true) {
+          found.push({ mod, profile: asObj(d.profile) })
+          hit = true
+        } else if (d.success === false && d.error && d.error !== 'invalid_address' && /unavailable|error/.test(str(d.error))) errors[mod] = str(d.error)
         else notFound++
       } catch (e) {
         if (isFatal(e)) throw e
         errors[mod] = e instanceof Error ? e.message : String(e)
+      } finally {
+        progress.tick(siteName(mod), hit)
       }
     })
 

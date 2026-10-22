@@ -3,7 +3,7 @@
 // AlloVoisins... avec 2,5 s entre deux requêtes, comme le site. 10 crédits par scan.
 
 import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
-import { creditsOf, isFatal, redact, ROSO_COMMON, RosoClient, sleep, toRosoError, type Json } from './_client'
+import { creditsOf, isFatal, redact, ROSO_COMMON, RosoClient, scanProgress, sleep, toRosoError, type Json } from './_client'
 import { asObj, avatarOf, dropEmpty, imageUrl, isHttpUrl, isObj, pick, str } from './_parse'
 
 const PAGE = '/partial-number/'
@@ -115,6 +115,7 @@ export default defineModule({
     const c = new RosoClient(ctx, 'partial-number')
 
     const start = await c.launch('/api/gateway/partial-number/start', {}, { page: PAGE })
+    const progress = scanProgress(ctx, exp.combos.length, { fr: 'combinaisons', en: 'combinations' })
 
     const hits: Hit[] = []
     const errors: string[] = []
@@ -122,6 +123,7 @@ export default defineModule({
     let stopped: string | null = null
     for (let i = 0; i < exp.combos.length; i++) {
       const combo = exp.combos[i]
+      const before = hits.length
       try {
         const r = await c.post('/api/gateway/partial-number/check', { phone: combo.phone }, { retries: 1, timeoutMs: 45000, throwOnError: false, page: PAGE })
         if (r.status === 401 || r.status === 403) throw toRosoError(r.status, r.data, 'partial-number', ctx.lang)
@@ -143,6 +145,7 @@ export default defineModule({
         if (isFatal(e)) throw e
         errors.push(`${combo.phone}: ${e instanceof Error ? e.message : String(e)}`)
       }
+      progress.tick(combo.phone, hits.length > before)
       if (stopped) break
       if (i < exp.combos.length - 1) await sleep(partialTiming.delayMs, ctx.signal)
     }

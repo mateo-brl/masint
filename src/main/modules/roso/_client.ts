@@ -275,6 +275,34 @@ export class RosoClient {
   }
 }
 
+export interface ScanProgress {
+  /** Un élément de plus est terminé : son nom, et s'il a donné un résultat. */
+  tick(current?: string, hit?: boolean): void
+}
+
+/**
+ * Avancement d'un scan dans la pastille de progression. L'interface affiche « 23/57 » et ce
+ * détail : unité, nombre de résultats, dernier élément terminé (« plateformes · 2 trouvés ·
+ * WhatsApp »).
+ */
+export function scanProgress(ctx: ModuleContext, total: number, unit: { fr: string; en: string }): ScanProgress {
+  const fr = ctx.lang === 'fr'
+  let done = 0
+  let found = 0
+  const detail = (current?: string): string =>
+    [fr ? unit.fr : unit.en, found ? (fr ? `${found} trouvé${found > 1 ? 's' : ''}` : `${found} found`) : '', current ?? '']
+      .filter(Boolean)
+      .join(' · ')
+  ctx.progress(0, total, detail())
+  return {
+    tick(current, hit = false) {
+      done = Math.min(done + 1, total)
+      if (hit) found++
+      ctx.progress(done, total, detail(current))
+    }
+  }
+}
+
 /** Retire la clé API d'une réponse avant de l'archiver dans `raw`. */
 export function redact<T>(value: T, key: string): T {
   if (!key || value === undefined) return value

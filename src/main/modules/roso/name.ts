@@ -2,7 +2,7 @@
 // POST /api/gateway/name/search qui renvoie une liste de profils candidats).
 
 import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
-import { creditsOf, redact, ROSO_COMMON, RosoClient } from './_client'
+import { creditsOf, redact, ROSO_COMMON, RosoClient, scanProgress } from './_client'
 import { accountEntities, asArr, asObj, dropEmpty, fullPhone, imageUrl, isEmail, isHttpUrl, pick, pickNum, rosoPlatform, str } from './_parse'
 
 const PAGE = '/name/'
@@ -62,7 +62,10 @@ export default defineModule({
     if (fullName.length < 2) throw new ModuleError('Nom trop court', 'invalid_input')
     const location = str(input.data.location) || str(input.data.city) || str(input.data.birth_place)
     const c = new RosoClient(ctx, 'name')
+    // Deux étapes : maintenance, puis la recherche (un seul appel, jusqu'à 2 min 30).
+    const progress = scanProgress(ctx, 2, { fr: 'étapes', en: 'steps' })
     await c.checkMaintenance('name')
+    progress.tick(ctx.lang === 'fr' ? 'recherche en cours' : 'searching')
 
     const bits = fullName.split(' ')
     const firstName = str(input.data.first_name) || (bits.length > 1 ? bits[0] : '')
@@ -73,6 +76,7 @@ export default defineModule({
       { page: PAGE, timeoutMs: 150000 }
     )
     const entities = nameEntities(res.results, fullName, ctx.lang)
+    progress.tick(ctx.lang === 'fr' ? `${asArr(res.results).length} profils` : `${asArr(res.results).length} profiles`)
     return {
       properties: dropEmpty({
         roso_credits_left: creditsOf(res),
