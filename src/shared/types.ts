@@ -250,6 +250,29 @@ export interface Suggestion {
   updatedAt: number
 }
 
+/** Résultat de la recherche globale : un nœud d'une enquête, avec un extrait du texte trouvé. */
+export interface GlobalSearchHit {
+  investigationId: string
+  investigationName: string
+  investigationColor: string
+  nodeId: string
+  kind: NodeKind
+  type: string
+  platform: string | null
+  label: string
+  /** Extrait du texte trouvé ; les passages correspondants sont entre `\u0002` et `\u0003`. */
+  snippet: string
+}
+
+/** Autre enquête où apparaît la même entité (même clé canonique). */
+export interface CrossRef {
+  investigationId: string
+  investigationName: string
+  investigationColor: string
+  /** Nœud de l'autre enquête (le plus ancien s'il y en a plusieurs). */
+  nodeId: string
+}
+
 export interface GraphChange {
   investigationId: string
   nodes: GraphNode[]
@@ -308,6 +331,11 @@ export interface Settings {
   /** `auto` : libellés masqués autour des nœuds très reliés, sauf pour la sélection. */
   edgeLabels: 'auto' | 'always'
   showMinimap: boolean
+  /**
+   * Enquêtes cloisonnées (finalité propre à chaque enquête, RGPD) : ni corrélation entre
+   * enquêtes, ni recherche globale.
+   */
+  isolateInvestigations: boolean
 }
 
 export interface SecretStatus {

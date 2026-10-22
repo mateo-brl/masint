@@ -32,7 +32,8 @@ export const DEFAULT_SETTINGS: Settings = {
   autoUpdate: true,
   edgeStyle: 'bezier',
   edgeLabels: 'auto',
-  showMinimap: true
+  showMinimap: true,
+  isolateInvestigations: false
 }
 
 /** Chiffrement des secrets. En production : `safeStorage` d'Electron (DPAPI, trousseau GNOME/KWallet). */

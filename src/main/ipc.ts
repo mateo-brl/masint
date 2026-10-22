@@ -12,6 +12,7 @@ import { buildArchive, duplicateInvestigation, importArchive } from './archive'
 import { mergeData } from './merge'
 import { applyAssistIdentity, assistedSearch, assistSession, needlesFor } from './assist'
 import { openInvestigationBrowser, openLink } from './browser'
+import { crossReferences, globalSearch } from './correlation'
 import { compactLater } from './db/database'
 import type { Repo } from './db/repo'
 import { createFetch, resetDispatchers } from './engine/http'
@@ -142,6 +143,10 @@ export function registerIpc(deps: IpcDeps): void {
     const change = { investigationId: invId, nodes: [merged] as GraphNode[], edges, deletedNodeIds: Array.from(otherSet), deletedEdgeIds }
     return change
   })
+
+  // Recherche globale et corrélation entre enquêtes (sauf enquêtes cloisonnées) -------
+  handle('search:global', (query, limit) => globalSearch(repo, settings, query, limit))
+  handle('nodes:crossRefs', (ids) => crossReferences(repo, settings, ids))
 
   // Pièces jointes -------------------------------------------------------------
   handle('attachments:add', (invId, file) =>
