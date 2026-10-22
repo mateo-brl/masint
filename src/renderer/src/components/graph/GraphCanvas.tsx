@@ -54,6 +54,9 @@ const minimapNodeColor = (n: Node): string => ((n as FlowNode).data.node.kind ==
 /** Au-delà de ce nombre de nœuds, seuls les éléments visibles sont rendus. */
 const VISIBLE_ONLY_MIN = 300
 
+/** Nœud d'affichage d'un groupe, réutilisé tant que ce dont il dépend ne change pas. */
+type BundleEntry = { bundle: Bundle; st: unknown; node: GraphNode; x: number; y: number; flow: FlowNode }
+
 /** Dernière enquête recadrée : on recadre à l'ouverture, pas à chaque retour sur la vue Graphe. */
 let fittedInvestigation: string | null = null
 
@@ -124,7 +127,7 @@ export function GraphCanvas(): React.JSX.Element {
   // Objets réutilisés d'un rendu à l'autre (nœuds masqués, groupes) : pendant un glisser, React
   // Flow ne voit changer que le nœud déplacé.
   const hiddenCopies = useRef(new WeakMap<FlowNode, FlowNode>())
-  const bundleNodes = useRef(new Map<string, { bundle: Bundle; st: unknown; node: GraphNode; x: number; y: number; flow: FlowNode }>())
+  const bundleNodes = useRef(new Map<string, BundleEntry>())
   const displayNodes = useMemo(() => {
     const out: FlowNode[] = nodes.map((n) => {
       if (!view.hidden.has(n.id)) return n
@@ -133,7 +136,7 @@ export function GraphCanvas(): React.JSX.Element {
       return copy
     })
     const byId = new Map(nodes.map((n) => [n.id, n]))
-    const cached = new Map<string, { bundle: Bundle; st: unknown; node: GraphNode; x: number; y: number; flow: FlowNode }>()
+    const cached = new Map<string, BundleEntry>()
     for (const b of view.bundles) {
       const first = byId.get(b.members[0])!
       const st = bundleState[b.id]
