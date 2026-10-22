@@ -1,0 +1,362 @@
+{
+ "results": [
+  {
+   "siren": "217500016",
+   "nom_complet": "VILLE DE PARIS",
+   "nature_juridique": "7229",
+   "activite_principale": "84.11Z",
+   "etat_administratif": "A",
+   "date_creation": "1983-03-01",
+   "date_fermeture": null,
+   "matching_etablissements": [
+    {
+     "siret": "21750001600019",
+     "adresse": "4 PL HOTEL VILLE ESP LIBERATION 75004 PARIS 04",
+     "code_postal": "75004",
+     "latitude": "48.856507956",
+     "longitude": "2.3520586814",
+     "etat_administratif": "A",
+     "est_siege": true,
+     "activite_principale": "84.11Z",
+     "date_creation": "1983-03-01",
+     "date_fermeture": null,
+     "liste_enseignes": [
+      "MAIRIE"
+     ],
+     "nom_commercial": null
+    }
+   ]
+  },
+  {
+   "siren": "953820107",
+   "nom_complet": "SOCIETE PUBLIQUE LOCALE FUNERAIRE DE PARIS",
+   "nature_juridique": "5599",
+   "activite_principale": "96.03Z",
+   "etat_administratif": "A",
+   "date_creation": "2023-06-26",
+   "date_fermeture": null,
+   "matching_etablissements": [
+    {
+     "siret": "95382010700019",
+     "adresse": "4 PL HOTEL VILLE ESP LIBERATION 75004 PARIS 04",
+     "code_postal": "75004",
+     "latitude": "48.856507956",
+     "longitude": "2.3520586814",
+     "etat_administratif": "A",
+     "est_siege": true,
+     "activite_principale": "96.03Z",
+     "date_creation": "2023-06-26",
+     "date_fermeture": null,
+     "liste_enseignes": null,
+     "nom_commercial": null
+    }
+   ]
+  },
+  {
+   "siren": "177500006",
+   "nom_complet": "PREFECTURE DE REGION ILE-DE-FRANCE",
+   "nature_juridique": "7171",
+   "activite_principale": "84.11Z",
+   "etat_administratif": "A",
+   "date_creation": "1981-06-23",
+   "date_fermeture": null,
+   "matching_etablissements": [
+    {
+     "siret": "17750000600065",
+     "adresse": "4 PL HOTEL VILLE ESP LIBERATION 75004 PARIS 04",
+     "code_postal": "75004",
+     "latitude": "48.856507956",
+     "longitude": "2.3520586814",
+     "etat_administratif": "A",
+     "est_siege": false,
+     "activite_principale": "84.11Z",
+     "date_creation": "2010-06-30",
+     "date_fermeture": null,
+     "liste_enseignes": [
+      "PREF PARIS BULL MUNI OFFI SERV"
+     ],
+     "nom_commercial": null
+    }
+   ]
+  },
+  {
+   "siren": "552038200",
+   "nom_complet": "ELOGIE - SIEMP",
+   "nature_juridique": "5599",
+   "activite_principale": "68.20A",
+   "etat_administratif": "A",
+   "date_creation": "1955-01-01",
+   "date_fermeture": null,
+   "matching_etablissements": [
+    {
+     "siret": "55203820000036",
+     "adresse": "HOTEL DE VILLE PL HOTEL VILLE ESP LIBERATION 75004 PARIS 04",
+     "code_postal": "75004",
+     "latitude": "48.856731157",
+     "longitude": "2.3519391022",
+     "etat_administratif": "A",
+     "est_siege": false,
+     "activite_principale": "68.20A",
+     "date_creation": "2006-07-21",
+     "date_fermeture": null,
+     "liste_enseignes": null,
+     "nom_commercial": null
+    }
+   ]
+  },
+  {
+   "siren": "200021624",
+   "nom_complet": "AGENCE METROPOLITAINE DES MOBILITES PARTAGEES",
+   "nature_juridique": "7355",
+   "activite_principale": "84.13Z",
+   "etat_administratif": "A",
+   "date_creation": "2009-07-09",
+   "date_fermeture": null,
+   "matching_etablissements": [
+    {
+     "siret": "20002162400016",
+     "adresse": "HOTEL DE VILLE 4 RUE DE L'HOTEL DE VILLE 75004 PARIS",
+     "code_postal": "75004",
+     "latitude": "48.856507956",
+     "longitude": "2.3520586814",
+     "etat_administratif": "F",
+     "est_siege": false,
+     "activite_principale": "77.11A",
+     "date_creation": "2009-07-09",
+     "date_fermeture": "2010-09-10",
+     "liste_enseignes": null,
+     "nom_commercial": null
+    }
+   ]
+  },
+  {
+   "siren": "000000001",
+   "nom_complet": "ENTREPRENEUR INDIVIDUEL 1",
+   "nature_juridique": "1000",
+   "activite_principale": "47.89Z",
+   "etat_administratif": "A",
+   "date_creation": "2005-01-03",
+   "date_fermeture": null,
+   "matching_etablissements": [
+    {
+     "siret": "00000000100010",
+     "adresse": "4 PL HOTEL VILLE ESP LIBERATION 75004 PARIS 04",
+     "code_postal": "75004",
+     "latitude": "48.856507956",
+     "longitude": "2.3520586814",
+     "etat_administratif": "A",
+     "est_siege": false,
+     "activite_principale": "47.89Z",
+     "date_creation": "2005-01-14",
+     "date_fermeture": null,
+     "liste_enseignes": null,
+     "nom_commercial": null
+    }
+   ]
+  },
+  {
+   "siren": "329121065",
+   "nom_complet": "SOCIETE D'ECONOMIE MIXTE PARIS COMMERCES (SEM PC)",
+   "nature_juridique": "5515",
+   "activite_principale": "71.11Z",
+   "etat_administratif": "A",
+   "date_creation": "1984-01-01",
+   "date_fermeture": null,
+   "matching_etablissements": [
+    {
+     "siret": "32912106500034",
+     "adresse": "HOTEL DE VILLE 4 PL HOTEL VILLE ESP LIBERATION 75004 PARIS 04",
+     "code_postal": "75004",
+     "latitude": "48.856507956",
+     "longitude": "2.3520586814",
+     "etat_administratif": "A",
+     "est_siege": true,
+     "activite_principale": "70.10Z",
+     "date_creation": "1984-02-20",
+     "date_fermeture": null,
+     "liste_enseignes": null,
+     "nom_commercial": null
+    }
+   ]
+  },
+  {
+   "siren": "130024151",
+   "nom_complet": "FONDS DEPARTEMENT DE PARIS (DPA)",
+   "nature_juridique": "7490",
+   "activite_principale": "84.30B",
+   "etat_administratif": "A",
+   "date_creation": "1981-09-11",
+   "date_fermeture": null,
+   "matching_etablissements": [
+    {
+     "siret": "13002415100016",
+     "adresse": "4 PL HOTEL VILLE ESP LIBERATION 75004 PARIS 04",
+     "code_postal": "75004",
+     "latitude": "48.856507956",
+     "longitude": "2.3520586814",
+     "etat_administratif": "A",
+     "est_siege": true,
+     "activite_principale": "84.30B",
+     "date_creation": "1981-09-11",
+     "date_fermeture": null,
+     "liste_enseignes": null,
+     "nom_commercial": null
+    }
+   ]
+  },
+  {
+   "siren": "000000002",
+   "nom_complet": "ENTREPRENEUR INDIVIDUEL 2",
+   "nature_juridique": "1000",
+   "activite_principale": "47.81Z",
+   "etat_administratif": "A",
+   "date_creation": "2001-05-25",
+   "date_fermeture": null,
+   "matching_etablissements": [
+    {
+     "siret": "00000000200010",
+     "adresse": "4 RUE DE L'HOTEL DE VILLE 75004 PARIS",
+     "code_postal": "75004",
+     "latitude": "48.856507956",
+     "longitude": "2.3520586814",
+     "etat_administratif": "F",
+     "est_siege": false,
+     "activite_principale": "47.89Z",
+     "date_creation": "2001-05-25",
+     "date_fermeture": "2007-06-30",
+     "liste_enseignes": null,
+     "nom_commercial": null
+    }
+   ]
+  },
+  {
+   "siren": "843810359",
+   "nom_complet": "IMPACTS EUROPE",
+   "nature_juridique": "9220",
+   "activite_principale": "94.99Z",
+   "etat_administratif": "A",
+   "date_creation": "1998-09-21",
+   "date_fermeture": null,
+   "matching_etablissements": [
+    {
+     "siret": "84381035900011",
+     "adresse": "DIR DE LA VOIRIE ET DES DEPLACEMENTS PL HOTEL VILLE ESP LIBERATION 75004 PARIS 04",
+     "code_postal": "75004",
+     "latitude": "48.856731157",
+     "longitude": "2.3519391022",
+     "etat_administratif": "A",
+     "est_siege": true,
+     "activite_principale": "94.99Z",
+     "date_creation": "1998-09-21",
+     "date_fermeture": null,
+     "liste_enseignes": null,
+     "nom_commercial": null
+    }
+   ]
+  },
+  {
+   "siren": "702017724",
+   "nom_complet": "SOC ETUDE MAITRISE OUVRAGE AMENAGEMENT PARISIENNE (SEMAPA)",
+   "nature_juridique": "5599",
+   "activite_principale": "42.99Z",
+   "etat_administratif": "A",
+   "date_creation": "1970-01-01",
+   "date_fermeture": null,
+   "matching_etablissements": [
+    {
+     "siret": "70201772400031",
+     "adresse": "4 RUE DE L'HOTEL DE VILLE 75004 PARIS",
+     "code_postal": "75004",
+     "latitude": "48.856507956",
+     "longitude": "2.3520586814",
+     "etat_administratif": "F",
+     "est_siege": false,
+     "activite_principale": "71.12B",
+     "date_creation": "1970-01-01",
+     "date_fermeture": "2014-06-30",
+     "liste_enseignes": null,
+     "nom_commercial": null
+    }
+   ]
+  },
+  {
+   "siren": "572196459",
+   "nom_complet": "L'HABITATION CONFORTABLE",
+   "nature_juridique": "5546",
+   "activite_principale": "68.20B",
+   "etat_administratif": "A",
+   "date_creation": "1957-01-01",
+   "date_fermeture": null,
+   "matching_etablissements": [
+    {
+     "siret": "57219645900059",
+     "adresse": "RUE DE L'HOTEL DE VILLE 75004 PARIS",
+     "code_postal": "75004",
+     "latitude": "48.8567311568955",
+     "longitude": "2.35193910222724",
+     "etat_administratif": "F",
+     "est_siege": false,
+     "activite_principale": "68.20A",
+     "date_creation": "1992-05-04",
+     "date_fermeture": "2009-11-10",
+     "liste_enseignes": null,
+     "nom_commercial": null
+    }
+   ]
+  },
+  {
+   "siren": "942426768",
+   "nom_complet": "FONCIERE DU LOGEMENT ABORDABLE (FLA)",
+   "nature_juridique": "5599",
+   "activite_principale": "68.10Z",
+   "etat_administratif": "A",
+   "date_creation": "2025-03-21",
+   "date_fermeture": null,
+   "matching_etablissements": [
+    {
+     "siret": "94242676800019",
+     "adresse": "4 PLACE DE L' HOTEL DE VILLE - ESPLANADE DE LA LIBERATION 75004 PARIS",
+     "code_postal": "75004",
+     "latitude": "48.8565079559425",
+     "longitude": "2.35205868139163",
+     "etat_administratif": "A",
+     "est_siege": true,
+     "activite_principale": "68.10Z",
+     "date_creation": "2025-03-21",
+     "date_fermeture": null,
+     "liste_enseignes": null,
+     "nom_commercial": null
+    }
+   ]
+  },
+  {
+   "siren": "422006338",
+   "nom_complet": "RETRAITE CONSEILLERS MUNICIPAUX PARIS",
+   "nature_juridique": "9220",
+   "activite_principale": "94.99Z",
+   "etat_administratif": "A",
+   "date_creation": "1999-01-01",
+   "date_fermeture": null,
+   "matching_etablissements": [
+    {
+     "siret": "42200633800012",
+     "adresse": "PL HOTEL VILLE ESP LIBERATION 75004 PARIS 04",
+     "code_postal": "75004",
+     "latitude": "48.8567311568955",
+     "longitude": "2.35193910222724",
+     "etat_administratif": "A",
+     "est_siege": true,
+     "activite_principale": "94.99Z",
+     "date_creation": "1999-01-01",
+     "date_fermeture": null,
+     "liste_enseignes": null,
+     "nom_commercial": null
+    }
+   ]
+  }
+ ],
+ "total_results": 66,
+ "page": 1,
+ "per_page": 25,
+ "total_pages": 3
+}

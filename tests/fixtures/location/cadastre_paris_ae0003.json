@@ -1,0 +1,23 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": null,
+   "properties": {
+    "gid": 44069263,
+    "numero": "0003",
+    "feuille": 1,
+    "section": "AE",
+    "code_dep": "75",
+    "nom_com": "Paris",
+    "code_com": "056",
+    "com_abs": "000",
+    "code_arr": "104",
+    "idu": "75104000AE0003",
+    "contenance": 15168,
+    "code_insee": "75056"
+   }
+  }
+ ]
+}
