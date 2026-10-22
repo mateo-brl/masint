@@ -1,7 +1,8 @@
-import { createContext, memo, useContext } from 'react'
+import { memo } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { useTranslation } from 'react-i18next'
 import { attachmentUrl } from '@shared/api'
+import type { JobProgress } from '@shared/types'
 import { getEntityType } from '@shared/entityTypes'
 import { getPlatform } from '@shared/platforms'
 import { CORROBORATION_BADGE_MIN } from '@shared/provenance'
@@ -9,29 +10,32 @@ import { nodeSubtitle } from '@shared/subtitle'
 import { useLang } from '../../../lib/i18n'
 import { EntityBadge } from '../../../lib/icons'
 import { useApp } from '../../../store/app'
+import { useCanvas, useLowZoom } from '../../../store/canvas'
 import { useGraph, type FlowNode } from '../../../store/graph'
 
 const SIZES = { sm: 168, md: 196, lg: 240 }
 
-/** Nombre de liens sortants par nœud, fourni par le canevas (pastille rouge). */
-export const OutDegreeContext = createContext<Map<string, number>>(new Map())
-
-/** Nombre de nœuds masqués sous chaque nœud replié (« Réduire »). */
-export const CollapsedCountContext = createContext<Map<string, number>>(new Map())
-
-/** Nombre de résultats à vérifier par nœud d'origine (pastille orange). */
-export const ReviewCountContext = createContext<Map<string, number>>(new Map())
-
-/** Nœuds sélectionnés : leurs liens affichent toujours leur libellé. */
-export const SelectedNodesContext = createContext<Set<string>>(new Set())
-
+/**
+ * Nœuds dont un enrichissement est en cours, calculés une fois par état des tâches et partagés
+ * par tous les nœuds (au lieu de parcourir les tâches pour chacun à chaque mise à jour).
+ */
+const runningCache = new WeakMap<Record<string, JobProgress>, Set<string>>()
+function runningNodes(jobs: Record<string, JobProgress>): Set<string> {
+  let ids = runningCache.get(jobs)
+  if (!ids) {
+    // Tâche en chaîne : les nœuds atteints qu'elle enrichit en ce moment aussi.
+    ids = new Set(Object.values(jobs).filter((j) => !j.finished).flatMap((j) => [j.nodeId, ...(j.chain?.active ?? [])]))
+    runningCache.set(jobs, ids)
+  }
+  return ids
+}
 
 function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Element {
   const n = data.node
   const { t } = useTranslation()
   const { tx } = useLang()
-  const running = useApp((s) => Object.values(s.jobs).some((j) => !j.finished && (j.nodeId === n.id || !!j.chain?.active.includes(n.id))))
-  // Sélecteur par nœud : seul ce nœud est redessiné quand son score change.
+  const running = useApp((s) => runningNodes(s.jobs).has(n.id))
+  // Sélecteur par nœud : seul ce nœud est redessiné quand son score de corroboration change.
   const sources = useGraph((s) => s.corroboration.nodes[n.id] ?? 0)
   const def = getEntityType(n.type)
   const platform = getPlatform(n.platform)
@@ -39,21 +43,56 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
   const width = SIZES[n.style.size ?? 'md']
   const kicker = (platform && def.keepTypeIcon ? `${tx(def.label)} · ${platform.name}` : (platform?.name ?? tx(def.label))).toUpperCase()
   const subtitle = n.style.hideSubtitle ? '' : nodeSubtitle(n)
-  const childCount = useContext(OutDegreeContext).get(n.id) ?? 0
-  const reviewCount = useContext(ReviewCountContext).get(n.id) ?? 0
-  const hiddenCount = useContext(CollapsedCountContext).get(n.id) ?? 0
+  // Chaque nœud ne lit que ses propres valeurs : il n'est re-rendu que si elles changent.
+  const childCount = useCanvas((s) => s.outDegree.get(n.id) ?? 0)
+  const reviewCount = useCanvas((s) => s.reviewCount.get(n.id) ?? 0)
+  const hiddenCount = useCanvas((s) => s.collapsedCount.get(n.id) ?? 0)
+  const dense = useCanvas((s) => s.dense)
+  const low = useLowZoom()
+  const box = {
+    width,
+    minHeight: 38,
+    background: n.style.bg ?? 'var(--node)',
+    borderColor: selected ? 'var(--accent)' : n.style.color && n.imageId ? n.style.color : 'var(--node-border)',
+    // L'ombre floue coûte cher à dessiner : simple contour sur les grands graphes et à faible zoom.
+    boxShadow:
+      dense || low
+        ? selected
+          ? '0 0 0 1px var(--accent)'
+          : 'none'
+        : selected
+          ? '0 0 0 1px var(--accent), 0 6px 24px rgb(0 0 0 / .35)'
+          : '0 2px 10px rgb(0 0 0 / .25)'
+  }
+
+  // Faible zoom : icône et pastille à la place du texte, sans badges. Les lignes gardent leur
+  // hauteur pour que le nœud garde sa taille (pas de nouvelle mesure, liens inchangés).
+  if (low)
+    return (
+      <div className="relative flex items-center gap-2 rounded-[7px] border px-1.5 py-1.5" style={box}>
+        <Handle type="target" position={Position.Top} />
+        <EntityBadge
+          type={n.type}
+          platform={n.platform}
+          imageUrl={n.imageId ? attachmentUrl(n.imageId) : null}
+          size={n.style.size === 'lg' ? 30 : 26}
+          color={n.style.color}
+          icon={n.style.icon}
+        />
+        <div className="min-w-0 flex-1 leading-tight">
+          <div className="text-[7.5px]">&nbsp;</div>
+          <div className="relative text-[11.5px]">
+            &nbsp;
+            <span className="absolute left-0 h-[6px] w-4/5 rounded-full" style={{ top: 'calc(50% - 3px)', background: `${accent}99` }} />
+          </div>
+          {subtitle && <div className="text-[8.5px]">&nbsp;</div>}
+        </div>
+        <Handle type="source" position={Position.Bottom} />
+      </div>
+    )
 
   return (
-    <div
-      className="relative flex items-center gap-2 rounded-[7px] border px-1.5 py-1.5 transition-shadow"
-      style={{
-        width,
-        minHeight: 38,
-        background: n.style.bg ?? 'var(--node)',
-        borderColor: selected ? 'var(--accent)' : n.style.color && n.imageId ? n.style.color : 'var(--node-border)',
-        boxShadow: selected ? '0 0 0 1px var(--accent), 0 6px 24px rgb(0 0 0 / .35)' : '0 2px 10px rgb(0 0 0 / .25)'
-      }}
-    >
+    <div className="relative flex items-center gap-2 rounded-[7px] border px-1.5 py-1.5" style={box}>
       <Handle type="target" position={Position.Top} />
       <EntityBadge
         type={n.type}
@@ -112,7 +151,8 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
           {reviewCount}
         </span>
       )}
-      <div className="absolute inset-y-1 left-0 w-[2px] rounded-full" style={{ background: accent, opacity: n.style.color ? 1 : 0 }} />
+      {/* Seulement si utile : même invisible (opacité nulle), l'élément coûte au dessin. */}
+      {n.style.color && <div className="absolute inset-y-1 left-0 w-[2px] rounded-full" style={{ background: accent }} />}
       <Handle type="source" position={Position.Bottom} />
     </div>
   )

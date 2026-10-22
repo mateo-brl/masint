@@ -4,6 +4,7 @@ import { childSlot, nodeBox } from '@shared/placement'
 import type { EventMap } from '@shared/api'
 import type { InputEntity, ModuleContext, ModuleOutput, OsintModule, OutEntity } from '@shared/modules'
 import type { GraphEdge, GraphNode, JobProgress, LinkStrength, ModuleRun, PropValue, Suggestion } from '@shared/types'
+import { nodeRef, type ActivityWriter } from '../activity'
 import { dedupKey, type ObservationInput, type Repo } from '../db/repo'
 import type { SettingsService } from '../settings'
 import { CHAIN_BUDGET, RECENT_ENRICH_MS, chainExcluded, chainable, defaultStrength, stopReason } from './chain'
@@ -176,7 +177,9 @@ export class Engine {
   constructor(
     private readonly repo: Repo,
     private readonly settings: SettingsService,
-    private readonly emit: Emit
+    private readonly emit: Emit,
+    /** Journal d'activité : modules lancés, résultats validés ou écartés. */
+    private readonly activity?: ActivityWriter
   ) {
     this.slots = new Semaphore(() => this.settings.get().globalConcurrency)
   }
@@ -246,6 +249,7 @@ export class Engine {
       this.jobs.delete(jobId)
       return { jobId }
     }
+    this.activity?.log(investigationId, 'module.run', { node: nodeRef(node), modules: modules.map((m) => m.id), count: modules.length, job: jobId })
     this.enqueue(job, { node, depth: 0, path: [], ran: new Set(), pending: 0, followed: false }, modules)
     this.emit('job:progress', this.snapshot(job))
     void this.runJob(job)
@@ -378,6 +382,7 @@ export class Engine {
           const fits = entry.depth === 0 || !job.chain || job.chain.runs + follow.length <= CHAIN_BUDGET.runs
           if (follow.length && !fits && job.progress.chain) job.progress.chain.budget = true
           if (follow.length && fits) {
+            this.activity?.log(fresh.investigationId, 'module.run', { node: nodeRef(fresh), modules: follow.map((x) => x.id), count: follow.length, job: job.progress.jobId, followUp: true })
             this.enqueue(job, entry, follow)
             more = true
           }
@@ -426,7 +431,9 @@ export class Engine {
         progress.budget = true
         continue
       }
-      this.enqueue(job, { node, depth, path: [...parent.path, m.id], ran: new Set(), pending: 0, followed: false }, mods)
+      const path = [...parent.path, m.id]
+      this.activity?.log(node.investigationId, 'module.run', { node: nodeRef(node), modules: mods.map((x) => x.id), count: mods.length, job: job.progress.jobId, chain: { depth, path } })
+      this.enqueue(job, { node, depth, path, ran: new Set(), pending: 0, followed: false }, mods)
       progress.enriched++
       progress.depth = Math.max(progress.depth, depth)
       scheduled = true
@@ -803,6 +810,15 @@ export class Engine {
     const done = (status: Suggestion['status']): void => {
       this.repo.setSuggestionStatus(id, status)
       this.emit('suggestions:changed', { investigationId: s.investigationId, nodeId: s.nodeId })
+      // Décision de l'enquêteur, inscrite avant l'éventuel enrichissement automatique qui la suit.
+      this.activity?.log(s.investigationId, `suggestion.${action}`, {
+        suggestion: s.id,
+        value: s.label,
+        type: s.type,
+        module: s.moduleId,
+        ...(parent ? { node: nodeRef(parent) } : {}),
+        ...(action === 'accept' && found ? { found: { type: found.type, label: found.label } } : {})
+      })
     }
     if (action !== 'accept' || !parent) {
       done(action === 'reopen' ? 'pending' : action === 'checked' ? 'checked' : 'rejected')

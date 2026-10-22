@@ -109,6 +109,34 @@ export async function attachmentDataUrl(id: string, maxDim: number): Promise<str
 }
 
 /**
+ * Miniature d'une capture pleine page : le haut de la page (rapport largeur sur hauteur 3:4),
+ * réduit à `width` pixels de large, en WebP. Une page très haute réduite en entier serait illisible.
+ */
+export async function pageThumbnailDataUrl(id: string, width = 420): Promise<string | null> {
+  const b64 = await api('attachments:readBase64', id)
+  if (!b64) return null
+  let img: HTMLImageElement
+  try {
+    img = await loadImage(`data:image/png;base64,${b64}`)
+  } catch {
+    return null
+  }
+  const w = img.naturalWidth
+  const h = img.naturalHeight
+  if (!w || !h) return null
+  const k = Math.min(1, width / w)
+  const cropH = Math.min(h, Math.round((w * 4) / 3))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.round(w * k))
+  canvas.height = Math.max(1, Math.round(cropH * k))
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return null
+  ctx.drawImage(img, 0, 0, w, cropH, 0, 0, canvas.width, canvas.height)
+  const out = canvas.toDataURL('image/webp', 0.82)
+  return out.startsWith('data:image/webp') ? out : canvas.toDataURL('image/png')
+}
+
+/**
  * Images de plusieurs pièces jointes, dans l'ordre donné, en s'arrêtant à `budget`
  * caractères au total. Renvoie aussi le nombre d'images écartées.
  */

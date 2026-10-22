@@ -3,9 +3,22 @@
 
 import { canonicalKey } from '@shared/canonical'
 import { CATEGORIES, ENTITY_TYPES, getEntityType, type CategoryId } from '@shared/entityTypes'
+import { activityLine, type ActivityWords } from '@shared/evidence'
 import { propertyLabel } from '@shared/propertyLabels'
 import { ADMIRALTY_KEY, parseAdmiralty } from '@shared/provenance'
-import type { Attachment, GraphEdge, GraphNode, Investigation, Lang, ModuleInfo, ModuleRun, ModuleRunStats } from '@shared/types'
+import type {
+  ActivityCheck,
+  ActivityEntry,
+  Attachment,
+  Capture,
+  GraphEdge,
+  GraphNode,
+  Investigation,
+  Lang,
+  ModuleInfo,
+  ModuleRun,
+  ModuleRunStats
+} from '@shared/types'
 import { collectEvents, formatEventDate } from '../../lib/timeline'
 import { entityBadgeHtml, iconSvg, logoHtml, type IconMarkup } from './badges'
 import {
@@ -24,8 +37,19 @@ import {
 } from './format'
 import { renderMarkdown } from './markdown'
 
-export type ReportSectionId = 'summary' | 'graph' | 'notes' | 'entities' | 'links' | 'timeline' | 'sources' | 'attachments' | 'raw'
-export const REPORT_SECTIONS: ReportSectionId[] = ['summary', 'graph', 'notes', 'entities', 'links', 'timeline', 'sources', 'attachments', 'raw']
+export type ReportSectionId =
+  | 'summary'
+  | 'graph'
+  | 'notes'
+  | 'entities'
+  | 'links'
+  | 'timeline'
+  | 'sources'
+  | 'journal'
+  | 'attachments'
+  | 'evidence'
+  | 'raw'
+export const REPORT_SECTIONS: ReportSectionId[] = ['summary', 'graph', 'notes', 'entities', 'links', 'timeline', 'sources', 'journal', 'attachments', 'evidence', 'raw']
 
 export interface ReportOptions {
   title: string
@@ -60,8 +84,14 @@ export interface ReportInput {
    * chiffres sont tirés de `runs`, qui peut être tronqué.
    */
   runStats?: ModuleRunStats[]
-  /** Pièces jointes utilisées par les nœuds (nom, SHA-256, URL d'origine). */
+  /** Pièces jointes utilisées par les nœuds (nom, SHA-256, URL d'origine) et fichiers des captures. */
   attachments?: Attachment[]
+  /** Journal d'activité : actions significatives, nombre total d'entrées, vérification de la chaîne. */
+  journal?: { entries: ActivityEntry[]; total: number; check: ActivityCheck } | null
+  /** Captures de pages (preuves) des nœuds présents, les plus récentes d'abord. */
+  captures?: Capture[]
+  /** Miniatures des captures en data URL, par identifiant de capture. */
+  captureImages?: Record<string, string>
 }
 
 export const DEFAULT_SECTIONS: Record<ReportSectionId, boolean> = {
@@ -72,13 +102,20 @@ export const DEFAULT_SECTIONS: Record<ReportSectionId, boolean> = {
   links: true,
   timeline: true,
   sources: true,
+  journal: true,
   attachments: true,
+  evidence: true,
   raw: false
 }
 
 const MAX_RUN_ROWS = 1500
 const MAX_EVENT_ROWS = 1500
 const MAX_RAW_CHARS = 4000
+const MAX_JOURNAL_ROWS = 1500
+const MAX_CAPTURES = 300
+
+/** Date ISO en UTC lisible : « 2026-10-22 14:03:12 UTC ». */
+const utc = (iso: string): string => iso.replace('T', ' ').replace(/(\.\d+)?Z$/, ' UTC')
 
 /** Objet aux clés triées, à toute profondeur (sérialisation stable). */
 function sortKeys(v: unknown): unknown {
@@ -204,7 +241,9 @@ export function buildReportHtml(input: ReportInput): string {
     links: S.links,
     timeline: S.timeline,
     sources: S.sources,
+    journal: S.journal,
     attachments: S.attachmentsTitle,
+    evidence: S.evidence,
     raw: S.raw
   }
   // Exécutions : totaux de la requête d'agrégat quand ils sont fournis (la liste est limitée).
@@ -464,6 +503,42 @@ ${
 </section>`)
   }
 
+  // Journal d'activité ---------------------------------------------------------
+  if (sections.journal) {
+    const j = input.journal
+    const W = S.journalWords
+    const words: ActivityWords = {
+      modules: (count) => fmt(count === 1 ? W.modulesOne : W.modulesMany, { count }),
+      more: (count) => fmt(W.more, { count }),
+      field: (key) => S.journalFields[key] ?? key,
+      untitled: W.untitled,
+      followUp: W.followUp,
+      chain: (depth) => fmt(W.chain, { depth }),
+      removedEdges: (count) => fmt(count === 1 ? W.removedEdgesOne : W.removedEdgesMany, { count })
+    }
+    let body = `<p class="muted">${e(S.journalEmpty)}</p>`
+    if (j && j.total) {
+      const shown = j.entries.slice(-MAX_JOURNAL_ROWS)
+      const rows = shown
+        .map((x) => {
+          const { subject, detail } = activityLine(x, words)
+          return `<tr class="act-${e(x.action.split('.')[0])}"><td class="num">${x.seq}</td><td class="nowrap">${e(utc(x.at))}</td><td class="wrap">${e(x.actor)}</td><td class="wrap">${e(S.journalActions[x.action] ?? x.action)}</td><td class="wrap">${e(subject)}</td><td class="wrap small">${e(detail)}</td></tr>`
+        })
+        .join('')
+      const check = j.check.ok
+        ? `<p class="chain ok">${e(fmt(S.journalIntact, { count: j.check.count }))}</p>`
+        : `<p class="chain broken">${e(fmt(S.journalBroken, { seq: j.check.broken?.seq ?? '?', date: j.check.broken ? utc(j.check.broken.at) : '' }))}</p>`
+      body = `<p class="muted small">${e(fmt(S.journalIntro, { shown: j.entries.length, total: j.total }))}</p>
+${check}
+${j.check.lastHash ? `<div class="fingerprint"><div class="card-sub">${e(S.journalLastHash)}</div><code>${e(j.check.lastHash)}</code><p class="small muted">${e(S.journalHashScope)}</p></div>` : ''}
+${j.entries.length > shown.length ? `<p class="muted small">${e(fmt(S.journalTruncated, { count: shown.length }))}</p>` : ''}
+${rows ? `<table class="grid journal"><thead><tr><th class="num">${e(S.seq)}</th><th>${e(S.dateUtc)}</th><th>${e(S.actor)}</th><th>${e(S.action)}</th><th>${e(S.subject)}</th><th>${e(S.detail)}</th></tr></thead><tbody>${rows}</tbody></table>` : ''}`
+    }
+    parts.push(`<section class="chapter">${chapterHead('journal')}
+${body}
+</section>`)
+  }
+
   // Pièces jointes et empreintes -----------------------------------------------
   if (sections.attachments) {
     const users = new Map<string, GraphNode[]>()
@@ -486,6 +561,46 @@ ${
   rows
     ? `<p class="muted small">${e(S.attachmentsIntro)}</p><table class="grid attachments"><thead><tr><th>${e(S.fileName)}</th><th>SHA-256</th><th>${e(S.origin)}</th><th>${e(S.usedBy)}</th></tr></thead><tbody>${rows}</tbody></table>`
     : `<p class="muted">${e(S.attachmentsEmpty)}</p>`
+}
+</section>`)
+  }
+
+  // Preuves : captures de pages ------------------------------------------------
+  if (sections.evidence) {
+    const captures = input.captures ?? []
+    const shown = captures.slice(0, MAX_CAPTURES)
+    const files = new Map((input.attachments ?? []).map((a) => [a.id, a]))
+    const fileRow = (label: string, id: string): string => {
+      const a = files.get(id)
+      return a ? `<tr><th>${e(label)}</th><td><code class="hash">${e(a.sha256)}</code><div class="small muted">${e(a.name)} · ${e(formatNumber(a.size, lang))} ${e(S.bytes)}</div></td></tr>` : ''
+    }
+    const cards = shown.map((c) => {
+      const img = input.captureImages?.[c.id]
+      const node = c.nodeId ? byId.get(c.nodeId) : undefined
+      const link = (url: string): string => {
+        const href = safeHttpUrl(url)
+        return href ? `<a href="${e(href)}">${e(url)}</a>` : e(url)
+      }
+      const rows = [
+        `<tr><th>${e(S.requestedUrl)}</th><td>${link(c.url)}</td></tr>`,
+        c.finalUrl && c.finalUrl !== c.url ? `<tr><th>${e(S.finalUrl)}</th><td>${link(c.finalUrl)}</td></tr>` : '',
+        `<tr><th>${e(S.capturedAt)}</th><td class="nowrap">${e(utc(c.capturedAt))}</td></tr>`,
+        c.title ? `<tr><th>${e(S.pageTitle)}</th><td>${e(c.title)}</td></tr>` : '',
+        node ? `<tr><th>${e(S.attachedTo)}</th><td>${refs.has(node.id) ? nodeCell(node.id) : e(node.label)}</td></tr>` : '',
+        `<tr><th>${e(S.manifestHash)}</th><td><code class="hash strong">${e(c.manifestSha256)}</code></td></tr>`,
+        fileRow(S.fileImage, c.screenshotAttachment),
+        fileRow(S.fileMhtml, c.mhtmlAttachment),
+        fileRow(S.fileMeta, c.metaAttachment)
+      ].join('')
+      return `<article class="card evidence"><div class="card-body has-img">${
+        img && isImageDataUrl(img) ? `<img class="ev-img" src="${img}" alt="">` : `<div class="ev-img ev-missing">${e(S.noThumbnail)}</div>`
+      }<div class="card-main"><table class="props"><tbody>${rows}</tbody></table></div></div></article>`
+    })
+    parts.push(`<section class="chapter">${chapterHead('evidence')}
+${
+  cards.length
+    ? `<p class="muted small">${e(S.evidenceIntro)}</p>${captures.length > shown.length ? `<p class="muted small">${e(fmt(S.evidenceTruncated, { count: shown.length }))}</p>` : ''}${cards.join('\n')}`
+    : `<p class="muted">${e(S.evidenceEmpty)}</p>`
 }
 </section>`)
   }
@@ -729,6 +844,20 @@ table.props td{padding:1mm 0;overflow-wrap:anywhere;vertical-align:top;border-bo
 .card-rating{font-size:7.5pt;color:#52525b;margin:0 0 1.5mm}
 .rating-code{display:inline-block;font-family:'JetBrains Mono',Consolas,ui-monospace,monospace;font-weight:700;font-size:8pt;color:#18181b;background:#f4f4f5;border:1px solid #e4e4e7;border-radius:3px;padding:0 4px;margin-right:4px}
 .card.annotation .card-body{display:block}
+
+/* Journal */
+table.journal td:first-child{width:9mm}
+table.journal td:nth-child(2){width:33mm}
+table.journal td:nth-child(4){width:30mm}
+p.chain{margin:0 0 3mm;padding:2mm 3mm;border-radius:5px;font-size:9pt;font-weight:500}
+p.chain.ok{background:#ecfdf3;color:#15803d}
+p.chain.broken{background:#fef2f2;color:#b91c1c}
+
+/* Preuves */
+.card.evidence .card-body{align-items:flex-start}
+.ev-img{width:48mm;max-height:64mm;object-fit:cover;object-position:top;border-radius:5px;border:1px solid #e4e4e7;flex-shrink:0}
+.ev-missing{height:30mm;display:flex;align-items:center;justify-content:center;font-size:7.5pt;color:#a1a1aa;background:#fafafa}
+code.hash.strong{font-size:7.5pt;font-weight:600;color:#18181b}
 
 /* Annexe */
 .raw{margin:0 0 3mm}

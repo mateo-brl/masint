@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { detectEntity } from '@shared/detect'
 import { getEntityType } from '@shared/entityTypes'
-import type { PropValue, Suggestion } from '@shared/types'
+import type { LinkContext, PropValue, Suggestion } from '@shared/types'
 import { api, openLink } from '../../lib/api'
 import { errorMessage } from '../../lib/errors'
 import { useLang } from '../../lib/i18n'
@@ -44,6 +44,9 @@ export function ReviewList({ suggestions, compact = false }: { suggestions: Sugg
   )
 }
 
+/** Contexte d'ouverture : une page capturée depuis le navigateur d'enquête se rattache au nœud d'origine. */
+const ctxOf = (s: Suggestion): LinkContext => ({ investigationId: s.investigationId, nodeId: s.nodeId })
+
 async function resolve(
   id: string,
   action: 'accept' | 'reject' | 'checked' | 'reopen',
@@ -82,7 +85,7 @@ function EntityRow({ s }: { s: Suggestion }): React.JSX.Element {
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-0.5">
-        {s.url && <RowButton icon="ExternalLink" title={t('review.open')} onClick={() => openLink(s.url!)} />}
+        {s.url && <RowButton icon="ExternalLink" title={t('review.open')} onClick={() => openLink(s.url!, ctxOf(s))} />}
         <RowButton label={t('review.rejectShort')} title={t('review.reject')} onClick={() => void resolve(s.id, 'reject')} />
         <RowButton icon="Check" label={t('review.acceptShort')} title={t('review.accept')} strong onClick={() => void resolve(s.id, 'accept')} />
       </div>
@@ -121,7 +124,7 @@ function ManualRow({ s }: { s: Suggestion }): React.JSX.Element {
           strong
           onClick={() => void useAssist.getState().run(s.id)}
         />
-        <RowButton icon="ExternalLink" label={t('review.openShort')} title={t('review.open')} onClick={() => s.url && openLink(s.url)} />
+        <RowButton icon="ExternalLink" label={t('review.openShort')} title={t('review.open')} onClick={() => s.url && openLink(s.url, ctxOf(s))} />
         <RowButton label={t('review.nothingShort')} title={t('review.nothing')} onClick={() => void resolve(s.id, 'checked')} />
         <RowButton icon="Plus" label={t('review.foundShort')} title={t('review.found')} onClick={() => setFinding(!finding)} />
       </div>
@@ -158,6 +161,16 @@ function AssistResults({ s }: { s: Suggestion }): React.JSX.Element | null {
   const list = r.matches.filter((m) => !entry.added.includes(m.url))
   return (
     <div className="mt-1.5 flex flex-col gap-1 pl-[22px]">
+      {(entry.at || r.captureId) && (
+        <div className="flex flex-wrap items-center gap-x-2 text-[10.5px] text-faint">
+          {entry.at && <span>{t('assist.savedAt', { date: new Date(entry.at).toLocaleString() })}</span>}
+          {r.captureId && (
+            <span className="flex items-center gap-1">
+              <Icon name="Camera" size={11} /> {t('assist.captured')}
+            </span>
+          )}
+        </div>
+      )}
       {r.matches.length === 0 && (
         <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted">
           {t('assist.none')}
@@ -167,7 +180,7 @@ function AssistResults({ s }: { s: Suggestion }): React.JSX.Element | null {
       {r.matches.length > 0 && <div className="text-[11px] text-muted">{t('assist.found', { count: r.matches.length })}</div>}
       {list.map((m) => (
         <div key={m.url} className="rounded-md bg-panel-2 px-2 py-1.5">
-          <button onClick={() => openLink(m.url)} className="block w-full truncate text-left text-[12px] font-medium hover:underline" title={m.url}>
+          <button onClick={() => openLink(m.url, ctxOf(s))} className="block w-full truncate text-left text-[12px] font-medium hover:underline" title={m.url}>
             {m.title}
           </button>
           <div className="line-clamp-3 text-[11px] [overflow-wrap:anywhere] text-muted">{m.snippet}</div>

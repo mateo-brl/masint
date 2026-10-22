@@ -1,4 +1,4 @@
-import { memo, useContext } from 'react'
+import { memo } from 'react'
 import {
   BaseEdge,
   EdgeLabelRenderer,
@@ -8,18 +8,27 @@ import {
   type EdgeProps
 } from '@xyflow/react'
 import { useApp } from '../../../store/app'
+import { useCanvas, useLowZoom } from '../../../store/canvas'
 import { useGraph, type FlowEdge } from '../../../store/graph'
-import { OutDegreeContext, SelectedNodesContext } from '../nodes/EntityNode'
 
 /** Au-delà de ce nombre de liens sortants, les libellés ne s'affichent que pour la sélection. */
 const LABEL_MAX_SIBLINGS = 6
+
+/** Au-delà de ce nombre de nœuds sélectionnés (Ctrl+A...), la sélection n'affiche plus les libellés. */
+const LABEL_MAX_SELECTED = 50
 
 function MasintEdgeImpl(props: EdgeProps<FlowEdge>): React.JSX.Element {
   const { id, source, target, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data, selected, markerEnd } = props
   const style = useApp((s) => s.settings?.edgeStyle ?? 'bezier')
   const allLabels = useApp((s) => s.settings?.edgeLabels === 'always')
-  const siblings = useContext(OutDegreeContext).get(source) ?? 0
-  const selectedNodes = useContext(SelectedNodesContext)
+  const siblings = useCanvas((s) => s.outDegree.get(source) ?? 0)
+  // Libellé dû à la sélection (le lien ou l'une de ses extrémités), sauf quand elle est trop
+  // grande. Booléen : seul un lien dont la réponse change est re-rendu.
+  const bySelection = useCanvas(
+    (s) => s.selected.size <= LABEL_MAX_SELECTED && (!!selected || s.selected.has(source) || s.selected.has(target))
+  )
+  // Faible zoom : libellés illisibles, donc omis.
+  const low = useLowZoom()
   const edge = data?.edge
   // Lien vu par un seul module : pointillé, à confirmer. Le style choisi à la main l'emporte.
   const single = useGraph((s) => s.corroboration.edges[id] === 1)
@@ -42,7 +51,7 @@ function MasintEdgeImpl(props: EdgeProps<FlowEdge>): React.JSX.Element {
         }}
         className={edge?.style.animated ? 'animated' : undefined}
       />
-      {edge?.label && (allLabels || selected || siblings <= LABEL_MAX_SIBLINGS || selectedNodes.has(source) || selectedNodes.has(target)) && (
+      {edge?.label && !low && (allLabels || siblings <= LABEL_MAX_SIBLINGS || bySelection) && (
         <EdgeLabelRenderer>
           <div
             className="nodrag nopan pointer-events-auto absolute rounded-md border border-line bg-panel px-1.5 py-0.5 text-[9px] text-muted"

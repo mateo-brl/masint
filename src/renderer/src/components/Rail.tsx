@@ -8,7 +8,8 @@ const VIEWS: Array<{ id: View; icon: string }> = [
   { id: 'map', icon: 'Map' },
   { id: 'timeline', icon: 'CalendarDays' },
   { id: 'modules', icon: 'Puzzle' },
-  { id: 'notes', icon: 'NotebookPen' }
+  { id: 'notes', icon: 'NotebookPen' },
+  { id: 'journal', icon: 'ScrollText' }
 ]
 
 /** Barre verticale de gauche : accueil, vues de l'enquête, paramètres. */

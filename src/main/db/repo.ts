@@ -1,6 +1,10 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type {
+  ActivityAction,
+  ActivityEntry,
+  ActivityTarget,
   Attachment,
+  Capture,
   Corroboration,
   EdgeInput,
   GraphEdge,
@@ -14,10 +18,12 @@ import type {
   PropValue,
   ProvenanceStep,
   SavedNode,
+  StoredAssist,
   Suggestion,
   UpsertOptions
 } from '@shared/types'
 import { canonicalKey } from '@shared/canonical'
+import { activityHash, GENESIS_HASH } from '../activity'
 import type { DB } from './database'
 
 const now = (): number => Date.now()
@@ -643,6 +649,11 @@ export class Repo {
     return this.getSuggestion(id)
   }
 
+  /** Dernier résultat de recherche assistée d'une recherche manuelle (`null` l'efface). */
+  setSuggestionAssist(id: string, assist: StoredAssist | null): void {
+    this.db.prepare('UPDATE suggestions SET assist_result = ? WHERE id = ?').run(assist ? JSON.stringify(assist) : null, id)
+  }
+
   /** Remet à l'état « à vérifier » les suggestions écartées d'un nœud (nouvel examen). */
   resetSuggestions(investigationId: string, nodeId: string): void {
     this.db
@@ -749,11 +760,13 @@ export class Repo {
     const runs = this.db.prepare('UPDATE module_runs SET node_id = ? WHERE investigation_id = ? AND node_id = ?')
     // Suggestion déjà connue sur la cible (même valeur) : la plus ancienne est gardée.
     const sugg = this.db.prepare('UPDATE OR IGNORE suggestions SET node_id = ? WHERE investigation_id = ? AND node_id = ?')
+    const captures = this.db.prepare('UPDATE captures SET node_id = ? WHERE investigation_id = ? AND node_id = ?')
     this.db.transaction(() => {
       for (const id of fromIds) {
         if (id === toId) continue
         runs.run(toId, investigationId, id)
         sugg.run(toId, investigationId, id)
+        captures.run(toId, investigationId, id)
       }
     })()
   }
@@ -958,6 +971,97 @@ export class Repo {
   }
 
   // -------------------------------------------------------------------------
+  // Preuves (captures de pages)
+
+  addCapture(c: Omit<Capture, 'id'> & { id?: string }): Capture {
+    const id = c.id ?? randomUUID()
+    this.db
+      .prepare(
+        `INSERT INTO captures (id, investigation_id, node_id, url, final_url, title, captured_at, screenshot_attachment, mhtml_attachment, meta_attachment, manifest_sha256)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .run(id, c.investigationId, c.nodeId, c.url, c.finalUrl, c.title, c.capturedAt, c.screenshotAttachment, c.mhtmlAttachment, c.metaAttachment, c.manifestSha256)
+    return this.getCapture(id)!
+  }
+
+  getCapture(id: string): Capture | null {
+    const r = this.db.prepare('SELECT * FROM captures WHERE id = ?').get(id) as CaptureRow | undefined
+    return r ? toCapture(r) : null
+  }
+
+  /**
+   * Captures d'une enquête (ou d'un nœud), les plus récentes d'abord. Celles d'un nœud supprimé
+   * restent en base mais ne sont ni listées, ni archivées, ni citées au rapport, comme ses
+   * exécutions ; une capture sans nœud (page ouverte hors d'une fiche) appartient à l'enquête.
+   */
+  listCaptures(investigationId: string, nodeId?: string): Capture[] {
+    const rows = this.db
+      .prepare(
+        `SELECT c.* FROM captures c LEFT JOIN nodes n ON n.id = c.node_id AND n.investigation_id = c.investigation_id AND n.deleted_at IS NULL
+         WHERE c.investigation_id = ? AND (c.node_id IS NULL OR n.id IS NOT NULL) ${nodeId ? 'AND c.node_id = ?' : ''}
+         ORDER BY c.captured_at DESC, c.rowid DESC`
+      )
+      .all(...(nodeId ? [investigationId, nodeId] : [investigationId])) as CaptureRow[]
+    return rows.map(toCapture)
+  }
+
+  // -------------------------------------------------------------------------
+  // Journal d'activité (ajout seul, chaîné ; voir ../activity.ts)
+
+  /** Ajoute une entrée au bout de la chaîne de l'enquête (rang et empreintes calculés ici). */
+  appendActivity(investigationId: string, e: { at: string; actor: string; action: ActivityAction; target: ActivityTarget }): ActivityEntry {
+    return this.db.transaction(() => {
+      const last = this.db
+        .prepare('SELECT seq, hash FROM activity WHERE investigation_id = ? ORDER BY seq DESC LIMIT 1')
+        .get(investigationId) as { seq: number; hash: string } | undefined
+      const seq = (last?.seq ?? 0) + 1
+      const prevHash = last?.hash ?? GENESIS_HASH
+      const entry: ActivityEntry = { id: randomUUID(), investigationId, seq, at: e.at, actor: e.actor, action: e.action, target: e.target, prevHash, hash: '' }
+      entry.hash = activityHash(prevHash, entry)
+      this.insertActivity(entry)
+      return entry
+    })()
+  }
+
+  /**
+   * Entrées reprises d'une archive : rang, date, auteur, objet et empreintes gardés tels quels
+   * (la chaîne importée se vérifie comme l'originale), nouvel identifiant de ligne.
+   */
+  importActivity(investigationId: string, entries: ActivityEntry[]): void {
+    this.db.transaction(() => {
+      for (const e of entries) this.insertActivity({ ...e, id: randomUUID(), investigationId })
+    })()
+  }
+
+  private insertActivity(e: ActivityEntry): void {
+    this.db
+      .prepare('INSERT INTO activity (id, investigation_id, seq, at, actor, action, target, prev_hash, hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(e.id, e.investigationId, e.seq, e.at, e.actor, e.action, JSON.stringify(e.target ?? {}), e.prevHash, e.hash)
+  }
+
+  /** Journal complet d'une enquête, dans l'ordre de la chaîne. */
+  allActivity(investigationId: string): ActivityEntry[] {
+    return (this.db.prepare('SELECT * FROM activity WHERE investigation_id = ? ORDER BY seq').all(investigationId) as ActivityRow[]).map(toActivity)
+  }
+
+  /** Page du journal, de la plus récente à la plus ancienne, éventuellement filtrée par action. */
+  listActivity(investigationId: string, opts: { offset?: number; limit?: number; actions?: string[] } = {}): { entries: ActivityEntry[]; total: number } {
+    const actions = opts.actions?.length ? opts.actions : null
+    const where = `investigation_id = ?${actions ? ` AND action IN (${actions.map(() => '?').join(', ')})` : ''}`
+    const params = [investigationId, ...(actions ?? [])]
+    const total = (this.db.prepare(`SELECT COUNT(*) AS n FROM activity WHERE ${where}`).get(...params) as { n: number }).n
+    const limit = Math.min(500, Math.max(1, Math.round(opts.limit ?? 50)))
+    const offset = Math.max(0, Math.round(opts.offset ?? 0))
+    const rows = this.db.prepare(`SELECT * FROM activity WHERE ${where} ORDER BY seq DESC LIMIT ? OFFSET ?`).all(...params, limit, offset) as ActivityRow[]
+    return { entries: rows.map(toActivity), total }
+  }
+
+  activityCounts(investigationId: string): Partial<Record<ActivityAction, number>> {
+    const rows = this.db.prepare('SELECT action, COUNT(*) AS n FROM activity WHERE investigation_id = ? GROUP BY action').all(investigationId) as Array<{ action: ActivityAction; n: number }>
+    return Object.fromEntries(rows.map((r) => [r.action, r.n]))
+  }
+
+  // -------------------------------------------------------------------------
   // Paramètres et secrets
 
   getSetting<T>(key: string, fallback: T): T {
@@ -996,6 +1100,58 @@ export class Repo {
   }
 }
 
+interface CaptureRow {
+  id: string
+  investigation_id: string
+  node_id: string | null
+  url: string
+  final_url: string
+  title: string
+  captured_at: string
+  screenshot_attachment: string
+  mhtml_attachment: string
+  meta_attachment: string
+  manifest_sha256: string
+}
+
+const toCapture = (r: CaptureRow): Capture => ({
+  id: r.id,
+  investigationId: r.investigation_id,
+  nodeId: r.node_id,
+  url: r.url,
+  finalUrl: r.final_url,
+  title: r.title,
+  capturedAt: r.captured_at,
+  screenshotAttachment: r.screenshot_attachment,
+  mhtmlAttachment: r.mhtml_attachment,
+  metaAttachment: r.meta_attachment,
+  manifestSha256: r.manifest_sha256
+})
+
+interface ActivityRow {
+  id: string
+  investigation_id: string
+  seq: number
+  at: string
+  actor: string
+  action: string
+  target: string
+  prev_hash: string
+  hash: string
+}
+
+const toActivity = (r: ActivityRow): ActivityEntry => ({
+  id: r.id,
+  investigationId: r.investigation_id,
+  seq: r.seq,
+  at: r.at,
+  actor: r.actor,
+  action: r.action as ActivityAction,
+  target: parse(r.target, {}),
+  prevHash: r.prev_hash,
+  hash: r.hash
+})
+
 interface SuggestionRow {
   id: string
   investigation_id: string
@@ -1010,6 +1166,7 @@ interface SuggestionRow {
   url: string | null
   reason: string
   status: string
+  assist_result?: string | null
   created_at: number
   updated_at: number
 }
@@ -1029,6 +1186,7 @@ function toSuggestion(r: SuggestionRow): Suggestion {
     url: r.url,
     reason: r.reason,
     status: r.status as Suggestion['status'],
+    assist: parse<StoredAssist | null>(r.assist_result, null),
     createdAt: r.created_at,
     updatedAt: r.updated_at
   }
