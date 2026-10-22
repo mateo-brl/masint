@@ -1,0 +1,193 @@
+{
+ "icoId": "00177041",
+ "zaznamy": [
+  {
+   "rejstrik": "OR",
+   "primarniZaznam": true,
+   "spisovaZnacka": [
+    {
+     "datumZapisu": "1990-11-20",
+     "soud": "MSPH",
+     "oddil": "B",
+     "vlozka": 332
+    }
+   ],
+   "ico": [
+    {
+     "datumZapisu": "1990-11-20",
+     "hodnota": "00177041"
+    }
+   ],
+   "obchodniJmeno": [
+    {
+     "datumZapisu": "2023-03-31",
+     "hodnota": "Škoda Auto a.s."
+    },
+    {
+     "datumZapisu": "1990-11-20",
+     "datumVymazu": "1991-04-02",
+     "hodnota": "Automobilový koncern ŠKODA a.s."
+    },
+    {
+     "datumZapisu": "1991-04-02",
+     "datumVymazu": "1998-02-06",
+     "hodnota": "ŠKODA, automobilová a.s."
+    },
+    {
+     "datumZapisu": "1998-02-06",
+     "datumVymazu": "2023-03-31",
+     "hodnota": "ŠKODA AUTO a.s."
+    }
+   ],
+   "zakladniKapital": [
+    {
+     "datumZapisu": "1996-04-23",
+     "typJmeni": "ZAKLADNI_JMENI",
+     "vklad": {
+      "typObnos": "KORUNY",
+      "hodnota": "16708850000;00"
+     }
+    },
+    {
+     "datumZapisu": "1990-11-20",
+     "datumVymazu": "1991-08-02",
+     "typJmeni": "ZAKLADNI_JMENI",
+     "vklad": {
+      "typObnos": "KORUNY",
+      "hodnota": "11000000;00"
+     }
+    },
+    {
+     "datumZapisu": "1991-08-02",
+     "datumVymazu": "1995-08-24",
+     "typJmeni": "ZAKLADNI_JMENI",
+     "vklad": {
+      "typObnos": "KORUNY",
+      "hodnota": "9642000000;00"
+     }
+    },
+    {
+     "datumZapisu": "1995-11-30",
+     "datumVymazu": "1996-04-23",
+     "typJmeni": "ZAKLADNI_JMENI",
+     "vklad": {
+      "typObnos": "KORUNY",
+      "hodnota": "13129700000;00"
+     }
+    }
+   ],
+   "datumZapisu": "1990-11-20",
+   "stavSubjektu": "AKTIVNI",
+   "statutarniOrgany": [
+    {
+     "nazevOrganu": "Statutární orgán - představenstvo",
+     "datumZapisu": "1990-11-20",
+     "clenoveOrganu": [
+      {
+       "datumZapisu": "2023-06-01",
+       "typAngazma": "STATUTARNI_ORGAN_CLEN",
+       "clenstvi": {
+        "clenstvi": {
+         "vznikClenstvi": "2023-06-01"
+        },
+        "funkce": {
+         "nazev": "předseda představenstva"
+        }
+       },
+       "nazevAngazma": "Člen statutárního orgánu",
+       "fyzickaOsoba": {
+        "jmeno": "Jan",
+        "prijmeni": "NOVÁK",
+        "datumNarozeni": "1970-01-01",
+        "adresa": {
+         "textovaAdresa": "adresse retirée"
+        }
+       }
+      },
+      {
+       "datumZapisu": "2023-06-01",
+       "typAngazma": "STATUTARNI_ORGAN_CLEN",
+       "clenstvi": {
+        "clenstvi": {
+         "vznikClenstvi": "2023-06-01"
+        },
+        "funkce": {
+         "nazev": "člen představenstva"
+        }
+       },
+       "nazevAngazma": "Člen statutárního orgánu",
+       "fyzickaOsoba": {
+        "jmeno": "Petra",
+        "prijmeni": "Svobodová",
+        "datumNarozeni": "1975-01-01",
+        "adresa": {
+         "textovaAdresa": "adresse retirée"
+        }
+       }
+      },
+      {
+       "datumZapisu": "2023-06-01",
+       "typAngazma": "STATUTARNI_ORGAN_CLEN",
+       "clenstvi": {
+        "clenstvi": {
+         "vznikClenstvi": "2023-06-01"
+        },
+        "funkce": {
+         "nazev": "člen představenstva"
+        }
+       },
+       "nazevAngazma": "Člen statutárního orgánu",
+       "fyzickaOsoba": {
+        "jmeno": "Karel",
+        "prijmeni": "DVOŘÁK",
+        "datumNarozeni": "1965-01-01",
+        "adresa": {
+         "textovaAdresa": "adresse retirée"
+        }
+       }
+      },
+      {
+       "datumZapisu": "2010-04-28",
+       "datumVymazu": "2016-11-10",
+       "typAngazma": "STATUTARNI_ORGAN_CLEN",
+       "clenstvi": {
+        "funkce": {
+         "nazev": "člen představenstva"
+        }
+       },
+       "fyzickaOsoba": {
+        "jmeno": "Eva",
+        "prijmeni": "Černá",
+        "datumNarozeni": "1980-01-01"
+       }
+      }
+     ]
+    }
+   ],
+   "ostatniOrgany": [
+    {
+     "nazevOrganu": "Dozorčí rada",
+     "clenoveOrganu": [
+      {
+       "datumZapisu": "2023-01-15",
+       "clenstvi": {
+        "clenstvi": {
+         "vznikClenstvi": "2023-01-15"
+        },
+        "funkce": {
+         "nazev": "člen dozorčí rady"
+        }
+       },
+       "nazevAngazma": "Člen dozorčí rady",
+       "fyzickaOsoba": {
+        "jmeno": "Jan",
+        "prijmeni": "NOVÁK",
+        "datumNarozeni": "1990-01-01"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
