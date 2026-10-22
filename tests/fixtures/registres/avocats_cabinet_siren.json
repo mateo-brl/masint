@@ -1,0 +1,65 @@
+{
+ "data": [
+  {
+   "__id": 10,
+   "NomBarreau": "PARIS",
+   "avNom": "EXEMPLE",
+   "avPrenom": "Alix",
+   "cbRaisonSociale": "GIDE LOYRETTE NOUEL AARPI",
+   "cbSiretSiren": "784355505",
+   "cbAdresse1": "15 RUE DE LABORDE",
+   "cbAdresse2": null,
+   "cbCp": "75008",
+   "cbVille": "PARIS",
+   "spLibelle1": "Droit fiscal",
+   "spLibelle2": null,
+   "spLibelle3": null,
+   "acDateSerment": "2005-01-10",
+   "avLang": "Anglais"
+  },
+  {
+   "__id": 11,
+   "NomBarreau": "PARIS",
+   "avNom": "FICTIF",
+   "avPrenom": "Dominique",
+   "cbRaisonSociale": "GIDE LOYRETTE NOUEL AARPI",
+   "cbSiretSiren": "784355505",
+   "cbAdresse1": "15 RUE DE LABORDE",
+   "cbAdresse2": null,
+   "cbCp": "75008",
+   "cbVille": "PARIS",
+   "spLibelle1": "Droit fiscal",
+   "spLibelle2": "Droit des sociétés",
+   "spLibelle3": null,
+   "acDateSerment": "2010-01-12",
+   "avLang": "Français"
+  },
+  {
+   "__id": 12,
+   "NomBarreau": "LYON",
+   "avNom": "IMAGINAIRE",
+   "avPrenom": "Sacha",
+   "cbRaisonSociale": "GIDE LOYRETTE NOUEL AARPI",
+   "cbSiretSiren": "78435550500021",
+   "cbAdresse1": "1 rue Fictive",
+   "cbAdresse2": null,
+   "cbCp": "69002",
+   "cbVille": "LYON",
+   "spLibelle1": null,
+   "spLibelle2": null,
+   "spLibelle3": null,
+   "acDateSerment": "2018-11-05",
+   "avLang": "Français"
+  }
+ ],
+ "links": {
+  "profile": "https://tabular-api.data.gouv.fr/api/resources/b9ff8dd7-0ea9-4dad-82fc-421f21a969ff/profile/",
+  "next": null,
+  "prev": null
+ },
+ "meta": {
+  "page": 1,
+  "page_size": 200,
+  "total": 3
+ }
+}

@@ -1,0 +1,32 @@
+{
+ "total_count": 3,
+ "results": [
+  {
+   "beneficiaire_identifiant": "10999999997",
+   "beneficiaire_type_code": "RPPS/ADELI",
+   "identite": "EXEMPLE",
+   "prenom": "Camille",
+   "profession_libelle": "Médecin",
+   "n": 19,
+   "total": 8534.5
+  },
+  {
+   "beneficiaire_identifiant": "10999999989",
+   "beneficiaire_type_code": "RPPS/ADELI",
+   "identite": "EXEMPLE",
+   "prenom": "Camille",
+   "profession_libelle": "Pharmacien",
+   "n": 1,
+   "total": 25.0
+  },
+  {
+   "beneficiaire_identifiant": "12345",
+   "beneficiaire_type_code": "AUTRE",
+   "identite": "EXEMPLE",
+   "prenom": "Camille-Anne",
+   "profession_libelle": null,
+   "n": 1,
+   "total": 10.0
+  }
+ ]
+}

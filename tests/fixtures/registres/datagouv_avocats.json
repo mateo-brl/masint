@@ -1,0 +1,39 @@
+{
+ "id": "6357de8624b187e5486cbef3",
+ "slug": "annuaire-des-avocats-de-france",
+ "resources": [
+  {
+   "id": "b9ff8dd7-0ea9-4dad-82fc-421f21a969ff",
+   "title": "annuaire-avocats-20261019.csv",
+   "type": "main",
+   "format": "csv",
+   "last_modified": "2026-10-19T07:20:57.513000+00:00",
+   "extras": {
+    "analysis:parsing:finished_at": "2026-10-19T19:23:58.727406+00:00",
+    "analysis:parsing:parsing_table": "e043bf5ae1402905aef513be15e4473a"
+   }
+  },
+  {
+   "id": "eae2d1db-5061-4914-9618-94a2709bf767",
+   "title": "annuaire-avocats-20260923.csv",
+   "type": "main",
+   "format": "csv",
+   "last_modified": "2026-09-23T14:37:17.875000+00:00",
+   "extras": {
+    "analysis:parsing:finished_at": "2026-10-02T05:07:59.819195+00:00",
+    "analysis:parsing:parsing_table": "5f170b1fbaa26857d4acf26528b1efce"
+   }
+  },
+  {
+   "id": "55334d54-4a90-4317-aa0a-5c6c8eb2bf4b",
+   "title": "annuaire-avocas-20240221.csv",
+   "type": "main",
+   "format": "csv",
+   "last_modified": "2024-02-21T10:03:01.653000+00:00",
+   "extras": {
+    "analysis:parsing:finished_at": "2026-10-22T03:24:01.347103+00:00",
+    "analysis:parsing:parsing_table": "ae01083c09bd4c88d12b8e7762c7a7d2"
+   }
+  }
+ ]
+}

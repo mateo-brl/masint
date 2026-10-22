@@ -1,0 +1,80 @@
+{
+ "results": 1,
+ "page": 1,
+ "total_pages": 1,
+ "data": [
+  {
+   "raisonSociale": "AXIOMAUTO",
+   "adresse1": "85 Rue André Durouchez",
+   "adresse2": "Zone industrielle nord",
+   "adresse3": null,
+   "codePostal": "80000",
+   "codeInsee": "80021",
+   "commune": "Amiens",
+   "codeNaf": "45",
+   "longitude": 2.277484,
+   "latitude": 49.931198,
+   "bovins": false,
+   "porcs": false,
+   "volailles": false,
+   "carriere": false,
+   "eolienne": false,
+   "industrie": true,
+   "prioriteNationale": false,
+   "statutSeveso": "Non Seveso",
+   "ied": false,
+   "etatActivite": "En exploitation avec titre",
+   "codeAIOT": "0003801058",
+   "siret": "52788711100021",
+   "coordonneeXAIOT": 648081,
+   "coordonneeYAIOT": 6981633,
+   "systemeCoordonneesAIOT": "2154",
+   "serviceAIOT": "DREAL HdF",
+   "regime": "Enregistrement",
+   "date_maj": "2026-04-26/10-21-48",
+   "inspections": [
+    {
+     "dateInspection": "2025-04-11",
+     "fichierInspection": {
+      "identifiantFichier": "kn4b6bDaz62ekH7JDW1QexX3Agdbwdhq",
+      "nomFichier": "rapport_2025INSPACNAT-VHUAR8ABD3JE.pdf",
+      "typeFichier": "Rapport d'inspection publiable",
+      "dateFichier": null,
+      "urlFichier": "https://www.georisques.gouv.fr/webappReport/ws/installations/inspection/kn4b6bDaz62ekH7JDW1QexX3Agdbwdhq"
+     }
+    }
+   ],
+   "documentsHorsInspection": [
+    {
+     "identifiantFichier": "8abb00ab6002145d01600379b56700cb",
+     "nomFichier": "AP d'enregistrement d'inst. d'entreposage, dépollution, démontage ....",
+     "typeFichier": "Arrêté préfectoral",
+     "dateFichier": "2017-06-14",
+     "urlFichier": "https://www.georisques.gouv.fr/webappReport/ws/installations/document/8abb00ab6002145d01600379b56700cb"
+    },
+    {
+     "identifiantFichier": "IqkSlvEZcgU7kbvBWXg2hjfi17aFEeGp",
+     "nomFichier": "2017_06_14_ape_agrement_vhu",
+     "typeFichier": "AP enregistrement",
+     "dateFichier": "2017-06-14",
+     "urlFichier": "https://www.georisques.gouv.fr/webappReport/ws/installations/document/IqkSlvEZcgU7kbvBWXg2hjfi17aFEeGp"
+    }
+   ],
+   "rubriques": [
+    {
+     "numeroRubrique": "2712",
+     "nature": "Stockage, dépollution, démontage,… de VHU",
+     "alinea": "1",
+     "regimeAutoriseAlinea": "Enregistrement",
+     "quantiteTotale": "27265.000",
+     "unite": "m2",
+     "dateMotif": "27/07/2020"
+    }
+   ]
+  }
+ ],
+ "response_code": 200,
+ "message": null,
+ "next": null,
+ "previous": null
+}
