@@ -60,6 +60,8 @@ export interface ActivityWords {
   untitled: string
   /** Module de suite lancé par le moteur. */
   followUp: string
+  /** Modules lancés par enchaînement, à cette profondeur. */
+  chain?: (depth: number) => string
   /** Liens supprimés avec des nœuds. */
   removedEdges: (count: number) => string
 }
@@ -93,7 +95,10 @@ export function activityLine(e: Pick<ActivityEntry, 'action' | 'target'>, w: Act
     case 'edge.update':
       return { subject: edges, detail: fields }
     case 'module.run':
-      return { subject: label(t.node?.label), detail: [w.modules(t.count ?? t.modules?.length ?? 0), t.followUp ? w.followUp : ''].filter(Boolean).join(' · ') }
+      return {
+        subject: label(t.node?.label),
+        detail: [w.modules(t.count ?? t.modules?.length ?? 0), t.followUp ? w.followUp : '', t.chain && w.chain ? w.chain(t.chain.depth) : ''].filter(Boolean).join(' · ')
+      }
     case 'suggestion.accept':
     case 'suggestion.reject':
     case 'suggestion.checked':

@@ -102,14 +102,66 @@ const fr = {
     noisyTitle_one: 'Ce module contacte la cible',
     noisyTitle_other: 'Ces modules contactent la cible',
     noisyBody_one: '{{list}} interroge directement la cible et peut l’alerter ou laisser une trace chez elle. Le mode passif l’exclut de « Enrichir ». Le lancer quand même ?',
-    noisyBody_other: '{{list}} interrogent directement la cible et peuvent l’alerter ou laisser une trace chez elle. Le mode passif les exclut de « Enrichir ». Les lancer quand même ?'
+    noisyBody_other: '{{list}} interrogent directement la cible et peuvent l’alerter ou laisser une trace chez elle. Le mode passif les exclut de « Enrichir ». Les lancer quand même ?',
+    chain: 'Enrichir en chaîne',
+    chainTitle: 'Enrichit ce nœud, puis les nouveaux nœuds sûrs (compte vérifié, lien déclaré) jusqu’à la profondeur réglée.',
+    hops_one: '{{count}} saut',
+    hops_other: '{{count}} sauts'
   },
   jobs: {
     finished: 'terminé · {{results}} · {{errors}}',
     modules: '{{done}}/{{total}} modules',
     details: 'Détail des modules',
     moreRunning: '+{{count}} autres en cours',
-    running: 'en cours'
+    running: 'en cours',
+    chain: 'En chaîne · profondeur {{depth}}/{{max}}',
+    chainNodes_one: '{{count}} nœud trouvé',
+    chainNodes_other: '{{count}} nœuds trouvés',
+    chainEnriched_one: '{{count}} enrichi',
+    chainEnriched_other: '{{count}} enrichis',
+    chainBudget: 'budget atteint : la suite est dans « À vérifier »',
+    stop: 'Arrêter',
+    stopTitle: 'Arrêter la chaîne et les modules en cours'
+  },
+  provenance: {
+    sources: 'Sources',
+    seenBy_one: 'Vu par {{count}} source',
+    seenBy_other: 'Vu par {{count}} sources',
+    empty: 'Aucun module n’a encore observé cet élément.',
+    openSource: 'Ouvrir la page source',
+    raw: 'Réponse brute du service',
+    entity: 'trouvé',
+    props_one: '{{count}} propriété',
+    props_other: '{{count}} propriétés',
+    path: 'Chemin :',
+    via: 'via',
+    then: 'puis',
+    origin: 'Source : {{list}}',
+    manual: 'Saisie manuelle ou source inconnue',
+    singleSource: 'Une seule source : lien à confirmer'
+  },
+  rating: {
+    title: 'Cotation',
+    hint: 'Fiabilité de la source et crédibilité de l’information, à la manière de l’Amirauté. Facultative, reprise dans le rapport.',
+    reliability: 'Fiabilité de la source',
+    credibility: 'Crédibilité de l’information',
+    none: 'Non cotée',
+    r: {
+      A: 'A · complètement fiable',
+      B: 'B · habituellement fiable',
+      C: 'C · assez fiable',
+      D: 'D · pas toujours fiable',
+      E: 'E · pas fiable',
+      F: 'F · impossible à évaluer'
+    },
+    c: {
+      '1': '1 · confirmée par d’autres sources',
+      '2': '2 · probablement vraie',
+      '3': '3 · possiblement vraie',
+      '4': '4 · douteuse',
+      '5': '5 · improbable',
+      '6': '6 · impossible à évaluer'
+    }
   },
   assist: {
     run: 'Chercher',
@@ -461,6 +513,7 @@ const fr = {
     modules_one: '{{count}} module',
     modules_other: '{{count}} modules',
     followUp: 'modules de suite',
+    chain: 'en chaîne, profondeur {{depth}}',
     removedEdges_one: 'avec {{count}} lien',
     removedEdges_other: 'avec {{count}} liens',
     field: {
@@ -501,6 +554,9 @@ const fr = {
     light: 'Clair',
     autoEnrich: 'Enrichissement automatique',
     autoEnrichHint: 'Lance les modules applicables dès qu’une entité est ajoutée avec une valeur.',
+    chainDepth: 'Enchaînement',
+    chainDepthHint: 'Enrichit à leur tour les nouveaux nœuds sûrs (compte vérifié, lien déclaré) jusqu’à cette profondeur. S’applique avec l’enrichissement automatique ou « Enrichir en chaîne », sans module bruyant, à la demande ou à crédits.',
+    chainOff: 'Désactivé',
     concurrency: 'Modules en parallèle',
     concurrencyHint: 'Par nœud enrichi (1 à 32).',
     globalConcurrency: 'Modules en parallèle au total',
@@ -696,14 +752,66 @@ const en: typeof fr = {
     noisyTitle_one: 'This module contacts the target',
     noisyTitle_other: 'These modules contact the target',
     noisyBody_one: '{{list}} queries the target directly and may alert it or leave a trace on its side. Passive mode keeps it out of “Enrich”. Run it anyway?',
-    noisyBody_other: '{{list}} query the target directly and may alert it or leave a trace on its side. Passive mode keeps them out of “Enrich”. Run them anyway?'
+    noisyBody_other: '{{list}} query the target directly and may alert it or leave a trace on its side. Passive mode keeps them out of “Enrich”. Run them anyway?',
+    chain: 'Chain enrichment',
+    chainTitle: 'Enriches this node, then the new reliable nodes (verified account, declared link) down to the set depth.',
+    hops_one: '{{count}} hop',
+    hops_other: '{{count}} hops'
   },
   jobs: {
     finished: 'done · {{results}} · {{errors}}',
     modules: '{{done}}/{{total}} modules',
     details: 'Module details',
     moreRunning: '+{{count}} more running',
-    running: 'running'
+    running: 'running',
+    chain: 'Chained · depth {{depth}}/{{max}}',
+    chainNodes_one: '{{count}} node found',
+    chainNodes_other: '{{count}} nodes found',
+    chainEnriched_one: '{{count}} enriched',
+    chainEnriched_other: '{{count}} enriched',
+    chainBudget: 'budget reached: the rest is in “To review”',
+    stop: 'Stop',
+    stopTitle: 'Stop the chain and the running modules'
+  },
+  provenance: {
+    sources: 'Sources',
+    seenBy_one: 'Seen by {{count}} source',
+    seenBy_other: 'Seen by {{count}} sources',
+    empty: 'No module has observed this item yet.',
+    openSource: 'Open the source page',
+    raw: 'Raw service response',
+    entity: 'found',
+    props_one: '{{count}} property',
+    props_other: '{{count}} properties',
+    path: 'Path:',
+    via: 'via',
+    then: 'then',
+    origin: 'Source: {{list}}',
+    manual: 'Entered by hand or unknown source',
+    singleSource: 'Single source: link to be confirmed'
+  },
+  rating: {
+    title: 'Rating',
+    hint: 'Source reliability and information credibility, Admiralty style. Optional, shown in the report.',
+    reliability: 'Source reliability',
+    credibility: 'Information credibility',
+    none: 'Not rated',
+    r: {
+      A: 'A · completely reliable',
+      B: 'B · usually reliable',
+      C: 'C · fairly reliable',
+      D: 'D · not usually reliable',
+      E: 'E · unreliable',
+      F: 'F · cannot be judged'
+    },
+    c: {
+      '1': '1 · confirmed by other sources',
+      '2': '2 · probably true',
+      '3': '3 · possibly true',
+      '4': '4 · doubtful',
+      '5': '5 · improbable',
+      '6': '6 · cannot be judged'
+    }
   },
   assist: {
     run: 'Search',
@@ -1055,6 +1163,7 @@ const en: typeof fr = {
     modules_one: '{{count}} module',
     modules_other: '{{count}} modules',
     followUp: 'follow-up modules',
+    chain: 'chained, depth {{depth}}',
     removedEdges_one: 'with {{count}} link',
     removedEdges_other: 'with {{count}} links',
     field: {
@@ -1095,6 +1204,9 @@ const en: typeof fr = {
     light: 'Light',
     autoEnrich: 'Automatic enrichment',
     autoEnrichHint: 'Runs applicable modules as soon as an entity with a value is added.',
+    chainDepth: 'Chaining',
+    chainDepthHint: 'Also enriches the new reliable nodes (verified account, declared link) down to this depth. Applies with automatic enrichment or “Chain enrichment”, without noisy, on-demand or credit-based modules.',
+    chainOff: 'Off',
     concurrency: 'Parallel modules',
     concurrencyHint: 'Per enriched node (1 to 32).',
     globalConcurrency: 'Parallel modules in total',

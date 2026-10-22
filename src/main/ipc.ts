@@ -11,7 +11,7 @@ import { captureUrlOf, isSignificantActivity } from '@shared/evidence'
 import type { ActivityAction, ExportMeta, GraphEdge, GraphNode, LinkContext, Settings } from '@shared/types'
 import { changedEdgeFields, changedNodeFields, edgeRefs, isLayoutOnly, nodeRef, nodeRefs, systemUser, type ActivityLog } from './activity'
 import { buildArchive, duplicateInvestigation, importArchive } from './archive'
-import { mergeData } from './merge'
+import { mergeNodes } from './merge'
 import { applyAssistIdentity, assistedSearch, assistSession, needlesFor } from './assist'
 import { openInvestigationBrowser, openLink, type PageCapture } from './browser'
 import type { CaptureService } from './capture'
@@ -146,7 +146,12 @@ export function registerIpc(deps: IpcDeps): void {
     // Journal WAL vidé et fichier reconstruit après la réponse : rien ne reste de l'enquête.
     compactLater(repo.db)
   })
-  handle('investigations:open', (id) => repo.getBundle(id))
+  handle('investigations:open', (id) => {
+    // L'interface repart d'un historique d'annulation vide : les observations des nœuds
+    // supprimés ne peuvent plus revenir, elles sont effacées.
+    repo.purgeOrphanObservations(id)
+    return repo.getBundle(id)
+  })
   handle('investigations:duplicate', async (id) => {
     // Modifications en attente écrites d'abord : la copie emporte le journal complet.
     activity.flush(id)
@@ -220,35 +225,13 @@ export function registerIpc(deps: IpcDeps): void {
   handle('graph:mergeNodes', (invId, targetId, otherIds) => {
     const target = repo.getNode(targetId)
     if (!target) throw new Error('Nœud cible introuvable')
-    const others = repo.getNodes(otherIds.filter((id) => id !== targetId))
-    activity.log(invId, 'node.merge', { into: nodeRef(target), ...nodeRefs(others) })
-    const data = mergeData(target, others)
-    const notes = [target.notes, ...others.map((o) => o.notes)].filter(Boolean).join('\n\n')
-    const [merged] = repo.upsertNodes(invId, [
-      { id: targetId, data, notes, imageId: target.imageId ?? others.find((o) => o.imageId)?.imageId ?? null }
-    ])
-    const edges: GraphEdge[] = []
-    const otherSet = new Set(others.map((o) => o.id))
-    for (const e of repo.listEdges(invId)) {
-      if (!otherSet.has(e.source) && !otherSet.has(e.target)) continue
-      const source = otherSet.has(e.source) ? targetId : e.source
-      const target2 = otherSet.has(e.target) ? targetId : e.target
-      if (source === target2) continue
-      const existing = repo.findEdge(invId, source, target2)
-      if (existing) {
-        // Lien déjà présent : on garde les deux libellés (« empreinte SHA-256 · empreinte MD5 »).
-        const labels = [existing.label, e.label].filter(Boolean)
-        const label = Array.from(new Set(labels.flatMap((l) => l.split(' · ')))).join(' · ')
-        if (label !== existing.label) edges.push(...repo.upsertEdges(invId, [{ ...existing, label }]))
-        continue
-      }
-      edges.push(...repo.upsertEdges(invId, [{ ...e, id: undefined, source, target: target2 }]))
-    }
-    repo.reassignNodeHistory(invId, Array.from(otherSet), targetId)
-    const deletedEdgeIds = repo.deleteNodes(invId, Array.from(otherSet))
-    const change = { investigationId: invId, nodes: [merged] as GraphNode[], edges, deletedNodeIds: Array.from(otherSet), deletedEdgeIds }
-    return change
+    activity.log(invId, 'node.merge', { into: nodeRef(target), ...nodeRefs(repo.getNodes(otherIds.filter((id) => id !== targetId))) })
+    return mergeNodes(repo, invId, targetId, otherIds)
   })
+  handle('graph:provenance', (invId, target) => ({
+    observations: repo.listObservations(invId, target),
+    path: target.nodeId ? repo.provenancePath(target.nodeId) : []
+  }))
 
   // Pièces jointes -------------------------------------------------------------
   handle('attachments:add', (invId, file) =>
@@ -351,7 +334,7 @@ export function registerIpc(deps: IpcDeps): void {
 
   // Modules ------------------------------------------------------------------
   handle('modules:list', () => allModules().map((m) => moduleInfo(m, settings)))
-  handle('modules:enrich', (invId, nodeId, moduleIds) => engine.enrich(invId, nodeId, moduleIds))
+  handle('modules:enrich', (invId, nodeId, moduleIds, opts) => engine.enrich(invId, nodeId, moduleIds, opts))
   handle('modules:cancel', (jobId) => engine.cancel(jobId))
   handle('modules:runs', (invId, nodeId) => repo.listRuns(invId, nodeId))
   handle('modules:runStats', (invId) => repo.runStats(invId))

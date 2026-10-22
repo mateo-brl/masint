@@ -31,9 +31,11 @@ export function parseGravatar(e: GravatarEntry, lang: Lang): Parsed {
   const contactUrls = (e.contactInfo ?? []).filter((c) => /^https?:/.test(c.value)).map((c) => c.value)
   const contactEmails = (e.contactInfo ?? []).filter((c) => c.type === 'email').map((c) => c.value)
   const children: OutEntity[] = [
+    // Comptes vérifiés par Gravatar : même identité ; liens et contacts : déclarés.
     ...linkedEntities({
       text: e.aboutMe,
-      urls: [...(e.accounts ?? []).filter((a) => !a.is_hidden).map((a) => a.url), ...(e.urls ?? []).map((u) => u.value), ...contactUrls],
+      sameUrls: (e.accounts ?? []).filter((a) => !a.is_hidden).map((a) => a.url),
+      urls: [...(e.urls ?? []).map((u) => u.value), ...contactUrls],
       emails: [...(e.emails ?? []).map((m) => m.value), ...contactEmails],
       lang,
       self: { platform: 'gravatar', username }
@@ -47,7 +49,8 @@ export function parseGravatar(e: GravatarEntry, lang: Lang): Parsed {
         label: c.value,
         platform: CHAINS[c.type.toLowerCase()],
         data: { chain: c.type },
-        linkLabel: lang === 'fr' ? 'portefeuille (Gravatar)' : 'wallet (Gravatar)'
+        linkLabel: lang === 'fr' ? 'portefeuille (Gravatar)' : 'wallet (Gravatar)',
+        strength: 'declared'
       })
     )
   ]

@@ -35,6 +35,7 @@ export function useActivityWords(): ActivityWords {
       field: (key) => t(`journal.field.${key}`, { defaultValue: key }),
       untitled: t('journal.untitled'),
       followUp: t('journal.followUp'),
+      chain: (depth) => t('journal.chain', { depth }),
       removedEdges: (count) => t('journal.removedEdges', { count })
     }),
     [t]

@@ -144,7 +144,8 @@ export default defineModule({
         platform: 'mastodon',
         data: parsed.data,
         image: parsed.image,
-        linkLabel: ctx.lang === 'fr' ? `compte Mastodon (${instance})` : `Mastodon account (${instance})`
+        linkLabel: ctx.lang === 'fr' ? `compte Mastodon (${instance})` : `Mastodon account (${instance})`,
+        strength: 'same'
       })
       entities.push(...parsed.children.map((c) => ({ ...c, from: ref })))
     })

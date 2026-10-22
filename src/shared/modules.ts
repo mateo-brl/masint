@@ -3,7 +3,7 @@
 // Les modules s'exécutent dans le processus principal : ils ont accès au réseau
 // (via ctx.fetch, qui respecte le proxy / Tor) mais pas à l'interface.
 
-import type { I18nText, KeyRequirement, ModuleCategory, PropValue } from './types'
+import type { I18nText, KeyRequirement, LinkStrength, ModuleCategory, PropValue } from './types'
 
 export interface InputEntity {
   id: string
@@ -38,6 +38,12 @@ export interface OutEntity {
   review?: boolean
   /** Pourquoi le résultat est à vérifier, affiché à l'enquêteur (« homonyme possible »...). */
   reviewReason?: string
+  /**
+   * Force du lien avec le parent, qui décide de l'enchaînement automatique : `same` (même
+   * identité), `declared` (déclaré par la personne), `mention` (texte libre), `weak` (même
+   * pseudo ailleurs, pseudo généré). Par défaut, selon le type (voir `defaultStrength`).
+   */
+  strength?: LinkStrength
 }
 
 /**

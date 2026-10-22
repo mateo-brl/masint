@@ -92,6 +92,16 @@ function GeneralTab(): React.JSX.Element | null {
       <Row label={t('settings.autoEnrich')} hint={t('settings.autoEnrichHint')}>
         <Switch checked={settings.autoEnrich} onChange={(v) => void update({ autoEnrich: v })} />
       </Row>
+      <Row label={t('settings.chainDepth')} hint={t('settings.chainDepthHint')}>
+        <select value={settings.chainDepth ?? 0} onChange={(e) => void update({ chainDepth: Number(e.target.value) })} className="field !w-40">
+          <option value={0}>{t('settings.chainOff')}</option>
+          {[1, 2, 3].map((n) => (
+            <option key={n} value={n}>
+              {t('enrich.hops', { count: n })}
+            </option>
+          ))}
+        </select>
+      </Row>
       <Row label={t('settings.passiveMode')} hint={t('settings.passiveModeHint')}>
         <Switch checked={settings.passiveMode} onChange={(v) => void update({ passiveMode: v })} />
       </Row>

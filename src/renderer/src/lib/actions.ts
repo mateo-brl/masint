@@ -46,7 +46,11 @@ export function useApplicable(node: GraphNode | undefined): { auto: Set<string>;
   return state
 }
 
-export async function enrichNode(nodeId: string, moduleIds?: string[]): Promise<void> {
+/**
+ * Enrichit un nœud. `chain` : `true` pour « Enrichir en chaîne », `false` pour ne jamais
+ * enchaîner ; absent, l'enchaînement suit les réglages (enrichissement automatique et profondeur).
+ */
+export async function enrichNode(nodeId: string, moduleIds?: string[], opts: { chain?: boolean } = {}): Promise<void> {
   const { investigation } = useGraph.getState()
   const { toast, settings, modules } = useApp.getState()
   if (!investigation) return
@@ -65,7 +69,7 @@ export async function enrichNode(nodeId: string, moduleIds?: string[]): Promise<
       return
   }
   try {
-    const { jobId } = await api('modules:enrich', investigation.id, nodeId, moduleIds)
+    const { jobId } = await api('modules:enrich', investigation.id, nodeId, moduleIds, opts)
     const job = useApp.getState().jobs[jobId]
     if (job && job.total === 0) toast('info', i18n.t('enrich.none'))
   } catch (e) {
@@ -93,7 +97,8 @@ export async function enrichNodes(nodes: GraphNode[]): Promise<void> {
     )
     if (!ok) return
   }
-  for (const n of list) void enrichNode(n.id)
+  // En masse, pas d'enchaînement : il est fait pour suivre une piste, pas cent à la fois.
+  for (const n of list) void enrichNode(n.id, undefined, list.length > 1 ? { chain: false } : {})
 }
 
 /**

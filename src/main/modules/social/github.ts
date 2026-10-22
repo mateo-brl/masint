@@ -128,9 +128,11 @@ export function parseGithub(
       gpgEmails.set(email, (gpgEmails.get(email) ?? false) || !!e.verified)
     }
   const children: OutEntity[] = [
+    // Comptes sociaux déclarés à GitHub : même identité ; site (blog) : déclaré ; bio : mention.
     ...linkedEntities({
       text: user.bio ?? '',
-      urls: [user.blog, ...(extra.socials ?? []).map((s) => s.url), user.twitter_username ? `https://x.com/${user.twitter_username}` : null],
+      sameUrls: [...(extra.socials ?? []).map((s) => s.url), user.twitter_username ? `https://x.com/${user.twitter_username}` : null],
+      urls: [user.blog],
       emails: [user.email],
       lang,
       self: { platform: 'github', username: user.login }
@@ -143,6 +145,7 @@ export function parseGithub(
           type: 'email',
           label: email,
           linkLabel: fr ? 'email de clé GPG' : 'GPG key email',
+          strength: verified ? 'same' : 'weak',
           ...(verified
             ? {}
             : {
@@ -163,6 +166,8 @@ export function parseGithub(
           label: c.email,
           data: c.name ? { commit_name: c.name } : {},
           linkLabel: fr ? 'email de commit' : 'commit email',
+          // Auteur au nom du profil : adresse déclarée ; autre auteur : simple mention.
+          strength: matchesProfile(c, user) ? 'declared' : 'mention',
           ...(matchesProfile(c, user)
             ? {}
             : {
