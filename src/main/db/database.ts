@@ -97,6 +97,29 @@ const MIGRATIONS: string[] = [
     encrypted INTEGER NOT NULL DEFAULT 1,
     updated_at INTEGER NOT NULL
   );
+  `,
+  // 2 : résultats à vérifier (hypothèses et recherches manuelles), hors du graphe.
+  `
+  CREATE TABLE suggestions (
+    id TEXT PRIMARY KEY,
+    investigation_id TEXT NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
+    node_id TEXT NOT NULL,
+    module_id TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    type TEXT NOT NULL,
+    label TEXT NOT NULL,
+    platform TEXT,
+    data TEXT NOT NULL DEFAULT '{}',
+    link_label TEXT NOT NULL DEFAULT '',
+    url TEXT,
+    reason TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'pending',
+    dedup_key TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+  CREATE INDEX idx_sugg_node ON suggestions(investigation_id, node_id);
+  CREATE UNIQUE INDEX idx_sugg_dedup ON suggestions(investigation_id, node_id, kind, dedup_key);
   `
 ]
 

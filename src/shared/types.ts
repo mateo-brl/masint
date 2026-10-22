@@ -188,8 +188,35 @@ export interface JobProgress {
   errors: number
   /** Modules en cours d'exécution. */
   running: string[]
+  /** Avancement interne des modules en cours qui le signalent (roso.info, pseudos...). */
+  steps?: Record<string, { done: number; total: number; detail?: string }>
+  /** Résultats mis de côté dans « À vérifier » pendant cette tâche. */
+  review?: number
   finished: boolean
   cancelled: boolean
+}
+
+/** Résultat en attente de validation par l'enquêteur (voir `OutEntity.review`, `OutManualCheck`). */
+export interface Suggestion {
+  id: string
+  investigationId: string
+  /** Nœud enrichi dont vient la suggestion. */
+  nodeId: string
+  moduleId: string
+  /** `entity` : entité à ajouter au graphe ; `manual` : recherche à faire à la main. */
+  kind: 'entity' | 'manual'
+  type: string
+  label: string
+  platform: string | null
+  data: Record<string, PropValue>
+  linkLabel: string
+  /** Page à ouvrir (recherche manuelle) ou page source du résultat. */
+  url: string | null
+  reason: string
+  /** `checked` : recherche manuelle faite, rien trouvé. */
+  status: 'pending' | 'accepted' | 'rejected' | 'checked'
+  createdAt: number
+  updatedAt: number
 }
 
 export interface GraphChange {

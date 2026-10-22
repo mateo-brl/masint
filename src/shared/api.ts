@@ -16,6 +16,7 @@ import type {
   ProxyTestResult,
   RosoStatus,
   SecretStatus,
+  Suggestion,
   Settings,
   UpdateStatus
 } from './types'
@@ -64,6 +65,10 @@ export interface ApiMap {
   'modules:runs': (investigationId: string, nodeId?: string) => ModuleRun[]
   'modules:jobs': () => JobProgress[]
   /** Modules lancés par « Enrichir » pour ce nœud, et modules applicables à sa valeur. */
+  /** Résultats à vérifier d'une enquête, ou d'un nœud. */
+  'suggestions:list': (investigationId: string, nodeId?: string) => Suggestion[]
+  /** Valider, écarter ou rouvrir un résultat à vérifier (voir Engine.resolveSuggestion). */
+  'suggestions:resolve': (id: string, action: 'accept' | 'reject' | 'checked' | 'reopen', found?: { type: string; label: string; platform?: string | null }) => void
   'modules:applicable': (nodeId: string) => { auto: string[]; accepted: string[] }
   'modules:setEnabled': (moduleId: string, enabled: boolean) => void
   /** Données brutes archivées d'une exécution (réponse du service). */
@@ -107,6 +112,7 @@ export type ApiChannel = keyof ApiMap
 export interface EventMap {
   'graph:changed': GraphChange
   'job:progress': JobProgress
+  'suggestions:changed': { investigationId: string; nodeId: string }
   'update:status': UpdateStatus
   /** Une archive `.masint` ouverte depuis l'explorateur a été importée. */
   'app:openInvestigation': { id: string }

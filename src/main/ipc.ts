@@ -179,6 +179,8 @@ export function registerIpc(deps: IpcDeps): void {
   handle('modules:cancel', (jobId) => engine.cancel(jobId))
   handle('modules:runs', (invId, nodeId) => repo.listRuns(invId, nodeId))
   handle('modules:jobs', () => engine.listJobs())
+  handle('suggestions:list', (invId, nodeId) => repo.listSuggestions(invId, nodeId))
+  handle('suggestions:resolve', (id, action, found) => engine.resolveSuggestion(id, action, found))
   handle('modules:applicable', (nodeId) => {
     const node = repo.getNode(nodeId)
     return node ? engine.applicable(node) : { auto: [], accepted: [] }

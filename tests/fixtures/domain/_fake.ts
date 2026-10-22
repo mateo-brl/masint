@@ -77,6 +77,7 @@ export function fakeContext(opts: {
     signal: new AbortController().signal,
     userAgent: 'test',
     lang: opts.lang ?? 'fr',
-    log: () => undefined
+    log: () => undefined,
+    progress: () => undefined
   }
 }

@@ -51,7 +51,8 @@ export function mockContext(routes: Route[], opts: { key?: string | null; lang?:
     signal: new AbortController().signal,
     userAgent: 'masint-test',
     lang: opts.lang ?? 'fr',
-    log: () => undefined
+    log: () => undefined,
+    progress: () => undefined
   }
   return { ctx, calls }
 }

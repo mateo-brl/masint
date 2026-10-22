@@ -87,6 +87,7 @@ réglages. Lors d'un enrichissement global, les modules « à la demande » sont
 | `lang` | `'fr'` ou `'en'` : langue de l'interface, pour les libellés de liens et de propriétés. |
 | `userAgent` | User-Agent configuré. |
 | `log(message)` | Trace dans la console du processus principal (préfixée par l'id du module). |
+| `progress(fait, total, détail?)` | Avancement interne d'un module long (« 23/57 · WhatsApp »), affiché dans la pastille de progression. Appelez-le librement : le moteur espace les envois. |
 
 N'utilisez jamais le `fetch` global, `node:dns` ou une bibliothèque HTTP directement : la
 requête contournerait le proxy et Tor, et révélerait l'adresse IP de l'enquêteur.
@@ -155,6 +156,23 @@ service, pseudo pris...) renvoient `found: true` ou `found: false`. L'historique
 « trouvé » ou « absent ». Laissez `found` indéfini pour les autres modules. Quand le service ne
 permet pas de conclure (captcha, réponse ambiguë), levez une `ModuleError` plutôt que de
 répondre `false`.
+
+### Résultats à vérifier : `review` et `manual`
+
+Le graphe ne doit contenir que des résultats vérifiés. Deux mécanismes gardent le reste à part,
+dans la liste « À vérifier » de la fiche, où l'enquêteur valide ou écarte chaque élément :
+
+- `review: true` sur une entité (avec `reviewReason`, par exemple « homonyme possible » ou
+  « pseudo généré, trouvé sur GitHub ») : hypothèse plausible mais non confirmée. Elle n'entre
+  dans le graphe que si l'enquêteur la valide. Si la même entité existe déjà dans l'enquête,
+  elle est reliée directement. Une suggestion écartée n'est plus proposée.
+- `manual: [{ label, url, hint }]` : recherche que le module ne peut pas faire lui-même (compte
+  requis, captcha, pas d'API). L'enquêteur ouvre la page, puis note « rien trouvé » ou saisit
+  ce qu'il a trouvé, qui devient une entité reliée.
+
+Avant de proposer une recherche manuelle, cherchez à l'automatiser : un lien de recherche que
+l'enquêteur doit ouvrir lui-même n'apporte presque rien. Aucun module ne crée de nœud
+`search_link`.
 
 ### Images : `image`
 

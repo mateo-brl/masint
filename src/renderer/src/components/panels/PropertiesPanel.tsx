@@ -12,6 +12,7 @@ import { EntityBadge, Icon } from '../../lib/icons'
 import { useApp } from '../../store/app'
 import { useGraph } from '../../store/graph'
 import { Button, confirmDialog, Dialog, Spinner, Switch, Tabs } from '../ui'
+import { ReviewList } from './ReviewList'
 
 const SWATCHES = ['#e5484d', '#f76b15', '#ffc53d', '#30a46c', '#12a594', '#0090ff', '#6e56cf', '#d6409f', '#8d8d93', '#ededef']
 
@@ -186,6 +187,7 @@ function EntitySheet({ node }: { node: GraphNode }): React.JSX.Element {
         />
       </label>
 
+      <NodeReview node={node} />
       <div className="border-t border-line" />
       <div className="text-[12.5px] font-semibold">{t('props.imageInfo')}</div>
       <ImageDrop node={node} />
@@ -574,6 +576,25 @@ function EnrichBlock({ node }: { node: GraphNode }): React.JSX.Element {
           ))}
         </div>
       </Dialog>
+    </div>
+  )
+}
+
+/** Résultats à vérifier issus de l'enrichissement de ce nœud. */
+function NodeReview({ node }: { node: GraphNode }): React.JSX.Element | null {
+  const { t } = useTranslation()
+  const all = useGraph((s) => s.suggestions)
+  const list = useMemo(() => all.filter((s) => s.nodeId === node.id), [all, node.id])
+  if (!list.length) return null
+  const pending = list.filter((s) => s.status === 'pending').length
+  return (
+    <div className="flex flex-col gap-2 rounded-xl border border-warning/30 bg-panel-2/40 p-2.5">
+      <div className="flex items-center gap-2 text-[12.5px] font-semibold">
+        <Icon name="ListTodo" size={14} className="text-warning" />
+        {t('review.title')}
+        {pending > 0 && <span className="rounded-full bg-warning/15 px-1.5 text-[10.5px] text-warning">{pending}</span>}
+      </div>
+      <ReviewList suggestions={list} />
     </div>
   )
 }

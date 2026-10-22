@@ -99,6 +99,9 @@ export const useApp = create<AppState>((set, get) => ({
       set({ jobs: next })
     }, 1000)
     onEvent('graph:changed', (change) => useGraph.getState().applyChange(change))
+    onEvent('suggestions:changed', (e) => {
+      if (e.investigationId === useGraph.getState().investigation?.id) void useGraph.getState().refreshSuggestions()
+    })
     onEvent('update:status', (update) => set({ update }))
     // L'événement signale une enquête en attente ; on la récupère aussi au démarrage
     // au cas où l'import a eu lieu avant que l'interface n'écoute.

@@ -27,7 +27,8 @@ export function makeContext(opts: { keys?: Record<string, string>; settings?: Pa
     signal,
     userAgent: settings.userAgent,
     lang: settings.lang,
-    log: () => undefined
+    log: () => undefined,
+    progress: () => undefined
   }
 }
 

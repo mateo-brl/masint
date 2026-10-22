@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useReactFlow } from '@xyflow/react'
 import { useTranslation } from 'react-i18next'
-import { getEntityType } from '@shared/entityTypes'
+import type { JobProgress, ModuleRun } from '@shared/types'
 import { api } from '../../lib/api'
 import { errorMessage } from '../../lib/errors'
 import { useLang } from '../../lib/i18n'
@@ -11,7 +11,8 @@ import { useApp } from '../../store/app'
 import { useGraph, type FlowEdge, type FlowNode } from '../../store/graph'
 import { fitGraph } from '../../lib/viewport'
 import { exportGraph, type ExportFormat } from '../export/exporters'
-import { Dropdown, Spinner } from '../ui'
+import { Dialog, Dropdown, Spinner } from '../ui'
+import { ReviewAll } from '../panels/ReviewList'
 
 /** Barre flottante du haut : disposition, export, rapport, nombre de liens, recherche. */
 export function TopBar(): React.JSX.Element {
@@ -25,6 +26,8 @@ export function TopBar(): React.JSX.Element {
   const setReportOpen = useApp((s) => s.setReportOpen)
   const toast = useApp((s) => s.toast)
   const [searching, setSearching] = useState(false)
+  const [reviewOpen, setReviewOpen] = useState(false)
+  const pendingReview = useGraph((s) => s.suggestions.filter((x) => x.status === 'pending').length)
   const canUndo = useGraph((s) => s.canUndo)
   const canRedo = useGraph((s) => s.canRedo)
 
@@ -130,11 +133,31 @@ export function TopBar(): React.JSX.Element {
         <div className="flex items-center gap-1.5 px-2 text-[12.5px] font-semibold text-muted" title={t('topbar.links')}>
           <Icon name="Link" size={14} /> <span className="text-fg">{edgesCount}</span>
         </div>
+        {pendingReview > 0 && (
+          <button
+            onClick={() => setReviewOpen(true)}
+            className="ml-1 flex items-center gap-1.5 rounded-lg bg-warning/15 px-2 py-1 text-[12px] font-semibold text-warning hover:bg-warning/25"
+            title={t('review.title')}
+          >
+            <Icon name="ListTodo" size={14} /> {pendingReview}
+          </button>
+        )}
         <button onClick={() => setSearching(!searching)} className="rounded-lg p-1.5 text-muted hover:bg-panel-3 hover:text-fg" title={t('topbar.search')}>
           <Icon name="Search" size={15} />
         </button>
       </div>
       {searching && <GraphSearch onClose={() => setSearching(false)} />}
+      <Dialog open={reviewOpen} onClose={() => setReviewOpen(false)} title={t('review.title')} width={620}>
+        <ReviewAll
+          onPick={(id) => {
+            const n = useGraph.getState().nodes.find((x) => x.id === id)
+            if (!n) return
+            setReviewOpen(false)
+            useGraph.getState().select([id])
+            void rf.setCenter(n.position.x + 98, n.position.y + 26, { zoom: 1.2, duration: 400 })
+          }}
+        />
+      </Dialog>
       <JobPills />
     </div>
   )
@@ -199,45 +222,123 @@ function GraphSearch({ onClose }: { onClose: () => void }): React.JSX.Element {
   )
 }
 
-/** Pastilles de progression des modules en cours, comme « phone · 56/57 · facebook ». */
+/** Pastilles de progression : une par enrichissement en cours ou tout juste terminé. */
 function JobPills(): React.JSX.Element | null {
-  const { t } = useTranslation()
-  const { tx } = useLang()
   const investigation = useGraph((s) => s.investigation)
-  const nodes = useGraph((s) => s.nodes)
   const jobsMap = useApp((s) => s.jobs)
-  const modules = useApp((s) => s.modules)
   const jobs = Object.values(jobsMap).filter((j) => j.investigationId === investigation?.id && j.total > 0)
   if (!jobs.length) return null
   return (
     <div className="flex flex-col items-center gap-1.5">
-      {jobs.map((j) => {
-        const node = nodes.find((n) => n.id === j.nodeId)?.data.node
-        const type = node ? tx(getEntityType(node.type).label).toLowerCase() : ''
-        const current = j.running[0] ? (modules.find((m) => m.id === j.running[0])?.name ?? null) : null
-        const pct = Math.round((j.done / j.total) * 100)
-        return (
-          <div key={j.jobId} className="glass flex items-center gap-2.5 rounded-full py-1 pr-1.5 pl-3 text-[12px]">
-            <div className="h-1 w-10 overflow-hidden rounded-full bg-panel-3">
-              <div className="h-full bg-accent transition-all" style={{ width: `${pct}%` }} />
+      {jobs.map((j) => (
+        <JobPill key={j.jobId} job={j} />
+      ))}
+    </div>
+  )
+}
+
+/**
+ * Une tâche d'enrichissement : nœud concerné, modules terminés, résultats, éléments à vérifier,
+ * modules en cours avec leur avancement interne (« 23/57 · WhatsApp »). Un clic déplie la liste
+ * des modules et leur état.
+ */
+function JobPill({ job: j }: { job: JobProgress }): React.JSX.Element {
+  const { t } = useTranslation()
+  const { tx } = useLang()
+  const nodes = useGraph((s) => s.nodes)
+  const modules = useApp((s) => s.modules)
+  const [open, setOpen] = useState(false)
+  const node = nodes.find((n) => n.id === j.nodeId)?.data.node
+  const label = node?.label || j.nodeLabel
+  const name = (id: string): string => {
+    const m = modules.find((x) => x.id === id)
+    return m ? tx(m.name) : id
+  }
+  const pct = Math.round((j.done / j.total) * 100)
+  const step = (id: string): string => {
+    const s = j.steps?.[id]
+    if (!s) return name(id)
+    return `${name(id)} · ${s.done}/${s.total}${s.detail ? ` · ${s.detail}` : ''}`
+  }
+  return (
+    <div className="glass w-[min(560px,calc(100vw-120px))] rounded-2xl px-3 py-2 text-[12px]">
+      <div className="flex items-center gap-2.5">
+        {j.finished ? <Icon name="CircleCheck" size={14} className="shrink-0 text-success" /> : <Spinner size={13} />}
+        {node && <EntityBadge type={node.type} platform={node.platform} size={18} />}
+        <span className="min-w-0 truncate font-semibold" title={label}>
+          {label}
+        </span>
+        <span className="shrink-0 text-muted">{t('jobs.modules', { done: j.done, total: j.total })}</span>
+        <div className="flex-1" />
+        <span className="shrink-0 text-muted">
+          {t('runs.nResults', { count: j.results })}
+          {(j.review ?? 0) > 0 && <span className="text-warning"> · {t('review.count', { count: j.review })}</span>}
+          {j.errors > 0 && <span className="text-accent"> · {t('runs.nErrors', { count: j.errors })}</span>}
+        </span>
+        <button onClick={() => setOpen(!open)} className="rounded-full p-1 text-muted hover:bg-panel-3 hover:text-fg" title={t('jobs.details')}>
+          <Icon name={open ? 'ChevronUp' : 'ChevronDown'} size={13} />
+        </button>
+        {!j.finished && (
+          <button onClick={() => void api('modules:cancel', j.jobId)} className="rounded-full p-1 text-muted hover:bg-panel-3 hover:text-fg" title={t('common.cancel')}>
+            <Icon name="X" size={12} />
+          </button>
+        )}
+      </div>
+      <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-panel-3">
+        <div className="h-full bg-accent transition-all" style={{ width: `${pct}%` }} />
+      </div>
+      {!j.finished && j.running.length > 0 && (
+        <div className="mt-1.5 flex flex-col gap-0.5 text-[11.5px] text-muted">
+          {j.running.slice(0, 3).map((id) => (
+            <div key={id} className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-warning" />
+              <span className="min-w-0 truncate">{step(id)}</span>
             </div>
-            {j.finished ? <Icon name="CircleCheck" size={13} className="text-success" /> : <Spinner size={12} />}
-            <span className="font-semibold">
-              {type} · {j.done}/{j.total}
-            </span>
-            {j.finished ? (
-              <span className="text-muted">{t('jobs.finished', { results: t('runs.nResults', { count: j.results }), errors: t('runs.nErrors', { count: j.errors }) })}</span>
-            ) : (
-              current && <span className="max-w-40 truncate text-muted">· {tx(current)}</span>
-            )}
-            {!j.finished && (
-              <button onClick={() => void api('modules:cancel', j.jobId)} className="rounded-full p-1 text-muted hover:bg-panel-3 hover:text-fg" title={t('common.cancel')}>
-                <Icon name="X" size={12} />
-              </button>
-            )}
-          </div>
-        )
-      })}
+          ))}
+          {j.running.length > 3 && <div className="pl-3 text-faint">{t('jobs.moreRunning', { count: j.running.length - 3 })}</div>}
+        </div>
+      )}
+      {open && <JobDetails job={j} name={name} step={step} />}
+    </div>
+  )
+}
+
+/** État de chaque module de la tâche, relu à chaque avancée. */
+function JobDetails({ job: j, name, step }: { job: JobProgress; name: (id: string) => string; step: (id: string) => string }): React.JSX.Element {
+  const { t } = useTranslation()
+  const [runs, setRuns] = useState<ModuleRun[]>([])
+  useEffect(() => {
+    void api('modules:runs', j.investigationId, j.nodeId).then((r) => setRuns(r.filter((x) => x.jobId === j.jobId)))
+  }, [j.investigationId, j.nodeId, j.jobId, j.done, j.finished])
+  const order = { running: 0, queued: 1, error: 2, done: 3, cancelled: 4 } as Record<string, number>
+  const sorted = [...runs].sort((a, b) => (order[a.status] ?? 5) - (order[b.status] ?? 5) || (b.resultCount || 0) - (a.resultCount || 0))
+  return (
+    <div className="mt-2 flex max-h-64 flex-col gap-0.5 overflow-auto border-t border-line pt-2 text-[11.5px]">
+      {sorted.map((r) => (
+        <div key={r.id} className="flex items-start gap-2">
+          <Icon
+            name={r.status === 'running' ? 'LoaderCircle' : r.status === 'error' ? 'CircleX' : r.found || r.resultCount > 0 ? 'CircleCheck' : 'CircleMinus'}
+            size={12}
+            className={`mt-px shrink-0 ${r.status === 'running' ? 'spin text-warning' : r.status === 'error' ? 'text-accent' : r.found || r.resultCount > 0 ? 'text-success' : 'text-faint'}`}
+          />
+          <span className="min-w-0 flex-1 truncate">{r.status === 'running' ? step(r.moduleId) : name(r.moduleId)}</span>
+          <span className="max-w-[45%] shrink-0 truncate text-right text-faint" title={r.error ?? undefined}>
+            {r.status === 'error'
+              ? r.error
+              : r.status === 'running'
+                ? t('jobs.running')
+                : r.found === false
+                  ? t('runs.notFound')
+                  : r.found
+                    ? t('runs.found')
+                    : r.resultCount > 0
+                      ? t('runs.results', { count: r.resultCount })
+                      : r.status === 'done'
+                        ? t('runs.empty')
+                        : ''}
+          </span>
+        </div>
+      ))}
     </div>
   )
 }
