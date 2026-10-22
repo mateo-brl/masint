@@ -1,0 +1,36 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "84K7XVJ72Q.fr.doctolib.www",
+        "paths": [
+          "NOT /auth/*",
+          "NOT /sessions/new/username_sign_in",
+          "NOT /sessions/two-factor",
+          "NOT /authn/patient/*",
+          "*"
+        ]
+      },
+      {
+        "appID": "84K7XVJ72Q.fr.doctolib.www.staging",
+        "paths": [
+          "NOT /auth/*",
+          "NOT /sessions/new/username_sign_in",
+          "NOT /sessions/two-factor",
+          "NOT /authn/patient/*",
+          "*"
+        ]
+      },
+      {
+        "appID": "84K7XVJ72Q.fr.doctolib.www.dev",
+        "paths": ["NOT /auth/*", "NOT /sessions/new/username_sign_in", "*"]
+      },
+      {
+        "appID": "84K7XVJ72Q.fr.doctolib.www.test",
+        "paths": ["NOT /auth/*", "NOT /sessions/new/username_sign_in", "*"]
+      }
+    ]
+  }
+}
+

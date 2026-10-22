@@ -1,0 +1,155 @@
+{
+ "status": "ok",
+ "data": {
+  "records": [
+   [
+    {
+     "key": "inetnum",
+     "value": "192.134.4.0/22",
+     "comment": null,
+     "details_link": "https://stat.ripe.net/192.134.4.0/22"
+    },
+    {
+     "key": "netname",
+     "value": "NIC-FR-SITES-SQY-TH3",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "descr",
+     "value": "AFNIC",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "country",
+     "value": "FR",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "org",
+     "value": "ORG-AFpl1-RIPE",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "status",
+     "value": "LEGACY",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "mnt-by",
+     "value": "FR-NIC-MNT",
+     "comment": null,
+     "details_link": "https://rest.db.ripe.net/ripe/mntner/FR-NIC-MNT"
+    },
+    {
+     "key": "mnt-lower",
+     "value": "FR-NIC-MNT",
+     "comment": null,
+     "details_link": "https://rest.db.ripe.net/ripe/mntner/FR-NIC-MNT"
+    },
+    {
+     "key": "mnt-routes",
+     "value": "FR-NIC-MNT",
+     "comment": null,
+     "details_link": "https://rest.db.ripe.net/ripe/mntner/FR-NIC-MNT"
+    },
+    {
+     "key": "mnt-routes",
+     "value": "RENATER-MNT",
+     "comment": null,
+     "details_link": "https://rest.db.ripe.net/ripe/mntner/RENATER-MNT"
+    },
+    {
+     "key": "mnt-domains",
+     "value": "FR-NIC-MNT",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "created",
+     "value": "2004-11-16T15:54:10Z",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "last-modified",
+     "value": "2019-12-04T13:16:47Z",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "source",
+     "value": "RIPE",
+     "comment": null,
+     "details_link": null
+    }
+   ]
+  ],
+  "irr_records": [
+   [
+    {
+     "key": "route",
+     "value": "192.134.0.0/17",
+     "comment": null,
+     "details_link": "https://stat.ripe.net/192.134.0.0/17"
+    },
+    {
+     "key": "descr",
+     "value": "NIC-FR-134",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "origin",
+     "value": "2200",
+     "comment": null,
+     "details_link": "https://stat.ripe.net/AS2200"
+    },
+    {
+     "key": "holes",
+     "value": "192.134.0.0/22",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "holes",
+     "value": "192.134.92.0/22",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "mnt-by",
+     "value": "RENATER-MNT",
+     "comment": null,
+     "details_link": "https://rest.db.ripe.net/ripe/mntner/RENATER-MNT"
+    },
+    {
+     "key": "created",
+     "value": "2017-11-23T06:50:04Z",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "last-modified",
+     "value": "2017-11-23T06:50:04Z",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "source",
+     "value": "RIPE",
+     "comment": null,
+     "details_link": null
+    }
+   ]
+  ],
+  "authorities": [
+   "ripe"
+  ],
+  "resource": "192.134.5.37"
+ }
+}

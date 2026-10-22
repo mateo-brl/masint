@@ -1,0 +1,9 @@
+{
+ "token_endpoint": "https://login.microsoftonline.com/c0dc8bb0-b616-427e-8217-9513964a145b/oauth2/token",
+ "issuer": "https://sts.windows.net/c0dc8bb0-b616-427e-8217-9513964a145b/",
+ "authorization_endpoint": "https://login.microsoftonline.com/c0dc8bb0-b616-427e-8217-9513964a145b/oauth2/authorize",
+ "tenant_region_scope": "NA",
+ "cloud_instance_name": "microsoftonline.com",
+ "cloud_graph_host_name": "graph.windows.net",
+ "msgraph_host": "graph.microsoft.com"
+}

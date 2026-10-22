@@ -46,7 +46,11 @@ describe('domain.dns', () => {
 
   it('analyse les enregistrements réels de github.com', () => {
     const out = buildDnsOutput('github.com', rec, 'fr')
-    expect(types(out, 'ip')).toEqual(rec.A)
+    // A, puis les adresses isolées du SPF (le bloc 192.30.252.0/22 reste en propriété).
+    expect(types(out, 'ip')).toEqual([...rec.A!, '62.253.227.114', '166.78.69.169', '166.78.69.170', '166.78.71.131'])
+    expect(out.properties?.spf_ip_ranges).toContain('192.30.252.0/22')
+    // Rapports DMARC adressés à github.com lui-même : aucun nœud de plus.
+    expect(out.properties?.dmarc_rua).toEqual(['dmarc@github.com'])
     // MX Microsoft 365 et NS NS1 / Route 53 : infrastructure partagée, gardée en propriétés.
     expect(types(out, 'domain')).toEqual([])
     expect(out.properties?.mx).toContain('github-com.mail.protection.outlook.com')
@@ -67,7 +71,7 @@ describe('domain.dns', () => {
 
   it('exécute le module via DoH simulé', async () => {
     const dns: Record<string, string[]> = {}
-    for (const [type, values] of Object.entries(rec)) dns[type === 'DMARC' ? '_dmarc.github.com|TXT' : `github.com|${type}`] = values
+    for (const [type, values] of Object.entries(rec)) dns[type === 'DMARC' ? '_dmarc.github.com|TXT' : `github.com|${type}`] = values as string[]
     const out = await dnsModule.run(entity('domain', 'github.com'), fakeContext({ dns }))
     expect(out.properties?.spf).toMatch(/^v=spf1/)
   })
@@ -327,17 +331,22 @@ describe('domain.subdomains', () => {
     expect(parseCrtSh('example.com', rows)).toEqual(['api.example.com', 'www.example.com'])
   })
 
-  it('bascule sur Cert Spotter quand crt.sh renvoie 502', async () => {
+  it('garde les autres sources quand crt.sh renvoie 502 (une seule nouvelle tentative)', async () => {
+    const names = parseCertSpotter('lemonde.fr', fixtureJson('domain/certspotter_subdomains_lemonde.json'))
     const ctx = fakeContext({
       routes: {
         'https://crt.sh/': { status: 502, body: 'Bad Gateway' },
         'https://api.certspotter.com/v1/issuances': fixtureJson('domain/certspotter_subdomains_lemonde.json')
-      }
+      },
+      // Les quatre premiers noms résolvent encore ; les autres sont morts.
+      dns: Object.fromEntries(names.slice(0, 4).map((n) => [`${n}|A`, ['192.0.2.10']]))
     })
     const out = await subdomains.run(entity('domain', 'lemonde.fr'), ctx)
-    expect(ctx.requests.filter((r) => r.startsWith('https://crt.sh/'))).toHaveLength(3)
-    expect(out.properties?.subdomain_source).toBe('Cert Spotter')
-    expect(types(out, 'domain').length).toBeGreaterThan(3)
+    expect(ctx.requests.filter((r) => r.startsWith('https://crt.sh/'))).toHaveLength(2)
+    expect(out.properties?.subdomain_sources).toEqual([`Cert Spotter : ${names.length}`])
+    expect(out.properties?.subdomain_sources_failed).toContain('crt.sh : indisponible (HTTP 502)')
+    expect(types(out, 'domain')).toEqual(names.slice(0, 4))
+    expect(out.properties?.subdomains_unresolved_count).toBe(names.length - 4)
   }, 20000)
 })
 
@@ -520,9 +529,18 @@ describe('services à clé (formats documentés)', () => {
 
 describe.skipIf(!LIVE)('domaine en direct', () => {
   const ctx = makeContext()
+  // Service limité ou injoignable depuis ce réseau (quota, proxy) : test ignoré, pas une régression.
+  const liveRun = async (m: Parameters<typeof runModule>[0], value: string, t: { skip: () => void }) => {
+    try {
+      return await runModule(m, entity('domain', value), ctx)
+    } catch (e) {
+      if ((e instanceof ModuleError && ['rate_limited', 'unavailable', 'blocked'].includes(e.code)) || /fetch failed/i.test(String(e))) t.skip()
+      throw e
+    }
+  }
 
-  it('domain.dns', async () => {
-    const out = await runModule(dnsModule, entity('domain', 'github.com'), ctx)
+  it('domain.dns', async (t) => {
+    const out = await liveRun(dnsModule, 'github.com', t)
     expect(out.properties?.mail_providers).toContain('Microsoft 365')
   })
 
@@ -536,10 +554,10 @@ describe.skipIf(!LIVE)('domaine en direct', () => {
     expect(out.entities?.map((e) => [e.type, e.platform, e.label])).toEqual([['hosting', 'infomaniak', 'Infomaniak']])
   })
 
-  it('domain.subdomains', async () => {
-    const out = await runModule(subdomains, entity('domain', 'lemonde.fr'), ctx)
+  it('domain.subdomains', async (t) => {
+    const out = await liveRun(subdomains, 'lemonde.fr', t)
     expect(Number(out.properties?.subdomain_count)).toBeGreaterThan(5)
-  }, 120000)
+  }, 200000)
 
   it('domain.hosting', async () => {
     const out = await runModule(hostingModule, entity('domain', 'ovhcloud.com'), ctx)
@@ -561,8 +579,8 @@ describe.skipIf(!LIVE)('domaine en direct', () => {
     expect(Number(out.properties?.urlscan_scans)).toBeGreaterThan(0)
   })
 
-  it('domain.otx', async () => {
-    const out = await runModule(otxModules[0], entity('domain', 'lemonde.fr'), ctx).catch((e: Error) => ({ error: e.message }))
+  it('domain.otx', async (t) => {
+    const out = await liveRun(otxModules[0], 'lemonde.fr', t)
     expect(out).toBeTruthy()
   }, 60000)
 
@@ -577,8 +595,8 @@ describe.skipIf(!LIVE)('domaine en direct', () => {
     }
   }, 90000)
 
-  it('domain.typosquat', async () => {
-    const out = await runModule(typosquat, entity('domain', 'paypal.com'), ctx)
+  it('domain.typosquat', async (t) => {
+    const out = await liveRun(typosquat, 'paypal.com', t)
     expect(Number(out.properties?.typosquat_checked)).toBeGreaterThan(50)
   }, 120000)
 })

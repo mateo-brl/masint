@@ -35,6 +35,40 @@ export function isDomain(s: string): boolean {
   return /^(?=.{1,253}$)([a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{0,62}$/i.test(s)
 }
 
+// Suffixes publics à deux niveaux hors forme `<générique>.<ccTLD>` (extrait de la Public Suffix
+// List) et domaines d'hébergeurs où chaque client reçoit son propre nom (`<client>.github.io`).
+const TWO_LEVEL_SUFFIXES = new Set([
+  'github.io', 'gitlab.io', 'herokuapp.com', 'azurewebsites.net', 'cloudapp.net', 'blogspot.com', 'netlify.app',
+  'vercel.app', 'pages.dev', 'workers.dev', 'web.app', 'firebaseapp.com', 'appspot.com', 'onmicrosoft.com',
+  'wordpress.com', 'wixsite.com', 'myshopify.com', 'ngrok.io', 'glitch.me', 'onrender.com', 'fly.dev',
+  'co.jp', 'ne.jp', 'or.jp', 'ac.jp', 'go.jp', 'ed.jp', 'gr.jp', 'lg.jp',
+  'qc.ca', 'on.ca', 'bc.ca', 'gc.ca', 'ab.ca',
+  'nhs.uk', 'police.uk', 'mod.uk', 'ltd.uk', 'plc.uk', 'me.uk', 'sch.uk',
+  'presse.fr', 'tm.fr', 'nom.fr', 'cci.fr', 'notaires.fr', 'avocat.fr', 'veterinaire.fr', 'port.fr',
+  'k12.us', 'us.com', 'eu.com', 'uk.com', 'de.com', 'za.com', 'br.com', 'cn.com', 'jpn.com'
+])
+const GENERIC_SECOND_LEVEL = /^(co|com|net|org|gov|gouv|gob|go|edu|ac|asso|or|ne|mil|nom|ltd|plc|govt|sch|res|biz|info|int|web)$/
+
+/** Nombre de labels du suffixe public (`co.uk` → 2, `com` → 1), par approximation prudente. */
+export function publicSuffixLength(host: string): number {
+  const labels = host.split('.')
+  if (labels.length < 3) return 1
+  const tld = labels[labels.length - 1]
+  if (TWO_LEVEL_SUFFIXES.has(labels.slice(-2).join('.'))) return 2
+  return tld.length === 2 && GENERIC_SECOND_LEVEL.test(labels[labels.length - 2]) ? 2 : 1
+}
+
+/**
+ * Domaine enregistrable : `_spf.mozilla.com` → `mozilla.com`, `mail.exemple.co.uk` →
+ * `exemple.co.uk`. Approximation sans la liste complète des suffixes publics : suffixes à deux
+ * niveaux courants et forme `<générique>.<ccTLD>` (`gouv.fr`, `com.au`...).
+ */
+export function registrableDomain(host: string): string {
+  const labels = normalizeHost(host).split('.').filter(Boolean)
+  const n = publicSuffixLength(labels.join('.')) + 1
+  return labels.slice(-n).join('.')
+}
+
 /** Le domaine puis ses parents (`a.b.example.com` → `a.b.example.com`, `b.example.com`, `example.com`). */
 export function domainAndParents(domain: string): string[] {
   const labels = domain.split('.')

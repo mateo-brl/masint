@@ -1,0 +1,79 @@
+{
+ "mozilla.org|A": [
+  "35.190.14.201"
+ ],
+ "mozilla.org|AAAA": [
+  "2600:1901:0:c197::"
+ ],
+ "mozilla.org|MX": [
+  "1 aspmx.l.google.com",
+  "5 alt2.aspmx.l.google.com",
+  "10 aspmx3.googlemail.com",
+  "5 alt1.aspmx.l.google.com"
+ ],
+ "mozilla.org|NS": [
+  "ns7-66.akam.net",
+  "ns4-64.akam.net",
+  "ns5-65.akam.net",
+  "ns1-240.akam.net"
+ ],
+ "mozilla.org|TXT": [
+  "google-site-verification=S3M17z96OKfZJ2dq7mYqQDfRWsEVjy3hdxaSyB72YPc",
+  "yandex-verification",
+  "google-site-verification=Lo_B34AJAe70BQVNF1Fo1zGGJudPmw9bLTnP2C8lV-s",
+  "_zojr3c56nq36tokzhnj9crit28tiqly",
+  "bzbkzkxj2ws8gvtw6hpssfy7lv9kym88",
+  "google-site-verification=Brpe3hQpo9FlGIHMtK4ViKL60L0G8VM16nXopwVDoEU",
+  "MS=ms14343235",
+  "openai-domain-verification=dv-J6NgbJamHFrHSyNqlhElIX5K",
+  "google-site-verification=Ep3NdzNxaf8Vl48dniNneaqm7JcWUiy3GjKS0wx5zQw",
+  "anthropic-domain-verification-w5rph5=bZ2V4N0ps4oFSU6yrv4DfD6nA",
+  "google-site-verification=E1vBHtOW-D9IlAj-pbRM-8PrOSiPDT48lrwRlW82ysw",
+  "zoom-domain-verification=ZOOM_verify_671ea7b9c47d4b7b8cc9441f40817e3e",
+  "google-site-verification=z68pON7CWSaZu_sBqDQofmDL19OVp3krGEjaDl7cSaU",
+  "google-site-verification=mU3ta-ZJga-aCNg7IlaRaGYK9sDOMagHRNGVW1FSJGE",
+  "rz8t7zvjv5frpfbjs3y5n6g5tkw7gt2q",
+  "ZOOM_verify_lGxIzL49Id7PipUgDgTd9K",
+  "v=spf1 include:%{i}._ip.%{h}._ehlo.%{d}._spf.vali.email include:_spf.mozilla.com include:_spf.google.com include:spf.fundraiseup.com ~all"
+ ],
+ "mozilla.org|SOA": [
+  "ns5-65.akam.net. hostmaster.mozilla.com. 2024020837 180 180 1209600 60"
+ ],
+ "mozilla.org|CAA": [
+  "0 issue \"comodoca.com\"",
+  "0 issue \"awstrust.com\"",
+  "0 issue \"amazontrust.com\"",
+  "0 iodef \"mailto:foxsec+caaiodef@mozilla.com\"",
+  "0 issue \"sectigo.com\"",
+  "0 issue \"amazon.com\"",
+  "0 issue \"certainly.com\"",
+  "0 issue \"letsencrypt.org\"",
+  "0 issue \"pki.goog\"",
+  "0 issue \"amazonaws.com\"",
+  "0 issue \"digicert.com\""
+ ],
+ "_dmarc.mozilla.org|TXT": [
+  "v=DMARC1; p=reject; pct=100; adkim=r; aspf=r; rua=mailto:dmarc_agg@vali.email,mailto:dmarc@mozilla.com"
+ ],
+ "default._bimi.mozilla.org|TXT": [
+  "v=BIMI1; l=https://amplify.valimail.com/bimi/mozilla/-OHlHGABH88-mozilla_logo.svg; a=https://amplify.valimail.com/bimi/mozilla/-OHlHGABH88-mozilla_logo.pem"
+ ],
+ "google._domainkey.mozilla.org|TXT": [
+  "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCeaLfcj7zdLlf8U+HmEV9SvLcrhQcwBBKzGXpazWCkdEczUCIbrx4PNfn0MDK7Pm+iwLu2CBwts+H4HKHHLR6UIzQeUw3+QoHjcRdBPrsAVT2Z3lgis0aPrR5wlv5ymlMfqXYu7N8UqKVKe5r0TO7uU+NI/tqNR20GKEYdBWtiVwIDAQAB"
+ ],
+ "_spf.mozilla.com|TXT": [
+  "v=spf1 include:_netblocks.mozilla.com include:_netblocks3.mozilla.com ~all"
+ ],
+ "_netblocks.mozilla.com|TXT": [
+  "v=spf1 ip4:63.245.208.0/20 ip4:203.192.141.162/32 ip4:64.213.97.194/32 ip4:64.213.68.131/32 ip4:60.234.66.18/32 ip4:89.202.203.51/32 ip4:146.82.185.165 ip4:206.15.76.125 ip6:2620:101:8000::/40 ~all"
+ ],
+ "_netblocks3.mozilla.com|TXT": [
+  "v=spf1 ip4:173.247.198.38/32 ip4:207.126.102.129/32 ip4:206.169.237.184/32 ip4:207.218.72.65/32 ip4:118.163.10.190/32 ip4:60.234.54.74/32 ip4:206.169.237.178/32 ip4:54.240.58.224/32 ip4:54.240.58.225/32 ip4:54.240.58.226/32 ~all"
+ ],
+ "spf.fundraiseup.com|TXT": [
+  "202309142210142gjgf5fwokyagxwm41zux4qqpsky7k3ybnkqsbic1mlkhki0he",
+  "google-site-verification=yCMV3z3BhBaINi0V033HnfTi9xkQjpIZ4DM4ywSlwUs",
+  "v=spf1 exists:%{i}._spf.sparkpostmail.com ~all",
+  "yahoo-verification-key=3FbuT+COxdPHeqY8GDS1MS5lZ+Y4R0w0MCU5RmkGdic="
+ ]
+}
