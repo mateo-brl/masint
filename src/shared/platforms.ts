@@ -45,7 +45,7 @@ const SOCIAL: Row[] = [
   ['reddit', 'Reddit', 'reddit', '#FF4500', 'https://www.reddit.com/user/{u}'],
   ['pinterest', 'Pinterest', 'pinterest', '#BD081C', 'https://www.pinterest.com/{u}/'],
   ['tumblr', 'Tumblr', 'tumblr', '#36465D', 'https://{u}.tumblr.com'],
-  ['threads', 'Threads', 'threads', '#FFFFFF', 'https://www.threads.net/@{u}'],
+  ['threads', 'Threads', 'threads', '#FFFFFF', 'https://www.threads.com/@{u}'],
   ['bluesky', 'Bluesky', 'bluesky', '#0285FF', 'https://bsky.app/profile/{u}'],
   ['mastodon', 'Mastodon', 'mastodon', '#6364FF'],
   ['vk', 'VK', 'vk', '#0077FF', 'https://vk.com/{u}'],

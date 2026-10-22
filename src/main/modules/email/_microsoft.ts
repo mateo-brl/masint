@@ -59,6 +59,9 @@ export interface MsaResult {
 export function interpretMsa(json: MsaResponse): MsaResult {
   // 8004113F : identifiant au format refusé (numéro non attribuable, adresse invalide).
   if (json.ErrorHR === '8004113F') throw new ModuleError('Microsoft : identifiant refusé comme invalide', 'invalid_input')
+  // 800478AC : domaine réservé à une organisation (microsoft.com...), fermé aux comptes
+  // personnels. Ce n'est pas un refus de session : aucun compte personnel à cette adresse.
+  if (json.ErrorHR === '800478AC') return { found: false, data: {} }
   if (json.ErrorHR) throw new ModuleError(`Microsoft : session refusée (code ${json.ErrorHR})`, 'blocked')
   if (json.ThrottleStatus === 1) throw new ModuleError('Microsoft : trop de requêtes, réessayez plus tard', 'rate_limited')
   const r = json.IfExistsResult
