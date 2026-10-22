@@ -14,6 +14,7 @@ import type {
   ModuleRun,
   ModuleRunStats,
   NodeInput,
+  Provenance,
   ProxyTestResult,
   PropValue,
   RosoStatus,
@@ -58,8 +59,10 @@ export interface ApiMap {
   'graph:deleteNodes': (investigationId: string, ids: string[]) => void
   'graph:upsertEdges': (investigationId: string, edges: EdgeInput[], opts?: UpsertOptions) => GraphEdge[]
   'graph:deleteEdges': (investigationId: string, ids: string[]) => void
-  /** Fusionne plusieurs nœuds dans le premier (liens et propriétés repris). */
+  /** Fusionne plusieurs nœuds dans le premier (liens, propriétés et observations repris). */
   'graph:mergeNodes': (investigationId: string, targetId: string, otherIds: string[]) => GraphChange
+  /** Observations d'un nœud ou d'un lien (modules, dates, pages sources) et chemin du nœud. */
+  'graph:provenance': (investigationId: string, target: { nodeId?: string; edgeId?: string }) => Provenance
 
   // Pièces jointes (servies par le protocole `masint-file://att/<id>`)
   'attachments:add': (investigationId: string, file: { name: string; mime: string; base64: string }) => Attachment
@@ -73,7 +76,11 @@ export interface ApiMap {
 
   // Modules
   'modules:list': () => ModuleInfo[]
-  'modules:enrich': (investigationId: string, nodeId: string, moduleIds?: string[]) => { jobId: string }
+  /**
+   * Enrichit un nœud. `chain` : `true` pour « Enrichir en chaîne », `false` pour ne jamais
+   * enchaîner (enrichissement en masse) ; absent, l'enchaînement suit les réglages.
+   */
+  'modules:enrich': (investigationId: string, nodeId: string, moduleIds?: string[], opts?: { chain?: boolean }) => { jobId: string }
   'modules:cancel': (jobId: string) => void
   'modules:runs': (investigationId: string, nodeId?: string) => ModuleRun[]
   /** Statistiques d'exécution par module, sans limite de nombre (rapport). */

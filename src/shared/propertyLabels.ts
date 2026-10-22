@@ -10,6 +10,7 @@ export const PROPERTY_LABELS: Record<string, { fr: string; en: string }> = {
   display_name: { fr: 'Nom affiché', en: 'Display name' },
   real_name: { fr: 'Nom réel', en: 'Real name' },
   aliases: { fr: 'Alias', en: 'Aliases' },
+  admiralty: { fr: 'Cotation (source, information)', en: 'Rating (source, information)' },
   birth_date: { fr: 'Date de naissance', en: 'Birth date' },
   birth_place: { fr: 'Lieu de naissance', en: 'Birth place' },
   birthday: { fr: 'Anniversaire', en: 'Birthday' },

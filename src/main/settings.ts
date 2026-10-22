@@ -26,6 +26,7 @@ export const DEFAULT_SETTINGS: Settings = {
   timeoutMs: 20000,
   disabledModules: [],
   autoEnrich: false,
+  chainDepth: 0,
   passiveMode: true,
   linkOpening: 'auto',
   torSalt: '',
@@ -82,6 +83,7 @@ export class SettingsService {
     next.concurrency = Math.min(32, Math.max(1, Math.round(next.concurrency)))
     next.globalConcurrency = Math.min(64, Math.max(1, Math.round(next.globalConcurrency) || DEFAULT_SETTINGS.globalConcurrency))
     next.timeoutMs = Math.min(120000, Math.max(3000, Math.round(next.timeoutMs)))
+    next.chainDepth = Math.min(3, Math.max(0, Math.round(Number(next.chainDepth) || 0)))
     if (!['auto', 'internal', 'external'].includes(next.linkOpening)) next.linkOpening = 'auto'
     // En-tête automatique enregistré vide : il suit les mises à jour d'Electron.
     const auto = isAutoUserAgent(next.userAgent)
