@@ -3,7 +3,7 @@
 // (OSOP). API Opendatasoft de la DILA, sans clé. Recherche par numéro RNA, par SIREN, ou par
 // nom (associations candidates à vérifier).
 
-import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
+import { defineModule, ModuleError, type InputEntity, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
 import { compact, num, tr } from '../misc/_util'
 import { httpStatus } from '../social/_lib'
@@ -212,6 +212,9 @@ export default defineModule({
   },
   category: 'company',
   inputTypes: ['organization', 'company'],
+  // Une entreprise n'est cherchée que si c'est une association, une fondation ou un syndicat.
+  accepts: (input: InputEntity) =>
+    input.type === 'organization' || !!rnaOf(input) || /association|fondation|syndica|^9[23]/i.test(String(input.data.legal_form ?? '')),
   homepage: 'https://www.journal-officiel.gouv.fr/pages/associations-recherche/',
   async run(input, ctx) {
     const rna = rnaOf(input)
