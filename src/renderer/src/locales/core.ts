@@ -197,7 +197,8 @@ const fr = {
     force: 'Organique (forces)',
     radial: 'Radial',
     circle: 'Cercle',
-    grid: 'Grille'
+    grid: 'Grille',
+    running: 'Disposition en cours…'
   },
   export: {
     png: 'Image PNG',
@@ -790,7 +791,8 @@ const en: typeof fr = {
     force: 'Organic (forces)',
     radial: 'Radial',
     circle: 'Circle',
-    grid: 'Grid'
+    grid: 'Grid',
+    running: 'Arranging the graph…'
   },
   export: {
     png: 'PNG image',

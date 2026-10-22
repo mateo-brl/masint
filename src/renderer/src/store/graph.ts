@@ -489,7 +489,12 @@ export const useGraph = create<GraphState>((set, get) => ({
 
   select(ids) {
     const s = new Set(ids)
-    set({ nodes: get().nodes.map((n) => ({ ...n, selected: s.has(n.id) })), edges: get().edges.map((e) => ({ ...e, selected: false })) })
+    // Seuls les éléments dont l'état change sont recréés : les autres ne sont pas re-rendus.
+    const edges = get().edges
+    set({
+      nodes: get().nodes.map((n) => (!!n.selected === s.has(n.id) ? n : { ...n, selected: s.has(n.id) })),
+      edges: edges.some((e) => e.selected) ? edges.map((e) => (e.selected ? { ...e, selected: false } : e)) : edges
+    })
   },
 
   selectedNodes() {

@@ -7,6 +7,17 @@ import { EntityBadge, Icon } from '../../../lib/icons'
 import { useGraph, type FlowNode } from '../../../store/graph'
 import { useView } from '../../../store/view'
 
+/**
+ * Index des nœuds par identifiant, construit une fois par version de la liste et partagé par
+ * tous les groupes (au lieu de parcourir tous les nœuds pour chaque groupe à chaque image).
+ */
+const indexes = new WeakMap<FlowNode[], Map<string, FlowNode>>()
+function nodeIndex(nodes: FlowNode[]): Map<string, FlowNode> {
+  let m = indexes.get(nodes)
+  if (!m) indexes.set(nodes, (m = new Map(nodes.map((n) => [n.id, n]))))
+  return m
+}
+
 /** Groupe de feuilles semblables (« 28 sous-domaines ») : un clic sur « Déplier » les montre. */
 function BundleNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Element | null {
   const { t } = useTranslation()
@@ -14,8 +25,13 @@ function BundleNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
   const bundle = data.bundle
   const preview = useGraph((s) => {
     if (!bundle) return ''
+    const byId = nodeIndex(s.nodes)
     const labels: string[] = []
-    for (const n of s.nodes) if (bundle.members.includes(n.id) && labels.length < 3) labels.push(n.data.node.label)
+    for (const id of bundle.members) {
+      if (labels.length >= 3) break
+      const n = byId.get(id)
+      if (n) labels.push(n.data.node.label)
+    }
     return labels.join(', ')
   })
   if (!bundle) return null
