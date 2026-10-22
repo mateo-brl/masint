@@ -960,6 +960,15 @@ export const PROPERTY_LABELS: Record<string, { fr: string; en: string }> = {
   dgtresor_id: { fr: 'Identifiant au registre des gels', en: 'Asset freeze register ID' },
   aliases_count: { fr: "Nombre d'alias", en: 'Alias count' },
 
+  // Listes noires de l'AMF (finance.amf_blacklist)
+  amf_blacklisted: { fr: "Liste noire de l'AMF", en: 'AMF blacklist' },
+  amf_categories: { fr: 'Catégories (liste noire AMF)', en: 'Categories (AMF blacklist)' },
+  amf_listing_date: { fr: "Inscription sur la liste noire de l'AMF", en: 'Added to the AMF blacklist' },
+  amf_entries: { fr: 'Entrées de la liste noire AMF', en: 'AMF blacklist entries' },
+  amf_match: { fr: 'Correspondance (liste noire AMF)', en: 'Match (AMF blacklist)' },
+  amf_url: { fr: "Listes noires de l'AMF", en: 'AMF blacklists' },
+  amf_possible_matches: { fr: 'Noms proches sur la liste noire AMF', en: 'Similar names on the AMF blacklist' },
+
   // roso.info
   roso_credits_left: { fr: 'Crédits roso.info restants', en: 'roso.info credits left' },
   roso_tier: { fr: 'Formule roso.info', en: 'roso.info plan' },
