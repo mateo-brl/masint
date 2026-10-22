@@ -548,12 +548,14 @@ function ContextMenu({
         item('Zap', t('enrich.selection', { count: selected.length }), () => {
           void enrichNodes(selected)
         })}
-      {url && item('ExternalLink', t('canvas.openLink'), () => openLink(url))}
+      {url && item('ExternalLink', t('canvas.openLink'), () => openLink(url, { investigationId: node.investigationId, nodeId: node.id }))}
       {!many &&
         node.platform &&
         getPlatform(node.platform)?.url &&
         typeof node.data.username === 'string' &&
-        item('ExternalLink', t('canvas.openProfile'), () => openLink(getPlatform(node.platform)!.url!.replace('{u}', String(node.data.username))))}
+        item('ExternalLink', t('canvas.openProfile'), () =>
+          openLink(getPlatform(node.platform)!.url!.replace('{u}', String(node.data.username)), { investigationId: node.investigationId, nodeId: node.id })
+        )}
       {!many && item('Copy', t('canvas.copyValue'), () => void navigator.clipboard.writeText(node.label))}
       {collapsible.length > 0 &&
         item('FoldVertical', t('collapse.collapse'), () => void setCollapsed(collapsible, true), {

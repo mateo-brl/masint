@@ -169,7 +169,7 @@ describe('buildReportHtml', () => {
   it("respecte les sections décochées et l'annexe", () => {
     const h = buildReportHtml(
       input({
-        options: { ...input().options, sections: { summary: false, graph: false, notes: false, entities: false, links: true, timeline: false, sources: false, attachments: false, raw: true } },
+        options: { ...input().options, sections: { summary: false, graph: false, notes: false, entities: false, links: true, timeline: false, sources: false, journal: false, attachments: false, evidence: false, raw: true } },
         rawRuns: [{ run: runs[0], raw: { result: '<b>ok</b>' } }]
       })
     )

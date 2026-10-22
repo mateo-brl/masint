@@ -67,6 +67,13 @@ function GeneralTab(): React.JSX.Element | null {
   const { t } = useTranslation()
   const settings = useApp((s) => s.settings)
   const update = useApp((s) => s.updateSettings)
+  // Nom de session du système : enquêteur du journal quand aucun nom n'est saisi.
+  const [systemUser, setSystemUser] = useState('')
+  useEffect(() => {
+    void api('app:info')
+      .then((info) => setSystemUser(info.user))
+      .catch(() => undefined)
+  }, [])
   if (!settings) return null
   return (
     <div>
@@ -87,6 +94,19 @@ function GeneralTab(): React.JSX.Element | null {
       </Row>
       <Row label={t('settings.passiveMode')} hint={t('settings.passiveModeHint')}>
         <Switch checked={settings.passiveMode} onChange={(v) => void update({ passiveMode: v })} />
+      </Row>
+      <Row label={t('settings.investigatorName')} hint={t('settings.investigatorNameHint', { user: systemUser || '?' })}>
+        {/* `key` : le champ reprend la valeur enregistrée (espaces retirés). */}
+        <input
+          key={settings.investigatorName}
+          defaultValue={settings.investigatorName}
+          placeholder={systemUser}
+          onBlur={(e) => e.target.value.trim() !== settings.investigatorName && void update({ investigatorName: e.target.value })}
+          className="field !w-48"
+        />
+      </Row>
+      <Row label={t('settings.assistCapture')} hint={t('settings.assistCaptureHint')}>
+        <Switch checked={settings.assistCapture} onChange={(v) => void update({ assistCapture: v })} />
       </Row>
       <Row label={t('settings.concurrency')} hint={t('settings.concurrencyHint')}>
         <input

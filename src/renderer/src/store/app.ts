@@ -5,7 +5,7 @@ import { loadPref, savePref } from '../lib/prefs'
 import { setLanguage } from '../lib/i18n'
 import { useGraph } from './graph'
 
-export type View = 'graph' | 'map' | 'timeline' | 'modules' | 'notes'
+export type View = 'graph' | 'map' | 'timeline' | 'modules' | 'notes' | 'journal'
 
 export interface ToastAction {
   label: string
