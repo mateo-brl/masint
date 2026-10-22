@@ -39,6 +39,9 @@
     "tests/layout.test.ts",
     "tests/collapse.test.ts",
     "tests/consistency.test.ts",
-    "tests/search.test.ts"
+    "tests/search.test.ts",
+    "tests/analysis.test.ts",
+    "tests/filters.test.ts",
+    "tests/fuzzy.test.ts"
   ]
 }
