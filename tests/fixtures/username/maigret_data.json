@@ -1,0 +1,53 @@
+{
+  "sites": {
+    "Forum Discourse": {
+      "urlMain": "https://forum.example.test",
+      "engine": "Discourse",
+      "tags": ["forum"],
+      "usernameClaimed": "alice"
+    },
+    "Profils": {
+      "url": "https://profils.example.test/u/{username}",
+      "urlMain": "https://profils.example.test",
+      "checkType": "message",
+      "presenseStrs": ["profile-header"],
+      "absenceStrs": ["User not found"],
+      "errors": { "Too many requests": "Rate limited" },
+      "alexaRank": 5000,
+      "tags": ["social"],
+      "usernameClaimed": "alice"
+    },
+    "Annuaire FR": {
+      "url": "{urlMain}/membres/{username}",
+      "urlMain": "https://annuaire.example.test",
+      "urlProbe": "{urlMain}/api/membres?login={username}",
+      "checkType": "status_code",
+      "tags": ["fr"],
+      "usernameClaimed": "alice"
+    },
+    "Protégé": {
+      "url": "https://protege.example.test/{username}",
+      "urlMain": "https://protege.example.test",
+      "protection": ["tls_fingerprint"],
+      "usernameClaimed": "alice"
+    },
+    "Ancien": {
+      "url": "https://ancien.example.test/{username}",
+      "urlMain": "https://ancien.example.test",
+      "disabled": true,
+      "usernameClaimed": "alice"
+    }
+  },
+  "engines": {
+    "Discourse": {
+      "name": "Discourse",
+      "site": {
+        "presenseStrs": ["<meta name=\"generator\" content=\"Discourse"],
+        "absenceStrs": ["Oops! That page doesn’t exist or is private.", "wrap not-found-container"],
+        "checkType": "message",
+        "url": "{urlMain}/u/{username}/summary"
+      }
+    }
+  },
+  "tags": ["forum", "social", "fr"]
+}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { KeyRequirement, LinkOpening, ProxyMode, ProxyTestResult, RosoStatus, Settings } from '@shared/types'
-import { api, openExternal } from '../../lib/api'
+import type { KeyRequirement, LinkOpening, ProxyMode, ProxyTestResult, RosoStatus, Settings, SitesStatus, SitesTier } from '@shared/types'
+import { api, onEvent, openExternal } from '../../lib/api'
 import { useLang } from '../../lib/i18n'
 import { Icon } from '../../lib/icons'
 import { Logo } from '../Logo'
@@ -67,6 +67,13 @@ function GeneralTab(): React.JSX.Element | null {
   const { t } = useTranslation()
   const settings = useApp((s) => s.settings)
   const update = useApp((s) => s.updateSettings)
+  // Nom de session du système : enquêteur du journal quand aucun nom n'est saisi.
+  const [systemUser, setSystemUser] = useState('')
+  useEffect(() => {
+    void api('app:info')
+      .then((info) => setSystemUser(info.user))
+      .catch(() => undefined)
+  }, [])
   if (!settings) return null
   return (
     <div>
@@ -87,6 +94,19 @@ function GeneralTab(): React.JSX.Element | null {
       </Row>
       <Row label={t('settings.passiveMode')} hint={t('settings.passiveModeHint')}>
         <Switch checked={settings.passiveMode} onChange={(v) => void update({ passiveMode: v })} />
+      </Row>
+      <Row label={t('settings.investigatorName')} hint={t('settings.investigatorNameHint', { user: systemUser || '?' })}>
+        {/* `key` : le champ reprend la valeur enregistrée (espaces retirés). */}
+        <input
+          key={settings.investigatorName}
+          defaultValue={settings.investigatorName}
+          placeholder={systemUser}
+          onBlur={(e) => e.target.value.trim() !== settings.investigatorName && void update({ investigatorName: e.target.value })}
+          className="field !w-48"
+        />
+      </Row>
+      <Row label={t('settings.assistCapture')} hint={t('settings.assistCaptureHint')}>
+        <Switch checked={settings.assistCapture} onChange={(v) => void update({ assistCapture: v })} />
       </Row>
       <Row label={t('settings.concurrency')} hint={t('settings.concurrencyHint')}>
         <input
@@ -134,6 +154,126 @@ function GeneralTab(): React.JSX.Element | null {
         />
         <div className="mt-1 text-[11.5px] text-muted">{t('settings.userAgentHint')}</div>
       </div>
+      <SitesSection />
+    </div>
+  )
+}
+
+/** Base des sites de recherche de pseudo : mise à jour, contrôle témoin et état des sites. */
+function SitesSection(): React.JSX.Element {
+  const { t } = useTranslation()
+  const lang = useApp((s) => s.settings?.lang ?? 'fr')
+  const [status, setStatus] = useState<SitesStatus | null>(null)
+  const [updating, setUpdating] = useState(false)
+  const [updateMsg, setUpdateMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [tier, setTier] = useState<SitesTier>('essential')
+  const [progress, setProgress] = useState<{ done: number; total: number; detail?: string } | null>(null)
+  const [checkError, setCheckError] = useState<string | null>(null)
+  useEffect(() => {
+    let alive = true
+    void api('sites:status').then((s) => {
+      if (!alive) return
+      setStatus(s)
+      // Contrôle lancé avant la réouverture des paramètres : on attend sa fin (même promesse côté principal).
+      if (s.checking)
+        void api('sites:check', 'essential')
+          .then((next) => alive && setStatus(next))
+          .finally(() => alive && setProgress(null))
+    })
+    const off = onEvent('sites:progress', setProgress)
+    return () => {
+      alive = false
+      off()
+    }
+  }, [])
+  const locale = lang === 'en' ? 'en-GB' : 'fr-FR'
+  const date = (d: string | number): string => new Date(d).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' })
+  const checking = !!status?.checking || progress !== null
+
+  const updateDb = async (): Promise<void> => {
+    setUpdating(true)
+    setUpdateMsg(null)
+    try {
+      const res = await api('sites:updateDb')
+      setUpdateMsg(res.ok ? { ok: true, text: t(`settings.sites.${res.status === 'updated' ? 'updated' : 'current'}`) } : { ok: false, text: t('settings.sites.updateFailed', { error: res.error }) })
+      setStatus(await api('sites:status'))
+    } catch (e) {
+      setUpdateMsg({ ok: false, text: t('settings.sites.updateFailed', { error: errorMessage(e) }) })
+    } finally {
+      setUpdating(false)
+    }
+  }
+  const check = async (): Promise<void> => {
+    setCheckError(null)
+    setProgress({ done: 0, total: status?.tiers.find((x) => x.tier === tier)?.total ?? 0 })
+    try {
+      setStatus(await api('sites:check', tier))
+    } catch (e) {
+      setCheckError(errorMessage(e))
+    } finally {
+      setProgress(null)
+    }
+  }
+  const network = !status ? '' : status.egress === 'direct' ? t('settings.sites.direct') : status.egress === 'tor' ? 'Tor' : t('settings.sites.proxy')
+
+  return (
+    <div className="mt-2 flex flex-col gap-2.5 border-t border-line pt-4">
+      <div className="text-[13px] font-medium">{t('settings.sites.title')}</div>
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0 text-[12px] text-muted">
+          {status &&
+            t(status.db.source === 'user' ? 'settings.sites.dbUser' : 'settings.sites.dbBundled', {
+              date: status.db.updatedAt ? date(status.db.updatedAt) : '?',
+              count: status.db.sites
+            })}
+        </div>
+        <Button size="sm" disabled={updating} onClick={() => void updateDb()}>
+          {updating ? <Spinner size={12} /> : <Icon name="CloudDownload" size={14} />}
+          {t('settings.sites.update')}
+        </Button>
+      </div>
+      {updateMsg && <div className={`text-[11.5px] ${updateMsg.ok ? 'text-success' : 'text-accent'}`}>{updateMsg.text}</div>}
+      {status?.tiers.map((x) => (
+        <div key={x.tier} className="text-[12px]">
+          <span className="text-fg">{t(`settings.sites.tier.${x.tier}`)}</span>
+          <span className="text-muted"> · {t('settings.sites.counts', { active: x.active, failed: x.failed, skipped: x.skipped })}</span>
+        </div>
+      ))}
+      <div className="text-[11.5px] text-muted">
+        {status &&
+          (status.checkedAt
+            ? t('settings.sites.lastCheck', {
+                network,
+                date: date(status.checkedAt),
+                ok: status.last?.ok ?? 0,
+                failed: (status.last?.false_positive ?? 0) + (status.last?.missed ?? 0),
+                inconclusive: (status.last?.inconclusive ?? 0) + (status.last?.untestable ?? 0)
+              })
+            : t('settings.sites.neverChecked', { network }))}
+      </div>
+      <div className="flex items-center gap-2">
+        <select value={tier} onChange={(e) => setTier(e.target.value as SitesTier)} disabled={checking} className="field !w-40 !py-1.5">
+          <option value="essential">{t('settings.sites.tier.essential')}</option>
+          <option value="extended">{t('settings.sites.tier.extended')}</option>
+        </select>
+        <Button size="sm" disabled={checking} onClick={() => void check()}>
+          {checking ? <Spinner size={12} /> : <Icon name="ShieldCheck" size={14} />}
+          {t('settings.sites.check')}
+        </Button>
+        {checking && (
+          <Button size="sm" variant="ghost" onClick={() => void api('sites:cancelCheck')}>
+            {t('common.cancel')}
+          </Button>
+        )}
+        {progress && progress.total > 0 && (
+          <span className="truncate text-[11.5px] text-muted">
+            {progress.done}/{progress.total}
+            {progress.detail ? ` · ${progress.detail}` : ''}
+          </span>
+        )}
+      </div>
+      {checkError && <div className="text-[11.5px] text-accent">{checkError}</div>}
+      <p className="text-[11.5px] text-faint">{t('settings.sites.checkHint')}</p>
     </div>
   )
 }

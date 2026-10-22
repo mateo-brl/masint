@@ -10,6 +10,7 @@ import {
 import { create } from 'zustand'
 import type { EdgeInput, GraphChange, GraphEdge, GraphNode, Investigation, NodeInput, SavedNode, Suggestion } from '@shared/types'
 import { api } from '../lib/api'
+import { useAssist } from './assist'
 import type { Bundle } from '../lib/collapse'
 
 /** `bundle` : nœud d'affichage qui regroupe des feuilles semblables (voir lib/collapse). */
@@ -262,7 +263,11 @@ export const useGraph = create<GraphState>((set, get) => ({
       tool: 'select',
       suggestions: []
     })
-    void get().refreshSuggestions()
+    // Derniers résultats des recherches assistées, gardés en base.
+    useAssist.getState().reset()
+    void get()
+      .refreshSuggestions()
+      .then(() => useAssist.getState().hydrate(get().suggestions))
   },
 
   close() {
@@ -484,7 +489,12 @@ export const useGraph = create<GraphState>((set, get) => ({
 
   select(ids) {
     const s = new Set(ids)
-    set({ nodes: get().nodes.map((n) => ({ ...n, selected: s.has(n.id) })), edges: get().edges.map((e) => ({ ...e, selected: false })) })
+    // Seuls les éléments dont l'état change sont recréés : les autres ne sont pas re-rendus.
+    const edges = get().edges
+    set({
+      nodes: get().nodes.map((n) => (!!n.selected === s.has(n.id) ? n : { ...n, selected: s.has(n.id) })),
+      edges: edges.some((e) => e.selected) ? edges.map((e) => (e.selected ? { ...e, selected: false } : e)) : edges
+    })
   },
 
   selectedNodes() {

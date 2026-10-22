@@ -158,16 +158,26 @@ select,
 .react-flow__attribution {
   display: none;
 }
+/* Poignées masquées par des couleurs transparentes plutôt que par l'opacité : une opacité
+   (et sa transition) par poignée multiplie les calques à composer, au point de figer
+   l'interface quand des milliers de nœuds sont sélectionnés d'un coup. */
 .react-flow__handle {
   width: 7px;
   height: 7px;
-  opacity: 0;
-  transition: opacity 0.12s;
+  background-color: transparent;
+  border-color: transparent;
 }
 .react-flow__node:hover .react-flow__handle,
 .react-flow__node.selected .react-flow__handle,
 .react-flow.connecting .react-flow__handle {
-  opacity: 1;
+  background-color: var(--xy-handle-background-color);
+  border-color: var(--xy-handle-border-color);
+}
+/* Fondu au survol seulement : pas de milliers de transitions lors d'un Ctrl+A. */
+.react-flow__node:hover .react-flow__handle {
+  transition:
+    background-color 0.12s,
+    border-color 0.12s;
 }
 .react-flow__edge-path {
   stroke-width: 1.1;

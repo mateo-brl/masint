@@ -1,19 +1,23 @@
+import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
 import { app, BrowserWindow, Menu, protocol, safeStorage, screen, session } from 'electron'
 import { ATTACHMENT_PROTOCOL } from '@shared/api'
 import { chromiumLocale } from '@shared/network'
 import type { EventChannel, EventMap } from '@shared/api'
 import type { Settings } from '@shared/types'
+import { ActivityLog, actorName } from './activity'
 import { openArchiveOnce } from './archive'
 import { openDatabase, readStoredLang, vacuumIfPending } from './db/database'
 import { Repo } from './db/repo'
 import { moveNoiseToReview } from './cleanup'
-import { applyAssistIdentity, ASSIST_PARTITION, proxyConfig } from './assist'
+import { applyAssistIdentity, ASSIST_PARTITION, assistSession, proxyConfig } from './assist'
 import { closeInvestigationBrowsers, openLink } from './browser'
+import { CaptureService, trackNavigation } from './capture'
 import { Engine } from './engine/runner'
 import { registerIpc } from './ipc'
 import { queueOpen } from './openQueue'
+import { configureSiteData } from './modules/username/_siteDb'
 import { DEFAULT_SETTINGS, SettingsService, type Cipher } from './settings'
 import { initUpdater } from './updater'
 
@@ -162,8 +166,18 @@ void app.whenReady().then(async () => {
       console.error('[masint] rangement des résultats non vérifiés', e)
     }
   }
+  // Base des sites de pseudo : copie embarquée dans resources/, copie mise à jour dans le dossier utilisateur.
+  configureSiteData({ bundledDir: join(__dirname, '../../resources/data'), userDir: join(app.getPath('userData'), 'sites') })
   const settings = new SettingsService(repo, electronCipher)
-  const engine = new Engine(repo, settings, (event, payload) => send(event, payload as never))
+  // Journal d'activité : l'enquêteur est celui des paramètres, sinon la session du système.
+  const activity = new ActivityLog(repo, () => actorName(settings.get()))
+  const engine = new Engine(repo, settings, (event, payload) => send(event, payload as never), activity)
+  const captures = new CaptureService({
+    repo,
+    settings,
+    activity,
+    notify: (investigationId, nodeId) => send('captures:changed', { investigationId, nodeId })
+  })
 
   protocol.handle(ATTACHMENT_PROTOCOL, (request) => {
     const url = new URL(request.url)
@@ -177,6 +191,8 @@ void app.whenReady().then(async () => {
 
   await applySessionProxy(settings.get())
   applyAssistIdentity(settings.get())
+  // Redirections, statut et en-têtes des pages de la partition d'enquête (contexte des captures).
+  trackNavigation(assistSession())
 
   registerIpc({
     repo,
@@ -184,7 +200,9 @@ void app.whenReady().then(async () => {
     engine,
     getWindow: () => mainWindow,
     emitGraph: (change) => send('graph:changed', change),
-    applySessionProxy
+    applySessionProxy,
+    activity,
+    captures
   })
 
   initUpdater((s) => send('update:status', s), settings.get().autoUpdate)
@@ -198,7 +216,11 @@ void app.whenReady().then(async () => {
 
   openFile = (path) => {
     void readFile(path)
-      .then((buf) => openArchiveOnce(repo, buf))
+      .then((buf) =>
+        openArchiveOnce(repo, buf, (inv) =>
+          activity.log(inv.id, 'archive.import', { file: basename(path), size: buf.length, sha256: createHash('sha256').update(buf).digest('hex') })
+        )
+      )
       .then((inv) => {
         queueOpen(inv.id)
         send('app:openInvestigation', { id: inv.id })
@@ -215,6 +237,8 @@ void app.whenReady().then(async () => {
   // `before-quit` précède la fermeture des fenêtres : on enregistre leur taille avant de fermer la base.
   app.on('before-quit', () => {
     if (mainWindow && !mainWindow.isDestroyed()) saveWindowState(mainWindow, repo)
+    // Modifications regroupées encore en attente : écrites avant la fermeture de la base.
+    activity.dispose()
     // Compactage reporté d'une grosse base après la suppression d'une enquête.
     vacuumIfPending(db)
     db.close()

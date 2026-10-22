@@ -17,6 +17,11 @@ Base de sites Sherlock (resources/data/sherlock-sites.json)
   Copyright (c) 2019 Sherlock Project, licence MIT
   https://github.com/sherlock-project/sherlock
 
+Base de sites Maigret (resources/data/maigret-sites.json, version réduite de
+maigret/resources/data.json ; copie mise à jour téléchargée à la demande)
+  Copyright (c) 2020-2026 Soxoj, licence MIT
+  https://github.com/soxoj/maigret
+
 Métadonnées de numérotation libphonenumber (via libphonenumber-js et
 libphonenumber-geo-carrier : formats, zones géographiques, opérateurs d'origine,
 fuseaux horaires)

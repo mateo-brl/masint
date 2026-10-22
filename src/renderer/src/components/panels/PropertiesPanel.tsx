@@ -4,9 +4,11 @@ import { attachmentUrl } from '@shared/api'
 import { ENTITY_TYPES, getEntityType, type CategoryId } from '@shared/entityTypes'
 import { propertyLabel } from '@shared/propertyLabels'
 import { emailProvider, getPlatform, PLATFORMS } from '@shared/platforms'
-import type { GraphEdge, GraphNode, ModuleRun, PropValue } from '@shared/types'
+import { captureUrlOf } from '@shared/evidence'
+import type { Capture, GraphEdge, GraphNode, ModuleRun, PropValue } from '@shared/types'
 import { canEnrich, enrichNode, enrichNodes, fileToBase64, modulesForNode, useApplicable } from '../../lib/actions'
-import { api, openLink } from '../../lib/api'
+import { api, onEvent, openLink } from '../../lib/api'
+import { errorMessage } from '../../lib/errors'
 import { useLang } from '../../lib/i18n'
 import { EntityBadge, Icon } from '../../lib/icons'
 import { useApp } from '../../store/app'
@@ -247,6 +249,7 @@ function EntitySheet({ node }: { node: GraphNode }): React.JSX.Element {
       <ImageDrop node={node} />
       <LinkedSummary node={node} />
       <PropertyList node={node} />
+      <EvidenceBlock node={node} />
       <EnrichBlock node={node} />
       <RunsList node={node} />
       <div className="text-[11px] text-faint">
@@ -414,6 +417,7 @@ function PropertyList({ node }: { node: GraphNode }): React.JSX.Element {
             kind={f?.kind}
             onChange={(text) => setProp(k, parseValue(text, node.data[k], f?.kind))}
             onDelete={() => setProp(k, undefined)}
+            onOpen={(url) => openLink(url, { investigationId: node.investigationId, nodeId: node.id })}
           />
         )
       })}
@@ -483,6 +487,7 @@ function PropertyRow({
   onChange,
   onDelete,
   onCancel,
+  onOpen = (url) => openLink(url),
   startEditing = false
 }: {
   label: string
@@ -490,6 +495,8 @@ function PropertyRow({
   kind?: string
   onChange: (text: string) => void
   onDelete: () => void
+  /** Ouverture d'une valeur qui est une adresse web (contexte de capture fourni par la fiche). */
+  onOpen?: (url: string) => void
   /** Sortie d'édition sans valeur (brouillon de nouveau champ). */
   onCancel?: () => void
   startEditing?: boolean
@@ -538,12 +545,138 @@ function PropertyRow({
             {str || <span className="text-faint">…</span>}
           </div>
           {isUrl && (
-            <button onClick={() => openLink(value as string)} className="mt-0.5 text-muted hover:text-fg">
+            <button onClick={() => onOpen(value as string)} className="mt-0.5 text-muted hover:text-fg">
               <Icon name="ExternalLink" size={13} />
             </button>
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+/**
+ * Preuves du nœud : captures de pages (image, date, adresse, empreinte du manifeste) et, pour
+ * un nœud `url` ou `account`, capture de sa page dans une fenêtre cachée du navigateur d'enquête.
+ */
+function EvidenceBlock({ node }: { node: GraphNode }): React.JSX.Element | null {
+  const { t, i18n } = useTranslation()
+  const toast = useApp((s) => s.toast)
+  const [captures, setCaptures] = useState<Capture[]>([])
+  const [busy, setBusy] = useState(false)
+  const [viewing, setViewing] = useState<Capture | null>(null)
+  const url = captureUrlOf(node)
+
+  useEffect(() => {
+    let alive = true
+    const load = (): void => {
+      void api('captures:list', node.investigationId, node.id).then((list) => alive && setCaptures(list))
+    }
+    load()
+    const off = onEvent('captures:changed', (e) => {
+      if (e.investigationId === node.investigationId && (e.nodeId === node.id || e.nodeId === null)) load()
+    })
+    return () => {
+      alive = false
+      off()
+    }
+  }, [node.investigationId, node.id])
+
+  if (!url && !captures.length) return null
+  const locale = i18n.language?.startsWith('en') ? 'en-GB' : 'fr-FR'
+  const capture = async (): Promise<void> => {
+    setBusy(true)
+    try {
+      const c = await api('captures:capture', node.investigationId, node.id)
+      toast('success', t('evidence.captured', { hash: `${c.manifestSha256.slice(0, 12)}…` }))
+    } catch (e) {
+      toast('error', t('evidence.failed', { error: errorMessage(e) }))
+    } finally {
+      setBusy(false)
+    }
+  }
+  const save = async (attachmentId: string): Promise<void> => {
+    const path = await api('attachments:save', attachmentId).catch((e: unknown) => {
+      toast('error', errorMessage(e))
+      return null
+    })
+    if (path) toast('success', t('evidence.saved', { path }))
+  }
+  const copy = (hash: string): void => void navigator.clipboard.writeText(hash).then(() => toast('success', t('evidence.copied')))
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <Icon name="Camera" size={14} className="text-muted" />
+        <span className="flex-1 text-[12.5px] font-semibold">{t('evidence.title')}</span>
+        {captures.length > 0 && <span className="text-[11px] text-faint">{t('evidence.count', { count: captures.length })}</span>}
+        {url && (
+          <Button size="sm" icon={busy ? undefined : 'Camera'} disabled={busy} onClick={() => void capture()} title={t('evidence.captureTitle')}>
+            {busy && <Spinner size={12} />}
+            {busy ? t('evidence.capturing') : t('evidence.capture')}
+          </Button>
+        )}
+      </div>
+      {captures.length === 0 && <div className="text-[11.5px] text-muted">{t('evidence.empty')}</div>}
+      {captures.map((c) => (
+        <div key={c.id} className="flex gap-2.5 rounded-xl border border-line bg-panel-2 p-2">
+          <button onClick={() => setViewing(c)} className="shrink-0 overflow-hidden rounded-md border border-line" title={t('evidence.openImage')}>
+            <img src={attachmentUrl(c.screenshotAttachment)} alt="" loading="lazy" draggable={false} className="h-14 w-16 object-cover object-top" />
+          </button>
+          <div className="min-w-0 flex-1 leading-tight">
+            <div className="text-[11.5px] font-medium" title={c.capturedAt}>
+              {new Date(c.capturedAt).toLocaleString(locale, { dateStyle: 'short', timeStyle: 'medium' })}
+            </div>
+            <div
+              className="mt-0.5 truncate text-[11px] text-muted"
+              title={c.url !== c.finalUrl ? `${c.url}\n${t('evidence.redirected', { url: c.finalUrl })}` : c.finalUrl}
+            >
+              {c.finalUrl}
+            </div>
+            <button onClick={() => copy(c.manifestSha256)} className="mt-0.5 block truncate font-mono text-[10.5px] text-faint hover:text-fg" title={`${t('evidence.copyHash')}\n${c.manifestSha256}`}>
+              SHA-256 {c.manifestSha256.slice(0, 16)}…
+            </button>
+          </div>
+          <div className="flex shrink-0 flex-col gap-0.5">
+            <button onClick={() => setViewing(c)} className="rounded p-1 text-muted hover:bg-panel-3 hover:text-fg" title={t('evidence.openImage')}>
+              <Icon name="Image" size={13} />
+            </button>
+            <button onClick={() => void save(c.mhtmlAttachment)} className="rounded p-1 text-muted hover:bg-panel-3 hover:text-fg" title={t('evidence.exportMhtml')}>
+              <Icon name="FileArchive" size={13} />
+            </button>
+            <button onClick={() => copy(c.manifestSha256)} className="rounded p-1 text-muted hover:bg-panel-3 hover:text-fg" title={t('evidence.copyHash')}>
+              <Icon name="FingerprintPattern" size={13} />
+            </button>
+          </div>
+        </div>
+      ))}
+      <Dialog
+        open={!!viewing}
+        onClose={() => setViewing(null)}
+        title={viewing?.title || viewing?.finalUrl}
+        width={980}
+        footer={
+          viewing && (
+            <>
+              <span className="mr-auto min-w-0 truncate font-mono text-[11px] text-muted" title={viewing.manifestSha256}>
+                {t('evidence.manifest')} SHA-256 {viewing.manifestSha256}
+              </span>
+              <Button icon="FileArchive" onClick={() => void save(viewing.mhtmlAttachment)}>
+                {t('evidence.exportMhtml')}
+              </Button>
+              <Button icon="Download" onClick={() => void save(viewing.screenshotAttachment)}>
+                {t('evidence.exportImage')}
+              </Button>
+            </>
+          )
+        }
+      >
+        {viewing && (
+          <div className="max-h-[68vh] overflow-auto rounded-lg border border-line bg-white">
+            <img src={attachmentUrl(viewing.screenshotAttachment)} alt="" className="block w-full" draggable={false} />
+          </div>
+        )}
+      </Dialog>
     </div>
   )
 }

@@ -1,0 +1,19 @@
+{
+ "kind": "t2",
+ "data": {
+  "id": "exmpl1",
+  "name": "exemple_compte",
+  "created_utc": 1577836800,
+  "link_karma": 120,
+  "comment_karma": 340,
+  "total_karma": 460,
+  "icon_img": "",
+  "has_verified_email": true,
+  "is_mod": false,
+  "subreddit": {
+   "title": "",
+   "public_description": "Compte fictif pour les tests.",
+   "over_18": false
+  }
+ }
+}

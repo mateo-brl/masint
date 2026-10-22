@@ -1,0 +1,44 @@
+[
+ {
+  "did": "did:plc:oky5czdrnfjpqslsw2a5iclo",
+  "createdAt": "2022-11-17T06:31:40.296Z",
+  "nullified": false,
+  "operation": {
+   "type": "create",
+   "handle": "jay.bsky.social"
+  }
+ },
+ {
+  "did": "did:plc:oky5czdrnfjpqslsw2a5iclo",
+  "createdAt": "2023-03-09T23:18:25.247Z",
+  "nullified": false,
+  "operation": {
+   "type": "plc_operation",
+   "alsoKnownAs": [
+    "at://jay.bsky.social"
+   ]
+  }
+ },
+ {
+  "did": "did:plc:oky5czdrnfjpqslsw2a5iclo",
+  "createdAt": "2023-04-12T21:13:58.460Z",
+  "nullified": false,
+  "operation": {
+   "type": "plc_operation",
+   "alsoKnownAs": [
+    "at://jay.bsky.team"
+   ]
+  }
+ },
+ {
+  "did": "did:plc:oky5czdrnfjpqslsw2a5iclo",
+  "createdAt": "2023-11-07T01:39:19.488Z",
+  "nullified": false,
+  "operation": {
+   "type": "plc_operation",
+   "alsoKnownAs": [
+    "at://jay.bsky.team"
+   ]
+  }
+ }
+]
