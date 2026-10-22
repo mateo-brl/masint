@@ -18,6 +18,9 @@ import type {
   PropValue,
   RosoStatus,
   SecretStatus,
+  SitesStatus,
+  SitesTier,
+  SitesUpdateResult,
   Suggestion,
   Settings,
   UpdateStatus
@@ -96,6 +99,15 @@ export interface ApiMap {
   /** Vérifie la clé roso.info et lit les crédits restants, sans en consommer. */
   'roso:status': () => RosoStatus
 
+  // Sites de recherche de pseudo
+  /** Base des sites (origine, date) et santé des sites sur la sortie réseau courante. */
+  'sites:status': () => SitesStatus
+  /** Télécharge la dernière base Maigret (empreinte SHA-256 et schéma vérifiés). */
+  'sites:updateDb': () => SitesUpdateResult
+  /** Contrôle témoin des sites d'un palier ; l'avancement arrive par l'évènement `sites:progress`. */
+  'sites:check': (tier: SitesTier) => SitesStatus
+  'sites:cancelCheck': () => void
+
   // Exports
   /** Imprime un document HTML en PDF et l'enregistre. */
   'export:pdf': (html: string, defaultName: string) => string | null
@@ -126,6 +138,8 @@ export interface EventMap {
   'update:status': UpdateStatus
   /** Une archive `.masint` ouverte depuis l'explorateur a été importée. */
   'app:openInvestigation': { id: string }
+  /** Avancement du contrôle témoin des sites de pseudo. */
+  'sites:progress': { done: number; total: number; detail?: string }
 }
 
 export type EventChannel = keyof EventMap

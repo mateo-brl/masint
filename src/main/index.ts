@@ -12,6 +12,7 @@ import { ASSIST_PARTITION, proxyConfig } from './assist'
 import { Engine } from './engine/runner'
 import { registerIpc } from './ipc'
 import { queueOpen } from './openQueue'
+import { configureSiteData } from './modules/username/_siteDb'
 import { SettingsService, type Cipher } from './settings'
 import { initUpdater } from './updater'
 
@@ -154,6 +155,8 @@ void app.whenReady().then(async () => {
       console.error('[masint] rangement des résultats non vérifiés', e)
     }
   }
+  // Base des sites de pseudo : copie embarquée dans resources/, copie mise à jour dans le dossier utilisateur.
+  configureSiteData({ bundledDir: join(__dirname, '../../resources/data'), userDir: join(app.getPath('userData'), 'sites') })
   const settings = new SettingsService(repo, electronCipher)
   const engine = new Engine(repo, settings, (event, payload) => send(event, payload as never))
 
