@@ -1,0 +1,14 @@
+{
+  "accounts": [
+    {
+      "id": 1234567890,
+      "id_str": "1234567890",
+      "screen_names": {
+        "exemple_ancien": ["2015-01-04", "2019-06-30"],
+        "exemple_actuel": ["2019-07-02", "2026-07-15"],
+        "exemple_bref": ["2014-03-01"],
+        "exemple_inconnu": null
+      }
+    }
+  ]
+}

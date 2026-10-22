@@ -1,0 +1,6 @@
+{
+  "accounts": [
+    { "id": 111, "id_str": "111", "screen_names": { "pseudo_partage": ["2012-02-01", "2016-05-10"], "premier_compte": ["2016-05-11", "2020-01-01"] } },
+    { "id": 222, "id_str": "222", "screen_names": { "pseudo_partage": ["2021-03-03", "2026-07-15"] } }
+  ]
+}
