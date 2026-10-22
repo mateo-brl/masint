@@ -1,0 +1,85 @@
+{
+ "results": [
+  {
+   "siren": "217500016",
+   "nom_complet": "VILLE DE PARIS",
+   "nature_juridique": "7229",
+   "activite_principale": "84.11Z",
+   "date_creation": "1983-03-01",
+   "etat_administratif": "A",
+   "nombre_etablissements": 3029,
+   "siege": {
+    "siret": "21750001600019",
+    "adresse": "4 PL HOTEL VILLE ESP LIBERATION 75004 PARIS 04",
+    "code_postal": "75004",
+    "libelle_commune": "PARIS 04",
+    "latitude": "48.856507956",
+    "longitude": "2.3520586814"
+   },
+   "dirigeants": [],
+   "complements": {
+    "collectivite_territoriale": {
+     "code": "75C",
+     "code_insee": "75",
+     "elus": [
+      {
+       "nom": "GRÉGOIRE",
+       "prenoms": "Emmanuel",
+       "annee_de_naissance": "1977-12",
+       "fonction": "Maire",
+       "sexe": "M"
+      }
+     ],
+     "niveau": "Ville de Paris"
+    },
+    "convention_collective_renseignee": true,
+    "liste_idcc": [
+     "5021",
+     "5003",
+     "5022",
+     "9999",
+     "1043"
+    ],
+    "liste_finess_juridique": [
+     "750805483",
+     "750002008"
+    ],
+    "numero_rnf": null,
+    "egapro_renseignee": false,
+    "est_achats_responsables": false,
+    "est_alim_confiance": true,
+    "est_association": false,
+    "est_avocat": false,
+    "est_bio": false,
+    "est_entrepreneur_individuel": false,
+    "est_entrepreneur_spectacle": true,
+    "est_ess": false,
+    "est_finess": true,
+    "est_organisme_formation": true,
+    "est_qualiopi": true,
+    "liste_id_organisme_formation": [
+     "11757308875"
+    ],
+    "est_rge": false,
+    "est_siae": false,
+    "est_societe_mission": false,
+    "est_uai": true,
+    "est_patrimoine_vivant": false,
+    "bilan_ges_renseigne": true,
+    "identifiant_association": null,
+    "statut_entrepreneur_spectacle": "valide",
+    "type_siae": null,
+    "a_aide_minimis": false,
+    "a_aide_ademe": true,
+    "est_administration": true,
+    "est_service_public": null,
+    "est_l100_3": null
+   },
+   "matching_etablissements": []
+  }
+ ],
+ "total_results": 1,
+ "page": 1,
+ "per_page": 1,
+ "total_pages": 1
+}

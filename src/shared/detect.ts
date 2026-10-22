@@ -94,6 +94,9 @@ export function detectEntity(raw: string): Detection | null {
   const algo = hashAlgorithm(q)
   if (algo && algo !== 'SHA-1') return { type: 'hash', value: q.toLowerCase() }
 
+  // Numéro RNA d'une association (répertoire national des associations).
+  if (/^W\d{9}$/i.test(q)) return { type: 'organization', value: q.toUpperCase() }
+
   if (!/\s/.test(q) || /^bitcoincash:/.test(q)) {
     const chain = detectCryptoChain(q)
     if (chain && !(chain === 'solana' && /^[a-z]+$/i.test(q)))
