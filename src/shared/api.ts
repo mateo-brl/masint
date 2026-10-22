@@ -7,20 +7,22 @@ import type {
   EdgeInput,
   GraphChange,
   GraphEdge,
-  GraphNode,
   Investigation,
   InvestigationBundle,
   JobProgress,
   ModuleInfo,
   ModuleRun,
+  ModuleRunStats,
   NodeInput,
   ProxyTestResult,
   PropValue,
   RosoStatus,
+  SavedNode,
   SecretStatus,
   Suggestion,
   Settings,
-  UpdateStatus
+  UpdateStatus,
+  UpsertOptions
 } from './types'
 
 export interface FileFilter {
@@ -45,9 +47,13 @@ export interface ApiMap {
   'investigations:importArchive': () => Investigation | null
 
   // Graphe
-  'graph:upsertNodes': (investigationId: string, nodes: NodeInput[]) => GraphNode[]
+  /**
+   * Crée ou modifie des nœuds. Avec `updateOnly`, les patchs vers un nœud absent sont ignorés.
+   * `duplicateOf` signale une entité de même valeur déjà présente.
+   */
+  'graph:upsertNodes': (investigationId: string, nodes: NodeInput[], opts?: UpsertOptions) => SavedNode[]
   'graph:deleteNodes': (investigationId: string, ids: string[]) => void
-  'graph:upsertEdges': (investigationId: string, edges: EdgeInput[]) => GraphEdge[]
+  'graph:upsertEdges': (investigationId: string, edges: EdgeInput[], opts?: UpsertOptions) => GraphEdge[]
   'graph:deleteEdges': (investigationId: string, ids: string[]) => void
   /** Fusionne plusieurs nœuds dans le premier (liens et propriétés repris). */
   'graph:mergeNodes': (investigationId: string, targetId: string, otherIds: string[]) => GraphChange
@@ -67,6 +73,8 @@ export interface ApiMap {
   'modules:enrich': (investigationId: string, nodeId: string, moduleIds?: string[]) => { jobId: string }
   'modules:cancel': (jobId: string) => void
   'modules:runs': (investigationId: string, nodeId?: string) => ModuleRun[]
+  /** Statistiques d'exécution par module, sans limite de nombre (rapport). */
+  'modules:runStats': (investigationId: string) => ModuleRunStats[]
   'modules:jobs': () => JobProgress[]
   /** Modules lancés par « Enrichir » pour ce nœud, et modules applicables à sa valeur. */
   /** Résultats à vérifier d'une enquête, ou d'un nœud. */
