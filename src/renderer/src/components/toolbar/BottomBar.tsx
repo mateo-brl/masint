@@ -77,7 +77,8 @@ export function BottomBar(): React.JSX.Element {
             return { label: tx(def.label), icon: def.icon, onClick: () => void addEntityAt(id, center()) }
           }),
           { separator: true, label: '' },
-          { label: t('bottombar.moreTypes'), icon: 'Layers', onClick: () => toggleCatalog(true) }
+          { label: t('bottombar.moreTypes'), icon: 'Layers', onClick: () => toggleCatalog(true) },
+          { label: t('bottombar.importList'), icon: 'FileSpreadsheet', onClick: () => useApp.getState().setImportOpen(true) }
         ]}
       />
       <Divider />
