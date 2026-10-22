@@ -157,8 +157,8 @@ export function history(records: CompanyBodaccRecord[], lang: 'fr' | 'en' = 'fr'
   for (const r of sorted) {
     const p = legalPerson(r)
     const when = r.dateparution ? r.dateparution.slice(0, 7).split('-').reverse().join('/') : ''
-    // « Administrateur partant : Nom, Prénom ; Président : ... »
-    for (const part of str(p?.administration).split(';')) {
+    // « Administrateur partant : Nom, Prénom ; Président : ... » (virgules dans les annonces anciennes).
+    for (const part of str(p?.administration).split(/\s*;\s*|,\s*(?=nomination|modification|d[ée]mission|[^,:;]*partante?s?\s*:)/i)) {
       const m = part.match(/^\s*([^:]*?)\s+partante?s?\s*:\s*(.+?)\s*$/i)
       if (!m) continue
       const who = m[2].replace(/\s+/g, ' ')
