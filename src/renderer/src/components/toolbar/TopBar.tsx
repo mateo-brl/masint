@@ -122,7 +122,7 @@ export function TopBar(): React.JSX.Element {
         />
         <Dropdown
           align="center"
-          width={240}
+          width={280}
           trigger={() => <ToolbarButton icon="Download" label={t('topbar.export')} />}
           items={[
             { label: t('export.png'), icon: 'Image', onClick: () => void doExport('png') },
@@ -132,6 +132,10 @@ export function TopBar(): React.JSX.Element {
             { label: t('export.json'), icon: 'Braces', onClick: () => void doExport('json') },
             { label: t('export.csvNodes'), icon: 'Sheet', onClick: () => void doExport('csv-nodes') },
             { label: t('export.csvEdges'), icon: 'Sheet', onClick: () => void doExport('csv-edges') },
+            { separator: true, label: '' },
+            { label: t('export.graphml'), icon: 'Share2', onClick: () => void doExport('graphml') },
+            { label: t('export.gexf'), icon: 'Network', onClick: () => void doExport('gexf') },
+            { label: t('export.maltego'), icon: 'Table', onClick: () => void doExport('maltego') },
             { separator: true, label: '' },
             {
               label: t('export.archive'),

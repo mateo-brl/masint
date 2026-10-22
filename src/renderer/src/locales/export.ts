@@ -5,8 +5,24 @@ const fr = {
     noInvestigation: 'Aucune enquête ouverte',
     emptyGraph: 'Le graphe est vide : rien à exporter',
     canvasHidden: 'Le canevas du graphe n’est pas affiché',
-    files: { nodes: 'noeuds', edges: 'liens', graph: 'graphe', report: 'rapport' },
-    filters: { png: 'Image PNG', svg: 'Image SVG', json: 'Données JSON', csv: 'CSV (Excel)', html: 'Page HTML' },
+    files: { nodes: 'noeuds', edges: 'liens', graph: 'graphe', report: 'rapport', maltego: 'maltego' },
+    filters: {
+      png: 'Image PNG',
+      svg: 'Image SVG',
+      json: 'Données JSON',
+      csv: 'CSV (Excel)',
+      html: 'Page HTML',
+      graphml: 'GraphML',
+      gexf: 'GEXF (Gephi)',
+      maltego: 'CSV (Maltego)'
+    },
+    maltego: {
+      source: 'Source',
+      sourceType: 'Type source',
+      target: 'Cible',
+      targetType: 'Type cible',
+      linkLabel: 'Libellé du lien'
+    },
     csv: {
       id: 'ID',
       kind: 'Nature',
@@ -208,8 +224,24 @@ const en: typeof fr = {
     noInvestigation: 'No investigation is open',
     emptyGraph: 'The graph is empty: nothing to export',
     canvasHidden: 'The graph canvas is not displayed',
-    files: { nodes: 'nodes', edges: 'links', graph: 'graph', report: 'report' },
-    filters: { png: 'PNG image', svg: 'SVG image', json: 'JSON data', csv: 'CSV (Excel)', html: 'HTML page' },
+    files: { nodes: 'nodes', edges: 'links', graph: 'graph', report: 'report', maltego: 'maltego' },
+    filters: {
+      png: 'PNG image',
+      svg: 'SVG image',
+      json: 'JSON data',
+      csv: 'CSV (Excel)',
+      html: 'HTML page',
+      graphml: 'GraphML',
+      gexf: 'GEXF (Gephi)',
+      maltego: 'CSV (Maltego)'
+    },
+    maltego: {
+      source: 'Source',
+      sourceType: 'Source type',
+      target: 'Target',
+      targetType: 'Target type',
+      linkLabel: 'Link label'
+    },
     csv: {
       id: 'ID',
       kind: 'Kind',
