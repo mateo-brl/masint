@@ -12,6 +12,7 @@ import {
   selectSites,
   type SherlockSite
 } from '../../src/main/modules/username/_sherlock'
+import { tierSites } from '../../src/main/modules/username/_catalog'
 import { accountEntity, modules, platformForSite } from '../../src/main/modules/username/sites'
 import { entity, LIVE, makeContext, runModule } from '../helpers/context'
 import { fakeContext } from './social_helpers'
@@ -142,6 +143,24 @@ describe('requêtes', () => {
     expect(ctx.calls.some((c) => c.url.includes('never.test'))).toBe(false)
   })
 
+  it('défi anti-robot signalé par les en-têtes (AWS WAF, Cloudflare) : ni compte ni absence', async () => {
+    const ctx = fakeContext([
+      [/aws\.test/, { status: 202, headers: { 'x-amzn-waf-action': 'challenge' } }],
+      [/cf\.test/, { status: 403, headers: { 'cf-mitigated': 'challenge' } }]
+    ])
+    expect((await checkSite(site({ url: 'https://aws.test/{}' }), 'bob', ctx)).status).toBe('waf')
+    expect((await checkSite(site({ url: 'https://cf.test/{}', errorType: 'message', errorMsg: 'x' }), 'bob', ctx)).status).toBe('waf')
+  })
+
+  it('Twitch : message d’erreur réduit à la phrase, quelle que soit la ponctuation de la balise', () => {
+    const twitch = allSites().find((s) => s.name === 'Twitch')!
+    const phrase = 'Twitch is the world&#39;s leading video platform and community for gamers.'
+    expect(twitch.errorMsg).toBe(phrase)
+    expect(evaluate(twitch, { status: 200, text: `<meta property="og:description" content="${phrase}">` })).toBe('available')
+    expect(evaluate(twitch, { status: 200, text: `<meta name="description" content='${phrase}'>` })).toBe('available')
+    expect(evaluate(twitch, { status: 200, text: '<meta name="description" content="xQc streams live on Twitch!">' })).toBe('claimed')
+  })
+
   it('rapporte les erreurs réseau sans lever', async () => {
     const ctx = fakeContext([])
     ctx.fetch = async () => {
@@ -185,20 +204,52 @@ describe('entités produites', () => {
     const ctx = fakeContext([[/github\.com\/bob$/, { status: 200 }], [/.*/, { status: 404, body: 'not found' }]])
     const out = await sitesModule.run(entity('username', 'bob'), ctx)
     expect(out.entities?.some((e) => e.platform === 'github')).toBe(true)
-    expect((out.raw as { tested: number }).tested).toBe(selectSites({ nsfw: false }).length)
+    // Palier Essentiel : sites Sherlock plus le complément Maigret.
+    expect((out.raw as { tested: number }).tested).toBe(tierSites('essential').length)
   }, 60000)
 })
 
+/** Erreur de réseau ou de service (quota, panne, blocage) : le test en direct est sauté, pas en échec. */
+function isNetworkTrouble(e: unknown): boolean {
+  const code = (e as { code?: string })?.code
+  return (code !== undefined && ['rate_limited', 'unavailable', 'blocked'].includes(code)) || /fetch failed/i.test(String((e as Error)?.message ?? e))
+}
+
+async function live<T>(t: { skip: () => void }, fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn()
+  } catch (e) {
+    if (isNetworkTrouble(e)) t.skip()
+    throw e
+  }
+}
+
+// Pseudo aléatoire, qui ne doit exister nulle part.
+const randomName = (): string => `zq${Math.random().toString(36).slice(2, 11).replace(/\d/g, 'k')}x`
+
 describe.skipIf(!LIVE)('live', () => {
-  it('aucun faux positif sur un pseudo aléatoire', async () => {
-    const out = await runModule(modules[0], entity('username', 'zq8x7v2kq9w1'), makeContext())
+  it('aucun faux positif sur un pseudo aléatoire (palier Essentiel, durée mesurée)', async (t) => {
+    const out = await live(t, () => runModule(modules[0], entity('username', randomName()), makeContext()))
+    const raw = out.raw as { tested: number; duration_ms: number; errors: number; blocked_by_waf: number }
+    console.log(`username.sites : ${raw.tested} sites en ${Math.round(raw.duration_ms / 1000)} s (${raw.errors} erreurs, ${raw.blocked_by_waf} pare-feu)`)
     expect(out.entities?.map((e) => e.data?.site)).toEqual([])
   }, 300000)
 
-  it('trouve de nombreux comptes pour un pseudo réel', async () => {
-    const out = await runModule(modules[0], entity('username', 'torvalds'), makeContext())
+  it('trouve de nombreux comptes pour le pseudo témoin de la base Sherlock', async (t) => {
+    // « blue » est le `username_claimed` de nombreux sites Sherlock (pseudo témoin public).
+    const out = await live(t, () => runModule(modules[0], entity('username', 'blue'), makeContext()))
     const sites = out.entities?.map((e) => e.data?.site) ?? []
     expect(sites.length).toBeGreaterThan(40)
-    expect(sites).toEqual(expect.arrayContaining(['Telegram', 'Twitch', 'Docker Hub']))
+    expect(sites).toEqual(expect.arrayContaining(['Telegram', 'Docker Hub']))
   }, 300000)
+
+  it('Twitch : témoin trouvé, pseudo aléatoire absent (message d’erreur corrigé)', async (t) => {
+    const twitch = allSites().find((s) => s.name === 'Twitch')!
+    const ctx = makeContext()
+    const claimed = await live(t, () => checkSite(twitch, twitch.username_claimed!, ctx))
+    const random = await live(t, () => checkSite(twitch, randomName(), ctx))
+    if (claimed.status === 'error' || random.status === 'error' || claimed.status === 'waf' || random.status === 'waf') t.skip()
+    expect(claimed.status).toBe('claimed')
+    expect(random.status).toBe('available')
+  }, 60000)
 })

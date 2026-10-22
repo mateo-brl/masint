@@ -88,6 +88,7 @@ réglages. Lors d'un enrichissement global, les modules « à la demande » sont
 | `userAgent` | User-Agent configuré. |
 | `log(message)` | Trace dans la console du processus principal (préfixée par l'id du module). |
 | `progress(fait, total, détail?)` | Avancement interne d'un module long (« 23/57 · WhatsApp »), affiché dans la pastille de progression. Appelez-le librement : le moteur espace les envois. |
+| `egress` | Sortie réseau du module (`direct`, `tor` ou `proxy:<empreinte>`, jamais l'adresse elle-même) : clé des caches qui dépendent de l'adresse IP de sortie, comme l'état de santé des sites de pseudo. Absente dans les tests (équivaut à `direct`). |
 
 N'utilisez jamais le `fetch` global, `node:dns` ou une bibliothèque HTTP directement : la
 requête contournerait le proxy et Tor, et révélerait l'adresse IP de l'enquêteur.
