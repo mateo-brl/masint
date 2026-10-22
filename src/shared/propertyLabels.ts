@@ -992,6 +992,18 @@ export const PROPERTY_LABELS: Record<string, { fr: string; en: string }> = {
   last_annual_return_date: { fr: 'Dernière déclaration annuelle', en: 'Latest annual return' },
   name_since: { fr: 'Dénomination depuis le', en: 'Name in use since' },
 
+  // Annuaire de l'administration (administration.annuaire)
+  acronym: { fr: 'Sigle', en: 'Acronym' },
+  websites: { fr: 'Sites web', en: 'Websites' },
+  social_networks: { fr: 'Réseaux sociaux', en: 'Social networks' },
+  opening_hours: { fr: "Horaires d'ouverture", en: 'Opening hours' },
+  mission: { fr: 'Missions', en: 'Missions' },
+  heads: { fr: 'Responsables publiés', en: 'Published heads' },
+  appointment_text: { fr: 'Texte de nomination', en: 'Appointment text' },
+  appointment_url: { fr: 'Nomination (Légifrance)', en: 'Appointment (Légifrance)' },
+  annuaire_id: { fr: "Identifiant de l'Annuaire de l'administration", en: 'Administration directory ID' },
+  annuaire_url: { fr: 'Fiche Service-Public.fr', en: 'Service-Public.fr page' },
+
   // roso.info
   roso_credits_left: { fr: 'Crédits roso.info restants', en: 'roso.info credits left' },
   roso_tier: { fr: 'Formule roso.info', en: 'roso.info plan' },
