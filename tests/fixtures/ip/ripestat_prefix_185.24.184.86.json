@@ -1,0 +1,19 @@
+{
+ "status": "ok",
+ "data": {
+  "resource": "185.24.184.0/24",
+  "announced": true,
+  "asns": [
+   {
+    "asn": 60855,
+    "holder": "DISIC-RIE-AS LA DIRECTION INTERMINISTERIELLE DU NUMERIQUE"
+   }
+  ],
+  "block": {
+   "resource": "185.0.0.0/8",
+   "desc": "RIPE NCC (Status: ALLOCATED)",
+   "name": "IANA IPv4 Address Space Registry"
+  },
+  "is_less_specific": false
+ }
+}

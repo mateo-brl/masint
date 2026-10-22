@@ -1,0 +1,10 @@
+# IPsum Threat Intelligence Feed
+# (https://github.com/stamparm/ipsum)
+#
+# Last update: Thu, 22 Oct 2026 03:00:53 +0200
+#
+# IP	number of (black)lists
+#
+138.226.239.233	12
+203.0.113.7	3
+198.51.100.23	1

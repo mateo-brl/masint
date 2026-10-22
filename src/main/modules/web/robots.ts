@@ -1,5 +1,10 @@
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
 import { cappedList, compact, isoDate, toUrl, uniq } from '../domain/_util'
+import { fetchSiteFile } from './_files'
+import { decodeEntities } from './_html'
+
+/** Taille maximale d'un plan du site lu (XML, éventuellement gzip). */
+const MAX_SITEMAP = 2_000_000
 
 export interface RobotsInfo {
   disallow: string[]
@@ -84,6 +89,50 @@ export function parseSecurityTxt(text: string): SecurityTxt {
   return out
 }
 
+export interface Sitemap {
+  /** Index de plans du site (`<sitemapindex>`) ou liste d'URL (`<urlset>`). */
+  kind: 'index' | 'urlset'
+  /** URL des pages (`<url><loc>`), sans les images ni les vidéos. */
+  urls: string[]
+  /** Plans du site enfants d'un index (`<sitemap><loc>`). */
+  children: string[]
+}
+
+const locOf = (block: string): string | null => {
+  const m = block.match(/<loc>\s*(?:<!\[CDATA\[)?\s*([^<\]]+?)\s*(?:\]\]>)?\s*<\/loc>/i)
+  return m ? decodeEntities(m[1]).trim() : null
+}
+
+/** Plan du site XML (protocole sitemaps.org). `null` si le texte n'en est pas un. */
+export function parseSitemap(xml: string): Sitemap | null {
+  const blocks = (tag: string): string[] =>
+    Array.from(xml.matchAll(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`, 'gi')), (m) => locOf(m[1])).filter((l): l is string => !!l)
+  if (/<sitemapindex[\s>]/i.test(xml)) return { kind: 'index', urls: [], children: uniq(blocks('sitemap')) }
+  if (/<urlset[\s>]/i.test(xml)) return { kind: 'urlset', urls: uniq(blocks('url')), children: [] }
+  return null
+}
+
+/** Documents bureautiques cités dans le plan du site (rapports, tarifs, organigrammes...). */
+const DOCUMENT = /\.(pdf|docx?|xlsx?|pptx?)$/i
+
+export function sitemapDocuments(urls: string[]): string[] {
+  return urls.filter((u) => {
+    try {
+      return DOCUMENT.test(new URL(u).pathname)
+    } catch {
+      return false
+    }
+  })
+}
+
+export interface SitemapSummary {
+  url: string
+  urls: string[]
+  /** Nombre de plans enfants quand le premier plan est un index. */
+  children: number | null
+  truncated: boolean
+}
+
 /** Chemins sensibles signalés dans robots.txt (administration, sauvegardes, API...). */
 const INTERESTING = /admin|login|backup|bak|old|private|secret|config|api|dev|test|staging|wp-|phpmyadmin|cgi|tmp|internal|intranet|panel|dashboard|\.git|\.env|sql|dump/i
 
@@ -91,7 +140,13 @@ const INTERESTING = /admin|login|backup|bak|old|private|secret|config|api|dev|te
  * Seuls les emails de security.txt deviennent des entités (contacts réels, à croiser) ; sitemaps,
  * chemins, page de recrutement et politique de divulgation restent des propriétés du site.
  */
-export function buildRobotsOutput(robots: RobotsInfo | null, sec: SecurityTxt | null, origin: string, lang: 'fr' | 'en'): ModuleOutput {
+export function buildRobotsOutput(
+  robots: RobotsInfo | null,
+  sec: SecurityTxt | null,
+  origin: string,
+  lang: 'fr' | 'en',
+  sitemap: SitemapSummary | null = null
+): ModuleOutput {
   const fr = lang === 'fr'
   const entities: OutEntity[] = []
   for (const e of sec?.emails ?? []) entities.push({ type: 'email', label: e, linkLabel: fr ? 'contact sécurité' : 'security contact' })
@@ -105,10 +160,41 @@ export function buildRobotsOutput(robots: RobotsInfo | null, sec: SecurityTxt | 
     security_policy: sec?.policy ?? null,
     security_hiring: sec?.hiring ?? null,
     security_languages: sec?.languages ?? null,
-    security_encryption: sec?.encryption ?? null
+    security_encryption: sec?.encryption ?? null,
+    sitemap_url: sitemap?.url ?? null,
+    sitemap_urls_count: sitemap ? sitemap.urls.length : null,
+    sitemap_children_count: sitemap?.children ?? null,
+    sitemap_partial: sitemap?.truncated || null,
+    ...cappedList('documents', sitemap ? sitemapDocuments(sitemap.urls) : [])
   })
   if (!Object.keys(properties).length && !entities.length) return {}
-  return { properties, entities, raw: { origin, robots, securityTxt: sec } }
+  return {
+    properties,
+    entities,
+    raw: { origin, robots, securityTxt: sec, sitemap: sitemap ? { ...sitemap, urls: sitemap.urls.slice(0, 200) } : null }
+  }
+}
+
+/**
+ * Premier plan du site annoncé dans robots.txt (2 Mo au plus). Un index renvoie à d'autres plans :
+ * on lit alors le premier d'entre eux, et le nombre d'URL ne porte que sur celui-là.
+ */
+export async function readFirstSitemap(ctx: ModuleContext, sitemaps: string[]): Promise<SitemapSummary | null> {
+  const first = sitemaps.find((u) => /^https?:\/\//i.test(u))
+  if (!first) return null
+  const file = await fetchSiteFile(ctx, first, MAX_SITEMAP)
+  const parsed = file ? parseSitemap(file.text) : null
+  if (!file || !parsed) return null
+  if (parsed.kind === 'urlset') return { url: first, urls: parsed.urls, children: null, truncated: file.truncated }
+  const child = parsed.children.find((u) => /^https?:\/\//i.test(u))
+  const sub = child ? await fetchSiteFile(ctx, child, MAX_SITEMAP) : null
+  const subParsed = sub ? parseSitemap(sub.text) : null
+  return {
+    url: subParsed && child ? child : first,
+    urls: subParsed?.urls ?? [],
+    children: parsed.children.length,
+    truncated: file.truncated || !!sub?.truncated
+  }
 }
 
 async function getText(ctx: ModuleContext, url: string): Promise<string | null> {
@@ -124,10 +210,10 @@ async function getText(ctx: ModuleContext, url: string): Promise<string | null> 
 
 export default defineModule({
   id: 'web.robots',
-  name: { fr: 'robots.txt et security.txt', en: 'robots.txt and security.txt' },
+  name: { fr: 'robots.txt, security.txt et plan du site', en: 'robots.txt, security.txt and sitemap' },
   description: {
-    fr: 'Contacte le site cible pour lire robots.txt (chemins cachés aux moteurs, sitemaps) et security.txt (contacts sécurité, politique de divulgation, recrutement).',
-    en: 'Contacts the target site to read robots.txt (paths hidden from search engines, sitemaps) and security.txt (security contacts, disclosure policy, hiring).'
+    fr: 'Contacte le site cible pour lire robots.txt (chemins cachés aux moteurs, sitemaps), security.txt (contacts sécurité, politique de divulgation, recrutement) et le premier plan du site annoncé (nombre de pages, documents PDF et bureautiques cités, 2 Mo au plus).',
+    en: 'Contacts the target site to read robots.txt (paths hidden from search engines, sitemaps), security.txt (security contacts, disclosure policy, hiring) and the first advertised sitemap (page count, PDF and office documents listed, 2 MB at most).'
   },
   category: 'web',
   inputTypes: ['url', 'website', 'domain'],
@@ -152,11 +238,14 @@ export default defineModule({
       }
       return {}
     }
+    const robots = robotsTxt !== null ? parseRobots(robotsTxt) : null
+    const sitemap = robots?.sitemaps.length ? await readFirstSitemap(ctx, robots.sitemaps).catch(() => null) : null
     return buildRobotsOutput(
-      robotsTxt !== null ? parseRobots(robotsTxt) : null,
+      robots,
       securityTxt !== null && /contact\s*:/i.test(securityTxt) ? parseSecurityTxt(securityTxt) : null,
       origin,
-      ctx.lang
+      ctx.lang,
+      sitemap
     )
   }
 })

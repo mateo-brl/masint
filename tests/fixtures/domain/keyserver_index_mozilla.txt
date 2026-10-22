@@ -1,0 +1,14 @@
+info:1:6
+pub:ADEFB2E2457DB7371A03134BA7CD99DA64E9DED7:1:4096:1730781483::
+uid:Mozilla Security <security@mozilla.org>:1730781483:1825389483:
+pub:F57F372A8C6D4F5572DEC9B9696E34310E3606D9:17:1024:1128019161::
+uid:Mozilla Software Releases <releases@mozilla.org>:1128019161::
+pub:5C2CFC2C667D0528490235851B8B4D46108237D9:17:1024:1089402594::
+uid:Mozilla Client Release (Release Signing Key) <cltbld@mozilla.org>:1089402594::
+pub:0000000000000000000000000000000000000A01:1:4096:1500000000::r
+uid:Mozilla Security (ancienne cl%C3%A9) <security@mozilla.org>:1500000000::
+pub:0000000000000000000000000000000000000A02:1:4096:1600000000::
+uid:%C3%89quipe Exemple (Example.org) <equipe@example.org>:1600000000::
+uid:Exemple Webmaster <webmaster@lists.mozilla.org>:1600000000::
+uid:Exemple Imitation <security@notmozilla.org>:1600000000::
+pub:0000000000000000000000000000000000000A03:1:4096:1650000000::
