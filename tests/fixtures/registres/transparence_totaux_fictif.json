@@ -1,0 +1,23 @@
+{
+ "total_count": 3,
+ "results": [
+  {
+   "lien_interet": "avantage",
+   "n": 12,
+   "total": 1534.5,
+   "last": "2025-11-30T00:00:00+00:00"
+  },
+  {
+   "lien_interet": "convention",
+   "n": 5,
+   "total": 4000.0,
+   "last": "2026-02-01T00:00:00+00:00"
+  },
+  {
+   "lien_interet": "remuneration",
+   "n": 2,
+   "total": 3000.0,
+   "last": "2025-06-15T00:00:00+00:00"
+  }
+ ]
+}
