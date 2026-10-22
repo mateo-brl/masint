@@ -37,7 +37,8 @@
     "src/shared/**/*",
     "tests/export*.test.ts",
     "tests/layout.test.ts",
-    "tests/collapse.test.ts"
+    "tests/collapse.test.ts",
+    "tests/consistency.test.ts"
   ],
   "exclude": [
     "src/shared/modules.ts"

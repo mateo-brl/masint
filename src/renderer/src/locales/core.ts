@@ -98,6 +98,31 @@ const fr = {
     moreRunning: '+{{count}} autres en cours',
     running: 'en cours'
   },
+  assist: {
+    run: 'Chercher',
+    running: 'Recherche…',
+    runTitle: 'Lancer la recherche dans MASINT : seuls les résultats qui contiennent la valeur sont gardés. Une fenêtre s’ouvre si un captcha ou une connexion est nécessaire.',
+    runAll_one: 'Tout chercher ({{count}})',
+    runAll_other: 'Tout chercher ({{count}})',
+    runAllTitle: 'Lancer toutes les recherches de la liste, l’une après l’autre',
+    cancelled: 'Recherche annulée (fenêtre fermée).',
+    timeout: 'La page n’a pas répondu à temps.',
+    none: 'Aucun résultat ne contient la valeur.',
+    found_one: '{{count}} résultat contient la valeur',
+    found_other: '{{count}} résultats contiennent la valeur',
+    add: 'Ajouter',
+    addTitle: 'Ajouter ce résultat au graphe'
+  },
+  consistency: {
+    title: 'Cohérence des indices',
+    one: 'Une seule identité dans les indices',
+    many_one: '{{count}} identités différentes',
+    many_other: '{{count}} identités différentes',
+    period: 'Indices datés de {{from}} à {{to}} ({{count}} dates)',
+    year_one: 'Indice daté de {{year}}',
+    year_other: 'Indices datés de {{year}} ({{count}} dates)',
+    hint: 'Identifiant partagé, ou numéro réattribué par l’opérateur ? Comparez les dates et les sources avant de conclure.'
+  },
   collapse: {
     collapse: 'Réduire',
     expand: 'Déplier',
@@ -468,6 +493,31 @@ const en: typeof fr = {
     details: 'Module details',
     moreRunning: '+{{count}} more running',
     running: 'running'
+  },
+  assist: {
+    run: 'Search',
+    running: 'Searching…',
+    runTitle: 'Run the search inside MASINT: only results containing the value are kept. A window opens if a captcha or a login is needed.',
+    runAll_one: 'Search all ({{count}})',
+    runAll_other: 'Search all ({{count}})',
+    runAllTitle: 'Run every search in the list, one after the other',
+    cancelled: 'Search cancelled (window closed).',
+    timeout: 'The page did not answer in time.',
+    none: 'No result contains the value.',
+    found_one: '{{count}} result contains the value',
+    found_other: '{{count}} results contain the value',
+    add: 'Add',
+    addTitle: 'Add this result to the graph'
+  },
+  consistency: {
+    title: 'Evidence consistency',
+    one: 'A single identity in the evidence',
+    many_one: '{{count}} different identities',
+    many_other: '{{count}} different identities',
+    period: 'Dated evidence from {{from}} to {{to}} ({{count}} dates)',
+    year_one: 'Evidence dated {{year}}',
+    year_other: 'Evidence dated {{year}} ({{count}} dates)',
+    hint: 'Shared identifier, or number reassigned by the carrier? Compare dates and sources before concluding.'
   },
   collapse: {
     collapse: 'Collapse',

@@ -112,6 +112,16 @@ jamais seuls.
 
 ## Configuration
 
+### Résultats à vérifier et recherche assistée
+
+Les hypothèses (pseudos générés, homonymes...) et les recherches qu'un module ne peut pas faire
+seul attendent dans **À vérifier** (fiche du nœud, compteur dans la barre du haut) : seul ce que
+l'enquêteur valide entre dans le graphe. Une recherche manuelle (Google, annuaire inversé,
+Truecaller...) peut être lancée dans MASINT avec **Chercher** : la page s'ouvre dans un navigateur
+intégré, à travers le proxy ou Tor configuré, avec une session gardée d'une fois sur l'autre ; la
+fenêtre ne s'affiche que si un captcha ou une connexion le demande, et seuls les résultats qui
+contiennent la valeur cherchée sont proposés.
+
 ### Clés API
 
 Certains modules demandent une clé (Have I Been Pwned, Shodan, VirusTotal, roso.info...). Elles

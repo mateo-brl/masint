@@ -167,8 +167,12 @@ dans la liste « À vérifier » de la fiche, où l'enquêteur valide ou écarte
   dans le graphe que si l'enquêteur la valide. Si la même entité existe déjà dans l'enquête,
   elle est reliée directement. Une suggestion écartée n'est plus proposée.
 - `manual: [{ label, url, hint }]` : recherche que le module ne peut pas faire lui-même (compte
-  requis, captcha, pas d'API). L'enquêteur ouvre la page, puis note « rien trouvé » ou saisit
-  ce qu'il a trouvé, qui devient une entité reliée.
+  requis, captcha, pas d'API). L'enquêteur la lance dans MASINT (« Chercher » : navigateur
+  intégré, session persistante, proxy et Tor respectés ; la fenêtre ne s'affiche que pour un
+  captcha ou une connexion) et ne garde que les résultats qui contiennent la valeur, ou ouvre
+  la page lui-même, puis note « rien trouvé » ou ce qu'il a trouvé.
+- `followUp: true` sur un module : il est relancé à la fin d'une tâche quand les résultats des
+  autres modules le rendent applicable (ex. recoupement des indices masqués).
 
 Avant de proposer une recherche manuelle, cherchez à l'automatiser : un lien de recherche que
 l'enquêteur doit ouvrir lui-même n'apporte presque rien. Aucun module ne crée de nœud

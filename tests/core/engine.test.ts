@@ -241,6 +241,19 @@ describe('Résultats à vérifier', () => {
   })
 })
 
+describe('Modules de suite', () => {
+  it('relance le recoupement des indices après un module choisi à la main', async () => {
+    const inv = repo.createInvestigation({ name: 'Suite' })
+    // Indices déjà présents : le recoupement (followUp) s'applique et n'était pas demandé.
+    const [n] = repo.upsertNodes(inv.id, [{ type: 'phone', label: '+33612345678', data: { masked_emails: ['a•••••@g•••••.com (Apple)'] } }])
+    engine.enrich(inv.id, n.id, ['phone.info'])
+    for (let i = 0; i < 100 && engine.listJobs().length; i++) await new Promise((r) => setTimeout(r, 50))
+    const ran = repo.listRuns(inv.id, n.id).map((r) => r.moduleId).sort()
+    expect(ran).toEqual(['hints.crossmatch', 'phone.info'])
+    expect(String(repo.getNode(n.id)!.data.hint_deductions)).toMatch(/gmail\.com/)
+  })
+})
+
 describe('Rangement des anciennes enquêtes', () => {
   it('déplace les liens de recherche et pseudos générés intacts dans « À vérifier »', () => {
     const inv = repo.createInvestigation({ name: 'Ancienne' })

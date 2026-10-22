@@ -128,6 +128,12 @@ export interface OsintModule {
   timeoutMs?: number
   /** Filtre supplémentaire sur l'entité (ex. plateforme précise). */
   accepts?(input: InputEntity): boolean
+  /**
+   * Relancé à la fin d'une tâche quand les résultats des autres modules le rendent applicable
+   * (ex. recoupement des indices masqués après un scan qui en a trouvé), même si cette tâche ne
+   * lançait qu'un module choisi à la main.
+   */
+  followUp?: boolean
   run(input: InputEntity, ctx: ModuleContext): Promise<ModuleOutput>
 }
 

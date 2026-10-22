@@ -15,6 +15,7 @@ import { Button, confirmDialog, Dialog, Spinner, Switch, Tabs } from '../ui'
 import { ReviewList } from './ReviewList'
 import { revealNode, useView } from '../../store/view'
 import { computeView } from '../../lib/collapse'
+import { analyzeConsistency } from '../../lib/consistency'
 
 const SWATCHES = ['#e5484d', '#f76b15', '#ffc53d', '#30a46c', '#12a594', '#0090ff', '#6e56cf', '#d6409f', '#8d8d93', '#ededef']
 
@@ -240,6 +241,7 @@ function EntitySheet({ node }: { node: GraphNode }): React.JSX.Element {
       </label>
 
       <NodeReview node={node} />
+      <ConsistencyBlock node={node} />
       <div className="border-t border-line" />
       <div className="text-[12.5px] font-semibold">{t('props.imageInfo')}</div>
       <ImageDrop node={node} />
@@ -640,6 +642,43 @@ function EnrichBlock({ node }: { node: GraphNode }): React.JSX.Element {
           ))}
         </div>
       </Dialog>
+    </div>
+  )
+}
+
+/**
+ * Cohérence des indices rattachés à un identifiant : plusieurs identités différentes signalent un
+ * numéro ou un email partagé, ou réattribué par l'opérateur.
+ */
+function ConsistencyBlock({ node }: { node: GraphNode }): React.JSX.Element | null {
+  const { t } = useTranslation()
+  const nodes = useGraph((s) => s.nodes)
+  const edges = useGraph((s) => s.edges)
+  const c = useMemo(
+    () =>
+      analyzeConsistency(
+        node.id,
+        nodes.map((n) => n.data.node),
+        edges.map((e) => e.data!.edge)
+      ),
+    [node.id, nodes, edges]
+  )
+  if (!['phone', 'email', 'username'].includes(node.type) || (!c.identities.length && !c.dated)) return null
+  const many = c.identities.length > 1
+  const period = c.dated ? (c.from === c.to ? t('consistency.year', { year: c.from, count: c.dated }) : t('consistency.period', { from: c.from, to: c.to, count: c.dated })) : null
+  return (
+    <div className={`flex flex-col gap-1.5 rounded-xl border p-2.5 text-[12px] ${many ? 'border-warning/40 bg-warning/5' : 'border-line bg-panel-2/40'}`}>
+      <div className="flex items-center gap-2 font-semibold">
+        <Icon name={many ? 'TriangleAlert' : 'UserCheck'} size={14} className={many ? 'text-warning' : 'text-success'} />
+        {many ? t('consistency.many', { count: c.identities.length }) : c.identities.length ? t('consistency.one') : t('consistency.title')}
+      </div>
+      {c.identities.map((i) => (
+        <div key={i.name} className="leading-snug">
+          <span className="font-medium">{i.name}</span> <span className="text-muted">· {i.sources.join(', ')}</span>
+        </div>
+      ))}
+      {period && <div className="text-muted">{period}</div>}
+      {many && <div className="leading-snug text-muted">{t('consistency.hint')}</div>}
     </div>
   )
 }

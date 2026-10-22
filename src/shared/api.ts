@@ -2,6 +2,7 @@
 // Chaque entrée de `ApiMap` correspond à un canal `ipcMain.handle`.
 
 import type {
+  AssistResult,
   Attachment,
   EdgeInput,
   GraphChange,
@@ -14,6 +15,7 @@ import type {
   ModuleRun,
   NodeInput,
   ProxyTestResult,
+  PropValue,
   RosoStatus,
   SecretStatus,
   Suggestion,
@@ -70,7 +72,13 @@ export interface ApiMap {
   /** Résultats à vérifier d'une enquête, ou d'un nœud. */
   'suggestions:list': (investigationId: string, nodeId?: string) => Suggestion[]
   /** Valider, écarter ou rouvrir un résultat à vérifier (voir Engine.resolveSuggestion). */
-  'suggestions:resolve': (id: string, action: 'accept' | 'reject' | 'checked' | 'reopen', found?: { type: string; label: string; platform?: string | null }) => void
+  'suggestions:resolve': (
+    id: string,
+    action: 'accept' | 'reject' | 'checked' | 'reopen',
+    found?: { type: string; label: string; platform?: string | null; data?: Record<string, PropValue> }
+  ) => void
+  /** Lance une recherche manuelle dans le navigateur intégré et renvoie les résultats qui contiennent la valeur. */
+  'assist:run': (suggestionId: string) => AssistResult
   'modules:applicable': (nodeId: string) => { auto: string[]; accepted: string[] }
   'modules:setEnabled': (moduleId: string, enabled: boolean) => void
   /** Données brutes archivées d'une exécution (réponse du service). */
