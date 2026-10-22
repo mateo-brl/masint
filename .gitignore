@@ -9,3 +9,4 @@ release/
 coverage/
 .out-*/
 *.tsbuildinfo
+.claude/worktrees/

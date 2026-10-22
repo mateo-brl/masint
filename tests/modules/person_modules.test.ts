@@ -228,6 +228,7 @@ describe('Journal officiel (JORFSearch)', () => {
     const out = await jorf.run(person('Camille Exemple'), fakeContext([[/jorfsearch/, { status: 503, body: 'down' }]]))
     expect(out.entities).toBeUndefined()
     expect(out.manual![0].label).toBe('Légifrance (Journal officiel)')
+    expect(out.manual![0].hint).toMatch(/JORFSearch n’a pas répondu/)
   })
 })
 

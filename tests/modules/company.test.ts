@@ -1,12 +1,13 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { frenchVat, headcountLabel, legalFormLabel, luhnOk, nafLabel, normName, titleCase } from '../../src/main/modules/company/_fr'
 import { chOutput, officerName } from '../../src/main/modules/company/companiesHouse'
 import { parseOpenCorporates } from '../../src/main/modules/company/opencorporates'
 import registry, { candidatesOutput, companyOutput, pickResult, searchQuery } from '../../src/main/modules/company/recherche'
 import vies, { frenchKeyOk, parseVat, viesOutput } from '../../src/main/modules/company/vies'
 import { entity, LIVE, runModule } from '../helpers/context'
+import { fakeContext } from './social_helpers'
 
 const json = (name: string) => JSON.parse(readFileSync(join(__dirname, '../fixtures/company', name), 'utf8'))
 const fr = { lang: 'fr' as const }
@@ -119,6 +120,31 @@ describe('company : services à clé (format documenté)', () => {
     expect(out.properties?.address).toBe('1 High Street, London, E1 1AA')
     expect(out.entities?.map((e) => e.type)).toEqual(['address', 'person', 'company'])
     expect(out.entities?.[1].data?.birth_date).toBe('1980-03')
+  })
+})
+
+describe('company.vies (service saturé)', () => {
+  afterEach(() => vi.useRealTimers())
+
+  it('France : réessaie puis déduit le SIREN sans VIES', async () => {
+    vi.useFakeTimers()
+    let calls = 0
+    const ctx = fakeContext([[/ec\.europa\.eu/, () => (calls++, { body: json('vies_busy.json') })]])
+    const run = vies.run(entity('vat', 'FR40303265045'), ctx)
+    await vi.runAllTimersAsync()
+    const out = await run
+    expect(calls).toBe(4)
+    expect(out.properties).toMatchObject({ siren: '303265045', key_ok: true })
+    expect(out.properties?.vies_status).toMatch(/indisponible/)
+  })
+
+  it('autre pays : erreur explicite après les nouvelles tentatives', async () => {
+    vi.useFakeTimers()
+    const ctx = fakeContext([[/ec\.europa\.eu/, { body: json('vies_busy.json') }]])
+    const run = vies.run(entity('vat', 'BE0403170701'), ctx)
+    const check = expect(run).rejects.toThrow(/saturé/)
+    await vi.runAllTimersAsync()
+    await check
   })
 })
 
