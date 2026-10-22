@@ -16,6 +16,7 @@ import {
   formatPayload,
   hasNestedQuantifier,
   isLegalFor,
+  isPublicHttpUrl,
   mergeEntry,
   probeUrl,
   profileUrl,
@@ -84,6 +85,12 @@ describe('lecture des entrées Maigret', () => {
     expect(reason({ url: 'https://s.test/profile' })).toBe('url')
     expect(reason({ ...base, engine: 'Inconnu' })).toBe('engine')
     expect(reason({ ...base, checkType: 'regex' })).toBe('check_type')
+    // URL interrogée hors du web public (base mise à jour malveillante) : jamais interrogée.
+    expect(reason({ ...base, urlProbe: 'http://127.0.0.1:8080/{username}' })).toBe('url')
+    expect(reason({ ...base, urlProbe: 'file:///etc/{username}' })).toBe('url')
+    expect(isPublicHttpUrl('https://forum.example.org/u/x')).toBe(true)
+    for (const u of ['http://localhost/x', 'http://192.168.1.1/x', 'http://10.0.0.2/', 'http://[::1]/', 'http://169.254.169.254/latest', 'ftp://example.org/'])
+      expect(isPublicHttpUrl(u), u).toBe(false)
   })
 })
 
@@ -449,6 +456,25 @@ describe.skipIf(!LIVE)('live', () => {
     for (const r of res) expect(['ok', 'inconclusive'], `${r.name} ${r.claimed}/${r.random} ${r.detail ?? ''}`).toContain(r.verdict)
     expect(res.filter((r) => r.verdict === 'ok').length).toBeGreaterThan(1)
   }, 120000)
+
+  it('mise à jour réelle depuis GitHub : db_meta.json, téléchargement et empreinte', async (t) => {
+    const dir = mkdtempSync(join(tmpdir(), 'masint-sites-live-'))
+    try {
+      configureSiteData({ userDir: dir })
+      const ctx = makeContext()
+      const out = await updateDb(ctx.fetch, { force: true }).catch((e: Error) => {
+        if (/fetch failed|délai|HTTP 5\d\d|HTTP 429/i.test(e.message)) t.skip()
+        throw e
+      })
+      expect(out.status).toBe('updated')
+      expect(out.sites).toBeGreaterThan(5000)
+      expect(dbInfo().source).toBe('user')
+      expect(tierSites('essential').length).toBeGreaterThan(600)
+    } finally {
+      configureSiteData({})
+      rmSync(dir, { recursive: true, force: true })
+    }
+  }, 180000)
 
   // Plusieurs minutes : LIVE=1 LIVE_EXTENDED=1 npx vitest run tests/modules/username_maigret.test.ts
   it.skipIf(!process.env.LIVE_EXTENDED)('palier Étendu sur un pseudo aléatoire (durée mesurée)', async () => {

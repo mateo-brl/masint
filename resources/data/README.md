@@ -167,7 +167,8 @@ Paramètres, onglet Général, « Mettre à jour la base des sites » : MASINT l
 utilisée, vérifie son empreinte SHA-256 et son schéma, puis l'écrit dans le dossier utilisateur
 (`sites/maigret-sites.json`, avec `sites/maigret-sites.meta.json`). Garde-fous : `data_url` en
 HTTPS sur un hôte de GitHub uniquement (y compris après redirection), 20 Mo au plus, au moins
-1 000 sites. Au chargement, la copie n'est utilisée que si son empreinte correspond encore et
+1 000 sites, expressions `regexCheck` compilées avec les protections décrites plus bas, et
+aucune URL interrogée hors du web public (ni `localhost`, ni adresse privée ou de lien local). Au chargement, la copie n'est utilisée que si son empreinte correspond encore et
 qu'elle est plus récente que la base embarquée, qui reste le secours. Les requêtes passent par
 le proxy ou Tor des modules de pseudo.
 
