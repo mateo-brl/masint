@@ -261,6 +261,12 @@ forums.triplea-game.org, git.keks.cloud, git.konjactw.dev, git.tcp.direct, quik,
 rbxlegacy.wiki, SportsTracker, wiki-es.guildwars2.com, wiki.teamfortress.com, WOW Circle,
 yamaya.ru. Aucun site Sherlock n'est en faux positif après la liste noire existante.
 
+Durée des modules, même sortie réseau, pseudo aléatoire (aucun compte ni forum trouvé dans les
+deux cas, liste noire appliquée) : `username.sites`, 695 sites en 46 s (concurrence 16, délai
+12 s) ; `username.sites_extended`, 7 212 sites en 6 min 21 s (concurrence 24, délai 10 s,
+790 erreurs et 328 pare-feu). Avec le pseudo témoin « blue » de Sherlock, `username.sites`
+dure 44 s.
+
 Les sites dont le témoin n'est plus trouvé (63 dans le palier Essentiel, dont 53 Sherlock :
 Gravatar, PyPi, Roblox, DeviantArt...) ne donnent jamais de faux compte ; le contrôle témoin
 de l'utilisateur les met en échec pour 7 jours.
