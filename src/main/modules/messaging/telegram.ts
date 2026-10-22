@@ -1,4 +1,4 @@
-import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
+import { defineModule, ModuleError, type InputEntity, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
 import { acceptsPlatform, compact, decodeHtml, htmlToText, linkedEntities, metaContent, toNumber, usernameOf, type Lang } from '../social/_lib'
 
@@ -50,6 +50,30 @@ export function parseTelegram(html: string): TelegramPage | null {
   }
 }
 
+/** Date du dernier message visible dans l'aperçu public d'un canal (t.me/s/<pseudo>). */
+export function parsePreview(html: string): { lastPostAt?: string; posts: number } {
+  const dates = [...html.matchAll(/class="tgme_widget_message_date"[^>]*>\s*<time datetime="([^"]+)"/g)]
+    .map((m) => Date.parse(m[1]))
+    .filter((t) => !Number.isNaN(t))
+  return { lastPostAt: dates.length ? new Date(Math.max(...dates)).toISOString() : undefined, posts: dates.length }
+}
+
+const TME_RE = /^(?:https?:\/\/)?(?:www\.)?(?:t|telegram)\.me\/(?:s\/)?([A-Za-z]\w{3,31})\/?(?:[?#].*)?$/i
+
+/**
+ * Pseudo Telegram d'un canal ou d'un groupe produit par un autre module : `data.username`,
+ * sinon le lien t.me (ou l'aperçu t.me/s/) de `data.url`, `data.preview_url` ou du libellé.
+ */
+export function groupUsername(input: Pick<InputEntity, 'label' | 'data' | 'platform'>): string | null {
+  const fromData = typeof input.data.username === 'string' ? input.data.username.replace(/^@/, '').trim() : ''
+  if (fromData && input.platform === 'telegram') return fromData
+  for (const c of [input.data.url, input.data.preview_url, input.label]) {
+    const m = typeof c === 'string' ? c.trim().match(TME_RE) : null
+    if (m) return m[1]
+  }
+  return null
+}
+
 const KIND_LABEL: Record<TelegramKind, { fr: string; en: string }> = {
   user: { fr: 'utilisateur', en: 'user' },
   bot: { fr: 'bot', en: 'bot' },
@@ -90,23 +114,35 @@ export default defineModule({
   id: 'messaging.telegram',
   name: { fr: 'Telegram (page publique)', en: 'Telegram (public page)' },
   description: {
-    fr: 'Lit la page publique t.me/<pseudo> sans compte : existence du pseudo, type (utilisateur, bot, canal, groupe), nom, bio, photo, badge vérifié et nombre d’abonnés ou de membres.',
-    en: 'Reads the public t.me/<username> page without an account: whether the username exists, type (user, bot, channel, group), name, bio, picture, verified badge and subscriber or member count.'
+    fr: 'Lit la page publique t.me/<pseudo> sans compte : existence du pseudo, type (utilisateur, bot, canal, groupe), nom, bio, photo, badge vérifié, nombre d’abonnés ou de membres et, pour un canal, date du dernier message (aperçu t.me/s/). Lit aussi les canaux et groupes Telegram déjà dans le graphe.',
+    en: 'Reads the public t.me/<username> page without an account: whether the username exists, type (user, bot, channel, group), name, bio, picture, verified badge, subscriber or member count and, for a channel, date of the latest post (t.me/s/ preview). Also reads Telegram channels and groups already in the graph.'
   },
   category: 'messaging',
-  inputTypes: ['username', 'account'],
-  accepts: acceptsPlatform('telegram'),
+  // `group` : canaux et groupes Telegram créés par d'autres modules (liens t.me d'une page, d'une bio).
+  inputTypes: ['username', 'account', 'group'],
+  accepts: (input) => (input.type === 'group' ? groupUsername(input) !== null : acceptsPlatform('telegram')(input)),
   homepage: 'https://t.me',
   async run(input, ctx) {
-    const username = usernameOf(input)
+    const username = input.type === 'group' ? (groupUsername(input) ?? '') : usernameOf(input)
     if (!/^[a-z][a-z0-9_]{3,31}$/i.test(username)) throw new ModuleError('Pseudo Telegram invalide (5 à 32 caractères, lettres, chiffres, _)', 'invalid_input')
     const html = await ctx.fetchText(`https://t.me/${encodeURIComponent(username)}`, { headers: { 'accept-language': 'en-US,en;q=0.9' } })
     const page = parseTelegram(html)
     if (!page) return { found: false }
     const out = telegramOutput(username, page, ctx.lang)
-    if (input.type === 'account') {
+    // Canal public : l'aperçu t.me/s/ donne ses derniers messages, donc sa dernière activité.
+    if (page.kind === 'channel') {
+      const preview = await ctx
+        .fetchText(`https://t.me/s/${encodeURIComponent(username)}`, { headers: { 'accept-language': 'en-US,en;q=0.9' } })
+        .then(parsePreview)
+        .catch(() => null)
+      // `out.data` est aussi l'objet `data` de l'entité créée pour un pseudo.
+      if (preview?.lastPostAt) out.data.last_post_at = preview.lastPostAt
+    }
+    if (input.type === 'account' || input.type === 'group') {
+      // Même nœud (type, libellé et plateforme de l'entrée) : propriétés et photo s'y ajoutent,
+      // les liens de la description s'y rattachent.
       const entities: OutEntity[] = []
-      if (page.photo) entities.push({ type: 'account', label: input.label, platform: input.platform ?? 'telegram', image: page.photo })
+      if (page.photo) entities.push({ type: input.type, label: input.label, platform: input.platform ?? undefined, image: page.photo })
       entities.push(...out.children.map((c) => ({ ...c, from: undefined })))
       return { found: true, properties: out.data, entities, raw: page }
     }

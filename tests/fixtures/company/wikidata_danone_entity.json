@@ -1,0 +1,647 @@
+{
+ "entities": {
+  "Q329426": {
+   "id": "Q329426",
+   "labels": {
+    "fr": {
+     "language": "fr",
+     "value": "Danone"
+    },
+    "en": {
+     "language": "en",
+     "value": "Danone"
+    }
+   },
+   "descriptions": {
+    "fr": {
+     "language": "fr",
+     "value": "groupe industriel multinational fondé en France"
+    },
+    "en": {
+     "language": "en",
+     "value": "French food company"
+    }
+   },
+   "claims": {
+    "P31": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 1252971,
+         "id": "Q1252971"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 43229,
+         "id": "Q43229"
+        }
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P856": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "https://www.danone.com/fr.html"
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "http://dap-health.co.in/"
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "https://www.danone.com/"
+       }
+      },
+      "rank": "preferred"
+     }
+    ],
+    "P1278": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "969500KMUQ2B6CBAF162"
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P1616": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "552032534"
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P355": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 17032450,
+         "id": "Q17032450"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 343276,
+         "id": "Q343276"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 633382,
+         "id": "Q633382"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 1047243,
+         "id": "Q1047243"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 1050918,
+         "id": "Q1050918"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 2104662,
+         "id": "Q2104662"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 2390384,
+         "id": "Q2390384"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 2878765,
+         "id": "Q2878765"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 2907440,
+         "id": "Q2907440"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 3013458,
+         "id": "Q3013458"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 3015341,
+         "id": "Q3015341"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 3104408,
+         "id": "Q3104408"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 3212705,
+         "id": "Q3212705"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 3499743,
+         "id": "Q3499743"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 3514008,
+         "id": "Q3514008"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 28971347,
+         "id": "Q28971347"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 28971348,
+         "id": "Q28971348"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 28971349,
+         "id": "Q28971349"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 28971350,
+         "id": "Q28971350"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 36878622,
+         "id": "Q36878622"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 107407410,
+         "id": "Q107407410"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 18379350,
+         "id": "Q18379350"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2017-00-00T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 110888003,
+         "id": "Q110888003"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 4037021,
+         "id": "Q4037021"
+        }
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P159": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 90,
+         "id": "Q90"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2025-09-17T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 90,
+         "id": "Q90"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2025-09-18T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ],
+    "P571": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "time": "+1919-01-01T00:00:00Z",
+         "timezone": 0,
+         "before": 0,
+         "after": 0,
+         "precision": 9,
+         "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+        }
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P452": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 540912,
+         "id": "Q540912"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 1187656,
+         "id": "Q1187656"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 112166038,
+         "id": "Q112166038"
+        }
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P3608": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "FR27552032534"
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P1128": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "amount": "+101911",
+         "unit": "1"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "amount": "+98105",
+         "unit": "1"
+        }
+       }
+      },
+      "rank": "preferred"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "amount": "+100000",
+         "unit": "1"
+        }
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P2002": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "Danone"
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2010-06-16T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ],
+    "P2003": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "lifeatdanone"
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P2013": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "Danone"
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P4264": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "danone"
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P2397": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "UCiMLbvE_0sP98wNLEHHoEdw"
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2011-10-03T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ]
+   }
+  }
+ }
+}

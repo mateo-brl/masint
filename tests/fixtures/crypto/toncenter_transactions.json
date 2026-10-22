@@ -1,0 +1,36 @@
+{
+ "ok": true,
+ "result": [
+  {
+   "@type": "ext.transaction",
+   "address": {
+    "@type": "accountAddress",
+    "account_address": "EQCD39VS5jcptHL8vMjEXrzGaRcCVYto7HUn4bpAOg8xqB2N"
+   },
+   "account": "0:83DFD552E63729B472FCBCC8C45EBCC6691702558B68EC7527E1BA403A0F31A8",
+   "utime": 1791870707,
+   "transaction_id": {
+    "@type": "internal.transactionId",
+    "lt": "109633787000015",
+    "hash": "10beCuKo9PUZEz6P/6NcvPePRnh8BPumR+7KzQOZyPU="
+   },
+   "fee": "6668",
+   "storage_fee": "1",
+   "other_fee": "6667",
+   "in_msg": {
+    "@type": "ext.message",
+    "hash": "wXnF7ooXZ5t2c0cFSLUHn7w7Gic0QfiobS3fss8of1I=",
+    "source": "EQC8j_29k20AmifgBK6y-1S_Ke5IOcQLiHD6-7wI9dpvv9o8",
+    "destination": "EQCD39VS5jcptHL8vMjEXrzGaRcCVYto7HUn4bpAOg8xqB2N",
+    "value": "10000000",
+    "extra_currencies": [],
+    "fwd_fee": "44446",
+    "ihr_fee": "0",
+    "created_lt": "109633787000014",
+    "body_hash": "0aldgd+xJfhnqvlJLlj7lAbNUlI94lnzhefaI2fK3lI="
+   },
+   "out_msgs": []
+  }
+ ],
+ "@extra": "1792687611:1:11.728"
+}

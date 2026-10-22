@@ -1,0 +1,318 @@
+{
+ "results": {
+  "bindings": [
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q90"
+    },
+    "coord": {
+     "datatype": "http://www.opengis.net/ont/geosparql#wktLiteral",
+     "type": "literal",
+     "value": "Point(2.352222222 48.856666666)"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Paris"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q343276"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Actimel"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q540912"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "industrie alimentaire"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q633382"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Grameen Danone Foods"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q1047243"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Volvic"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q1050918"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Évian"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q1187656"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "biens de grande consommation"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q2104662"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Numico"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q2390384"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Arvie"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q2878765"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Badoit"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q2907440"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Blédina"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q3013458"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Danette"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q3015341"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Danone"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q3104408"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Gervais"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q3212705"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "La Salvetat"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q3499743"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Stonyfield Farm"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q3514008"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Taillefine"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q4037021"
+    },
+    "itemLabel": {
+     "type": "literal",
+     "value": "Q4037021"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q17032450"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Wahaha Joint Venture Company"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q18379350"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "WhiteWave Foods"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q28971347"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Danone (Netherlands)"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q28971348"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Danone (France)"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q28971349"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Danone (Morocco)"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q28971350"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Danone"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q36878622"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Danone"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q107407410"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Bagley Argentina S.A."
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q110888003"
+    },
+    "itemLabel": {
+     "xml:lang": "mul",
+     "type": "literal",
+     "value": "Aguas Danone SA"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q112166038"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "activités des sièges sociaux"
+    }
+   }
+  ]
+ }
+}

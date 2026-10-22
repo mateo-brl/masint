@@ -48,7 +48,8 @@ export function detectCryptoChain(q: string): string | null {
   if (/^D[5-9A-HJ-NP-U][1-9A-HJ-NP-Za-km-z]{32}$/.test(q)) return 'dogecoin'
   if (/^4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}$/.test(q)) return 'monero'
   if (/^r[1-9A-HJ-NP-Za-km-z]{24,34}$/.test(q)) return 'xrp'
-  if (/^(EQ|UQ)[A-Za-z0-9_-]{46}$/.test(q)) return 'ton'
+  // TON : forme conviviale (EQ/UQ + 46 caractères base64url) ou brute (`0:` + 64 hex).
+  if (/^(EQ|UQ)[A-Za-z0-9_-]{46}$/.test(q) || /^-?[01]:[0-9a-fA-F]{64}$/.test(q)) return 'ton'
   if (/^addr1[a-z0-9]{50,}$/.test(q)) return 'cardano'
   if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(q) && !/^\d+$/.test(q)) return 'solana'
   return null

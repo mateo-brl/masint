@@ -1,0 +1,47 @@
+{
+ "hash": "3c9105b5eda9fbeae5d5f52b00fe2e7d539c7e542f3608b2e62b589b25524e20",
+ "block": 87306086,
+ "timestamp": 1792591344000,
+ "ownerAddress": "TNXoiAJ3dct8Fjg4M9fkLFh9S2v9TXc32G",
+ "toAddress": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+ "contractType": 31,
+ "confirmed": true,
+ "contractRet": "SUCCESS",
+ "cost": {
+  "net_fee_cost": 1000,
+  "date_created": 1792591344,
+  "fee": 0,
+  "energy_fee_cost": 100,
+  "net_usage": 345,
+  "multi_sign_fee": 0,
+  "net_fee": 0,
+  "energy_penalty_total": 100635,
+  "energy_usage": 130285,
+  "energy_fee": 0,
+  "energy_usage_total": 130285,
+  "memoFee": 0,
+  "origin_energy_usage": 0
+ },
+ "contractData": {
+  "owner_address": "TNXoiAJ3dct8Fjg4M9fkLFh9S2v9TXc32G",
+  "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+ },
+ "addressTag": {
+  "TNXoiAJ3dct8Fjg4M9fkLFh9S2v9TXc32G": "Binance-Hot 4"
+ },
+ "contract_map": {
+  "TNXoiAJ3dct8Fjg4M9fkLFh9S2v9TXc32G": false,
+  "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t": true,
+  "TAnonymizedRecipient11111111111111": false
+ },
+ "trc20TransferInfo": [
+  {
+   "symbol": "USDT",
+   "to_address": "TAnonymizedRecipient11111111111111",
+   "contract_address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+   "decimals": 6,
+   "from_address": "TNXoiAJ3dct8Fjg4M9fkLFh9S2v9TXc32G",
+   "amount_str": "30000000"
+  }
+ ]
+}

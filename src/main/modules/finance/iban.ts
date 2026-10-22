@@ -48,8 +48,8 @@ export default defineModule({
   id: 'finance.iban',
   name: { fr: "Analyse de l'IBAN", en: 'IBAN analysis' },
   description: {
-    fr: "Vérifie la clé et la longueur de l'IBAN, extrait le pays, le code banque et le code guichet, et identifie la banque pour la France, Monaco et l'Espagne (liste officielle BCE embarquée). Hors ligne.",
-    en: 'Checks the IBAN check digits and length, extracts country, bank and branch codes, and identifies the bank for France, Monaco and Spain (embedded official ECB list). Offline.'
+    fr: "Vérifie la clé et la longueur de l'IBAN, extrait le pays, le code banque et le code guichet, et identifie la banque pour la France, Monaco et l'Espagne (liste officielle BCE embarquée, néobanques et établissements de paiement du registre REGAFI) ainsi que les néobanques allemandes (N26, Revolut, Qonto). Hors ligne.",
+    en: 'Checks the IBAN check digits and length, extracts country, bank and branch codes, and identifies the bank for France, Monaco and Spain (embedded official ECB list, neobanks and payment institutions from the REGAFI register) and German neobanks (N26, Revolut, Qonto). Offline.'
   },
   category: 'finance',
   inputTypes: ['iban'],

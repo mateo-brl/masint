@@ -1,68 +1,181 @@
-// Wikidata : fiche d'une personnalité publique (naissance, décès, lieu de
-// naissance, site officiel, compte X, portrait). API publique, sans clé.
+// Wikidata : fiche d'une personnalité publique (naissance, décès, lieu de naissance, fonctions
+// occupées, employeurs, études, proches, site officiel, comptes en ligne, portrait). API
+// publique, sans clé ; repli sur SPARQL et Special:EntityData quand l'API refuse (429).
 
-import { defineModule, ModuleError, type HttpError, type ModuleContext, type OutEntity } from '@shared/modules'
+import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
+import { cappedList } from '../domain/_util'
+import {
+  accountEntities,
+  claimsOf,
+  descriptionOf,
+  distinctLabel,
+  first,
+  getEntities,
+  isHuman,
+  itemId,
+  labelOf,
+  period,
+  qualifier,
+  resolveItems,
+  sameName,
+  searchCandidates,
+  wikidataDate,
+  type Claim,
+  type Resolved,
+  type WdEntity
+} from './_wikidata'
 
-const API = 'https://www.wikidata.org/w/api.php'
-// Politique de Wikimedia : un User-Agent qui identifie l'outil et permet de le contacter.
-const USER_AGENT = 'MASINT (https://github.com/mateo-brl/masint)'
+export { isHuman, wikidataDate, type WdEntity } from './_wikidata'
 
-interface SearchResponse {
-  search?: Array<{ id: string; label?: string; description?: string }>
+/** Entités reliées au graphe par type de relation (fonctions en propriété, sans plafond strict). */
+const MAX_RELATED = 10
+
+/** Proches : propriété Wikidata et libellé du lien. */
+const RELATIVES: Array<[prop: string, fr: string, en: string]> = [
+  ['P22', 'père', 'father'],
+  ['P25', 'mère', 'mother'],
+  ['P26', 'conjoint ou conjointe', 'spouse'],
+  ['P40', 'enfant', 'child']
+]
+
+const wdData = (id: string): Record<string, PropValue> => ({ wikidata_id: id, wikidata_url: `https://www.wikidata.org/wiki/${id}` })
+
+/** Éléments cités par la fiche, dont il faut le libellé (et les coordonnées du lieu de naissance). */
+export function personReferences(p: WdEntity): { ids: string[]; withCoords: string[] } {
+  const props = ['P19', 'P39', 'P108', 'P69', ...RELATIVES.map(([prop]) => prop)]
+  const ids = props.flatMap((prop) => claimsOf(p, prop).map((c) => itemId(c.mainsnak?.datavalue?.value)))
+  // Organisation dirigée ou concernée par une fonction (« président, En Marche »).
+  for (const c of claimsOf(p, 'P39')) ids.push(itemId(qualifier(c, 'P2389')), itemId(qualifier(c, 'P642')))
+  const birthPlace = itemId(first(p, 'P19'))
+  return { ids: ids.filter((x): x is string => !!x), withCoords: birthPlace ? [birthPlace] : [] }
 }
 
-interface Claim {
-  mainsnak?: { datavalue?: { value?: unknown } }
+/** Fonctions occupées (P39) : la plus récente d'abord, en cours avant terminées. */
+export function positionsHeld(p: WdEntity, names: Map<string, Resolved>, lang: 'fr' | 'en'): string[] {
+  const rows = claimsOf(p, 'P39')
+    .map((c) => {
+      const office = names.get(itemId(c.mainsnak?.datavalue?.value) ?? '')?.label
+      const of = names.get(itemId(qualifier(c, 'P2389')) ?? itemId(qualifier(c, 'P642')) ?? '')?.label
+      const label = office && of ? `${office}, ${of}` : office
+      const start = wikidataDate(qualifier(c, 'P580')) ?? ''
+      const ended = !!qualifier(c, 'P582')
+      const when = period(c, lang)
+      return label ? { text: when ? `${label} (${when})` : label, start, ended } : null
+    })
+    .filter((r): r is { text: string; start: string; ended: boolean } => !!r)
+  rows.sort((a, b) => Number(a.ended) - Number(b.ended) || b.start.localeCompare(a.start))
+  return [...new Set(rows.map((r) => r.text))]
 }
 
-export interface WdEntity {
-  id: string
-  labels?: Record<string, { value: string }>
-  descriptions?: Record<string, { value: string }>
-  claims?: Record<string, Claim[]>
+/** Élément relié (employeur, établissement, proche) avec la période de la relation. */
+function related(c: Claim, names: Map<string, Resolved>, type: string, fr: string, en: string, lang: 'fr' | 'en', self?: string): OutEntity | null {
+  const id = itemId(c.mainsnak?.datavalue?.value)
+  const label = id ? names.get(id)?.label : undefined
+  if (!id || !label) return null
+  const when = period(c, lang)
+  const rel = lang === 'fr' ? fr : en
+  return { type, label: distinctLabel(label, id, self), data: wdData(id), linkLabel: when ? `${rel} (${when})` : rel }
 }
 
-interface EntitiesResponse {
-  entities?: Record<string, WdEntity>
-}
+/**
+ * Sortie du module à partir de la fiche et des libellés des éléments cités. `self` est le
+ * libellé du nœud d'entrée : un proche du même nom (père et fils homonymes) reçoit son
+ * identifiant Wikidata dans le libellé, pour ne pas être fusionné avec la personne recherchée.
+ */
+export function personOutput(lang: 'fr' | 'en', person: WdEntity, names: Map<string, Resolved>, reviewReason?: string, self?: string): ModuleOutput {
+  const fr = lang === 'fr'
+  const entities: OutEntity[] = []
 
-/** Valeurs d'une propriété Wikidata (P569 = naissance, P18 = image...). */
-function values<T>(e: WdEntity, prop: string): T[] {
-  return (e.claims?.[prop] ?? []).map((c) => c.mainsnak?.datavalue?.value as T).filter((v) => v !== undefined)
-}
+  // Lieu de naissance avec ses coordonnées : lat/lon le placent sur la carte.
+  const birthPlace = names.get(itemId(first(person, 'P19')) ?? '')
+  if (birthPlace?.label) {
+    entities.push({
+      type: 'city',
+      label: birthPlace.label,
+      data: birthPlace.lat !== undefined && birthPlace.lon !== undefined ? { lat: birthPlace.lat, lon: birthPlace.lon } : {},
+      linkLabel: fr ? 'lieu de naissance' : 'birthplace'
+    })
+  }
 
-const first = <T>(e: WdEntity, prop: string): T | undefined => values<T>(e, prop)[0]
+  const website = first<string>(person, 'P856')
+  if (website) entities.push({ type: 'website', label: website, linkLabel: fr ? 'site officiel' : 'official website' })
+  entities.push(...accountEntities(person, lang))
 
-/** `+1867-11-07T00:00:00Z` → `1867-11-07` ; précision réduite si le jour ou le mois manque. */
-export function wikidataDate(v: { time?: string } | undefined): string | null {
-  const m = v?.time?.match(/^\+?(\d{4})-(\d{2})-(\d{2})/)
-  if (!m) return null
-  const [, y, mo, d] = m
-  return mo === '00' ? y : d === '00' ? `${y}-${mo}` : `${y}-${mo}-${d}`
-}
+  // Portrait : l'URL est téléchargée par le moteur (via le proxy) et jointe au nœud.
+  const portrait = first<string>(person, 'P18')
+  if (portrait) {
+    const file = encodeURIComponent(portrait.replace(/ /g, '_'))
+    entities.push({
+      type: 'photo',
+      label: `Wikimedia Commons : ${portrait}`,
+      image: `https://commons.wikimedia.org/wiki/Special:FilePath/${file}?width=512`,
+      data: { url: `https://commons.wikimedia.org/wiki/File:${file}` },
+      linkLabel: 'portrait'
+    })
+  }
 
-/** Un élément Wikidata est une personne si P31 (nature de l'élément) vaut Q5 (être humain). */
-export const isHuman = (e: WdEntity): boolean => values<{ id?: string }>(e, 'P31').some((v) => v.id === 'Q5')
+  const add = (prop: string, type: string, frLabel: string, enLabel: string): void => {
+    for (const c of claimsOf(person, prop).slice(0, MAX_RELATED)) {
+      const e = related(c, names, type, frLabel, enLabel, lang, self ?? labelOf(person, lang))
+      if (e) entities.push(e)
+    }
+  }
+  add('P108', 'organization', 'employeur', 'employer')
+  add('P69', 'school', 'études', 'education')
+  for (const [prop, frLabel, enLabel] of RELATIVES) add(prop, 'person', frLabel, enLabel)
 
-/** Appel de l'API Wikidata ; un refus pour quota devient une erreur explicite. */
-async function api<T>(ctx: ModuleContext, query: Record<string, string | number>): Promise<T> {
-  try {
-    return await ctx.fetchJson<T>(API, { query: { ...query, format: 'json' }, headers: { 'user-agent': USER_AGENT } })
-  } catch (e) {
-    if ((e as HttpError).status === 429) throw new ModuleError('Wikidata : trop de requêtes, réessayez plus tard', 'rate_limited')
-    throw e
+  // Propriétés fusionnées dans le nœud d'origine ; les clés *_date alimentent la frise.
+  const properties: Record<string, PropValue> = {
+    ...wdData(person.id),
+    description: descriptionOf(person, lang) ?? null,
+    birth_date: wikidataDate(first(person, 'P569')),
+    death_date: wikidataDate(first(person, 'P570')),
+    // Fonctions publiques : utile pour repérer une personne politiquement exposée.
+    ...cappedList('positions_held', positionsHeld(person, names, lang), 30)
+  }
+
+  return {
+    properties,
+    entities: reviewReason ? entities.map((e) => ({ ...e, review: true, reviewReason })) : entities,
+    raw: { id: person.id }
   }
 }
 
-const label = (e: WdEntity, lang: string): string | undefined => (e.labels?.[lang] ?? e.labels?.en)?.value
+/**
+ * Personne retenue parmi les candidats : le premier être humain. Si plusieurs êtres humains
+ * portent exactement ce nom, le choix est signalé comme incertain.
+ */
+export function pickPerson(
+  name: string,
+  candidates: Array<{ id: string; label?: string; description?: string; human: boolean }>,
+  lang: 'fr' | 'en'
+): { id: string; reviewReason?: string } | null {
+  const humans = candidates.filter((c) => c.human)
+  if (!humans.length) return null
+  const chosen = humans[0]
+  const namesakes = humans.filter((c) => c.label && sameName(c.label, name))
+  if (namesakes.length < 2) return { id: chosen.id }
+  const who = chosen.description ? `${chosen.description}, ${chosen.id}` : chosen.id
+  return {
+    id: chosen.id,
+    reviewReason:
+      lang === 'fr'
+        ? `homonyme possible : ${namesakes.length} personnes de ce nom dans Wikidata, retenue : ${who}`
+        : `possible namesake: ${namesakes.length} people with this name in Wikidata, chosen: ${who}`
+  }
+}
+
+async function lookup(ctx: ModuleContext, id: string, known: Record<string, WdEntity> = {}): Promise<WdEntity | undefined> {
+  return known[id] ?? (await getEntities(ctx, [id]))[id]
+}
 
 export default defineModule({
   id: 'person.wikidata',
   name: { fr: 'Wikidata (personnalité publique)', en: 'Wikidata (public figure)' },
   description: {
-    fr: 'Cherche la personne dans Wikidata : description, dates de naissance et de décès, lieu de naissance (placé sur la carte), site officiel, compte X et portrait.',
-    en: 'Looks the person up in Wikidata: description, birth and death dates, birthplace (shown on the map), official website, X account and portrait.'
+    fr: 'Cherche la personne dans Wikidata : description, dates de naissance et de décès, lieu de naissance (placé sur la carte), fonctions occupées (personne politiquement exposée), employeurs, études, proches, site officiel, comptes en ligne et portrait.',
+    en: 'Looks the person up in Wikidata: description, birth and death dates, birthplace (shown on the map), positions held (politically exposed person), employers, education, relatives, official website, online accounts and portrait.'
   },
   category: 'person',
   inputTypes: ['person'],
@@ -71,90 +184,30 @@ export default defineModule({
   async run(input, ctx) {
     const fr = ctx.lang === 'fr'
     const name = input.label.trim()
-    if (name.length < 3) throw new ModuleError(fr ? 'Nom trop court' : 'Name too short', 'invalid_input')
+    // Identifiant déjà connu (proche relié par ce module, saisie de l'enquêteur) : pas de recherche.
+    const knownId = typeof input.data.wikidata_id === 'string' && /^Q\d+$/.test(input.data.wikidata_id) ? input.data.wikidata_id : null
+    if (!knownId && name.length < 3) throw new ModuleError(fr ? 'Nom trop court' : 'Name too short', 'invalid_input')
 
-    // 1. Recherche plein texte : jusqu'à 5 éléments candidats.
-    const search = await api<SearchResponse>(ctx, {
-      action: 'wbsearchentities',
-      search: name,
-      language: ctx.lang,
-      uselang: ctx.lang,
-      type: 'item',
-      limit: 5
-    })
-    const ids = (search.search ?? []).map((s) => s.id)
-    if (!ids.length) return {}
-
-    // 2. Détail des candidats en une requête ; on garde le premier être humain.
-    const details = await api<EntitiesResponse>(ctx, {
-      action: 'wbgetentities',
-      ids: ids.join('|'),
-      props: 'labels|descriptions|claims',
-      languages: `${ctx.lang}|en`
-    })
-    const person = ids.map((id) => details.entities?.[id]).find((e): e is WdEntity => !!e && isHuman(e))
+    let person: WdEntity | undefined
+    let reviewReason: string | undefined
+    let candidates: string[] = []
+    if (knownId) {
+      person = await lookup(ctx, knownId)
+      if (person && !isHuman(person)) person = undefined
+    } else {
+      // Recherche plein texte (5 candidats) ; on garde le premier être humain.
+      const found = await searchCandidates(ctx, name)
+      candidates = found.candidates.map((c) => c.id)
+      const pick = pickPerson(name, found.candidates, ctx.lang)
+      if (!pick) return {}
+      reviewReason = pick.reviewReason
+      person = await lookup(ctx, pick.id, found.entities)
+    }
     if (!person) return {}
 
-    const entities: OutEntity[] = []
-
-    // 3. Lieu de naissance avec ses coordonnées : lat/lon le placent sur la carte.
-    const birthPlaceId = first<{ id?: string }>(person, 'P19')?.id
-    if (birthPlaceId) {
-      const places = await api<EntitiesResponse>(ctx, {
-        action: 'wbgetentities',
-        ids: birthPlaceId,
-        props: 'labels|claims',
-        languages: `${ctx.lang}|en`
-      })
-      const place = places.entities?.[birthPlaceId]
-      const coords = place && first<{ latitude: number; longitude: number }>(place, 'P625')
-      const placeName = place && label(place, ctx.lang)
-      if (placeName) {
-        entities.push({
-          type: 'city',
-          label: placeName,
-          data: coords ? { lat: coords.latitude, lon: coords.longitude } : {},
-          linkLabel: fr ? 'lieu de naissance' : 'birthplace'
-        })
-      }
-    }
-
-    const website = first<string>(person, 'P856')
-    if (website) entities.push({ type: 'website', label: website, linkLabel: fr ? 'site officiel' : 'official website' })
-
-    const xHandle = first<string>(person, 'P2002')
-    if (xHandle) {
-      entities.push({
-        type: 'account',
-        platform: 'x',
-        label: xHandle,
-        data: { username: xHandle, url: `https://x.com/${xHandle}` },
-        linkLabel: fr ? 'compte X' : 'X account'
-      })
-    }
-
-    // 4. Portrait : l'URL est téléchargée par le moteur (via le proxy) et jointe au nœud.
-    const portrait = first<string>(person, 'P18')
-    if (portrait) {
-      const file = encodeURIComponent(portrait.replace(/ /g, '_'))
-      entities.push({
-        type: 'photo',
-        label: `Wikimedia Commons : ${portrait}`,
-        image: `https://commons.wikimedia.org/wiki/Special:FilePath/${file}?width=512`,
-        data: { url: `https://commons.wikimedia.org/wiki/File:${file}` },
-        linkLabel: 'portrait'
-      })
-    }
-
-    // Propriétés fusionnées dans le nœud d'origine ; les clés *_date alimentent la frise.
-    const properties: Record<string, PropValue> = {
-      wikidata_id: person.id,
-      wikidata_url: `https://www.wikidata.org/wiki/${person.id}`,
-      description: (person.descriptions?.[ctx.lang] ?? person.descriptions?.en)?.value ?? null,
-      birth_date: wikidataDate(first(person, 'P569')),
-      death_date: wikidataDate(first(person, 'P570'))
-    }
-
-    return { properties, entities, raw: { id: person.id, candidates: ids } }
+    const refs = personReferences(person)
+    const names = await resolveItems(ctx, refs.ids, refs.withCoords)
+    const out = personOutput(ctx.lang, person, names, reviewReason, name)
+    return { ...out, raw: { id: person.id, label: labelOf(person, ctx.lang), candidates } }
   }
 })

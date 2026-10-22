@@ -3,7 +3,7 @@
 <!-- Fichier généré : ne pas modifier à la main. -->
 <!-- Régénérer avec : node build/scripts/list-modules.mjs > docs/modules-list.md -->
 
-146 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
+162 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
 
 Légende des remarques : **à la demande** (lancé seulement sur demande explicite, service à crédits), **bruyant** (peut alerter la personne recherchée), **expérimental** (résultats à vérifier). Une clé suivie de « (facultative) » améliore les résultats sans être obligatoire.
 
@@ -13,18 +13,18 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | [Email](#email) | 26 |
 | [Pseudo](#username) | 2 |
 | [Personne](#person) | 7 |
-| [Domaine](#domain) | 14 |
-| [Adresse IP](#ip) | 13 |
-| [Site web](#web) | 5 |
-| [Crypto](#crypto) | 11 |
+| [Domaine](#domain) | 17 |
+| [Adresse IP](#ip) | 14 |
+| [Site web](#web) | 8 |
+| [Crypto](#crypto) | 14 |
 | [Finance](#finance) | 2 |
-| [Entreprise](#company) | 4 |
+| [Entreprise](#company) | 5 |
 | [Localisation](#location) | 3 |
-| [Image](#image) | 3 |
+| [Image](#image) | 4 |
 | [Messagerie](#messaging) | 2 |
-| [Réseaux sociaux](#social) | 28 |
-| [Forensic / IOC](#forensic) | 6 |
-| [Divers](#misc) | 2 |
+| [Réseaux sociaux](#social) | 29 |
+| [Forensic / IOC](#forensic) | 8 |
+| [Divers](#misc) | 3 |
 | [roso.info](#roso) | 9 |
 
 <a id="phone"></a>
@@ -110,7 +110,10 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `domain.dns` | Enregistrements DNS | `domain` |  |  |
 | `domain.hosting` | Hébergeur et fournisseur DNS | `domain` |  |  |
 | `domain.hudsonrock` | Infostealers (Hudson Rock) | `domain` |  |  |
+| `domain.m365` | Tenant Microsoft 365 | `domain` |  |  |
 | `domain.otx` | AlienVault OTX (domaine) | `domain` | `otx` (facultative) |  |
+| `domain.pdns` | Historique DNS (Mnemonic) | `domain`, `ip` |  |  |
+| `domain.pgp` | Clés PGP du domaine | `domain` |  |  |
 | `domain.securitytrails` | SecurityTrails | `domain` | `securitytrails` | à la demande, expérimental |
 | `domain.shodan` | Shodan (DNS du domaine) | `domain` | `shodan` | à la demande, expérimental |
 | `domain.subdomains` | Sous-domaines | `domain` |  |  |
@@ -129,13 +132,14 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `asn.info` | Informations ASN (RIPEstat) | `asn` |  |  |
 | `cidr.info` | Informations sur la plage IP | `cidr` |  |  |
 | `ip.abuseipdb` | AbuseIPDB | `ip` | `abuseipdb` | expérimental |
+| `ip.blocklists` | Listes de blocage publiques | `ip` |  |  |
 | `ip.geo` | Géolocalisation IP | `ip` |  |  |
 | `ip.greynoise` | GreyNoise | `ip` | `greynoise` (facultative) |  |
 | `ip.internetdb` | Shodan InternetDB | `ip` |  |  |
 | `ip.otx` | AlienVault OTX (IP) | `ip` | `otx` (facultative) |  |
 | `ip.reverse_dns` | DNS inverse (PTR) | `ip` |  |  |
 | `ip.reverse_ip` | Domaines sur la même IP | `ip` |  |  |
-| `ip.ripestat` | ASN, préfixe et contact abus (RIPEstat) | `ip` |  |  |
+| `ip.ripestat` | ASN, préfixe et titulaire (RIPEstat) | `ip` |  |  |
 | `ip.shodan` | Shodan (hôte) | `ip` | `shodan` | expérimental |
 | `ip.tor` | Nœud Tor | `ip` |  |  |
 | `ip.virustotal` | VirusTotal (IP) | `ip` | `virustotal` | expérimental |
@@ -146,11 +150,14 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
+| `misc.url_parse` | Lecture de l'URL | `url`, `website` |  |  |
+| `tracker.gtm` | Contenu du conteneur Google Tag Manager | `tracker` |  |  |
 | `tracker.lookup` | Recherche inversée du traceur | `tracker` |  |  |
 | `web.favicon` | Empreinte du favicon | `url`, `website`, `domain` | `urlscan` (facultative) | bruyant |
 | `web.page` | Analyse de la page web | `url`, `website` |  | bruyant |
-| `web.robots` | robots.txt et security.txt | `url`, `website`, `domain` |  | bruyant |
+| `web.robots` | robots.txt, security.txt et plan du site | `url`, `website`, `domain` |  | bruyant |
 | `web.virustotal` | VirusTotal (URL) | `url`, `website` | `virustotal` | expérimental |
+| `web.wellknown` | ads.txt et applications mobiles liées | `url`, `website`, `domain` |  | bruyant |
 
 <a id="crypto"></a>
 
@@ -168,7 +175,10 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `crypto.litecoin` | Portefeuille Litecoin (litecoinspace.org) | `crypto_wallet` |  |  |
 | `crypto.ofac` | Sanctions OFAC (adresses crypto) | `crypto_wallet` |  |  |
 | `crypto.solana` | Portefeuille Solana (RPC public) | `crypto_wallet` |  |  |
+| `crypto.ton` | Portefeuille TON (toncenter) | `crypto_wallet` |  |  |
+| `crypto.transaction` | Transaction crypto (explorateurs publics) | `crypto_tx` |  |  |
 | `crypto.tron` | Portefeuille TRON (Tronscan) | `crypto_wallet` |  |  |
+| `crypto.walletexplorer` | Regroupement d’adresses Bitcoin (WalletExplorer) | `crypto_wallet` |  |  |
 
 <a id="finance"></a>
 
@@ -189,6 +199,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `company.fr_registry` | Entreprise française (annuaire officiel) | `company` |  |  |
 | `company.opencorporates` | Registres mondiaux (OpenCorporates) | `company` | `opencorporates` | expérimental |
 | `company.vies` | TVA intracommunautaire (VIES) | `vat` |  |  |
+| `company.wikidata` | Wikidata (organisation) | `company`, `organization` |  | expérimental |
 
 <a id="location"></a>
 
@@ -209,6 +220,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `image.exif` | Métadonnées de la photo (EXIF) | `photo` |  |  |
 | `image.hashes` | Empreintes du fichier image | `photo` |  |  |
 | `image.reverse_search` | Recherche d'image inversée | `photo` |  | expérimental |
+| `social.avatar_photo` | Photo de profil | `account` |  |  |
 
 <a id="messaging"></a>
 
@@ -217,7 +229,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
 | `messaging.discord_invite` | Invitation Discord | `url`, `keyword` |  |  |
-| `messaging.telegram` | Telegram (page publique) | `username`, `account` |  |  |
+| `messaging.telegram` | Telegram (page publique) | `username`, `account`, `group` |  |  |
 
 <a id="social"></a>
 
@@ -237,12 +249,13 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `social.hackernews` | Profil Hacker News | `username`, `account` |  |  |
 | `social.huggingface` | Profil Hugging Face | `username`, `account` |  |  |
 | `social.keybase` | Profil Keybase | `username`, `account` |  |  |
-| `social.kick` | Chaîne Kick | `username`, `account` |  | expérimental |
+| `social.kick` | Chaîne Kick | `username`, `account` |  |  |
 | `social.lichess` | Profil Lichess | `username`, `account` |  |  |
 | `social.linktree` | Page Linktree | `username`, `account` |  |  |
 | `social.mastodon` | Comptes Mastodon | `username`, `account` |  |  |
 | `social.minecraft` | Compte Minecraft | `username`, `account` |  |  |
 | `social.npm` | Compte npm | `username`, `account` |  |  |
+| `social.profile_manual` | Profil à consulter | `account` |  |  |
 | `social.reddit` | Profil Reddit | `username`, `account` |  | expérimental |
 | `social.roblox` | Profil Roblox | `username`, `account` |  |  |
 | `social.snapchat` | Profil Snapchat | `username`, `account` |  |  |
@@ -264,6 +277,8 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `forensic.hashlookup` | Fichier connu (CIRCL hashlookup) | `hash` |  |  |
 | `forensic.hibp_breach` | Détails de la fuite (Have I Been Pwned) | `breach` |  |  |
 | `forensic.malwarebazaar` | Échantillon de malware (MalwareBazaar) | `hash` | `abusech` | expérimental |
+| `forensic.threatfox` | Indicateurs de compromission (ThreatFox) | `domain`, `ip`, `url`, `hash` | `abusech` | expérimental |
+| `forensic.urlhaus` | URL malveillantes (URLhaus) | `domain`, `ip` | `abusech` | expérimental |
 | `forensic.virustotal` | Réputation du fichier (VirusTotal) | `hash` | `virustotal` | expérimental |
 | `misc.user_agent` | Analyse du User-Agent | `user_agent` |  |  |
 
@@ -275,6 +290,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | --- | --- | --- | --- | --- |
 | `misc.license_plate` | Analyse de la plaque d'immatriculation | `license_plate` |  |  |
 | `misc.mac_vendor` | Constructeur de l'adresse MAC | `mac_address` |  |  |
+| `misc.snowflake` | Date cachée dans l'identifiant | `account`, `group` |  |  |
 
 <a id="roso"></a>
 
