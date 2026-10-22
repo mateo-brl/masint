@@ -645,7 +645,7 @@ function EvidenceBlock({ node }: { node: GraphNode }): React.JSX.Element | null 
               <Icon name="FileArchive" size={13} />
             </button>
             <button onClick={() => copy(c.manifestSha256)} className="rounded p-1 text-muted hover:bg-panel-3 hover:text-fg" title={t('evidence.copyHash')}>
-              <Icon name="Fingerprint" size={13} />
+              <Icon name="FingerprintPattern" size={13} />
             </button>
           </div>
         </div>

@@ -246,6 +246,8 @@ describe("Chaîne d'empreintes du journal", () => {
     expect(isLayoutOnly({ id: node.id, x: 10, label: 'x' })).toBe(false)
     expect(changedNodeFields(node, { id: node.id, x: 5, label: node.label, data: { ...node.data } })).toEqual([])
     expect(changedNodeFields(node, { id: node.id, label: 'https://exemple.test/autre', style: { color: '#fff' } })).toEqual(['label', 'style'])
+    // Replier une descendance est un état d'affichage.
+    expect(changedNodeFields(node, { id: node.id, style: { ...node.style, collapsed: true } })).toEqual([])
   })
 
   it('ne garde au rapport que les actions significatives', () => {

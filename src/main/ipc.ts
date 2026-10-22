@@ -375,8 +375,9 @@ export function registerIpc(deps: IpcDeps): void {
       title: `MASINT · ${s.label}`,
       capture
     })
-    // Dernier résultat gardé en base : il revient à la réouverture de l'enquête.
-    repo.setSuggestionAssist(id, { result, added: [], at: Date.now() })
+    // Dernier résultat gardé en base : il revient à la réouverture de l'enquête. Une recherche
+    // annulée (fenêtre fermée) ne remplace pas le résultat précédent.
+    if (result.status !== 'cancelled') repo.setSuggestionAssist(id, { result, added: [], at: Date.now() })
     return result
   })
   handle('assist:markAdded', (id, url) => {
