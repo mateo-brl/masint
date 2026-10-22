@@ -4,6 +4,7 @@ import { useGraph } from '../store/graph'
 import { useApp } from '../store/app'
 import { DuplicateAlerts } from './DuplicateAlerts'
 import { ReportDialog } from './export/ReportDialog'
+import { ImportDialog } from './import/ImportDialog'
 import { GraphCanvas } from './graph/GraphCanvas'
 import { CatalogPanel } from './panels/CatalogPanel'
 import { PropertiesPanel } from './panels/PropertiesPanel'
@@ -42,6 +43,7 @@ export function Workspace(): React.JSX.Element {
         {view === 'notes' && <NotesView />}
         {(view === 'graph' || view === 'map' || view === 'timeline') && <PropertiesPanel />}
         <ReportDialog />
+        <ImportDialog />
         <DuplicateAlerts />
       </div>
     </ReactFlowProvider>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { detectEntity } from '@shared/detect'
 import { getEntityType } from '@shared/entityTypes'
@@ -11,6 +11,7 @@ import { useGraph } from '../../store/graph'
 import { Logo } from '../Logo'
 import { Button, confirmDialog, Dialog, Dropdown, Empty, Switch } from '../ui'
 import { errorMessage } from '../../lib/errors'
+import { readTextFile } from '../import/ImportDialog'
 
 const COLORS = ['#e5484d', '#f76b15', '#ffc53d', '#30a46c', '#12a594', '#0090ff', '#6e56cf', '#d6409f', '#8d8d93']
 
@@ -45,6 +46,21 @@ export function Home(): React.JSX.Element {
         toast('success', t('home.imported', { name: inv.name }))
         await refresh()
       }
+    } catch (e) {
+      toast('error', errorMessage(e))
+    }
+  }
+
+  // Nouvelle enquête depuis un fichier CSV ou texte : nommée d'après le fichier, puis import en masse.
+  const fileInput = useRef<HTMLInputElement>(null)
+  const fromFile = async (file: File | undefined): Promise<void> => {
+    if (!file) return
+    if (file.size > 20 * 1024 * 1024) return toast('error', t('importer.tooBig'))
+    try {
+      const text = await readTextFile(file)
+      const inv = await api('investigations:create', { name: file.name.replace(/\.[^.]+$/, '') || file.name })
+      await open(inv.id)
+      useApp.getState().setImportOpen(true, { name: file.name, text })
     } catch (e) {
       toast('error', errorMessage(e))
     }
@@ -114,6 +130,19 @@ export function Home(): React.JSX.Element {
           />
           <Button icon="Upload" onClick={() => void importArchive()}>
             {t('home.import')}
+          </Button>
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".csv,.tsv,.txt,text/csv,text/plain"
+            className="hidden"
+            onChange={(e) => {
+              void fromFile(e.target.files?.[0])
+              e.target.value = ''
+            }}
+          />
+          <Button icon="FileSpreadsheet" title={t('home.fromFileHint')} onClick={() => fileInput.current?.click()}>
+            {t('home.fromFile')}
           </Button>
           <Button variant="primary" icon="Plus" onClick={() => setEditing('new')}>
             {t('home.new')}
