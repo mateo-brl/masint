@@ -60,6 +60,11 @@ export interface GraphNode {
   style: NodeStyle
   /** `manual` ou identifiant du module qui a créé le nœud. */
   source: string
+  /**
+   * Profondeur : 0 pour une saisie ou un import, sinon profondeur du nœud parent + 1 (nœud
+   * trouvé par un module). Sert à borner l'enchaînement automatique.
+   */
+  hop?: number
   createdAt: number
   updatedAt: number
 }
@@ -101,6 +106,62 @@ export interface InvestigationBundle {
   investigation: Investigation
   nodes: GraphNode[]
   edges: GraphEdge[]
+  /** Score de corroboration des nœuds et des liens (voir `Corroboration`). */
+  corroboration?: Corroboration
+}
+
+// ---------------------------------------------------------------------------
+// Provenance
+
+/**
+ * Force du lien entre une entité trouvée et celle d'où elle vient, déclarée par le module
+ * (`OutEntity.strength`) :
+ * - `same` : même identité (preuve Keybase, compte vérifié, recherche par identifiant...) ;
+ * - `declared` : déclaré par la personne (lien de bio, site, page « lien en bio ») ;
+ * - `mention` : simple mention (texte libre, email de commit d'un autre auteur) ;
+ * - `weak` : rapprochement fragile (même pseudo sur un autre site, pseudo généré).
+ */
+export type LinkStrength = 'same' | 'declared' | 'mention' | 'weak'
+
+/**
+ * Observation : un module a vu ce nœud, ce lien ou cette propriété lors d'une exécution. Un
+ * second module qui retrouve la même entité ajoute la sienne : c'est la corroboration.
+ */
+export interface Observation {
+  id: string
+  investigationId: string
+  /** Nœud observé (pour une propriété : le nœud qui la porte). */
+  nodeId: string
+  /** Lien observé avec le nœud (depuis son parent), s'il existe. */
+  edgeId: string | null
+  /** Clé de propriété écrite ; `null` pour l'entité elle-même. */
+  property: string | null
+  /** Exécution d'origine (`module_runs`), vide si elle n'est pas connue. */
+  runId: string
+  moduleId: string
+  /** Page où l'information a été vue, quand le module la donne. */
+  sourceUrl: string | null
+  observedAt: number
+}
+
+/** Nombre de modules distincts qui ont observé chaque nœud et chaque lien. */
+export interface Corroboration {
+  nodes: Record<string, number>
+  edges: Record<string, number>
+}
+
+/** Étape du chemin d'un nœud : `moduleId` l'a trouvé depuis le nœud `fromId`. */
+export interface ProvenanceStep {
+  moduleId: string
+  fromId: string | null
+  fromLabel: string | null
+  fromType: string | null
+}
+
+/** Provenance d'un nœud ou d'un lien : observations et chemin depuis le nœud de départ. */
+export interface Provenance {
+  observations: Observation[]
+  path: ProvenanceStep[]
 }
 
 export type NodeInput = Partial<Omit<GraphNode, 'investigationId' | 'createdAt' | 'updatedAt'>> & {
@@ -214,8 +275,25 @@ export interface JobProgress {
   steps?: Record<string, { done: number; total: number; detail?: string }>
   /** Résultats mis de côté dans « À vérifier » pendant cette tâche. */
   review?: number
+  /** Tâche « en chaîne » : les nouveaux nœuds sont enrichis à leur tour (voir `Settings.chainDepth`). */
+  chain?: ChainProgress
   finished: boolean
   cancelled: boolean
+}
+
+export interface ChainProgress {
+  /** Profondeur maximale de la tâche. */
+  maxDepth: number
+  /** Profondeur la plus grande atteinte par un nœud enrichi. */
+  depth: number
+  /** Nouveaux nœuds ajoutés au graphe par la tâche. */
+  created: number
+  /** Nœuds enrichis par enchaînement, hors nœud de départ. */
+  enriched: number
+  /** Nœuds en cours d'enrichissement (pastille du canevas). */
+  active: string[]
+  /** Budget épuisé (nœuds, exécutions ou durée) : le surplus est parti dans « À vérifier ». */
+  budget: boolean
 }
 
 /** Résultat d'une recherche assistée (navigateur intégré). */
@@ -268,6 +346,8 @@ export interface GraphChange {
   edges: GraphEdge[]
   deletedNodeIds?: string[]
   deletedEdgeIds?: string[]
+  /** Scores de corroboration mis à jour (nœuds et liens touchés seulement). */
+  corroboration?: Corroboration
 }
 
 // ---------------------------------------------------------------------------
@@ -307,6 +387,12 @@ export interface Settings {
   disabledModules: string[]
   /** Lancer automatiquement les modules applicables à la création d'un nœud. */
   autoEnrich: boolean
+  /**
+   * Enchaînement : profondeur jusqu'à laquelle les nouveaux nœuds sûrs (`same`, `declared`)
+   * sont enrichis à leur tour, de 0 (désactivé) à 3. Ne s'applique qu'avec l'enrichissement
+   * automatique ou l'action « Enrichir en chaîne ».
+   */
+  chainDepth: number
   /** Mode passif : les modules qui contactent la cible (`noisy`) ne partent pas avec « Enrichir ». */
   passiveMode: boolean
   linkOpening: LinkOpening
@@ -488,6 +574,8 @@ export interface ActivityTarget {
   modules?: string[]
   job?: string
   followUp?: boolean
+  /** Modules lancés par enchaînement : profondeur et modules qui ont mené au nœud. */
+  chain?: { depth: number; path: string[] }
   suggestion?: string
   value?: string
   type?: string

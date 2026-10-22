@@ -147,11 +147,12 @@ export default defineModule({
         type: 'domain',
         label: domain,
         data: compact({ mx, mx_null: nullMx || undefined, mail_host: host }),
-        linkLabel: tr(ctx, 'domaine', 'domain')
+        linkLabel: tr(ctx, 'domaine', 'domain'),
+        strength: 'mention'
       })
     }
     if (canonical !== email) {
-      entities.push({ type: 'email', label: canonical, linkLabel: tr(ctx, 'adresse canonique', 'canonical address') })
+      entities.push({ type: 'email', label: canonical, linkLabel: tr(ctx, 'adresse canonique', 'canonical address'), strength: 'same' })
     }
     const user = usernameCandidate(local)
     if (user && !disposable)
@@ -160,6 +161,7 @@ export default defineModule({
         label: user,
         linkLabel: tr(ctx, 'pseudo possible', 'possible username'),
         // Partie locale de l'adresse : souvent réutilisée comme pseudo, mais rien ne le prouve.
+        strength: 'weak',
         review: true,
         reviewReason: tr(ctx, 'partie locale de l’adresse, non vérifiée comme pseudo', 'local part of the address, not checked as a username')
       })

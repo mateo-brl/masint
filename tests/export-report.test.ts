@@ -100,6 +100,15 @@ const input = (over: Partial<ReportInput> = {}): ReportInput => ({
 describe('buildReportHtml', () => {
   const html = buildReportHtml(input())
 
+  it('affiche la cotation de l’enquêteur en tête de fiche, pas comme une propriété', () => {
+    const rated = nodes.map((n) => (n.id === 'h1' ? { ...n, data: { ...n.data, admiralty: 'B2' } } : n))
+    const out = buildReportHtml(input({ nodes: rated }))
+    expect(out).toContain('<span class="rating-code">B2</span>Cotation · source : habituellement fiable · information : probablement vraie')
+    expect(out).not.toContain('Cotation (source, information)')
+    const en = buildReportHtml(input({ nodes: rated, options: { ...input().options, lang: 'en' } }))
+    expect(en).toContain('<span class="rating-code">B2</span>Rating · source : usually reliable · information : probably true')
+  })
+
   it('produit un document HTML complet avec page de garde', () => {
     expect(html.startsWith('<!doctype html>')).toBe(true)
     expect(html).toContain('<html lang="fr">')

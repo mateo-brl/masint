@@ -10,12 +10,14 @@
 // - `hashes.json` : empreinte SHA-256 de chaque entrée, vérifiée à l'import ;
 // - `captures` : preuves (captures de pages) des nœuds présents, avec leurs trois pièces jointes ;
 // - `activity.json` : journal d'activité, repris tel quel à l'import (sa chaîne d'empreintes
-//   se vérifie dans la copie comme dans l'original).
-// Les archives version 1, ou version 2 d'avant les preuves et le journal, restent lisibles.
+//   se vérifie dans la copie comme dans l'original) ;
+// - `observations` : provenance fine (quel module a vu quel nœud, lien ou propriété).
+// Les archives version 1, ou version 2 d'avant les preuves, le journal et les observations,
+// restent lisibles.
 
 import { createHash, randomUUID } from 'node:crypto'
 import JSZip from 'jszip'
-import type { ActivityEntry, Attachment, Capture, GraphEdge, GraphNode, Investigation, ModuleRun, Suggestion } from '@shared/types'
+import type { ActivityEntry, Attachment, Capture, GraphEdge, GraphNode, Investigation, ModuleRun, Observation, Suggestion } from '@shared/types'
 import type { Repo } from './db/repo'
 
 export const ARCHIVE_FORMAT = 'masint'
@@ -44,6 +46,8 @@ export interface Manifest {
   captures?: Capture[]
   /** Nombre d'entrées du journal d'activité (`activity.json`). */
   activity?: number
+  /** Observations des modules (provenance, corroboration). */
+  observations?: Observation[]
 }
 
 /** Limites contre les archives piégées (bombe de décompression, milliers d'entrées). */
@@ -85,7 +89,8 @@ export async function buildArchive(repo: Repo, investigationId: string): Promise
     suggestions: repo.listSuggestions(investigationId),
     runs: runs.map(({ raw, ...run }) => ({ ...run, raw: raw !== null })),
     captures,
-    activity: activity.length
+    activity: activity.length,
+    observations: repo.listObservationsForArchive(investigationId)
   }
   const zip = new JSZip()
   const hashes: Record<string, string> = {}
@@ -294,11 +299,13 @@ export async function importArchive(repo: Repo, buf: Buffer, limits: ArchiveLimi
       imageId: n.imageId ? (attIds.get(n.imageId) ?? null) : null
     }))
   )
+  const edgeIds = new Map<string, string>()
+  for (const e of manifest.edges) edgeIds.set(e.id, randomUUID())
   repo.upsertEdges(
     inv.id,
     manifest.edges
       .filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target))
-      .map((e) => ({ ...e, id: randomUUID(), source: nodeIds.get(e.source)!, target: nodeIds.get(e.target)! }))
+      .map((e) => ({ ...e, id: edgeIds.get(e.id)!, source: nodeIds.get(e.source)!, target: nodeIds.get(e.target)! }))
   )
   // Preuves : nouveaux identifiants ; une capture dont un fichier manque n'est pas reprise.
   const captureIds = new Map<string, string>()
@@ -323,13 +330,34 @@ export async function importArchive(repo: Repo, buf: Buffer, limits: ArchiveLimi
   }
   // Exécutions : nouveaux identifiants, une tâche d'origine devient une tâche de la copie.
   const jobIds = new Map<string, string>()
+  const runIds = new Map<string, string>()
   for (const r of manifest.runs ?? []) {
     const nodeId = nodeIds.get(r.nodeId)
     if (!nodeId) continue
     if (!jobIds.has(r.jobId)) jobIds.set(r.jobId, randomUUID())
     const { raw: _raw, ...run } = r
-    repo.importRun({ ...run, id: randomUUID(), investigationId: inv.id, nodeId, jobId: jobIds.get(r.jobId)! }, raws.get(r.id) ?? null)
+    runIds.set(r.id, randomUUID())
+    repo.importRun({ ...run, id: runIds.get(r.id)!, investigationId: inv.id, nodeId, jobId: jobIds.get(r.jobId)! }, raws.get(r.id) ?? null)
   }
+  // Observations : nœud, lien et exécution désignés par leurs nouveaux identifiants.
+  const existingEdges = new Set(repo.listEdges(inv.id).map((e) => e.id))
+  repo.addObservations(
+    (manifest.observations ?? [])
+      .filter((o) => nodeIds.has(o.nodeId) && typeof o.moduleId === 'string')
+      .map((o) => {
+        const edgeId = o.edgeId ? (edgeIds.get(o.edgeId) ?? null) : null
+        return {
+          investigationId: inv.id,
+          nodeId: nodeIds.get(o.nodeId)!,
+          edgeId: edgeId && existingEdges.has(edgeId) ? edgeId : null,
+          property: typeof o.property === 'string' ? o.property : null,
+          runId: (o.runId && runIds.get(o.runId)) || '',
+          moduleId: o.moduleId,
+          sourceUrl: typeof o.sourceUrl === 'string' ? o.sourceUrl : null,
+          observedAt: typeof o.observedAt === 'number' ? o.observedAt : Date.now()
+        }
+      })
+  )
   // Journal repris tel quel : les entrées d'origine gardent leurs empreintes.
   if (activity.length) repo.importActivity(inv.id, activity)
   if (manifest.investigation.viewport) repo.updateInvestigation(inv.id, { viewport: manifest.investigation.viewport })

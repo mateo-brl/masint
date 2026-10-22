@@ -155,6 +155,12 @@ describe('Description des entrées du journal', () => {
     expect(activityLine({ action: 'node.update', target: { nodes: [nodes[0]], count: 1, fields: ['label', 'style'] } }, words).detail).toBe('label, style')
   })
 
+  it('signale les modules lancés par enchaînement', () => {
+    const run = { action: 'module.run' as const, target: { node: { id: 'a', type: 'account', label: 'jane' }, count: 2, chain: { depth: 2, path: ['m1', 'm2'] } } }
+    expect(activityLine(run, { ...words, chain: (d) => `en chaîne, profondeur ${d}` }).detail).toBe('2 modules · en chaîne, profondeur 2')
+    expect(activityLine(run, words).detail).toBe('2 modules')
+  })
+
   it('distingue les modifications significatives', () => {
     expect(isSignificantActivity({ action: 'edge.update', target: { fields: ['style'] } })).toBe(false)
     expect(isSignificantActivity({ action: 'capture.create', target: {} })).toBe(true)

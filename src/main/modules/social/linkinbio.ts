@@ -155,7 +155,7 @@ export function bioEntities(parsed: ParsedBio, lang: Lang): OutEntity[] {
   })
   const entities = [
     ...linkedEntities({ urls: parsed.links, emails: [...parsed.emails, ...extractEmails(bio)], lang, linkLabel: { fr: 'lien de la page', en: 'page link' } }),
-    ...linkedEntities({ urls: textUrls, lang, linkLabel: { fr: 'dans la description de la page', en: 'in page description' } })
+    ...linkedEntities({ urls: textUrls, urlStrength: 'mention', lang, linkLabel: { fr: 'dans la description de la page', en: 'in page description' } })
   ]
   const seen = new Set<string>()
   return [

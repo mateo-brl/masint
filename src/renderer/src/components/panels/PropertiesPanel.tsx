@@ -5,7 +5,8 @@ import { ENTITY_TYPES, getEntityType, type CategoryId } from '@shared/entityType
 import { propertyLabel } from '@shared/propertyLabels'
 import { emailProvider, getPlatform, PLATFORMS } from '@shared/platforms'
 import { captureUrlOf } from '@shared/evidence'
-import type { Capture, GraphEdge, GraphNode, ModuleRun, PropValue } from '@shared/types'
+import { ADMIRALTY_KEY, CREDIBILITY, formatAdmiralty, parseAdmiralty, RELIABILITY, type Admiralty } from '@shared/provenance'
+import type { Capture, GraphEdge, GraphNode, ModuleRun, Observation, PropValue, Provenance, ProvenanceStep } from '@shared/types'
 import { canEnrich, enrichNode, enrichNodes, fileToBase64, modulesForNode, useApplicable } from '../../lib/actions'
 import { api, onEvent, openLink } from '../../lib/api'
 import { errorMessage } from '../../lib/errors'
@@ -196,6 +197,9 @@ function EntitySheet({ node }: { node: GraphNode }): React.JSX.Element {
 
   const platformCats = PLATFORM_CATEGORIES[node.type]
   const platformOptions = platformCats ? PLATFORMS.filter((p) => platformCats.includes(p.category)) : []
+  // Provenance relue quand le nœud ou son score de corroboration changent.
+  const score = useGraph((s) => s.corroboration.nodes[node.id] ?? 0)
+  const provenance = useProvenance({ nodeId: node.id }, `${node.updatedAt}:${score}`)
 
   return (
     <div className="flex flex-col gap-4">
@@ -241,6 +245,7 @@ function EntitySheet({ node }: { node: GraphNode }): React.JSX.Element {
           className="field"
         />
       </label>
+      {provenance && <NodePath path={provenance.path} />}
 
       <NodeReview node={node} />
       <ConsistencyBlock node={node} />
@@ -248,7 +253,9 @@ function EntitySheet({ node }: { node: GraphNode }): React.JSX.Element {
       <div className="text-[12.5px] font-semibold">{t('props.imageInfo')}</div>
       <ImageDrop node={node} />
       <LinkedSummary node={node} />
-      <PropertyList node={node} />
+      <PropertyList node={node} observations={provenance?.observations} />
+      <SourcesBlock observations={provenance?.observations ?? null} />
+      <RatingBlock node={node} />
       <EvidenceBlock node={node} />
       <EnrichBlock node={node} />
       <RunsList node={node} />
@@ -382,17 +389,30 @@ function parseValue(text: string, previous: PropValue, kind?: string): PropValue
   return text
 }
 
-function PropertyList({ node }: { node: GraphNode }): React.JSX.Element {
+function PropertyList({ node, observations }: { node: GraphNode; observations?: Observation[] }): React.JSX.Element {
   const { t } = useTranslation()
   const { tx, lang } = useLang()
   const updateNode = useGraph((s) => s.updateNode)
+  const moduleName = useModuleName()
   const def = getEntityType(node.type)
+  // Origine de chaque propriété : modules qui l'ont écrite (ou confirmée), au survol.
+  const origins = useMemo(() => {
+    const m = new Map<string, Set<string>>()
+    for (const o of observations ?? []) if (o.property) m.set(o.property, (m.get(o.property) ?? new Set()).add(moduleName(o.moduleId)))
+    return m
+  }, [observations, moduleName])
+  const originOf = (key: string): string | undefined => {
+    if (!observations) return undefined
+    const list = origins.get(key)
+    return list ? t('provenance.origin', { list: Array.from(list).join(', ') }) : t('provenance.manual')
+  }
   const [adding, setAdding] = useState(false)
   const [newKey, setNewKey] = useState('')
   const [draft, setDraft] = useState<{ key: string; label: string; kind?: string } | null>(null)
 
   const fieldByKey = new Map(def.fields.map((f) => [f.key, f]))
-  const keys = Object.keys(node.data).filter((k) => !k.startsWith('__'))
+  // La cotation a son propre bloc (voir RatingBlock).
+  const keys = Object.keys(node.data).filter((k) => !k.startsWith('__') && k !== ADMIRALTY_KEY)
   // Champs du type d'abord, puis les autres dans leur ordre d'ajout : un champ créé à la main
   // reste à l'endroit où on vient de le saisir.
   const ordered = [...def.fields.map((f) => f.key).filter((k) => keys.includes(k)), ...keys.filter((k) => !fieldByKey.has(k))]
@@ -413,6 +433,7 @@ function PropertyList({ node }: { node: GraphNode }): React.JSX.Element {
           <PropertyRow
             key={k}
             label={f ? tx(f.label) : propertyLabel(k, lang)}
+            origin={originOf(k)}
             value={node.data[k]}
             kind={f?.kind}
             onChange={(text) => setProp(k, parseValue(text, node.data[k], f?.kind))}
@@ -482,6 +503,7 @@ function PropertyList({ node }: { node: GraphNode }): React.JSX.Element {
 
 function PropertyRow({
   label,
+  origin,
   value,
   kind,
   onChange,
@@ -491,6 +513,8 @@ function PropertyRow({
   startEditing = false
 }: {
   label: string
+  /** Modules d'où vient la valeur, affichés au survol. */
+  origin?: string
   value: PropValue
   kind?: string
   onChange: (text: string) => void
@@ -512,9 +536,9 @@ function PropertyRow({
     else if (!text) onCancel?.()
   }
   return (
-    <div className="group rounded-xl border border-line bg-panel-2 px-3 py-2">
+    <div className="group rounded-xl border border-line bg-panel-2 px-3 py-2" title={origin}>
       <div className="flex items-center gap-2">
-        <span className="min-w-0 flex-1 truncate text-[11px] text-muted" title={label}>{label}</span>
+        <span className="min-w-0 flex-1 truncate text-[11px] text-muted" title={origin ? `${label}\n${origin}` : label}>{label}</span>
         <button onClick={onDelete} className="text-faint opacity-0 transition group-hover:opacity-100 hover:text-accent">
           <Icon name="X" size={12} />
         </button>
@@ -937,6 +961,187 @@ function RunIcon({ run }: { run: ModuleRun }): React.JSX.Element {
 }
 
 // ---------------------------------------------------------------------------
+// Provenance : chemin, sources, cotation
+
+/** Observations et chemin d'un nœud ou d'un lien, relus quand `refresh` change. */
+function useProvenance(target: { nodeId?: string; edgeId?: string }, refresh: string): Provenance | null {
+  const invId = useGraph((s) => s.investigation?.id)
+  const [state, setState] = useState<Provenance | null>(null)
+  const { nodeId, edgeId } = target
+  useEffect(() => {
+    if (!invId || (!nodeId && !edgeId)) return setState(null)
+    let live = true
+    void api('graph:provenance', invId, nodeId ? { nodeId } : { edgeId })
+      .then((p) => live && setState(p))
+      .catch(() => live && setState(null))
+    return () => {
+      live = false
+    }
+  }, [invId, nodeId, edgeId, refresh])
+  return state
+}
+
+function useModuleName(): (id: string) => string {
+  const modules = useApp((s) => s.modules)
+  const { tx } = useLang()
+  const { t } = useTranslation()
+  return useMemo(() => {
+    const names = new Map(modules.map((m) => [m.id, tx(m.name)]))
+    return (id: string) => (id === 'manual' ? t('props.manual') : (names.get(id) ?? id))
+  }, [modules, tx, t])
+}
+
+/** Chemin d'un nœud trouvé par un module : « via Gravatar (jane@...) puis GitHub (jane) ». */
+function NodePath({ path }: { path: ProvenanceStep[] }): React.JSX.Element | null {
+  const { t } = useTranslation()
+  const moduleName = useModuleName()
+  if (!path.length) return null
+  const go = (id: string): void => void revealNode(id).then(() => useGraph.getState().select([id]))
+  return (
+    <div className="-mt-2 text-[11.5px] leading-snug text-muted">
+      <span className="text-faint">{t('provenance.path')}</span> {t('provenance.via')}{' '}
+      {path.map((step, i) => (
+        <span key={i}>
+          {i > 0 && ` ${t('provenance.then')} `}
+          <span className="font-medium text-fg">{moduleName(step.moduleId)}</span>
+          {step.fromId && step.fromLabel && (
+            <>
+              {' '}
+              <button onClick={() => go(step.fromId!)} className="inline text-left [overflow-wrap:anywhere] underline-offset-2 hover:text-fg hover:underline">
+                ({step.fromLabel})
+              </button>
+            </>
+          )}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+/** Sources d'un nœud ou d'un lien : un module par ligne, avec sa date, la page source et la réponse brute. */
+function SourcesBlock({ observations }: { observations: Observation[] | null }): React.JSX.Element | null {
+  const { t } = useTranslation()
+  const moduleName = useModuleName()
+  const [raw, setRaw] = useState<{ title: string; data: unknown } | null>(null)
+  const groups = useMemo(() => {
+    type Group = { moduleId: string; first: number; last: number; url: string | null; runId: string; entity: boolean; props: Set<string> }
+    const m = new Map<string, Group>()
+    for (const o of observations ?? []) {
+      const g: Group = m.get(o.moduleId) ?? { moduleId: o.moduleId, first: o.observedAt, last: o.observedAt, url: null, runId: '', entity: false, props: new Set() }
+      g.first = Math.min(g.first, o.observedAt)
+      // Exécution la plus récente : sa réponse brute est celle qu'on montre.
+      if (o.observedAt >= g.last && o.runId) g.runId = o.runId
+      if (!g.runId && o.runId) g.runId = o.runId
+      g.last = Math.max(g.last, o.observedAt)
+      // Page où l'entité a été vue d'abord, sinon celle d'une propriété.
+      if (o.sourceUrl && (!g.url || o.property === null)) g.url = o.sourceUrl
+      if (o.property === null) g.entity = true
+      else g.props.add(o.property)
+      m.set(o.moduleId, g)
+    }
+    return Array.from(m.values()).sort((a, b) => a.first - b.first)
+  }, [observations])
+  if (!observations) return null
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center gap-2 text-[12.5px] font-semibold">
+        <Icon name="Layers" size={14} className="text-muted" />
+        {t('provenance.sources')}
+        {groups.length > 0 && <span className="rounded-full bg-panel-3 px-1.5 text-[10.5px] text-muted">{groups.length}</span>}
+      </div>
+      {groups.length === 0 && <div className="text-[12px] text-muted">{t('provenance.empty')}</div>}
+      {groups.map((g) => (
+        <div key={g.moduleId} className="flex items-start gap-2 rounded-lg border border-line bg-panel-2 px-2.5 py-1.5">
+          <div className="min-w-0 flex-1 leading-tight">
+            <div className="truncate text-[12px] font-medium">{moduleName(g.moduleId)}</div>
+            <div className="mt-0.5 text-[11px] text-muted">
+              {new Date(g.last).toLocaleString()}
+              {g.entity && ` · ${t('provenance.entity')}`}
+              {g.props.size > 0 && ` · ${t('provenance.props', { count: g.props.size })}`}
+            </div>
+          </div>
+          {g.url && (
+            <button onClick={() => openLink(g.url!)} className="mt-0.5 text-muted hover:text-fg" title={`${t('provenance.openSource')}\n${g.url}`}>
+              <Icon name="ExternalLink" size={13} />
+            </button>
+          )}
+          {g.runId && (
+            <button
+              onClick={() => void api('modules:runRaw', g.runId).then((data) => setRaw({ title: moduleName(g.moduleId), data }))}
+              className="mt-0.5 text-muted hover:text-fg"
+              title={t('provenance.raw')}
+            >
+              <Icon name="FileBraces" size={13} />
+            </button>
+          )}
+        </div>
+      ))}
+      <Dialog open={!!raw} onClose={() => setRaw(null)} title={raw?.title} width={720}>
+        <pre className="max-h-[60vh] overflow-auto rounded-lg bg-panel-2 p-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap select-text">
+          {raw?.data === null || raw?.data === undefined ? t('runs.noRaw') : JSON.stringify(raw.data, null, 2)}
+        </pre>
+      </Dialog>
+    </div>
+  )
+}
+
+/** Cotation facultative, à la manière de l'Amirauté : fiabilité de la source (A à F), crédibilité (1 à 6). */
+function RatingBlock({ node }: { node: GraphNode }): React.JSX.Element {
+  const { t } = useTranslation()
+  const updateNode = useGraph((s) => s.updateNode)
+  const value: Admiralty = parseAdmiralty(node.data[ADMIRALTY_KEY]) ?? { reliability: null, credibility: null }
+  const code = formatAdmiralty(value)
+  const set = (patch: Partial<Admiralty>): void => {
+    const next = formatAdmiralty({ ...value, ...patch })
+    const data = { ...node.data }
+    if (next) data[ADMIRALTY_KEY] = next
+    else delete data[ADMIRALTY_KEY]
+    void updateNode(node.id, { data })
+  }
+  return (
+    <div className="flex flex-col gap-1.5" title={t('rating.hint')}>
+      <div className="flex items-center gap-2 text-[12.5px] font-semibold">
+        <Icon name="Scale" size={14} className="text-muted" />
+        {t('rating.title')}
+        {code && <span className="rounded bg-panel-3 px-1.5 font-mono text-[11px] text-fg">{code}</span>}
+      </div>
+      <div className="grid grid-cols-2 gap-1.5">
+        <label className="flex min-w-0 flex-col gap-1">
+          <span className="truncate text-[11px] text-muted">{t('rating.reliability')}</span>
+          <select
+            value={value.reliability ?? ''}
+            onChange={(e) => set({ reliability: (e.target.value || null) as Admiralty['reliability'] })}
+            className="field !py-1 !text-[12px]"
+          >
+            <option value="">{t('rating.none')}</option>
+            {RELIABILITY.map((r) => (
+              <option key={r} value={r}>
+                {t(`rating.r.${r}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex min-w-0 flex-col gap-1">
+          <span className="truncate text-[11px] text-muted">{t('rating.credibility')}</span>
+          <select
+            value={value.credibility ?? ''}
+            onChange={(e) => set({ credibility: e.target.value ? (Number(e.target.value) as Admiralty['credibility']) : null })}
+            className="field !py-1 !text-[12px]"
+          >
+            <option value="">{t('rating.none')}</option>
+            {CREDIBILITY.map((c) => (
+              <option key={c} value={c}>
+                {t(`rating.c.${c}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Annotations (texte, image, carte, dessin)
 
 function AnnotationSheet({ node }: { node: GraphNode }): React.JSX.Element {
@@ -1131,6 +1336,8 @@ function EdgePanel({ edge }: { edge: GraphEdge }): React.JSX.Element {
   const deleteEdges = useGraph((s) => s.deleteEdges)
   const nodes = useGraph((s) => s.nodes)
   const [label, setLabel] = useSyncedText(edge.label, (v) => void updateEdge(edge.id, { label: v }))
+  const score = useGraph((s) => s.corroboration.edges[edge.id] ?? 0)
+  const provenance = useProvenance({ edgeId: edge.id }, `${edge.updatedAt}:${score}`)
   const src = nodes.find((n) => n.id === edge.source)?.data.node
   const dst = nodes.find((n) => n.id === edge.target)?.data.node
   return (
@@ -1158,8 +1365,10 @@ function EdgePanel({ edge }: { edge: GraphEdge }): React.JSX.Element {
         </div>
         <label className="flex items-center justify-between">
           <span className="text-[12.5px]">{t('style.dashed')}</span>
-          <Switch checked={!!edge.style.dashed} onChange={(v) => void updateEdge(edge.id, { style: { ...edge.style, dashed: v } })} />
+          {/* Pointillé d'office pour un lien vu par une seule source, tant qu'il n'est pas réglé à la main. */}
+          <Switch checked={edge.style.dashed ?? score === 1} onChange={(v) => void updateEdge(edge.id, { style: { ...edge.style, dashed: v } })} />
         </label>
+        {edge.sourceModule !== 'manual' && <SourcesBlock observations={provenance?.observations ?? null} />}
         <label className="flex items-center justify-between">
           <span className="text-[12.5px]">{t('style.animated')}</span>
           <Switch checked={!!edge.style.animated} onChange={(v) => void updateEdge(edge.id, { style: { ...edge.style, animated: v } })} />
