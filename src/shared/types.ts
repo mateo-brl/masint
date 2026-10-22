@@ -304,3 +304,41 @@ export interface ProxyTestResult {
   isTor?: boolean
   error?: string
 }
+
+// ---------------------------------------------------------------------------
+// Sites de recherche de pseudo (bases Sherlock et Maigret)
+
+/** Palier de la recherche de pseudo : `essential` (module automatique), `extended` (sur demande). */
+export type SitesTier = 'essential' | 'extended'
+
+export interface SitesTierStatus {
+  tier: SitesTier
+  /** Sites du palier. */
+  total: number
+  /** Sites interrogés par les recherches (sites en échec retirés). */
+  active: number
+  /** Sites en échec au contrôle témoin, sautés pendant 7 jours. */
+  failed: number
+  /** Sites écartés par des règles fixes : liste noire, protection anti-robot, jeton dynamique... */
+  skipped: number
+}
+
+export interface SitesStatus {
+  /** Base Maigret utilisée : embarquée ou mise à jour, date de la base. */
+  db: { source: 'bundled' | 'user'; updatedAt: string | null; sites: number }
+  /** Sortie réseau des recherches : `direct`, `tor` ou `proxy:<empreinte>`. */
+  egress: string
+  /** Dernier contrôle témoin sur cette sortie réseau. */
+  checkedAt: number | null
+  last: { tested: number; ok: number; false_positive: number; missed: number; inconclusive: number; untestable: number } | null
+  tiers: SitesTierStatus[]
+  /** Un contrôle est en cours. */
+  checking: boolean
+}
+
+export interface SitesUpdateResult {
+  ok: boolean
+  /** `updated` : nouvelle base installée ; `current` : déjà à jour. */
+  status?: 'updated' | 'current'
+  error?: string
+}

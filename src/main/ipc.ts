@@ -18,6 +18,7 @@ import type { SettingsService } from './settings'
 import { takePendingOpen } from './openQueue'
 import { checkForUpdates, installUpdate } from './updater'
 import { creditsOf, RosoClient } from './modules/roso/_client'
+import { SitesService } from './sites'
 
 type Handler<C extends ApiChannel> = (...args: Parameters<ApiMap[C]>) => ReturnType<ApiMap[C]> | Promise<ReturnType<ApiMap[C]>>
 
@@ -289,6 +290,16 @@ export function registerIpc(deps: IpcDeps): void {
       return { ok: false, error }
     }
   })
+
+  // Sites de recherche de pseudo ------------------------------------------------
+  const sites = new SitesService(settings, engine, (p) => {
+    const win = getWindow()
+    if (win && !win.isDestroyed()) win.webContents.send('sites:progress', p)
+  })
+  handle('sites:status', () => sites.status())
+  handle('sites:updateDb', () => sites.updateDb())
+  handle('sites:check', (tier) => sites.check(tier))
+  handle('sites:cancelCheck', () => sites.cancel())
 
   // Exports ------------------------------------------------------------------
   handle('export:pdf', async (html, defaultName) => {
