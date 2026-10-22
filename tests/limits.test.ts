@@ -140,7 +140,8 @@ describe('createFetch : limite par hôte', () => {
     const controller = new AbortController()
     const fetchFn = createFetch({ settings: settings(), signal: controller.signal })
     const all = Array.from({ length: 5 }, () => fetchFn(url).then(() => 'ok', (e: Error) => e.name))
-    await sleep(20)
+    // Attend que les trois premières requêtes soient arrivées au serveur (machine chargée).
+    for (let i = 0; i < 200 && stats.total < PER_HOST_LIMIT; i++) await sleep(10)
     const t0 = Date.now()
     controller.abort()
     const results = await Promise.all(all)
