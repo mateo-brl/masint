@@ -168,11 +168,13 @@ export class Repo {
     const current = this.getInvestigation(id)
     if (!current) throw new Error(`Enquête introuvable : ${id}`)
     const next = { ...current, ...patch }
+    // Se déplacer dans le graphe (vue enregistrée) ne modifie pas l'enquête : l'ordre de l'accueil ne bouge pas.
+    const touched = Object.keys(patch).some((k) => k !== 'viewport')
     this.db
       .prepare(
         `UPDATE investigations SET name = ?, description = ?, color = ?, notes = ?, viewport = ?, updated_at = ? WHERE id = ?`
       )
-      .run(next.name, next.description, next.color, next.notes, next.viewport ? JSON.stringify(next.viewport) : null, now(), id)
+      .run(next.name, next.description, next.color, next.notes, next.viewport ? JSON.stringify(next.viewport) : null, touched ? now() : current.updatedAt, id)
     return this.getInvestigation(id)!
   }
 
