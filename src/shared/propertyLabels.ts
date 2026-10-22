@@ -944,6 +944,22 @@ export const PROPERTY_LABELS: Record<string, { fr: string; en: string }> = {
   author: { fr: 'Auteur', en: 'Author' },
   source: { fr: 'Source', en: 'Source' },
 
+  // Sanctions et gel des avoirs (finance.sanctions)
+  sanctions_lists: { fr: 'Listes de sanctions', en: 'Sanctions lists' },
+  sanctions_reasons: { fr: 'Motifs de la sanction', en: 'Reasons for listing' },
+  sanctions_legal_bases: { fr: 'Fondements juridiques', en: 'Legal bases' },
+  sanctions_eu_refs: { fr: 'Références UE', en: 'EU references' },
+  sanctions_un_refs: { fr: 'Références ONU', en: 'UN references' },
+  sanctions_birth_dates: { fr: 'Dates de naissance publiées', en: 'Published birth dates' },
+  sanctions_match: { fr: 'Correspondance avec la liste', en: 'Match with the list' },
+  sanctions_possible_matches: { fr: 'Homonymes possibles sur les listes de sanctions', en: 'Possible namesakes on sanctions lists' },
+  sanctions_excluded_matches: { fr: 'Homonymes écartés (naissance incompatible)', en: 'Namesakes dropped (inconsistent birth date)' },
+  sanctions_lists_checked: { fr: 'Listes de sanctions consultées', en: 'Sanctions lists checked' },
+  sanctions_lists_unavailable: { fr: 'Listes de sanctions injoignables', en: 'Sanctions lists unavailable' },
+  sanctions_url: { fr: 'Texte de la sanction', en: 'Sanction text' },
+  dgtresor_id: { fr: 'Identifiant au registre des gels', en: 'Asset freeze register ID' },
+  aliases_count: { fr: "Nombre d'alias", en: 'Alias count' },
+
   // roso.info
   roso_credits_left: { fr: 'Crédits roso.info restants', en: 'roso.info credits left' },
   roso_tier: { fr: 'Formule roso.info', en: 'roso.info plan' },
