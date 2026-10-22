@@ -20,7 +20,7 @@ import { getEntityType } from '@shared/entityTypes'
 import { getPlatform } from '@shared/platforms'
 import type { GraphNode } from '@shared/types'
 import { addEntityAt, addFromLines, addFromText, addImageFiles, canEnrich, enrichNode, modulesForNode, pasteImages, useApplicable } from '../../lib/actions'
-import { api, openExternal } from '../../lib/api'
+import { openExternal } from '../../lib/api'
 import { DRAG_MIME } from '../../lib/catalog'
 import { fitGraph, visibleCenter } from '../../lib/viewport'
 import { useLang } from '../../lib/i18n'
@@ -568,11 +568,10 @@ function ContextMenu({
       })}
       {many &&
         item('Merge', t('canvas.merge'), async () => {
-          const inv = useGraph.getState().investigation
-          if (!inv) return
+          if (!useGraph.getState().investigation) return
           if (!(await confirmDialog(t('canvas.mergeTitle'), t('canvas.mergeBody', { label: node.label }), false))) return
-          const change = await api('graph:mergeNodes', inv.id, node.id, selected.map((s) => s.id))
-          useGraph.getState().applyChange(change)
+          // Fusion annulable (Ctrl+Z) : voir useGraph.mergeNodes.
+          await useGraph.getState().mergeNodes(node.id, selected.map((s) => s.id))
           toast('success', t('canvas.merged'))
         })}
       <div className="my-1 border-t border-line" />
