@@ -1,0 +1,58 @@
+{
+ "success": true,
+ "result": {
+  "total": 2,
+  "records": [
+   {
+    "_id": 246244,
+    "company_num": 249885,
+    "company_name": "RYANAIR HOLDINGS PUBLIC LIMITED COMPANY",
+    "company_status_code": 1151,
+    "company_status": "Normal ",
+    "company_type_code": 1154,
+    "company_type": "PLC - Public Limited Company",
+    "company_reg_date": "1996-06-05T00:00:00",
+    "last_ar_date": "2025-10-09T00:00:00",
+    "company_address_1": "RYANAIR DUBLIN OFFICE",
+    "company_address_2": "AIRSIDE BUSINESS PARK",
+    "company_address_3": "SWORDS CO. DUBLIN",
+    "company_address_4": "SWORDS,DUBLIN",
+    "comp_dissolved_date": null,
+    "nard": "2026-10-09T00:00:00",
+    "last_accounts_date": "2025-03-31T00:00:00",
+    "company_status_date": null,
+    "nace_v2_code": null,
+    "eircode": null,
+    "company_name_eff_date": "1997-05-16T00:00:00",
+    "company_type_eff_date": "2015-06-01T00:00:00",
+    "princ_object_code": "74.84",
+    "rank": 0.09059158
+   },
+   {
+    "_id": 130194,
+    "company_num": 133835,
+    "company_name": "ELITE HOLDINGS LIMITED",
+    "company_status_code": 1158,
+    "company_status": "Dissolved",
+    "company_type_code": 1119,
+    "company_type": "Private limited by shares",
+    "company_reg_date": "1988-07-14T00:00:00",
+    "last_ar_date": "1989-12-31T00:00:00",
+    "company_address_1": "RYANAIR CORPORATE HEADQUARTERS",
+    "company_address_2": "DUBLIN AIRPORT",
+    "company_address_3": "CO. DUBLIN.",
+    "company_address_4": "DUBLIN",
+    "comp_dissolved_date": "1994-06-17T00:00:00",
+    "nard": "2003-12-31T00:00:00",
+    "last_accounts_date": null,
+    "company_status_date": "1994-06-17T00:00:00",
+    "nace_v2_code": null,
+    "eircode": null,
+    "company_name_eff_date": "1988-07-14T00:00:00",
+    "company_type_eff_date": "1988-07-14T00:00:00",
+    "princ_object_code": "74.84",
+    "rank": 0.001107236
+   }
+  ]
+ }
+}

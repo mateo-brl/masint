@@ -982,6 +982,16 @@ export const PROPERTY_LABELS: Record<string, { fr: string; en: string }> = {
   domiciliation_provider: { fr: 'Société de domiciliation', en: 'Registered-office provider' },
   individual_entrepreneurs_seen: { fr: 'Entrepreneurs individuels parmi les 25 premières entreprises (non nommés)', en: 'Sole traders among the first 25 companies (not named)' },
 
+  // Registres européens (company.brreg, company.prh, company.ares, company.cro)
+  registration_date: { fr: "Date d'immatriculation", en: 'Registration date' },
+  share_capital: { fr: 'Capital social', en: 'Share capital' },
+  register_file: { fr: 'Référence au registre', en: 'Register file' },
+  euid: { fr: 'Identifiant européen (EUID)', en: 'European ID (EUID)' },
+  other_names: { fr: 'Autres dénominations', en: 'Other names' },
+  last_accounts_date: { fr: 'Derniers comptes déposés', en: 'Latest accounts filed' },
+  last_annual_return_date: { fr: 'Dernière déclaration annuelle', en: 'Latest annual return' },
+  name_since: { fr: 'Dénomination depuis le', en: 'Name in use since' },
+
   // roso.info
   roso_credits_left: { fr: 'Crédits roso.info restants', en: 'roso.info credits left' },
   roso_tier: { fr: 'Formule roso.info', en: 'roso.info plan' },

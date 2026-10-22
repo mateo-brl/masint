@@ -1,0 +1,138 @@
+{
+ "_embedded": {
+  "enheter": [
+   {
+    "organisasjonsnummer": "923609016",
+    "navn": "EQUINOR ASA",
+    "organisasjonsform": {
+     "_links": {
+      "self": {
+       "href": "https://data.brreg.no/enhetsregisteret/api/organisasjonsformer/ASA"
+      }
+     },
+     "beskrivelse": "Allmennaksjeselskap",
+     "kode": "ASA"
+    },
+    "forretningsadresse": {
+     "adresse": [
+      "Forusbeen 50"
+     ],
+     "kommune": "STAVANGER",
+     "kommunenummer": "1103",
+     "land": "Norge",
+     "landkode": "NO",
+     "postnummer": "4035",
+     "poststed": "STAVANGER"
+    },
+    "stiftelsesdato": "1972-09-18"
+   },
+   {
+    "organisasjonsnummer": "959733600",
+    "navn": "EQUINOR PENSJON",
+    "organisasjonsform": {
+     "_links": {
+      "self": {
+       "href": "https://data.brreg.no/enhetsregisteret/api/organisasjonsformer/PK"
+      }
+     },
+     "beskrivelse": "Pensjonskasse",
+     "kode": "PK"
+    },
+    "forretningsadresse": {
+     "adresse": [
+      "Forusbeen 50"
+     ],
+     "kommune": "STAVANGER",
+     "kommunenummer": "1103",
+     "land": "Norge",
+     "landkode": "NO",
+     "postnummer": "4035",
+     "poststed": "STAVANGER"
+    },
+    "stiftelsesdato": "1990-11-20"
+   },
+   {
+    "organisasjonsnummer": "983908179",
+    "navn": "EQUINOR STORBAND",
+    "organisasjonsform": {
+     "_links": {
+      "self": {
+       "href": "https://data.brreg.no/enhetsregisteret/api/organisasjonsformer/FLI"
+      }
+     },
+     "beskrivelse": "Forening/lag/innretning",
+     "kode": "FLI"
+    },
+    "forretningsadresse": {
+     "adresse": [
+      "c/o Øystein Holt",
+      "Torbjørn Hornkloves gate 49"
+     ],
+     "kommune": "STAVANGER",
+     "kommunenummer": "1103",
+     "land": "Norge",
+     "landkode": "NO",
+     "postnummer": "4010",
+     "poststed": "STAVANGER"
+    },
+    "stiftelsesdato": "1990-03-13"
+   },
+   {
+    "organisasjonsnummer": "985418624",
+    "navn": "EQUINOR TEATERFORENING",
+    "organisasjonsform": {
+     "_links": {
+      "self": {
+       "href": "https://data.brreg.no/enhetsregisteret/api/organisasjonsformer/FLI"
+      }
+     },
+     "beskrivelse": "Forening/lag/innretning",
+     "kode": "FLI"
+    },
+    "forretningsadresse": {
+     "adresse": [
+      "Forusbeen 50"
+     ],
+     "kommune": "STAVANGER",
+     "kommunenummer": "1103",
+     "land": "Norge",
+     "landkode": "NO",
+     "postnummer": "4035",
+     "poststed": "STAVANGER"
+    },
+    "stiftelsesdato": "2003-01-01"
+   },
+   {
+    "organisasjonsnummer": "932699141",
+    "navn": "EQUINOR TOASTMASTERS",
+    "organisasjonsform": {
+     "_links": {
+      "self": {
+       "href": "https://data.brreg.no/enhetsregisteret/api/organisasjonsformer/FLI"
+      }
+     },
+     "beskrivelse": "Forening/lag/innretning",
+     "kode": "FLI"
+    },
+    "forretningsadresse": {
+     "adresse": [
+      "Forusbeen 50"
+     ],
+     "kommune": "STAVANGER",
+     "kommunenummer": "1103",
+     "land": "Norge",
+     "landkode": "NO",
+     "postnummer": "4035",
+     "poststed": "STAVANGER"
+    },
+    "stiftelsesdato": "2023-11-01"
+   }
+  ]
+ },
+ "page": {
+  "number": 0,
+  "size": 5,
+  "totalElements": 179,
+  "totalPages": 36
+ }
+}
