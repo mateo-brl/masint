@@ -1,4 +1,4 @@
-import { memo, useRef } from 'react'
+import { memo } from 'react'
 import {
   BaseEdge,
   EdgeLabelRenderer,
@@ -8,7 +8,7 @@ import {
   type EdgeProps
 } from '@xyflow/react'
 import { useApp } from '../../../store/app'
-import { useCanvas, useEdgeDecor, useEdgeOnPath, useLowZoom } from '../../../store/canvas'
+import { useCanvas, useEdgeDecor, useLowZoom } from '../../../store/canvas'
 import type { FlowEdge } from '../../../store/graph'
 
 /** Au-delà de ce nombre de liens sortants, les libellés ne s'affichent que pour la sélection. */
@@ -29,17 +29,14 @@ function MasintEdgeImpl(props: EdgeProps<FlowEdge>): React.JSX.Element {
   )
   // Faible zoom : libellés illisibles, donc omis.
   const low = useLowZoom()
-  // Chemin mis en évidence (re-rendu des seuls liens du chemin) ; estompé écrit dans le DOM sans
-  // re-rendu (voir useEdgeDecor).
-  const onPath = useEdgeOnPath(id)
-  const group = useRef<SVGGElement>(null)
-  const labelRef = useRef<HTMLDivElement>(null)
-  useEdgeDecor(id, source, target, group, labelRef)
+  // Estompé et chemin mis en évidence écrits dans le DOM sans re-rendu ; seuls les liens qui
+  // entrent sur le chemin ou en sortent sont re-rendus, pour leur libellé (voir useEdgeDecor).
+  const { ref: group, extraRef: labelRef, onPath } = useEdgeDecor(id, source, target)
   const edge = data?.edge
   const params = { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }
   const [path, labelX, labelY] =
     style === 'straight' ? getStraightPath(params) : style === 'smoothstep' ? getSmoothStepPath({ ...params, borderRadius: 10 }) : getBezierPath(params)
-  const color = selected || onPath ? 'var(--accent)' : (edge?.style.color ?? 'var(--edge)')
+  const color = selected ? 'var(--accent)' : (edge?.style.color ?? 'var(--edge)')
 
   return (
     <>
@@ -50,7 +47,7 @@ function MasintEdgeImpl(props: EdgeProps<FlowEdge>): React.JSX.Element {
           markerEnd={markerEnd}
           style={{
             stroke: color,
-            strokeWidth: (edge?.style.width ?? 1.1) * (selected ? 1.6 : onPath ? 2.2 : 1),
+            strokeWidth: (edge?.style.width ?? 1.1) * (selected ? 1.6 : 1),
             strokeDasharray: edge?.style.dashed ? '5 4' : undefined
           }}
           className={edge?.style.animated ? 'animated' : undefined}

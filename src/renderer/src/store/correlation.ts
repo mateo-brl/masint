@@ -8,6 +8,7 @@ import { create } from 'zustand'
 import type { CrossRef, GraphNode } from '@shared/types'
 import { api } from '../lib/api'
 import { useApp } from './app'
+import { useCanvas } from './canvas'
 import { useGraph } from './graph'
 
 interface CorrelationState {
@@ -17,9 +18,10 @@ interface CorrelationState {
 
 export const useCorrelation = create<CorrelationState>(() => ({ investigationId: null, refs: new Map() }))
 
-/** Nombre d'autres enquêtes où apparaît un nœud : sélecteur fin, un nombre par nœud. */
-export function useCrossRefCount(id: string): number {
-  return useCorrelation((s) => s.refs.get(id)?.length ?? 0)
+/** Publie les décomptes pour les nœuds du canevas (pastille « vu dans N enquêtes »). */
+function publish(refs: ReadonlyMap<string, CrossRef[]>): void {
+  useCorrelation.setState({ refs })
+  useCanvas.setState({ crossRefs: new Map(Array.from(refs, ([id, list]) => [id, list.length])) })
 }
 
 /** Délai de regroupement des nouveaux nœuds avant la requête. */
@@ -36,7 +38,8 @@ export function useCorrelationSync(): void {
   const isolated = useApp((s) => s.settings?.isolateInvestigations ?? false)
 
   useEffect(() => {
-    useCorrelation.setState({ investigationId, refs: new Map() })
+    useCorrelation.setState({ investigationId })
+    publish(new Map())
     if (!investigationId || isolated) return
     let live = true
     /** Valeur interrogée pour chaque nœud ; nœuds (versions) déjà examinés. */
@@ -67,7 +70,7 @@ export function useCorrelationSync(): void {
         if (list?.length) refs.set(id, list)
         else refs.delete(id)
       }
-      useCorrelation.setState({ refs })
+      publish(refs)
     }
     const schedule = (): void => {
       if (!timer) timer = setTimeout(() => void check(), BATCH_DELAY)

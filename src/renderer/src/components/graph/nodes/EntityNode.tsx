@@ -1,4 +1,4 @@
-import { memo, useRef } from 'react'
+import { memo } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { useTranslation } from 'react-i18next'
 import { attachmentUrl } from '@shared/api'
@@ -9,8 +9,7 @@ import { nodeSubtitle } from '@shared/subtitle'
 import { useLang } from '../../../lib/i18n'
 import { EntityBadge, Icon } from '../../../lib/icons'
 import { useApp } from '../../../store/app'
-import { useCanvas, useLowZoom, useNodeDecor, useOnPath } from '../../../store/canvas'
-import { useCrossRefCount } from '../../../store/correlation'
+import { useCanvas, useLowZoom, useNodeDecor } from '../../../store/canvas'
 import { useGraph, type FlowNode } from '../../../store/graph'
 
 const SIZES = { sm: 168, md: 196, lg: 240 }
@@ -46,20 +45,15 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
   const hiddenCount = useCanvas((s) => s.collapsedCount.get(n.id) ?? 0)
   const dense = useCanvas((s) => s.dense)
   const low = useLowZoom()
-  // Analyse et filtre : chemin mis en évidence (re-rendu des seuls nœuds du chemin) ; estompé et
-  // couleur de communauté écrits dans le DOM sans re-rendu (voir useNodeDecor). Autres
-  // enquêtes où l'entité apparaît.
-  const root = useRef<HTMLDivElement>(null)
-  const onPath = useOnPath(n.id)
-  useNodeDecor(n.id, root)
-  const seenElsewhere = useCrossRefCount(n.id)
+  // Analyse et filtre (estompé, communauté, chemin mis en évidence) écrits dans le DOM sans
+  // re-rendu ; autres enquêtes où l'entité apparaît (voir useNodeDecor).
+  const { ref: root, seenElsewhere } = useNodeDecor(n.id)
   const box: React.CSSProperties = {
     width,
     minHeight: 38,
     background: n.style.bg ?? 'var(--node)',
-    borderColor: selected || onPath ? 'var(--accent)' : n.style.color && n.imageId ? n.style.color : 'var(--node-border)',
-    // Contour plutôt qu'ombre : peu coûteux à dessiner, n'altère pas la taille mesurée.
-    ...(onPath ? { outline: '2px solid var(--accent)' } : {}),
+    borderColor: selected ? 'var(--accent)' : n.style.color && n.imageId ? n.style.color : 'var(--node-border)',
+    // Contour (communauté, chemin) plutôt qu'ombre : peu coûteux à dessiner, taille inchangée.
     outlineOffset: 2,
     // L'ombre floue coûte cher à dessiner : simple contour sur les grands graphes et à faible zoom.
     boxShadow:
