@@ -150,6 +150,10 @@ describe('email.microsoft (parsing)', () => {
     expect(() => interpretMsa({ ErrorHR: '80046703' })).toThrow(/session/)
   })
 
+  it('domaine réservé à une organisation (microsoft.com) : absent, pas une session refusée', () => {
+    expect(interpretMsa(json('microsoft_reserved_domain.json'))).toEqual({ found: false, data: {} })
+  })
+
   it('enchaîne page de connexion et vérification (fetch simulé)', async () => {
     const ctx = fakeContext([
       [/login\.srf/, () => new Response(fx('microsoft_login.html'), { headers: { 'set-cookie': 'MSPRequ=1; path=/' } })],
