@@ -6,7 +6,7 @@ import type { InputEntity, ModuleContext, ModuleOutput, OsintModule, OutEntity }
 import type { GraphEdge, GraphNode, JobProgress, ModuleRun, PropValue, Suggestion } from '@shared/types'
 import { dedupKey, type Repo } from '../db/repo'
 import type { SettingsService } from '../settings'
-import { createDohResolver, createFetch, jsonHelpers, type FetchFn } from './http'
+import { createDohResolver, createFetch, egressKey, jsonHelpers, type FetchFn } from './http'
 import { allModules, isConfigured } from './registry'
 
 const MAX_RAW = 200_000
@@ -311,7 +311,8 @@ export class Engine {
       userAgent: settings.userAgent,
       lang: settings.lang,
       log: (msg) => console.log(`[${m.id}] ${msg}`),
-      progress: onProgress
+      progress: onProgress,
+      egress: egressKey(settings.proxy, settings.proxy.perModule[m.id] ?? 'default')
     }
   }
 

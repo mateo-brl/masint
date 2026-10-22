@@ -88,17 +88,26 @@ const WAF_MARKERS = [
   '{return l.onPageView}}),Object.defineProperty(r,"perimeterxIdentifiers",{enumerable:'
 ]
 
+/**
+ * Corrections locales de la base, vérifiées en direct. Twitch sert la balise `content` tantôt
+ * entre apostrophes, tantôt entre guillemets : le message d'erreur est réduit à la phrase seule,
+ * absente des pages de comptes existants (audit du 22/10/2026).
+ */
+export const OVERRIDES: Record<string, Partial<SherlockSite>> = {
+  Twitch: { errorMsg: 'Twitch is the world&#39;s leading video platform and community for gamers.' }
+}
+
 const MAX_BODY = 3 * 1024 * 1024
 
 let cache: SherlockSite[] | null = null
 
-/** Tous les sites de la base (hors métadonnées `$schema`). */
+/** Tous les sites de la base (hors métadonnées `$schema`), corrections locales appliquées. */
 export function allSites(): SherlockSite[] {
   if (!cache) {
     const data = rawData as unknown as Record<string, Omit<SherlockSite, 'name'> | string>
     cache = Object.entries(data)
       .filter(([name, v]) => !name.startsWith('$') && typeof v === 'object' && v !== null)
-      .map(([name, v]) => ({ name, ...(v as Omit<SherlockSite, 'name'>) }))
+      .map(([name, v]) => ({ name, ...(v as Omit<SherlockSite, 'name'>), ...OVERRIDES[name] }))
   }
   return cache
 }
@@ -177,8 +186,23 @@ export function evaluate(site: SherlockSite, res: { status: number; text: string
   return status
 }
 
-async function readText(res: Response): Promise<string> {
-  if (!res.body) return ''
+/**
+ * Défi anti-robot signalé par les en-têtes : AWS WAF (`x-amzn-waf-action`, CGTrader répond 202
+ * sans corps) et Cloudflare (`cf-mitigated: challenge`). Un tel statut ne dit rien du compte.
+ */
+export function wafFromHeaders(headers: Headers | undefined): boolean {
+  if (!headers) return false
+  return headers.has('x-amzn-waf-action') || headers.get('cf-mitigated')?.toLowerCase() === 'challenge'
+}
+
+/** Corps de la réponse en UTF-8, tronqué à `max` octets. */
+export async function readText(res: Response, max = MAX_BODY): Promise<string> {
+  return (await readBytes(res, max)).toString('utf8')
+}
+
+/** Corps brut de la réponse, tronqué à `max` octets. */
+export async function readBytes(res: Response, max = MAX_BODY): Promise<Buffer> {
+  if (!res.body) return Buffer.alloc(0)
   const reader = res.body.getReader()
   const chunks: Uint8Array[] = []
   let size = 0
@@ -188,7 +212,7 @@ async function readText(res: Response): Promise<string> {
       if (done) break
       chunks.push(value)
       size += value.byteLength
-      if (size >= MAX_BODY) {
+      if (size >= max) {
         await reader.cancel().catch(() => undefined)
         break
       }
@@ -196,7 +220,7 @@ async function readText(res: Response): Promise<string> {
   } catch {
     /* corps tronqué : on garde ce qui a été lu */
   }
-  return Buffer.concat(chunks).toString('utf8')
+  return Buffer.concat(chunks)
 }
 
 /** Interroge un site pour un pseudo. Ne lève jamais : les erreurs sont rapportées dans le résultat. */
@@ -217,8 +241,10 @@ export async function checkSite(site: SherlockSite, username: string, ctx: Modul
       timeoutMs,
       ...(payload !== undefined ? { json: payload } : {})
     })
+    const waf = wafFromHeaders(res.headers)
+    if (method === 'HEAD' || waf) await res.body?.cancel().catch(() => undefined)
+    if (waf) return { site: site.name, url, status: 'waf', httpStatus: res.status }
     const text = method === 'HEAD' ? '' : await readText(res)
-    if (method === 'HEAD') await res.body?.cancel().catch(() => undefined)
     return { site: site.name, url, status: evaluate(site, { status: res.status, text }), httpStatus: res.status }
   } catch (e) {
     const err = e as Error & { cause?: { code?: string; message?: string } }

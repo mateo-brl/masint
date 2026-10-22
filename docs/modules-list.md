@@ -3,7 +3,7 @@
 <!-- Fichier généré : ne pas modifier à la main. -->
 <!-- Régénérer avec : node build/scripts/list-modules.mjs > docs/modules-list.md -->
 
-146 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
+147 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
 
 Légende des remarques : **à la demande** (lancé seulement sur demande explicite, service à crédits), **bruyant** (peut alerter la personne recherchée), **expérimental** (résultats à vérifier). Une clé suivie de « (facultative) » améliore les résultats sans être obligatoire.
 
@@ -11,7 +11,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | --- | ---: |
 | [Téléphone](#phone) | 9 |
 | [Email](#email) | 26 |
-| [Pseudo](#username) | 2 |
+| [Pseudo](#username) | 3 |
 | [Personne](#person) | 7 |
 | [Domaine](#domain) | 14 |
 | [Adresse IP](#ip) | 13 |
@@ -83,6 +83,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
 | `username.sites` | Pseudo sur des centaines de sites | `username` |  |  |
+| `username.sites_extended` | Pseudo sur des milliers de sites | `username` |  | à la demande |
 | `username.sites_nsfw` | Pseudo sur les sites adultes | `username` |  | à la demande |
 
 <a id="person"></a>

@@ -1,6 +1,7 @@
 // Client HTTP des modules : proxy HTTP(S), SOCKS5 ou Tor, User-Agent, délai,
 // et DNS-over-HTTPS pour ne pas faire fuiter les résolutions hors du proxy.
 
+import { createHash } from 'node:crypto'
 import { Agent, ProxyAgent, fetch as undiciFetch, type Dispatcher } from 'undici'
 import { socksDispatcher } from 'fetch-socks'
 import type { FetchOptions, HttpError } from '@shared/modules'
@@ -40,6 +41,19 @@ export function getDispatcher(proxy: ProxySettings, route: ModuleRoute = 'defaul
   }
   dispatchers.set(url, d)
   return d
+}
+
+/**
+ * Identifiant de la sortie réseau d'un module : `direct`, `tor`, ou `proxy:` suivi d'une
+ * empreinte de l'adresse du proxy (jamais l'adresse ni les identifiants eux-mêmes). Les caches
+ * qui dépendent de l'adresse IP de sortie (santé des sites de pseudo) en dépendent.
+ */
+export function egressKey(proxy: ProxySettings, route: ModuleRoute = 'default'): string {
+  if (route === 'direct') return 'direct'
+  const url = proxyUrl(proxy)
+  if (!url) return 'direct'
+  if (proxy.mode === 'tor') return 'tor'
+  return `proxy:${createHash('sha256').update(url).digest('hex').slice(0, 12)}`
 }
 
 export function resetDispatchers(): void {
