@@ -123,9 +123,15 @@ describe('requêtes', () => {
       site({ name: 'Redir', url: 'https://redir.test/u/{}', errorType: 'response_url' }),
       site({ name: 'Illegal', url: 'https://never.test/{}', regexCheck: '^\\d+$' })
     ]
+    const progress: Array<[number, number, string | undefined]> = []
+    ctx.progress = (done, total, detail) => void progress.push([done, total, detail])
     const res = await scanSites(sites, 'bob', ctx, { concurrency: 4 })
     const by = Object.fromEntries(res.map((r) => [r.site, r.status]))
     expect(by).toEqual({ Head: 'claimed', Msg: 'claimed', Api: 'claimed', Redir: 'available', Illegal: 'illegal' })
+    // Pastille : 0/5 au départ, une avance par site, et le nombre de comptes trouvés.
+    expect(progress[0]).toEqual([0, 5, 'sites'])
+    expect(progress.map(([d]) => d)).toEqual([0, 1, 2, 3, 4, 5])
+    expect(progress.at(-1)?.[2]).toMatch(/^sites · 3 trouvés · /)
     const call = (host: string) => ctx.calls.find((c) => c.url.includes(host))!
     expect(call('head.test').method).toBe('HEAD')
     expect(call('msg.test').method).toBe('GET')

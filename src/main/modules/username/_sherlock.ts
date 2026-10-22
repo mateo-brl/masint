@@ -227,7 +227,10 @@ export async function checkSite(site: SherlockSite, username: string, ctx: Modul
   }
 }
 
-/** Interroge une liste de sites avec une concurrence limitée. */
+/**
+ * Interroge une liste de sites avec une concurrence limitée. L'avancement (« 410/480 · sites ·
+ * 12 trouvés · GitHub ») est signalé à la pastille après chaque site.
+ */
 export async function scanSites(
   sites: SherlockSite[],
   username: string,
@@ -236,10 +239,18 @@ export async function scanSites(
 ): Promise<SiteResult[]> {
   const queue = [...sites]
   const results: SiteResult[] = []
+  const fr = ctx.lang === 'fr'
+  let found = 0
+  const detail = (current?: string): string =>
+    ['sites', found ? (fr ? `${found} trouvé${found > 1 ? 's' : ''}` : `${found} found`) : '', current ?? ''].filter(Boolean).join(' · ')
+  ctx.progress(0, sites.length, detail())
   const worker = async (): Promise<void> => {
     while (queue.length && !ctx.signal.aborted) {
       const site = queue.shift()!
-      results.push(await checkSite(site, username, ctx, opts.timeoutMs))
+      const result = await checkSite(site, username, ctx, opts.timeoutMs)
+      results.push(result)
+      if (result.status === 'claimed') found++
+      ctx.progress(results.length, sites.length, detail(site.name))
     }
   }
   await Promise.all(Array.from({ length: Math.min(opts.concurrency ?? 16, sites.length) }, worker))

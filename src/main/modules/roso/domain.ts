@@ -5,7 +5,7 @@
 import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
 import { localizeCountry, MAX_LIST_ENTITIES } from '../domain/_util'
-import { creditsOf, redact, ROSO_COMMON, RosoClient, toRosoError, type Json, type RosoResponse } from './_client'
+import { creditsOf, redact, ROSO_COMMON, RosoClient, scanProgress, toRosoError, type Json, type RosoResponse } from './_client'
 import {
   asArr,
   asObj,
@@ -170,8 +170,13 @@ export default defineModule({
     const start = await c.launch('/api/gateway/domain/start', { domain }, { page: PAGE })
 
     const q = { domain }
+    // 11 routes en parallèle : la pastille avance à chaque réponse (nom de la route).
+    const progress = scanProgress(ctx, 11, { fr: 'sources', en: 'sources' })
     const get = (path: string, timeoutMs = 60000, extra: Record<string, string> = {}): Promise<Res> =>
-      c.get(path, { query: { ...q, ...extra }, timeoutMs, retries: 1, throwOnError: false, page: PAGE }).catch(() => null)
+      c
+        .get(path, { query: { ...q, ...extra }, timeoutMs, retries: 1, throwOnError: false, page: PAGE })
+        .catch(() => null)
+        .finally(() => progress.tick(path.split('/').pop()))
     const [cti, rdap, crtsh, history, intelx, hudson, wayback, vt, urlscan, abuse, otx] = await Promise.all([
       get('/api/gateway/domain/cti', 65000, { visual: '1' }),
       get('/api/gateway/domain/rdap'),

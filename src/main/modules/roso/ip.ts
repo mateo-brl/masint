@@ -6,7 +6,7 @@ import type { PropValue } from '@shared/types'
 import { findPlatformByName } from '@shared/platforms'
 import { sharedInfrastructure, sharedLabel } from '../domain/_hosting'
 import { cappedList, localizeCountry, MAX_LIST_ENTITIES } from '../domain/_util'
-import { creditsOf, redact, ROSO_COMMON, RosoClient, toRosoError, type Json } from './_client'
+import { creditsOf, redact, ROSO_COMMON, RosoClient, scanProgress, toRosoError, type Json } from './_client'
 import { asArr, asObj, dropEmpty, isDomain, isIp, pick, pickNum, str } from './_parse'
 
 const PAGE = '/ip/'
@@ -110,12 +110,18 @@ export default defineModule({
 
     const start = await c.launch('/api/gateway/ip/start', { ip }, { page: PAGE })
 
-    const geoReq = c.get('/api/gateway/ip/lookup', { query: { ip }, timeoutMs: 60000, throwOnError: false, page: PAGE }).catch(() => null)
+    // Géolocalisation et 13 sources en parallèle : la pastille avance à chaque réponse.
+    const progress = scanProgress(ctx, IP_SOURCES.length + 1, { fr: 'sources', en: 'sources' })
+    const geoReq = c
+      .get('/api/gateway/ip/lookup', { query: { ip }, timeoutMs: 60000, throwOnError: false, page: PAGE })
+      .catch(() => null)
+      .finally(() => progress.tick(ctx.lang === 'fr' ? 'géolocalisation' : 'geolocation'))
     const sourceReqs = IP_SOURCES.map((id) =>
       c
         .get(`/api/ip-preprod/lookup/${id}`, { query: { ip }, timeoutMs: 60000, retries: 1, throwOnError: false, page: PAGE })
         .then((r) => ({ id, r }))
         .catch((e: unknown) => ({ id, r: null, error: e instanceof Error ? e.message : String(e) }))
+        .finally(() => progress.tick(id))
     )
     const [geoRes, ...sources] = await Promise.all([geoReq, ...sourceReqs])
     if (geoRes?.status === 401) throw toRosoError(401, geoRes.data, 'ip', ctx.lang)

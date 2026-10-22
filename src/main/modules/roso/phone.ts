@@ -5,8 +5,8 @@ import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
 import { findPlatformByName } from '@shared/platforms'
 import { normalizePhone } from '@shared/detect'
-import { MAX_LIST_ENTITIES } from '../domain/_util'
-import { creditsOf, isFatal, redact, ROSO_COMMON, RosoClient, sleep, toRosoError, type Json } from './_client'
+import { localizeCountry, MAX_LIST_ENTITIES } from '../domain/_util'
+import { creditsOf, isFatal, redact, ROSO_COMMON, RosoClient, scanProgress, sleep, toRosoError, type Json } from './_client'
 import {
   accountEntities,
   addGeneric,
@@ -17,6 +17,7 @@ import {
   isDomain,
   isObj,
   pick,
+  pivotProperties,
   siteName,
   stealerEntities,
   str
@@ -42,15 +43,23 @@ interface Result {
   message?: string
 }
 
-/** Lecture d'une réponse Twilio Lookup v2, brute ou enveloppée dans `data`. */
-export function parseTwilio(body: Json): Record<string, PropValue | undefined> {
+/**
+ * Lecture d'une réponse Twilio Lookup v2, brute ou enveloppée dans `data`. Le site affiche aussi
+ * la validité du numéro (`valid`), son pays (`country_code`) et le nom d'appelant (`caller_name`).
+ */
+export function parseTwilio(body: Json, lang: 'fr' | 'en' = 'fr'): Record<string, PropValue | undefined> {
   const root = asObj(body.data ?? body)
   const m = root.phone_number || root.national_format ? root : asObj(root.data)
   const lti = asObj(m.line_type_intelligence)
   const carrier = asObj(m.carrier)
   const status = asObj(m.line_status)
   const lineType = asObj(root.lineType)
+  const valid = m.valid ?? root.validNumber
+  const country = pick(m, 'country_code') || pick(root, 'countryCode')
   return {
+    twilio_valid: typeof valid === 'boolean' ? valid : undefined,
+    twilio_country: /^[a-z]{2}$/i.test(country) ? (localizeCountry(null, country, lang) ?? undefined) : undefined,
+    twilio_caller_name: pick(asObj(m.caller_name), 'caller_name') || undefined,
     national: pick(m, 'national_format') || undefined,
     carrier: pick(lti, 'carrier_name') || pick(carrier, 'name') || pick(lineType, 'carrier') || undefined,
     line_type: pick(lti, 'type') || pick(lineType, 'type') || undefined,
@@ -76,6 +85,8 @@ export default defineModule({
     const phone = normalizePhone(input.label)
     if (!phone) throw new ModuleError('Numéro non reconnu', 'invalid_input')
     const c = new RosoClient(ctx, 'phone')
+    const platforms = phonePlatforms(phone)
+    const progress = scanProgress(ctx, platforms.length, { fr: 'plateformes', en: 'platforms' })
     await c.checkMaintenance('phone')
 
     // Lancement : c'est cet appel qui ouvre la session téléphone et débite le crédit.
@@ -96,7 +107,7 @@ export default defineModule({
             page: PAGE
           })
           if (r.status === 401) throw toRosoError(401, r.data, 'phone', ctx.lang)
-          hlr = r.ok ? parseTwilio(r.data) : {}
+          hlr = r.ok ? parseTwilio(r.data, ctx.lang) : {}
           results.push({ platform, exists: r.ok && !!hlr.carrier, data: r.data })
           return
         }
@@ -117,14 +128,15 @@ export default defineModule({
         const d = r.data
         const exists = d.exists === true || d.found === true ? true : d.exists === false ? false : null
         if (!r.ok || (exists === null && (d.error || d.code))) errors[platform] = str(d.code) || str(d.error) || str(d.message) || `HTTP ${r.status}`
-        results.push({ platform, exists, data: isObj(d.data) ? d.data : d, message: str(d.message) || undefined })
+        results.push({ platform, exists, data: isObj(d.data) ? d.data : isObj(d.profile) ? d.profile : d, message: str(d.message) || undefined })
       } catch (e) {
         if (isFatal(e)) throw e
         errors[platform] = e instanceof Error ? e.message : String(e)
+      } finally {
+        progress.tick(siteName(platform), platform !== 'twilio' && results.some((r) => r.platform === platform && r.exists === true))
       }
     }
 
-    const platforms = phonePlatforms(phone)
     for (let i = 0; i < platforms.length; i += BATCH) {
       if (ctx.signal.aborted) break
       await Promise.all(platforms.slice(i, i + BATCH).map(check))
@@ -174,11 +186,22 @@ export default defineModule({
       })
     }
 
+    // Pivots regroupés sur le numéro : emails et téléphones masqués, lieux (bloc « Pivots » du site).
+    const pivots = pivotProperties(
+      found.filter((r) => r.platform !== 'twilio').map((r) => ({ site: r.platform, profile: r.data })),
+      phone,
+      ctx.lang
+    )
+
     return {
       properties: dropEmpty({
         carrier: hlr.carrier,
         line_type: hlr.line_type,
         hlr_status: hlr.hlr_status,
+        twilio_valid: hlr.twilio_valid,
+        twilio_country: hlr.twilio_country,
+        twilio_caller_name: hlr.twilio_caller_name,
+        ...pivots,
         roso_credits_left: creditsOf(log.data),
         roso_found_count: found.filter((r) => r.platform !== 'twilio').length,
         roso_platforms_checked: platforms.length,

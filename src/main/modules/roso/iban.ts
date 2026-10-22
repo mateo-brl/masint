@@ -4,7 +4,7 @@
 import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
 import { isValidIban } from '@shared/detect'
 import { localizeCountry } from '../domain/_util'
-import { creditsOf, redact, ROSO_COMMON, RosoClient } from './_client'
+import { creditsOf, redact, ROSO_COMMON, RosoClient, scanProgress } from './_client'
 import { asArr, asObj, dropEmpty, pick, str, type Obj } from './_parse'
 
 const PAGE = '/iban/'
@@ -47,9 +47,12 @@ export default defineModule({
     const iban = input.label.replace(/\s+/g, '').toUpperCase()
     if (!isValidIban(iban)) throw new ModuleError('IBAN invalide (clé de contrôle)', 'invalid_input')
     const c = new RosoClient(ctx, 'iban')
+    const progress = scanProgress(ctx, 2, { fr: 'étapes', en: 'steps' })
     await c.checkMaintenance('iban')
+    progress.tick(ctx.lang === 'fr' ? 'vérification' : 'checking')
 
     const res = await c.launch('/api/gateway/iban/check', { iban }, { page: PAGE })
+    progress.tick()
     const r = asObj(res.result ?? res)
     if (r.ok === false) throw new ModuleError(`roso.info : ${pick(r, 'detail', 'error') || 'vérification impossible'}`, 'other')
     const sepa = asObj(r.sepa)

@@ -4,7 +4,7 @@
 
 import { defineModule, ModuleError, type ModuleContext, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
-import { creditsOf, isFatal, pool, redact, ROSO_BASE, ROSO_COMMON, RosoClient, toRosoError, type Json } from './_client'
+import { creditsOf, isFatal, pool, redact, ROSO_BASE, ROSO_COMMON, RosoClient, scanProgress, toRosoError, type Json } from './_client'
 import {
   accountEntities,
   addGeneric,
@@ -15,6 +15,7 @@ import {
   isHttpUrl,
   pick,
   pickNum,
+  pivotProperties,
   siteName,
   stealerEntities,
   str,
@@ -155,23 +156,35 @@ export default defineModule({
     const found: Found[] = []
     const errors: Record<string, string> = {}
     let notFound = 0
+    const progress = scanProgress(ctx, sites.length, { fr: 'sites', en: 'sites' })
     await pool(sites, POOL, ctx.signal, async (site) => {
+      let hit = false
       try {
         const path = list.paths[site] ?? `/api/uc/${site}/profile`
         const res = await c.request(path, { method: 'POST', json: { username }, timeoutMs: 30000, retries: 1, throwOnError: false, page: PAGE })
         if (res.status === 401) throw toRosoError(401, res.data, 'username', ctx.lang)
         const d = res.data
         if (site === 'vinted' && d.exists === null) return void (errors[site] = 'unavailable')
-        if (d.success === true && d.exists === true) found.push({ site, data: d })
-        else if (!res.ok) errors[site] = str(d.error) || `HTTP ${res.status}`
+        if (d.success === true && d.exists === true) {
+          found.push({ site, data: d })
+          hit = site !== 'wayback'
+        } else if (!res.ok) errors[site] = str(d.error) || `HTTP ${res.status}`
         else notFound++
       } catch (e) {
         if (isFatal(e)) throw e
         errors[site] = e instanceof Error ? e.message : String(e)
+      } finally {
+        progress.tick(siteName(site), hit)
       }
     })
 
     const { entities, props } = foundEntities(found, username, ctx.lang)
+    // Pivots regroupés sur le pseudo : emails et téléphones masqués, lieux des profils.
+    const pivots = pivotProperties(
+      found.filter((f) => f.site !== 'wayback' && f.site !== 'hudsonrock').map((f) => ({ site: f.site, profile: f.data.profile ?? f.data.data })),
+      username,
+      ctx.lang
+    )
     return {
       properties: dropEmpty({
         roso_credits_left: creditsOf(start),
@@ -179,7 +192,8 @@ export default defineModule({
         roso_sites_checked: sites.length,
         roso_errors: Object.keys(errors).length,
         roso_found_on: found.map((f) => siteName(f.site)),
-        ...props
+        ...props,
+        ...pivots
       }),
       entities,
       raw: redact({ start, siteList: list.source, sites: sites.length, found: Object.fromEntries(found.map((f) => [f.site, f.data])), notFound, errors }, c.key)

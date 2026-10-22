@@ -37,7 +37,8 @@ confirmer avec une vraie clé.
 10. [IBAN](#iban)
 11. [Routes non utilisées par MASINT](#routes-non-utilisées)
 12. [Implémentation MASINT](#implémentation-masint)
-13. [À valider avec une vraie clé](#à-valider)
+13. [Équivalents gratuits des vérifications téléphone](#équivalents-gratuits-des-vérifications-téléphone)
+14. [À valider avec une vraie clé](#à-valider)
 
 ## Généralités
 
@@ -189,9 +190,11 @@ Application React séparée : `/app/phone` → `/app/assets/index-CAOIqV3w.js` (
      code?}` (sans clé : 401 `{"module":"phone","code":"api_key_required"}` [observé]).
    - `twilio` : `GET /api/gateway/twilio/lookup/<numéro>?fields=line_type_intelligence,line_status`
      (en-têtes optionnels `X-Twilio-Account-Sid`, `X-Twilio-Auth-Token`) → réponse Twilio
-     Lookup v2 (`phone_number`, `national_format`, `country_code`, `line_type_intelligence{type,
-     carrier_name, mobile_country_code, mobile_network_code}`, `line_status{status}`),
-     éventuellement enveloppée dans `data`.
+     Lookup v2 (`phone_number`, `national_format`, `country_code`, `valid`, `caller_name{caller_name,
+     caller_type}`, `line_type_intelligence{type, carrier_name, mobile_country_code,
+     mobile_network_code}`, `line_status{status}`), éventuellement enveloppée dans `data`. Le site
+     affiche la validité (`valid`) et le pays (`country_code`) ; MASINT les lit
+     (`twilio_valid`, `twilio_country`, `twilio_caller_name`).
    - `phonely` (Royaume-Uni seulement) et `callfilter` (France ou Royaume-Uni) :
      `GET /api/gateway/twilio/<plateforme>/<numéro>` → `{success, data, skipped?}`.
 3. Si Telegram renvoie `data.userId` : `GET /api/funstat?id=<userId>&api_key=<clé>` (délai 10 s)
@@ -199,7 +202,25 @@ Application React séparée : `/app/phone` → `/app/assets/index-CAOIqV3w.js` (
 4. Pas d'appel `complete`. Champs utilisés par l'affichage : `displayName`, `name`, `username`,
    `location`, `firstName`, `lastName`, `avatar`, `email`, `fullName`, `emails`, `city`,
    `address`, `profileImage`, `profilePictureUrl` ; `reversewhois` : `data.domains` /
-   `domainList` / `results`.
+   `domainList` / `results`. La carte de chaque plateforme lit `data`, sinon `profile` [code].
+   Champs masqués affichés par plateforme [code] : Apple (`platform: "Apple ID"`) `kind: "phone"`
+   avec `maskedEmail` (« Email rescue masque »), `kind: "email"` avec `maskedPhones[]`,
+   `multipleEmails` ; Sleeper `maskedEmail`, `maskedPhone`, `hasEmail`, `hasPhone` ; AJIO
+   `email_hint`, `phone_hint` ; Advance Auto Parts `phone_hint` ; Snapchat `matchedEmail`,
+   `matchedPhone` ; Instagram `maskedUsernames[]`, `maskedFullNames[]`, `accountsCount` ; Life360
+   `firstNamePartial`, `loginMethod`.
+5. **ARCEP** : le bloc « ARCEP » de la page (opérateur, type de réseau, bloc, territoire, date
+   d'attribution, SIRET, adresse) n'est pas renvoyé par l'API. Il est calculé dans le navigateur
+   à partir d'un instantané du plan de numérotation embarqué dans le bundle (« ARCEP -
+   data.gouv.fr », généré le 2025-10-06, 17 556 tranches, et la table des opérateurs). Le « bloc »
+   affiché est le début de tranche sans ses zéros finaux. MASINT obtient la même chose, à jour et
+   sans crédit, avec le module gratuit `phone.arcep` (voir plus bas).
+6. **Pivots** : le résumé `/_shared/roso-summary.js` regroupe, pour toutes les plateformes
+   trouvées, les emails masqués (`email`, `emails[]`, `emailHints[]`, `masked_email`,
+   `maskedEmail`), les téléphones masqués (`phone`, `phoneNumber`, `formattedPhone`, `phoneHint`,
+   `phoneMasked`, `maskedPhone`, `maskedMobile`, `mobile`, `r_mobile`, `recoveryPhone`,
+   `phone_number`, `phones[]`, `masked_phones[]`, `phoneHints[]`, `recoveryMethods[]`) et les
+   lieux (`location`, sinon `city` + `country`, `homeCity`).
 
 ## IP
 
@@ -322,15 +343,15 @@ Fichiers : `src/main/modules/roso/`.
 
 | Fichier | Rôle |
 |---|---|
-| `_client.ts` | `RosoClient` : base URL, `X-API-Key`, `Origin`/`Referer`, `X-Session-Id`, réessais limités (erreur réseau, 500/502/503/504/520-524 ; jamais sur une route qui débite), traduction des erreurs en `ModuleError`, maintenance, `status()`, `pool()` à concurrence bornée, `redact()` qui retire la clé de `raw` |
-| `_parse.ts` | lecture tolérante : profils → `account` (+ `person`, `email`, `phone`), fuites → `breach`, Hudson Rock → `infostealer`, IntelX, adresses, correspondance plateformes roso → `platforms.ts`, images (URL relatives rendues absolues, `eyecon-app.com` via le proxy public), repli générique (emails, téléphones, URL, pseudos) |
+| `_client.ts` | `RosoClient` : base URL, `X-API-Key`, `Origin`/`Referer`, `X-Session-Id`, réessais limités (erreur réseau, 500/502/503/504/520-524 ; jamais sur une route qui débite), traduction des erreurs en `ModuleError`, maintenance, `status()`, `pool()` à concurrence bornée, `redact()` qui retire la clé de `raw`, `scanProgress()` pour la pastille de progression |
+| `_parse.ts` | lecture tolérante : profils → `account` (+ `person`, `email`, `phone`), fuites → `breach`, Hudson Rock → `infostealer`, IntelX, adresses, correspondance plateformes roso → `platforms.ts`, images (URL relatives rendues absolues, `eyecon-app.com` via le proxy public), repli générique (emails, téléphones, URL, pseudos), pivots regroupés (`pivotProperties`) |
 | `_sites.ts` | instantané généré des listes du site (907 sites pseudo, 57 plateformes téléphone, modules crypto de repli, noms affichés, instances Mastodon) |
 
 | Module | Entrée | Appels | Sorties principales |
 |---|---|---|---|
 | `roso.email` | `email` | maintenance, start, meta, ~300 modules (12 en parallèle), complete | `account` par plateforme (avatar, URL, bio, dates), `person`, `email`, `phone`, `breach` (HIBP, IntelX), `infostealer`, `domain` (reverse WHOIS) ; `roso_credits_left`, `roso_found_count`, `roso_found_on`, `breaches` |
 | `roso.username` | `username` | maintenance, start, 907 vérifications (20 en parallèle) ; la liste est relue sur `/username/` (cache 12 h) avec repli sur l'instantané | `account`, `person`, `email` (commits GitHub), `infostealer`, `url` (archives Wayback) |
-| `roso.phone` | `phone` sans `*` | maintenance, phone/log, autochecks par lots de 3, HLR Twilio, FunStat | `account`, `person` (caller ID), `address` (annuaires), `carrier`, `infostealer`, `domain` ; `carrier`, `line_type`, `hlr_status` |
+| `roso.phone` | `phone` sans `*` | maintenance, phone/log, autochecks par lots de 3, HLR Twilio, FunStat | `account`, `person` (caller ID), `address` (annuaires), `carrier`, `infostealer`, `domain` ; `carrier`, `line_type`, `hlr_status`, `twilio_valid`, `twilio_country` |
 | `roso.ip` | `ip` | maintenance, start, lookup, 13 sources | `asn`, `country`, `hosting`, `organization`, `domain` (PTR, DNS passif) ; géolocalisation `lat`/`lon`, drapeaux VPN/Tor, `roso_<source>` |
 | `roso.domain` | `domain` | maintenance, start, 11 routes | `website` (capture d'écran jointe, localisation du serveur), `domain` (sous-domaines), `ip`, `email`, `person`/`organization`/`phone` (RDAP, historique WHOIS), `breach` (IntelX) ; registrar, dates, serveurs DNS, statistiques Hudson Rock, VirusTotal, urlscan, OTX |
 | `roso.name` | `person` | maintenance, name/search | `account` (profils candidats), `person` (homonymes), `email`, `phone` |
@@ -345,10 +366,72 @@ la réponse de lancement, les réponses des modules trouvés, la liste des erreu
 Une erreur 401 en cours de scan arrête tout ; les autres erreurs de sous-module sont comptées
 (`roso_errors`) sans interrompre le scan.
 
+**Pivots** : comme le bloc « Pivots » du site, `roso.phone`, `roso.email` et `roso.username`
+regroupent sur le nœud recherché les emails masqués (`masked_emails`), les téléphones masqués
+(`masked_phones`) et les lieux (`locations`) trouvés sur l'ensemble des plateformes, chacun suivi
+de ses plateformes d'origine : `d•••••@e•••••.com (Apple, Sleeper)`, `Lyon, France
+(Explurger)`. Le compte (Apple...) garde aussi ses propres valeurs. Un masque qui correspond à la
+valeur recherchée elle-même (au moins 4 caractères visibles concordants) n'est pas répété.
+
+**Progression** : chaque module signale son avancement à la pastille (`ctx.progress`) : nombre
+d'éléments terminés sur le total, unité, nombre de résultats et dernier élément terminé
+(« 23/57 · plateformes · 2 trouvés · WhatsApp », « 410/907 · sites », « 4/100 ·
+combinaisons »). `roso.ip` et `roso.domain` avancent à chaque source, `roso.name` et `roso.iban`
+par étape.
+
 Tests : `tests/modules/roso.test.ts` (hors ligne, fixtures `tests/fixtures/roso/*.json`
 construites d'après le code client) et `tests/modules/rosoLive.test.ts`
 (`ROSO_KEY=roso_… npx vitest run tests/modules/rosoLive` : statut de la clé et maintenance,
 gratuits ; ajouter `ROSO_LIVE_SPEND=1` pour une vérification IBAN à 1 crédit).
+
+## Équivalents gratuits des vérifications téléphone
+
+roso.info vérifie 57 plateformes pour un numéro. MASINT n'en reprend, gratuitement et sans
+compte, que celles qui sont possibles **sans compte, sans clé, sans captcha, silencieusement**
+(aucun SMS, email ni notification envoyé à la personne) et de façon **fiable** (réponse
+différente selon que le numéro est inscrit ou non). Évaluation du 2026-10-22 :
+
+| Plateforme | MASINT | Raison |
+|---|---|---|
+| ARCEP (bloc affiché par le site) | `phone.arcep` | données ouvertes de l'Arcep (voir le module) |
+| Microsoft, Amazon | `phone.microsoft`, `phone.amazon` | déjà présents : première étape de connexion, sans SMS |
+| Sleeper | `phone.sleeper` (expérimental) | requête GraphQL publique `login_context_by_email_or_phone_or_username` (première étape de connexion, aucun code envoyé) : absence observée sur des numéros non attribués, format « trouvé » observé sur un compte public (par pseudo) ; aucun numéro inscrit connu pour confirmer le cas « trouvé » par téléphone |
+| Twilio | `phone.hlr_*` (payants) | Lookup exige un compte Twilio |
+| WhatsApp, Telegram, Signal, Happn, Teams | non | nécessitent un compte de l'application (`t.me/+numéro` n'est qu'un lien d'invitation) |
+| CallApp, Eyecon, ViewCaller | non | API d'application à jeton |
+| Snapchat | non | l'ancienne route silencieuse `validate_phone_number` redirige vers la nouvelle connexion (v2) |
+| Instagram | non | la simulation d'inscription répond 429 depuis une IP de serveur ; la récupération de compte envoie un code |
+| Duolingo | non | l'API publique `users` n'accepte que `email` ou `username` (422 avec `phone`) |
+| Substack | non | connexion par lien magique ou SMS : envoie un message |
+| Mapstr, Pi Network, Fishbrain, Delectable, Samsung Food, Explurger, Airbuds | non | d'après les champs affichés par roso.info (abonnés, relation avec l'utilisateur connecté), recherche d'amis par contacts dans l'application : compte requis |
+| Apple (iForgot), Battle.net, AliExpress | non | captcha |
+| Facebook | non | récupération de compte protégée (400 sans session navigateur) |
+| Life360 | non | la connexion web envoie un code (OTP) ; pas de recherche silencieuse sans le jeton de l'application |
+| Expensify, ClassPass, VSCO, Shotgun, Boulanger | non | protection anti-robot (403, 429 ou coupure HTTP/2) |
+| AlloVoisins | non | connexion web par email et mot de passe ; la recherche par numéro passe par l'API de l'application |
+| Poteau, Joinr, WeWard, Co-Star, Family Locator, Samsung, Samsung Health | non | aucune route web publique connue (API d'application mobile), non vérifiable sans compte |
+| Moov (Togo, Burkina, Bénin, Côte d'Ivoire), AJIO, Advance Auto Parts, CVS | non | API d'application non publique ; services limités à l'Afrique de l'Ouest, à l'Inde ou aux États-Unis |
+| Hudson Rock | non | l'API gratuite ne cherche pas par téléphone (`search-by-phone` : 404) |
+| Reverse WHOIS | non | clé payante (WhoisXML) |
+| PagesJaunes, CleverDialer, SpamCalls, CallFilter, Phonely | non | annuaires et bases de signalements, pas des comptes ; PagesJaunes et CallFilter derrière un anti-robot, SpamCalls en erreur 522, cleverdialer.fr inaccessible (certificat), Phonely réservé au Royaume-Uni |
+
+**`phone.arcep`** (gratuit, sans clé, lancé automatiquement sur les numéros du plan français,
+métropole et outre-mer) : bloc (`arcep_block`), tranche, opérateur d'attribution et son code,
+territoire, date d'attribution du bloc et type de numéro sur le nœud téléphone ; raison sociale,
+SIREN, SIRET, greffe du RCS, adresse du siège et code Arcep sur le nœud opérateur. Quand
+`phone.info` a déjà créé l'opérateur (même plateforme ou noms qui se recouvrent), le module
+reprend son libellé et sa plateforme : le moteur enrichit ce nœud au lieu d'en créer un second.
+L'opérateur d'attribution est celui qui a reçu le bloc ; avec la portabilité, l'opérateur actuel
+peut être différent (voir les modules HLR). Source : les CSV officiels de l'Arcep
+(`MAJNUM.csv`, `identifiants_CE.csv`, environ 1,4 Mo), téléchargés une fois puis gardés en
+mémoire 12 h, chaque numéro suivant étant résolu sans requête. L'API tabulaire de data.gouv.fr
+sert les mêmes fichiers mais n'est qu'un repli : elle inverse jour et mois des dates quand le
+jour vaut 12 ou moins, décode les accents en Windows-1250 et avait plusieurs semaines de retard
+le 2026-10-22. En repli, les dates ambiguës sont écartées et les accents corrigés. Un numéro hors
+de toute tranche donne `arcep_attributed: false` (numéro jamais attribué ou bloc rendu).
+
+Tests : `tests/modules/phone_arcep.test.ts` et `tests/modules/phone_sleeper.test.ts` (hors ligne,
+et en direct avec `LIVE=1` sur des numéros publics ou non attribués).
 
 ## À valider
 

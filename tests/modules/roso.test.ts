@@ -8,11 +8,23 @@ import { ModuleError, type ModuleOutput, type OsintModule, type OutEntity } from
 import { entity } from '../helpers/context'
 import { fixture, mockContext, NO_MAINTENANCE, TEST_KEY, type Route } from '../fixtures/roso/mock'
 import { pool, RosoClient, toRosoError } from '../../src/main/modules/roso/_client'
-import { accountEntities, addGeneric, genericExtract, imageUrl, isoDate, rosoPlatform, stealerEntities } from '../../src/main/modules/roso/_parse'
+import {
+  accountEntities,
+  addGeneric,
+  emailsOf,
+  genericExtract,
+  imageUrl,
+  isoDate,
+  maskMatches,
+  phonesOf,
+  pivotProperties,
+  rosoPlatform,
+  stealerEntities
+} from '../../src/main/modules/roso/_parse'
 import { USERNAME_SITES } from '../../src/main/modules/roso/_sites'
 import rosoEmail, { finalizeEmailModules } from '../../src/main/modules/roso/email'
 import rosoUsername, { parseUsernamePage, resetUsernameCache } from '../../src/main/modules/roso/username'
-import rosoPhone, { phonePlatforms, phoneTiming } from '../../src/main/modules/roso/phone'
+import rosoPhone, { parseTwilio, phonePlatforms, phoneTiming } from '../../src/main/modules/roso/phone'
 import rosoIp from '../../src/main/modules/roso/ip'
 import rosoDomain, { rdapContacts } from '../../src/main/modules/roso/domain'
 import rosoName from '../../src/main/modules/roso/name'
@@ -21,6 +33,22 @@ import rosoCrypto from '../../src/main/modules/roso/crypto'
 import rosoIban from '../../src/main/modules/roso/iban'
 
 type J = Record<string, any>
+
+/** Appels à ctx.progress, pour vérifier la pastille de progression. */
+function trackProgress(ctx: { progress: (done: number, total: number, detail?: string) => void }): Array<[number, number, string | undefined]> {
+  const calls: Array<[number, number, string | undefined]> = []
+  ctx.progress = (done, total, detail) => void calls.push([done, total, detail])
+  return calls
+}
+
+/** La pastille part de 0 et finit à son total, sans jamais le dépasser. */
+function expectFinished(calls: Array<[number, number, string | undefined]>): void {
+  expect(calls.length).toBeGreaterThan(1)
+  expect(calls[0][0]).toBe(0)
+  const [done, total] = calls.at(-1)!
+  expect(done).toBe(total)
+  expect(calls.every(([d, t]) => d <= t)).toBe(true)
+}
 
 const find = (out: ModuleOutput, type: string, label?: string): OutEntity | undefined =>
   out.entities?.find((e) => e.type === type && (label === undefined || e.label === label))
@@ -148,6 +176,47 @@ describe('roso.info : parsing tolérant', () => {
     expect(isoDate('12/04/2023')).toBe('2023-04-12')
     expect(isoDate('pas une date')).toBeUndefined()
   })
+  it('lit les emails et téléphones masqués sous les clés affichées par le site', () => {
+    expect(emailsOf({ maskedEmail: 'd•••@e•••.com', email_hint: 'j**n@o****.fr', matchedEmail: 'Contact@Example.com' })).toEqual({
+      full: ['contact@example.com'],
+      masked: ['d•••@e•••.com', 'j**n@o****.fr']
+    })
+    expect(phonesOf({ maskedPhones: ['+33 •• •• •• •• 12'], phone_hint: '******5678', masked_phone: '+1 ***-***-0199' }).masked).toEqual([
+      '******5678',
+      '+1 ***-***-0199',
+      '+33 •• •• •• •• 12'
+    ])
+  })
+
+  it('rapproche un masque de la valeur recherchée seulement quand il en montre assez', () => {
+    expect(maskMatches('j***@g***.com', 'jean@gmail.com')).toBe(true)
+    expect(maskMatches('j***@g***.com', 'jean@example.com')).toBe(false)
+    expect(maskMatches('+33 6 •• •• •• 78', '+33612345678')).toBe(true)
+    expect(maskMatches('+33 6 •• •• •• 78', '+33612345679')).toBe(false)
+    // Deux chiffres visibles : trop peu pour conclure que c'est le même numéro.
+    expect(maskMatches('•• •• •• •• 78', '+33612345678')).toBe(false)
+    expect(maskMatches('jean@gmail.com', 'jean@gmail.com')).toBe(false)
+  })
+
+  it('regroupe les pivots avec leurs plateformes, sans le masque de la valeur recherchée', () => {
+    const props = pivotProperties(
+      [
+        { site: 'apple-iforgot', profile: { kind: 'phone', maskedEmail: 'd•••@e•••.com' } },
+        { site: 'sleeper', profile: { maskedEmail: 'D•••@E•••.com', maskedPhone: '+33 6 •• •• •• 78' } },
+        { site: 'explurger', profile: { city: 'Lyon', countryCode: 'FR' } },
+        { site: 'instagram', profile: { location: 'Lyon, France' } },
+        { site: 'whatsapp', profile: {} }
+      ],
+      '+33612345678',
+      'fr'
+    )
+    expect(props).toEqual({
+      masked_emails: ['d•••@e•••.com (Apple, Sleeper)'],
+      masked_phones: [],
+      locations: ['Lyon, France (Explurger, Instagram)']
+    })
+  })
+
   it('repli générique : emails, téléphones, URL, pseudos', () => {
     const ex = genericExtract({ a: { contact: 'x@y.fr', mobile: '+33 6 12 34 56 78', masked: 'j***@g.com' }, list: [{ profile_url: 'https://site/x' }, { login: 'bob_42' }] })
     expect(ex.emails).toEqual(['x@y.fr'])
@@ -181,7 +250,9 @@ describe('roso.email', () => {
 
   it('enchaîne start, meta, modules et complete', async () => {
     const { ctx, calls } = mockContext(routes())
+    const progress = trackProgress(ctx)
     const out = await rosoEmail.run(entity('email', 'Jean.Dupont@Example.com'), ctx)
+    expectFinished(progress)
     const start = calls.find((c) => c.url.pathname === '/api/gateway/email/start')!
     expect(start.body).toEqual({ email: 'jean.dupont@example.com' })
     expect(start.headers['x-api-key']).toBe(TEST_KEY)
@@ -213,6 +284,13 @@ describe('roso.email', () => {
     expect(find(out, 'account', 'jean.dupont@example.com')?.data).toBeDefined()
     const apple = out.entities!.find((e) => e.platform === 'apple')!
     expect(apple.data).toMatchObject({ masked_phones: ['+33 •• •• •• •• 42'], masked_emails: ['j••••@g••••.com'] })
+    // Les mêmes pivots, regroupés sur l'adresse recherchée avec leur plateforme.
+    expect(out.properties).toMatchObject({
+      masked_phones: ['+33 •• •• •• •• 42 (Apple)'],
+      masked_emails: ['j••••@g••••.com (Apple)'],
+      locations: expect.arrayContaining(['Paris, France (GitHub)'])
+    })
+    expect(progress.some(([, , d]) => d?.startsWith('modules · '))).toBe(true)
     const duo = find(out, 'account', 'jeandup')!
     expect(duo.image).toBe('https://simg-ssl.duolingo.com/ssr-avatars/123/SSR-abc/large')
     expect(find(out, 'phone', '+33612345678')?.from).toBe('acc_duolingo')
@@ -260,7 +338,9 @@ describe('roso.username', () => {
         return { body: fx.found[site] ?? { success: true, exists: false } }
       }]
     ])
+    const progress = trackProgress(ctx)
     const out = await rosoUsername.run(entity('username', '@jdoe'), ctx)
+    expectFinished(progress)
     const checks = calls.filter((c) => c.url.pathname.startsWith('/api/uc/'))
     expect(checks.length).toBe(USERNAME_SITES.length)
     expect(checks.every((c) => c.headers['x-api-key'] === TEST_KEY && (c.body as J).username === 'jdoe')).toBe(true)
@@ -301,6 +381,7 @@ describe('roso.phone', () => {
       ['GET', '/api/funstat', { body: fx.funstat }],
       ['POST', /^\/api\/autocheck\/check\//, (c) => ({ body: fx.autocheck[c.url.pathname.split('/').pop()!] ?? { exists: false } })]
     ])
+    const progress = trackProgress(ctx)
     const out = await rosoPhone.run(entity('phone', '06 12 34 56 78'), ctx)
     expect(calls.find((c) => c.url.pathname === '/api/gateway/phone/log')?.body).toEqual({ phone: '+33612345678' })
     const auto = calls.filter((c) => c.url.pathname.startsWith('/api/autocheck/check/'))
@@ -317,6 +398,33 @@ describe('roso.phone', () => {
     expect(find(out, 'address', '12 rue de la Paix, 75002 Paris')?.data).toMatchObject({ city: 'Paris', postcode: '75002' })
     expect(out.properties?.roso_found_on).toEqual(expect.arrayContaining(['Telegram', 'WhatsApp', 'CallApp']))
     expect(out.properties?.roso_errors).toBe(1)
+
+    // Twilio : validité et pays, comme sur le site.
+    expect(out.properties).toMatchObject({ twilio_valid: true, twilio_country: 'France' })
+    // Pivots sur le numéro : l'email masqué d'Apple (et de Sleeper), les lieux ; le téléphone
+    // masqué de Sleeper est celui qu'on cherche, il n'est pas répété.
+    expect(out.properties?.masked_emails).toEqual(['d•••••@e•••••.com (Sleeper, Apple)'])
+    expect(out.properties?.masked_phones).toBeUndefined()
+    expect(out.properties?.locations).toEqual(expect.arrayContaining(['Lyon, France (Explurger)']))
+    // Le compte Apple garde aussi son email masqué.
+    expect(out.entities!.find((e) => e.platform === 'apple')?.data).toMatchObject({ masked_emails: ['d•••••@e•••••.com'] })
+
+    // Pastille : 0/N au départ, puis une avance par plateforme jusqu'à N/N.
+    const total = phonePlatforms('+33612345678').length
+    expect(progress[0]).toEqual([0, total, 'plateformes'])
+    expect(progress.at(-1)?.[0]).toBe(total)
+    expect(progress.every(([, t]) => t === total)).toBe(true)
+    expect(progress.some(([, , d]) => /^plateformes · \d+ trouvés · /.test(d ?? ''))).toBe(true)
+  })
+
+  it('lit la réponse Twilio brute ou enveloppée', () => {
+    const fx = fixture<J>('phone.json')
+    expect(parseTwilio(fx.twilio, 'en')).toMatchObject({ carrier: 'Orange', line_type: 'mobile', mccmnc: '208/01', twilio_valid: true, twilio_country: 'France' })
+    expect(parseTwilio({ data: { phone_number: '+447700900123', valid: false, country_code: 'GB', caller_name: { caller_name: 'ACME LTD' } } }, 'fr')).toMatchObject({
+      twilio_valid: false,
+      twilio_country: 'Royaume-Uni',
+      twilio_caller_name: 'ACME LTD'
+    })
   })
 
   it('remonte un refus de lancement', async () => {
@@ -334,7 +442,9 @@ describe('roso.ip', () => {
       ['GET', '/api/gateway/ip/lookup', { body: fx.lookup }],
       ['GET', /^\/api\/ip-preprod\/lookup\//, (c) => ({ body: fx.sources[c.url.pathname.split('/').pop()!] ?? { status: 'error' } })]
     ])
+    const progress = trackProgress(ctx)
     const out = await rosoIp.run(entity('ip', '1.1.1.1'), ctx)
+    expectFinished(progress)
     expect(calls.find((c) => c.url.pathname === '/api/gateway/ip/start')?.body).toEqual({ ip: '1.1.1.1' })
     expect(calls.filter((c) => c.url.pathname.startsWith('/api/ip-preprod/lookup/')).length).toBe(13)
     expect(out.properties).toMatchObject({ country: 'Australie', city: 'Brisbane', asn: 'AS13335', reverse: 'one.one.one.one', lat: -27.4679, lon: 153.0281, roso_credits_left: 13 })
@@ -375,7 +485,9 @@ describe('roso.domain', () => {
       ['POST', '/api/gateway/domain/start', { body: fx.start }],
       ['GET', /^\/api\/gateway\/domain\//, (c) => ({ body: map[c.url.pathname.replace('/api/gateway/domain/', '')] ?? { success: false } })]
     ])
+    const progress = trackProgress(ctx)
     const out = await rosoDomain.run(entity('domain', 'https://www.Example.com/page'), ctx)
+    expectFinished(progress)
     expect(calls.find((c) => c.url.pathname === '/api/gateway/domain/start')?.body).toEqual({ domain: 'example.com' })
     expect(calls.find((c) => c.url.pathname === '/api/gateway/domain/cti')?.url.searchParams.get('visual')).toBe('1')
     expect(out.properties).toMatchObject({
@@ -413,7 +525,9 @@ describe('roso.name', () => {
   it('convertit les profils candidats', async () => {
     const fx = fixture<J>('name.json')
     const { ctx, calls } = mockContext([NO_MAINTENANCE, ['POST', '/api/gateway/name/search', { body: fx.search }]])
+    const progress = trackProgress(ctx)
     const out = await rosoName.run(entity('person', 'Jean  Dupont', { data: { city: 'Lyon' } }), ctx)
+    expectFinished(progress)
     expect(calls.find((c) => c.url.pathname === '/api/gateway/name/search')?.body).toMatchObject({ firstName: 'Jean', lastName: 'Dupont', location: 'Lyon', fullName: 'Jean Dupont', q: 'Jean Dupont' })
     expect(out.properties).toMatchObject({ roso_credits_left: 12, roso_found_count: 3 })
     expect(find(out, 'account', 'jean-dupont-42')).toMatchObject({ platform: 'linkedin', image: 'https://media.licdn.com/abc.jpg' })
@@ -444,7 +558,10 @@ describe('roso.partial_number', () => {
       ['POST', '/api/gateway/partial-number/start', { body: fx.start }],
       ['POST', '/api/gateway/partial-number/check', (c) => ({ body: (c.body as J).phone === fx.hitPhone ? fx.hit : fx.miss })]
     ])
+    const progress = trackProgress(ctx)
     const out = await rosoPartial.run(entity('keyword', '+33 6 12 34 56 *8'), ctx)
+    expectFinished(progress)
+    expect(progress.at(-1)?.[2]).toMatch(/^combinaisons · /)
     expect(calls.filter((c) => c.url.pathname.endsWith('/check')).length).toBe(10)
     expect(calls[0].body).toEqual({})
     expect(out.properties).toMatchObject({ roso_credits_left: 5, roso_combinations: 10, roso_checked: 10, roso_found_count: 1 })
@@ -473,7 +590,9 @@ describe('roso.crypto', () => {
       ['GET', '/api/gateway/crypto/meta', { body: fx.meta }],
       ['POST', /^\/api\/gateway\/crypto\//, (c) => ({ body: fx.modules[c.url.pathname.split('/').pop()!] ?? { success: true, exists: false } })]
     ])
+    const progress = trackProgress(ctx)
     const out = await rosoCrypto.run(entity('crypto_wallet', '0x1234567890abcdef1234567890abcdef12345678', { platform: 'ethereum' }), ctx)
+    expectFinished(progress)
     const mods = calls.filter((c) => c.method === 'POST')
     expect(mods.length).toBe(6)
     expect(mods[0].body).toEqual({ address: '0x1234567890abcdef1234567890abcdef12345678', api_key: TEST_KEY })
@@ -491,7 +610,9 @@ describe('roso.iban', () => {
   it('vérifie un IBAN', async () => {
     const fx = fixture<J>('iban.json')
     const { ctx, calls } = mockContext([NO_MAINTENANCE, ['POST', '/api/gateway/iban/check', { body: fx.check }]])
+    const progress = trackProgress(ctx)
     const out = await rosoIban.run(entity('iban', 'FR76 3000 6000 0112 3456 7890 189'), ctx)
+    expectFinished(progress)
     expect(calls.find((c) => c.method === 'POST')?.body).toEqual({ iban: 'FR7630006000011234567890189' })
     expect(out.properties).toMatchObject({ valid: true, bic: 'BNPAFRPPXXX', bank: 'BNP PARIBAS', country: 'France', roso_credits_left: 19, sepa: ['credit_transfer', 'direct_debit', 'instant'] })
     expect(find(out, 'bank', 'BNP PARIBAS')?.data).toMatchObject({ bic: 'BNPAFRPPXXX', branch: '00001 · PARIS CENTRE' })

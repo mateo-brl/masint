@@ -253,9 +253,12 @@ const PHONE_KEYS = [
   'phone_number',
   'formattedPhone',
   'phoneHint',
+  'phone_hint',
   'phoneMasked',
   'maskedPhone',
+  'masked_phone',
   'maskedMobile',
+  'matchedPhone',
   'mobile',
   'r_mobile',
   'recoveryPhone',
@@ -279,11 +282,15 @@ export function displayNameOf(p: Obj): string {
   return [pick(p, 'firstName', 'first_name', 'givenName'), pick(p, 'lastName', 'last_name', 'familyName')].filter(Boolean).join(' ')
 }
 
-/** Emails d'un profil : complets d'un côté, masqués de l'autre. */
+/**
+ * Emails d'un profil : complets d'un côté, masqués de l'autre. Clés lues par l'affichage de
+ * roso.info : `maskedEmail` (Apple, Sleeper), `email_hint` (AJIO), `matchedEmail` (Snapchat)...
+ */
 export function emailsOf(p: Obj): { full: string[]; masked: string[] } {
   const raw: string[] = []
-  for (const k of ['email', 'mail', 'recoveryEmail', 'masked_email', 'maskedEmail', 'emailHint']) raw.push(str(p[k]))
-  for (const k of ['emails', 'emailHints', 'masked_emails']) {
+  for (const k of ['email', 'mail', 'recoveryEmail', 'recovery_email', 'masked_email', 'maskedEmail', 'emailMasked', 'emailHint', 'email_hint', 'matchedEmail'])
+    raw.push(str(p[k]))
+  for (const k of ['emails', 'emailHints', 'masked_emails', 'maskedEmails']) {
     for (const e of asArr(p[k])) raw.push(isObj(e) ? pick(e, 'email', 'value', 'address') : str(e))
   }
   const full: string[] = []
@@ -300,7 +307,7 @@ export function emailsOf(p: Obj): { full: string[]; masked: string[] } {
 export function phonesOf(p: Obj): { full: string[]; masked: string[] } {
   const raw: string[] = []
   for (const k of PHONE_KEYS) raw.push(str(p[k]))
-  for (const k of ['phones', 'masked_phones', 'phoneHints']) {
+  for (const k of ['phones', 'masked_phones', 'maskedPhones', 'phoneHints']) {
     for (const ph of asArr(p[k])) raw.push(isObj(ph) ? pick(ph, 'phone', 'number', 'value', 'mask') : str(ph))
   }
   for (const m of asArr(p.recoveryMethods)) {
@@ -316,6 +323,67 @@ export function phonesOf(p: Obj): { full: string[]; masked: string[] } {
     else if (isMasked(ph)) masked.push(ph)
   }
   return { full: uniq(full), masked: uniq(masked) }
+}
+
+/** Lieu lisible d'un profil : `location`, sinon ville et pays (comme le résumé de roso.info). */
+export function locationOf(p: Obj, lang: 'fr' | 'en'): string {
+  const direct = pick(p, 'location', 'locationText')
+  if (direct) return direct
+  const city = pick(p, 'city', 'locality', 'town', 'homeCity')
+  const country = localizeCountry(pick(p, 'country'), pick(p, 'countryCode', 'country_code'), lang) ?? ''
+  return [city, country].filter(Boolean).join(', ')
+}
+
+/**
+ * Valeur masquée compatible avec une valeur complète (`j***@g***.com` et `jean@gmail.com`,
+ * `+33 6 •• •• •• 78` et `+33612345678`) : sert à écarter les masques de la valeur recherchée.
+ * Un masque qui laisse voir moins de 4 caractères (`•• •• •• •• 78`) n'est jamais rapproché.
+ */
+export function maskMatches(mask: string, value: string): boolean {
+  const clean = (v: string): string => v.toLowerCase().replace(/[\s()-]/g, '')
+  const m = clean(mask)
+  const v = clean(value)
+  if (!m || !v || !isMasked(m)) return false
+  const parts = m.split(/x{3,}|[*•●∗…]+/)
+  if (parts.join('').replace(/[^a-z0-9]/g, '').length < 4) return false
+  const pattern = parts.map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.+')
+  return new RegExp(`^${pattern}$`).test(v)
+}
+
+export interface PivotSource {
+  /** Identifiant roso.info de la plateforme (`apple-iforgot`, `sleeper`...). */
+  site: string
+  profile: unknown
+}
+
+const MAX_PIVOTS = 30
+
+/**
+ * Pivots regroupés pour le nœud recherché, comme le bloc « Pivots » de roso.info : emails et
+ * téléphones masqués et lieux trouvés, chacun suivi des plateformes qui l'ont renvoyé
+ * (`d•••••@e•••••.com (Apple)`). Les masques qui correspondent à la valeur recherchée elle-même
+ * sont écartés.
+ */
+export function pivotProperties(sources: PivotSource[], query: string, lang: 'fr' | 'en'): Record<string, PropValue | undefined> {
+  type Group = 'emails' | 'phones' | 'places'
+  const groups: Record<Group, Map<string, { value: string; sites: string[] }>> = { emails: new Map(), phones: new Map(), places: new Map() }
+  const add = (group: Group, value: string, site: string): void => {
+    const key = value.toLowerCase().replace(/\s+/g, ' ')
+    const entry = groups[group].get(key) ?? { value, sites: [] }
+    if (!entry.sites.includes(site)) entry.sites.push(site)
+    groups[group].set(key, entry)
+  }
+  for (const { site, profile } of sources) {
+    const p = asObj(profile)
+    const name = siteName(site)
+    for (const e of emailsOf(p).masked) if (!maskMatches(e, query)) add('emails', e, name)
+    for (const ph of phonesOf(p).masked) if (!maskMatches(ph, query)) add('phones', ph, name)
+    const place = locationOf(p, lang)
+    if (place && place.length <= 120 && !isMasked(place)) add('places', place, name)
+  }
+  const list = (group: Group): string[] =>
+    [...groups[group].values()].slice(0, MAX_PIVOTS).map((e) => `${e.value} (${e.sites.join(', ')})`)
+  return { masked_emails: list('emails'), masked_phones: list('phones'), locations: list('places') }
 }
 
 /** Champs simples du profil, conservés pour consultation dans la fiche. */
@@ -360,9 +428,7 @@ export function accountEntities(profile: unknown, opts: AccountOpts): OutEntity[
   const url = isHttpUrl(urlRaw) ? urlRaw : platform && username ? profileUrl(platform, username) : undefined
   const emails = emailsOf(p)
   const phones = phonesOf(p)
-  const city = pick(p, 'city', 'locality', 'town', 'homeCity')
-  const country = localizeCountry(pick(p, 'country'), pick(p, 'countryCode', 'country_code'), opts.lang) ?? ''
-  const location = pick(p, 'location', 'locationText') || [city, country].filter(Boolean).join(', ')
+  const location = locationOf(p, opts.lang)
   const lat = pickNum(p, 'lat', 'latitude')
   const lon = pickNum(p, 'lon', 'lng', 'longitude')
 

@@ -3,7 +3,7 @@
 
 import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
 import { MAX_LIST_ENTITIES } from '../domain/_util'
-import { creditsOf, isFatal, pool, redact, ROSO_COMMON, RosoClient, toRosoError, type Json } from './_client'
+import { creditsOf, isFatal, pool, redact, ROSO_COMMON, RosoClient, scanProgress, toRosoError, type Json } from './_client'
 import {
   accountEntities,
   addGeneric,
@@ -15,6 +15,7 @@ import {
   isEmail,
   isObj,
   pick,
+  pivotProperties,
   siteName,
   stealerEntities,
   str,
@@ -35,6 +36,8 @@ const SLOW: Record<string, number> = {
   thefork: 26000
 }
 const ALWAYS_ADDED = ['yahoo', 'protonmail', 'outlookcom', 'hotmailcom', 'outlookfr', 'hotmailfr']
+/** Modules sans profil de compte (fuites, infostealers, WHOIS) : exclus des pivots. */
+const NOT_PROFILES = new Set(['hibp', 'haveibeenpwned', 'intelx', 'intelligencex', 'hudsonrock', 'hudson', 'whoxy', 'whoisxml', 'reversewhois'])
 const EXCLUDED = ['spoutible', 'bandlab', 'warthunder']
 
 /** Liste finale des modules, filtrée comme le fait le site (silencieux, ACL, priorités). */
@@ -144,7 +147,9 @@ export default defineModule({
     const found: Found[] = []
     const notFound: string[] = []
     const errors: Record<string, string> = {}
+    const progress = scanProgress(ctx, modules.length, { fr: 'modules', en: 'modules' })
     await pool(modules, POOL, ctx.signal, async (mod) => {
+      let hit = false
       try {
         const res = await c.request(`/api/gateway/email/module/${encodeURIComponent(mod)}`, {
           method: 'POST',
@@ -159,16 +164,26 @@ export default defineModule({
         if (res.status === 404) return void notFound.push(mod)
         if (!res.ok) return void (errors[mod] = str(res.data.error) || str(res.data.message) || `HTTP ${res.status}`)
         const d = res.data
-        if (d.success === true && d.exists === true) found.push({ mod, data: d })
-        else if (d.exists === false || d.success === true) notFound.push(mod)
+        if (d.success === true && d.exists === true) {
+          found.push({ mod, data: d })
+          hit = true
+        } else if (d.exists === false || d.success === true) notFound.push(mod)
         else errors[mod] = str(d.error) || 'error'
       } catch (e) {
         if (isFatal(e)) throw e
         errors[mod] = e instanceof Error ? e.message : String(e)
+      } finally {
+        progress.tick(siteName(mod), hit)
       }
     })
 
     const { entities, breaches } = foundEntities(found, email, ctx.lang)
+    // Pivots regroupés sur l'adresse : téléphones et emails masqués (Apple...), lieux.
+    const pivots = pivotProperties(
+      found.filter((f) => !NOT_PROFILES.has(f.mod.toLowerCase())).map((f) => ({ site: f.mod, profile: f.data.profile ?? f.data.data })),
+      email,
+      ctx.lang
+    )
 
     // Archivage côté roso.info, comme le site en fin de scan (sans effet sur le résultat).
     if (sessionId && found.length) {
@@ -196,7 +211,8 @@ export default defineModule({
         roso_modules_checked: modules.length,
         roso_errors: Object.keys(errors).length,
         roso_found_on: found.map((f) => siteName(f.mod)),
-        breaches: breaches.length ? breaches : undefined
+        breaches: breaches.length ? breaches : undefined,
+        ...pivots
       }),
       entities,
       raw: redact(
