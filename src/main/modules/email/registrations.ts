@@ -15,7 +15,15 @@ async function fetchBody(
   url: string,
   init: Parameters<typeof fetchRetry>[2] = {}
 ): Promise<{ status: number; text: string }> {
-  const res = await fetchRetry(ctx, url, init)
+  let res: Response
+  try {
+    res = await fetchRetry(ctx, url, init)
+  } catch (e) {
+    // Connexion impossible ou délai dépassé : service injoignable, pas une réponse négative.
+    if (e instanceof Error && (e.name === 'TimeoutError' || e.message === 'fetch failed'))
+      throw new ModuleError(`${service} : pas de réponse (${e.name === 'TimeoutError' ? 'délai dépassé' : 'connexion impossible'})`, 'unavailable')
+    throw e
+  }
   if (res.status === 429 || res.status >= 500) throw httpFailure(service, res.status)
   return { status: res.status, text: await res.text() }
 }

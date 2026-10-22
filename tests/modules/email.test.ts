@@ -303,6 +303,8 @@ describe.skipIf(!LIVE)('email (live)', () => {
   it('email.microsoft', async () => {
     expect((await runModule(microsoft, entity('email', 'test@outlook.com'), ctx)).found).toBe(true)
     expect((await runModule(microsoft, entity('email', absent), ctx)).found).toBe(false)
+    // Domaine réservé à une organisation (ErrorHR 800478AC) : absent, pas une session refusée.
+    expect((await runModule(microsoft, entity('email', 'zq8xk2vmw93pq7abc@microsoft.com'), ctx)).found).toBe(false)
   })
 
   it('email.office365', async () => {
