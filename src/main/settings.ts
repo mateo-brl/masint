@@ -32,7 +32,9 @@ export const DEFAULT_SETTINGS: Settings = {
   autoUpdate: true,
   edgeStyle: 'bezier',
   edgeLabels: 'auto',
-  showMinimap: true
+  showMinimap: true,
+  investigatorName: '',
+  assistCapture: false
 }
 
 /** Chiffrement des secrets. En production : `safeStorage` d'Electron (DPAPI, trousseau GNOME/KWallet). */
@@ -83,6 +85,8 @@ export class SettingsService {
     next.globalConcurrency = Math.min(64, Math.max(1, Math.round(next.globalConcurrency) || DEFAULT_SETTINGS.globalConcurrency))
     next.timeoutMs = Math.min(120000, Math.max(3000, Math.round(next.timeoutMs)))
     if (!['auto', 'internal', 'external'].includes(next.linkOpening)) next.linkOpening = 'auto'
+    next.investigatorName = String(next.investigatorName ?? '').trim().slice(0, 120)
+    next.assistCapture = next.assistCapture === true
     // En-tête automatique enregistré vide : il suit les mises à jour d'Electron.
     const auto = isAutoUserAgent(next.userAgent)
     next.userAgent = auto ? DEFAULT_USER_AGENT : next.userAgent.trim()
