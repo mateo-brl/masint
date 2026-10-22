@@ -1,0 +1,87 @@
+{
+ "objectClassName": "domain",
+ "handle": "DOM000000000001-FRNIC",
+ "ldhName": "exemple-masque.fr",
+ "status": ["active"],
+ "events": [
+  { "eventAction": "registration", "eventDate": "2019-04-02T10:11:12Z" },
+  { "eventAction": "expiration", "eventDate": "2027-04-02T10:11:12Z" },
+  { "eventAction": "last changed", "eventDate": "2026-03-01T08:00:00Z" }
+ ],
+ "nameservers": [
+  { "objectClassName": "nameserver", "ldhName": "ns11.infomaniak.ch" },
+  { "objectClassName": "nameserver", "ldhName": "ns12.infomaniak.ch" }
+ ],
+ "secureDNS": { "delegationSigned": false },
+ "entities": [
+  {
+   "objectClassName": "entity",
+   "handle": "RAR929-FRNIC",
+   "roles": ["sponsor", "registrar"],
+   "vcardArray": [
+    "vcard",
+    [
+     ["version", {}, "text", "4.0"],
+     ["fn", {}, "text", "Infomaniak Network SA"],
+     ["tel", { "type": "voice" }, "uri", "tel:+41.228203544"],
+     ["tel", { "type": "fax" }, "uri", "tel:+41.228203546"],
+     ["email", {}, "text", "abuse@infomaniak.com"],
+     ["url", {}, "uri", "https://www.infomaniak.com"],
+     ["adr", { "cc": "CH" }, "text", ["", "", "Rue Eugène-Marziano, 25", "LES ACACIAS", "", "CH-1227", ""]]
+    ]
+   ],
+   "remarks": [{ "type": "registrar restricted publication", "description": ["No"] }]
+  },
+  {
+   "objectClassName": "entity",
+   "handle": "ANO00-FRNIC",
+   "roles": ["registrant"],
+   "vcardArray": [
+    "vcard",
+    [
+     ["version", {}, "text", "4.0"],
+     ["fn", {}, "text", "Ano Nymous"],
+     ["adr", { "cc": "FR" }, "text", ["", "", "***", "***", "", "***", ""]],
+     ["email", {}, "text", "***"],
+     ["tel", { "type": "voice" }, "uri", "***"]
+    ]
+   ],
+   "remarks": [
+    { "type": "contact restricted publication", "description": ["YES"] },
+    { "type": "contact type", "description": ["PERSON"] }
+   ]
+  },
+  {
+   "objectClassName": "entity",
+   "handle": "XXX00-FRNIC",
+   "roles": ["administrative"],
+   "vcardArray": [
+    "vcard",
+    [
+     ["version", {}, "text", "4.0"],
+     ["fn", {}, "text", "***"],
+     ["email", {}, "text", "***"]
+    ]
+   ]
+  },
+  {
+   "objectClassName": "entity",
+   "handle": "INF0-FRNIC",
+   "roles": ["technical"],
+   "vcardArray": [
+    "vcard",
+    [
+     ["version", {}, "text", "4.0"],
+     ["fn", {}, "text", "Infomaniak Network SA"],
+     ["adr", { "cc": "CH" }, "text", ["", "", "Rue Eugène-Marziano 25", "Les Acacias", "", "1227", ""]],
+     ["email", {}, "text", "abuse@infomaniak.ch"],
+     ["tel", { "type": "voice" }, "uri", "tel:+41.228203544"]
+    ]
+   ],
+   "remarks": [
+    { "type": "contact restricted publication", "description": ["NO"] },
+    { "type": "contact type", "description": ["ORGANIZATION"] }
+   ]
+  }
+ ]
+}

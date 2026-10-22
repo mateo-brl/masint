@@ -111,6 +111,14 @@ export function detectHosting(hint: {
   return null
 }
 
+/**
+ * Nom d'hôte de l'infrastructure d'un hébergeur connu (`ec2-...amazonaws.com`, `ns301234.ip-51-75-1.eu`,
+ * `reverse-proxy-ip-1.infomaniak.ch`) : il désigne la machine de l'hébergeur, pas un site lié à la cible.
+ */
+export function isProviderHost(host: string): boolean {
+  return !!detectHosting({ hosts: [host] })
+}
+
 function match(r: HostingRule, via: HostingMatch['via']): HostingMatch {
   return { platform: r.platform, name: getPlatform(r.platform)?.name ?? r.platform, via }
 }

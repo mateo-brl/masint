@@ -1,5 +1,5 @@
 import { defineModule, ModuleError, type ModuleOutput, type OutEntity } from '@shared/modules'
-import { sharedInfrastructure } from '../domain/_hosting'
+import { isProviderHost, sharedInfrastructure } from '../domain/_hosting'
 import { cappedList, compact, getJsonOrNull, isIPv4, MAX_LIST_ENTITIES, normalizeHost } from '../domain/_util'
 
 const MAX_CVE = 20
@@ -64,11 +64,12 @@ export function parseInternetDb(d: InternetDb | null, lang: 'fr' | 'en'): Module
   if (!d || !d.ip) return {}
   const fr = lang === 'fr'
   const entities: OutEntity[] = []
-  // IP de CDN : noms d'autres clients du CDN, gardés en propriété seulement.
+  // IP de CDN : noms d'autres clients du CDN, gardés en propriété seulement. Même chose pour les
+  // noms des machines d'un hébergeur connu (`reverse-proxy-ip-1.infomaniak.ch`, `ec2-...amazonaws.com`).
   const shared = sharedInfrastructure(d.ip)
   const hostnames = d.hostnames ?? []
-  if (shared?.kind !== 'cdn')
-    for (const host of hostnames.slice(0, MAX_LIST_ENTITIES)) entities.push({ type: 'domain', label: host, linkLabel: 'hostname' })
+  const linked = shared?.kind === 'cdn' ? [] : hostnames.filter((h) => !isProviderHost(h)).slice(0, MAX_LIST_ENTITIES)
+  for (const host of linked) entities.push({ type: 'domain', label: host, linkLabel: 'hostname' })
   for (const cpe of d.cpes ?? []) {
     const t = cpeToTechnology(cpe)
     if (t) entities.push({ type: 'technology', label: t.name, data: compact({ version: t.version, kind: t.kind, cpe }), linkLabel: fr ? 'exécute' : 'runs' })
@@ -81,7 +82,7 @@ export function parseInternetDb(d: InternetDb | null, lang: 'fr' | 'en'): Module
       shodan_tags: d.tags ?? [],
       vulns,
       cpes: d.cpes ?? [],
-      ...(hostnames.length > MAX_LIST_ENTITIES || shared?.kind === 'cdn' ? cappedList('hostnames', hostnames) : {}),
+      ...(hostnames.length > linked.length ? cappedList('hostnames', hostnames) : {}),
       shodan_link: `https://www.shodan.io/host/${d.ip}`
     }),
     entities,

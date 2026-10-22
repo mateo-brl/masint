@@ -1,4 +1,5 @@
 import { defineModule, ModuleError, type ModuleOutput } from '@shared/modules'
+import { isProviderHost } from '../domain/_hosting'
 import { isIPv4, isIPv6, normalizeHost } from '../domain/_util'
 
 /** Développe une adresse IPv6 abrégée en 8 groupes de 4 chiffres hexadécimaux. */
@@ -38,7 +39,8 @@ export function buildPtrOutput(names: string[], confirmed: Record<string, boolea
       ...(hosts.length > 1 ? { reverse_all: hosts } : {}),
       reverse_confirmed: !!confirmed[hosts[0]]
     },
-    entities: hosts.slice(0, 5).map((h) => ({
+    // Nom générique d'une machine d'hébergeur (`ec2-...amazonaws.com`) : gardé dans la fiche seulement.
+    entities: hosts.filter((h) => !isProviderHost(h)).slice(0, 5).map((h) => ({
       type: 'domain',
       label: h,
       linkLabel: confirmed[h] ? (lang === 'fr' ? 'reverse DNS (confirmé)' : 'reverse DNS (confirmed)') : 'reverse DNS'

@@ -87,13 +87,14 @@ export function parseSecurityTxt(text: string): SecurityTxt {
 /** Chemins sensibles signalés dans robots.txt (administration, sauvegardes, API...). */
 const INTERESTING = /admin|login|backup|bak|old|private|secret|config|api|dev|test|staging|wp-|phpmyadmin|cgi|tmp|internal|intranet|panel|dashboard|\.git|\.env|sql|dump/i
 
+/**
+ * Seuls les emails de security.txt deviennent des entités (contacts réels, à croiser) ; sitemaps,
+ * chemins, page de recrutement et politique de divulgation restent des propriétés du site.
+ */
 export function buildRobotsOutput(robots: RobotsInfo | null, sec: SecurityTxt | null, origin: string, lang: 'fr' | 'en'): ModuleOutput {
   const fr = lang === 'fr'
   const entities: OutEntity[] = []
   for (const e of sec?.emails ?? []) entities.push({ type: 'email', label: e, linkLabel: fr ? 'contact sécurité' : 'security contact' })
-  for (const s of (robots?.sitemaps ?? []).slice(0, 5)) entities.push({ type: 'url', label: s, linkLabel: 'sitemap' })
-  if (sec?.hiring) entities.push({ type: 'url', label: sec.hiring, linkLabel: fr ? 'recrutement' : 'hiring' })
-  if (sec?.policy) entities.push({ type: 'url', label: sec.policy, linkLabel: fr ? 'politique de divulgation' : 'disclosure policy' })
   const properties = compact({
     ...cappedList('robots_disallow', robots?.disallow ?? []),
     robots_interesting_paths: robots?.disallow.filter((d) => INTERESTING.test(d)).slice(0, 50) ?? [],
@@ -102,6 +103,7 @@ export function buildRobotsOutput(robots: RobotsInfo | null, sec: SecurityTxt | 
     security_contacts: sec?.contacts ?? [],
     security_txt_expires_at: sec?.expires ?? null,
     security_policy: sec?.policy ?? null,
+    security_hiring: sec?.hiring ?? null,
     security_languages: sec?.languages ?? null,
     security_encryption: sec?.encryption ?? null
   })

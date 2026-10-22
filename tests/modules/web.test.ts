@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { ModuleError } from '@shared/modules'
 import { emails, metas, socialLink, technologies, trackers } from '../../src/main/modules/web/_html'
-import favicon, { buildFaviconOutput, encodebytes, faviconHash, iconUrl, murmur3 } from '../../src/main/modules/web/favicon'
+import favicon, { buildFaviconOutput, encodebytes, faviconHash, iconUrl, murmur3, sharedFaviconOutput, type UrlscanHit } from '../../src/main/modules/web/favicon'
 import page, { analyzePage, guessCountry } from '../../src/main/modules/web/page'
-import robots, { parseRobots, parseSecurityTxt } from '../../src/main/modules/web/robots'
-import tracker, { normalizeTracker, parseAnalyticsLookup } from '../../src/main/modules/web/tracker'
+import robots, { buildRobotsOutput, parseRobots, parseSecurityTxt } from '../../src/main/modules/web/robots'
+import tracker, { normalizeTracker, parseAnalyticsLookup, parseBuiltWith } from '../../src/main/modules/web/tracker'
 import { fakeContext, fixture, fixtureBytes, fixtureJson } from '../fixtures/domain/_fake'
 import { entity, LIVE, makeContext, runModule } from '../helpers/context'
 
@@ -149,7 +149,17 @@ describe('web.robots', () => {
     const out = await robots.run(entity('domain', 'www.ovhcloud.com'), ctx)
     expect(types(out, 'email')).toEqual(['csirt@ovhcloud.com'])
     expect(out.properties?.robots_interesting_paths).toEqual(['/admin/'])
-    expect(types(out, 'url')).toContain('https://www.ovhcloud.com/sitemap.xml')
+    // Sitemaps, politique et recrutement : propriétés du site, pas des nœuds.
+    expect(out.entities?.map((e) => e.type)).toEqual(['email'])
+    expect(out.properties?.sitemaps).toEqual(['https://www.ovhcloud.com/sitemap.xml'])
+  })
+
+  it('range page de recrutement et politique de divulgation en propriétés', () => {
+    const sec = parseSecurityTxt(fixture('web/security_google.txt'))
+    const out = buildRobotsOutput(null, sec, 'https://www.google.com', 'fr')
+    expect(out.entities?.map((e) => e.label)).toEqual(['security@google.com'])
+    expect(out.properties?.security_hiring).toBe('https://g.co/SecurityPrivacyEngJobs')
+    expect(out.properties?.security_policy).toBe(sec.policy)
   })
 })
 
@@ -167,8 +177,10 @@ describe('web.favicon', () => {
     expect(faviconHash(ico)).toBe(-124005466)
     const out = buildFaviconOutput('https://www.ldlc.com/favicon.ico', ico, 'image/vnd.microsoft.icon', 'fr')
     expect(out.properties?.favicon_md5).toBe('01cb58472c5f9b0f2c08a636a79bcdad')
-    expect(types(out, 'hash')).toEqual(['-124005466'])
-    expect(types(out, 'search_link').length).toBe(4)
+    // Empreintes dans la fiche du site, recherches de serveurs à la main : aucun nœud.
+    expect(out.entities).toBeUndefined()
+    expect(out.manual!.map((m) => m.label)).toEqual(['Shodan', 'Censys', 'FOFA'])
+    expect(out.manual![0].url).toBe('https://www.shodan.io/search?query=http.favicon.hash%3A-124005466')
     expect(iconUrl(fixture('web/ldlc.html'), 'https://www.ldlc.com/')).toBe('https://www.ldlc.com/ldlc/build/img/common/favicon/favicon.ico')
   })
 
@@ -181,6 +193,32 @@ describe('web.favicon', () => {
     })
     const out = await favicon.run(entity('website', 'https://www.ldlc.com'), ctx)
     expect(out.properties?.favicon_mmh3).toBe('-124005466')
+    // urlscan.io injoignable : les empreintes restent.
+    expect(out.entities).toBeUndefined()
+  })
+
+  it('relie les autres sites qui chargent la même icône (urlscan.io)', async () => {
+    const hits = fixtureJson<{ results: UrlscanHit[] }>('web/urlscan_favicon_lemonde.json').results
+    const out = sharedFaviconOutput(hits, ['lemonde.fr'], 'fr')
+    expect(types(out, 'domain')).toEqual(['infoevolve.pro', 'klyroo.site'])
+    expect(out.entities![0].linkLabel).toBe('même favicon')
+    // Indice faible : à vérifier, pas directement dans le graphe.
+    expect(out.entities!.every((e) => e.review && e.reviewReason)).toBe(true)
+    expect(out.properties).toEqual({ favicon_shared_domains: ['infoevolve.pro', 'klyroo.site'], favicon_shared_domains_count: 2 })
+    // Icône d'hébergeur partagée par des dizaines de sites : aucun lien.
+    const generic = Array.from({ length: 30 }, (_, i) => ({ page: { domain: `site${i}.example` } }))
+    expect(sharedFaviconOutput(generic, ['lemonde.fr'], 'fr')).toMatchObject({ entities: [], properties: { favicon_generic: true, favicon_shared_domains_count: 30 } })
+
+    const ctx = fakeContext({
+      routes: {
+        'https://www.ldlc.com/ldlc/build/img/common/favicon/favicon.ico': { body: fixtureBytes('web/favicon_ldlc.ico'), headers: { 'content-type': 'image/vnd.microsoft.icon' } },
+        'https://www.ldlc.com/': { body: fixture('web/ldlc.html'), headers: { 'content-type': 'text/html' } },
+        'https://urlscan.io/api/v1/search/': { body: { results: [{ page: { domain: 'www.ldlc.com' } }, { page: { domain: 'shop.ldlc.com' } }, { page: { domain: 'ldlc-pro.example' } }] } }
+      }
+    })
+    const run = await favicon.run(entity('website', 'https://www.ldlc.com'), ctx)
+    expect(ctx.requests.find((u) => u.startsWith('https://urlscan.io/'))).toContain('q=hash%3A39bc665b7543a5e83a3d1f46ac6eedba6b1a98960548e2445c588898405250c6')
+    expect(types(run, 'domain')).toEqual(['ldlc-pro.example'])
   })
 })
 
@@ -197,7 +235,24 @@ describe('tracker.lookup', () => {
     const ctx = fakeContext({ routes: { 'https://api.hackertarget.com/analyticslookup/': fixture('web/hackertarget_analytics_gtm.txt') } })
     const out = await tracker.run(entity('tracker', 'GTM-P24PF4B'), ctx)
     expect(types(out, 'domain')).toContain('af.wordpress.org')
-    expect(types(out, 'search_link')).toContain('PublicWWW GTM-P24PF4B')
+    expect(out.manual!.map((m) => m.label)).toEqual(['PublicWWW'])
+  })
+
+  it('ajoute les domaines vus par BuiltWith, avec les dates', async () => {
+    const bw = parseBuiltWith(fixture('web/builtwith_gtm.html'))
+    expect(bw[0]).toEqual({ domain: 'choiyo88.me', first: '2025-02', last: '2025-09' })
+    expect(bw.map((d) => d.domain)).toContain('wordpress.org')
+    const ctx = fakeContext({
+      routes: {
+        'https://api.hackertarget.com/analyticslookup/': { status: 200, body: 'API count exceeded - Increase Quota with Membership' },
+        'https://builtwith.com/relationships/tag/GTM-P24PF4B': fixture('web/builtwith_gtm.html')
+      }
+    })
+    // Quota HackerTarget dépassé : BuiltWith suffit.
+    const out = await tracker.run(entity('tracker', 'GTM-P24PF4B'), ctx)
+    expect(types(out, 'domain')[0]).toBe('choiyo88.me')
+    expect(out.entities![0].data).toEqual({ first_seen: '2025-02', last_seen: '2025-09' })
+    expect(out.properties?.shared_domains_count).toBe(8)
   })
 })
 
@@ -223,7 +278,7 @@ describe.skipIf(!LIVE)('web en direct', () => {
   it('tracker.lookup', async (t) => {
     try {
       const out = await runModule(tracker, entity('tracker', 'GTM-P24PF4B'), ctx)
-      expect(types(out, 'search_link').length).toBe(4)
+      expect(types(out, 'domain').length).toBeGreaterThan(0)
     } catch (e) {
       // Quota gratuit HackerTarget partagé par adresse IP (50 requêtes par jour).
       if (e instanceof ModuleError && e.code === 'rate_limited') t.skip()

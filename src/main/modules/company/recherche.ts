@@ -181,7 +181,10 @@ export function candidatesOutput(ctx: Pick<ModuleContext, 'lang'>, results: ReRe
       created_at: r.date_creation ?? null,
       closed_at: r.date_fermeture ?? null
     },
-    linkLabel: tr(ctx, 'correspondance possible', 'possible match')
+    linkLabel: tr(ctx, 'correspondance possible', 'possible match'),
+    // Saisie ambiguë : l'enquêteur choisit la bonne entreprise dans « À vérifier ».
+    review: true,
+    reviewReason: tr(ctx, 'saisie ambiguë : plusieurs entreprises correspondent à ce nom', 'ambiguous input: several companies match this name')
   }))
   return { entities, raw: results.slice(0, MAX_CANDIDATES).map((r) => ({ siren: r.siren, nom: r.nom_complet })) }
 }

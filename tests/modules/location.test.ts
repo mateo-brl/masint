@@ -76,17 +76,17 @@ describe('location.reverse (hors ligne)', () => {
 })
 
 describe('location.map_links', () => {
-  it('liens à partir des coordonnées', async () => {
+  it('liens à partir des coordonnées, dans la fiche du lieu', async () => {
     const out = await runModule(links, entity('coordinates', '48.8566, 2.3522'))
-    expect(out.entities?.map((e) => e.data?.engine)).toEqual(['Google Maps', 'Google Street View', 'OpenStreetMap', 'Mapillary'])
-    expect(out.entities?.[1].data?.url).toBe('https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=48.856600,2.352200')
-    expect(out.entities?.[0].label).toBe('Google Maps · 48.85660, 2.35220')
+    expect(out.entities).toBeUndefined()
+    expect(Object.keys(out.properties!)).toEqual(['google_maps_url', 'street_view_url', 'osm_map_url', 'mapillary_url'])
+    expect(out.properties?.street_view_url).toBe('https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=48.856600,2.352200')
   })
 
   it('liens de recherche sans coordonnées', async () => {
     const out = await runModule(links, entity('address', '10 rue de Rivoli, Paris'))
-    expect(out.entities).toHaveLength(2)
-    expect(out.entities?.[0].data?.url).toContain('query=10%20rue%20de%20Rivoli%2C%20Paris')
+    expect(Object.keys(out.properties!)).toEqual(['google_maps_url', 'osm_map_url'])
+    expect(out.properties?.google_maps_url).toContain('query=10%20rue%20de%20Rivoli%2C%20Paris')
   })
 })
 

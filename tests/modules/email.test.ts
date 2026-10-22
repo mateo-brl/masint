@@ -104,7 +104,8 @@ describe('email.info', () => {
       mx: ['mx1.mail.ovh.net', 'mx2.mail.ovh.net']
     })
     expect(out.entities?.find((e) => e.type === 'domain')?.label).toBe('example.fr')
-    expect(out.entities?.find((e) => e.type === 'username')?.label).toBe('jean.dupont')
+    // Partie locale de l'adresse : pseudo plausible, mis de côté dans « À vérifier ».
+    expect(out.entities?.find((e) => e.type === 'username')).toMatchObject({ label: 'jean.dupont', review: true })
   })
 
   it("ne crée pas d'entité domaine pour un webmail", async () => {
@@ -117,12 +118,14 @@ describe('email.info', () => {
 })
 
 describe('email.links', () => {
-  it('prépare des liens de recherche uniques', async () => {
+  it('propose quelques recherches manuelles, aucune entité', async () => {
     const out = await runModule(links, entity('email', 'john@example.com'))
-    const urls = out.entities?.map((e) => e.data?.url as string) ?? []
+    expect(out.entities).toBeUndefined()
+    const urls = out.manual!.map((m) => m.url)
     expect(urls).toContain('https://www.google.com/search?q=%22john%40example.com%22')
     expect(urls.some((u) => u.startsWith('https://epieos.com/'))).toBe(true)
-    expect(new Set(out.entities?.map((e) => e.label)).size).toBe(out.entities?.length)
+    expect(out.manual!.map((m) => m.label)).toEqual(['Google', 'Epieos', 'Intelligence X'])
+    expect(out.manual!.every((m) => m.hint)).toBe(true)
   })
 })
 

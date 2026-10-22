@@ -44,9 +44,16 @@ export function buildDnsOutput(domain: string, rec: DnsRecords, lang: 'fr' | 'en
   for (const ip of a.slice(0, MAX_IPS)) entities.push({ type: 'ip', label: ip, data: { version: 'IPv4' }, linkLabel: 'A' })
   for (const ip of aaaa.slice(0, MAX_IPS)) entities.push({ type: 'ip', label: ip, data: { version: 'IPv6' }, linkLabel: 'AAAA' })
   for (const target of cname.slice(0, 3)) entities.push({ type: 'domain', label: target, linkLabel: 'CNAME' })
-  const mxHosts = mx.filter((h) => h !== domain)
+  // Serveurs MX et NS d'un fournisseur reconnu (Infomaniak, OVHcloud, Google, Route 53...) : partagés
+  // par tous ses clients, ils n'apprennent rien de plus que le nœud messagerie ou hébergeur et restent
+  // en propriétés. Les NS Cloudflare, attribués par compte, restent des entités (pivot entre domaines).
+  const mxHosts = mx.filter((h) => h !== domain && !analyzeMail([h], []).mailProviders.length)
+  const nsHosts = ns.filter((h) => {
+    const provider = detectDnsProvider([h])
+    return !provider || provider.platform === 'cloudflare'
+  })
   for (const host of mxHosts.slice(0, MAX_HOSTS)) entities.push({ type: 'domain', label: host, linkLabel: 'MX' })
-  for (const host of ns.slice(0, MAX_HOSTS)) entities.push({ type: 'domain', label: host, linkLabel: 'NS' })
+  for (const host of nsHosts.slice(0, MAX_HOSTS)) entities.push({ type: 'domain', label: host, linkLabel: 'NS' })
 
   for (const name of mail.mailProviders)
     entities.push({ type: 'technology', label: name, data: { kind: fr ? 'Messagerie' : 'Email hosting' }, linkLabel: fr ? 'messagerie' : 'email hosting' })

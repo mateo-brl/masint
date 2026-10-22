@@ -1,0 +1,55 @@
+[
+ {
+  "organisations": [],
+  "source_date": "2021-07-14",
+  "source_id": "JORFTEXT000099999901",
+  "source_name": "JORF",
+  "type_ordre": "nomination",
+  "legion_honneur": "true",
+  "grade": "Chevalier",
+  "nomme_par": "Ministère de la culture",
+  "sexe": "F",
+  "nom": "Exemple",
+  "prenom": "Camille",
+  "autres_prenoms": "Louise"
+ },
+ {
+  "organisations": [
+   {
+    "nom": "Conseil d'orientation"
+   }
+  ],
+  "source_date": "2023-02-01",
+  "source_id": "INTS9999999A",
+  "source_name": "BOMI",
+  "type_ordre": "nomination",
+  "sexe": "F",
+  "nom": "Exemple",
+  "prenom": "Camille"
+ },
+ {
+  "organisations": [
+   {
+    "nom": "Université de Lyon"
+   }
+  ],
+  "source_date": "2010-09-01",
+  "source_id": "JORFTEXT000099999902",
+  "source_name": "JORF",
+  "type_ordre": "admission",
+  "sexe": "M",
+  "nom": "Exemple",
+  "prenom": "Camille",
+  "date_naissance": "1990-04-02"
+ },
+ {
+  "organisations": [],
+  "source_date": "2015-01-01",
+  "source_id": "JORFTEXT000099999903",
+  "source_name": "JORF",
+  "type_ordre": "nomination",
+  "sexe": "M",
+  "nom": "Exemplé",
+  "prenom": "Camil"
+ }
+]

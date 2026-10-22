@@ -17,7 +17,10 @@ describe('registre', () => {
         'messaging.discord_invite',
         'person.usernames',
         'person.search_links',
-        'person.fr_dirigeants'
+        'person.fr_dirigeants',
+        'person.fr_deces',
+        'person.bodacc',
+        'person.jorf'
       ])
     )
     const types = new Set(ENTITY_TYPES.map((t) => t.id))

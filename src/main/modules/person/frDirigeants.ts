@@ -223,8 +223,17 @@ function companyEntity(c: MandateCandidate, lang: 'fr' | 'en'): OutEntity {
       lon: Number.isFinite(lon) && r.siege?.longitude ? lon : undefined,
       url: `https://annuaire-entreprises.data.gouv.fr/entreprise/${r.siren}`
     }),
-    // Seule une date de naissance concordante permet d'écarter l'homonymie.
-    linkLabel: c.confirmed ? roles : `${roles} · ${lang === 'fr' ? 'homonyme possible' : 'possible namesake'}`
+    linkLabel: roles,
+    // Seule une date de naissance concordante permet d'écarter l'homonymie : sinon, à vérifier.
+    ...(c.confirmed
+      ? {}
+      : {
+          review: true,
+          reviewReason:
+            lang === 'fr'
+              ? 'homonyme possible : même nom et prénom ; comparez le mois de naissance déclaré ou ajoutez la date de naissance à la fiche'
+              : 'possible namesake: same name; compare the declared birth month or add the birth date to the record'
+        })
   }
 }
 
@@ -264,8 +273,8 @@ export default defineModule({
   id: 'person.fr_dirigeants',
   name: { fr: 'Mandats de dirigeant (France)', en: 'Company officer roles (France)' },
   description: {
-    fr: 'Cherche la personne parmi les dirigeants d’entreprises françaises (API Recherche d’entreprises de l’État, sans clé) : 10 entreprises au plus, avec la fonction et le mois de naissance déclaré. Les mandats incompatibles avec la date de naissance ou de décès connue sont écartés ; sans date concordante, le lien est marqué « homonyme possible ».',
-    en: 'Looks the person up among French company officers (government Company Search API, no key): up to 10 companies, with the role and declared birth month. Roles inconsistent with the known birth or death date are dropped; without a matching date, the link is marked as a possible namesake.'
+    fr: 'Cherche la personne parmi les dirigeants d’entreprises françaises (API Recherche d’entreprises de l’État, sans clé) : 10 entreprises au plus, avec la fonction et le mois de naissance déclaré. Les mandats incompatibles avec la date de naissance ou de décès connue sont écartés ; sans date de naissance concordante, l’entreprise est mise de côté dans « À vérifier » (homonyme possible).',
+    en: 'Looks the person up among French company officers (government Company Search API, no key): up to 10 companies, with the role and declared birth month. Roles inconsistent with the known birth or death date are dropped; without a matching birth date, the company is put aside in "To review" (possible namesake).'
   },
   category: 'person',
   inputTypes: ['person'],

@@ -41,7 +41,7 @@ describe('company.fr_registry (hors ligne)', () => {
     expect(pickResult(res.results, 'Danon', null)).toBeNull()
     const c = candidatesOutput(fr, res.results)
     expect(c.entities).toHaveLength(4)
-    expect(c.entities?.[0]).toMatchObject({ type: 'company', label: 'DANONE', data: { siren: '552032534' } })
+    expect(c.entities?.[0]).toMatchObject({ type: 'company', label: 'DANONE', data: { siren: '552032534' }, review: true })
     expect(c.properties).toBeUndefined()
   })
 

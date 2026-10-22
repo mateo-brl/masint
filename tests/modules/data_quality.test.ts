@@ -177,6 +177,19 @@ describe('ip.reverse_ip', () => {
     expect(out.entities).toHaveLength(10)
     expect((out.properties?.hosted_domains as string[]).length).toBe(50)
     expect(out.properties?.hosted_domains_count).toBe(120)
+    // 120 domaines : hébergement mutualisé, les voisins attendent dans « À vérifier ».
+    expect(out.entities?.every((e) => e.review && /mutualisé/.test(e.reviewReason ?? ''))).toBe(true)
+    expect(out.properties?.shared_infrastructure).toBe('hébergement mutualisé (120 domaines)')
+  })
+
+  it('quelques domaines sur une IP dédiée : entités directes', () => {
+    const out = parseReverseIp('free.fr\naliceadsl.fr\nfree-infra.fr', 'fr', '212.27.48.10')
+    expect(out.entities?.map((e) => [e.label, !!e.review])).toEqual([
+      ['free.fr', false],
+      ['aliceadsl.fr', false],
+      ['free-infra.fr', false]
+    ])
+    expect(out.properties?.shared_infrastructure).toBeUndefined()
   })
 
   it('aucune entité pour une IP Cloudflare', () => {
@@ -202,14 +215,14 @@ describe('person.fr_dirigeants : homonymes de Marie Curie', () => {
     expect(parsePartialDate('inconnue')).toBeNull()
   })
 
-  it('sans date connue : 10 entreprises au plus, toutes « homonyme possible »', () => {
+  it('sans date connue : 10 entreprises au plus, toutes à vérifier (homonyme possible)', () => {
     const { kept } = selectMandates(results, name)
     expect(kept.length).toBeGreaterThan(10)
     // Premier prénom exact d'abord : « MARIE », « MARIE ANNE » avant « HÉLÈNE MARIE ».
     expect(kept.slice(0, 5).every((c) => /^MARIE\b/.test(c.matches[0].prenoms ?? ''))).toBe(true)
     const out = companiesFor(results, name)
     expect(out).toHaveLength(10)
-    expect(out.every((e) => e.linkLabel?.endsWith('· homonyme possible'))).toBe(true)
+    expect(out.every((e) => e.review && e.reviewReason?.startsWith('homonyme possible'))).toBe(true)
   })
 
   it('décès en 1934 : aucun mandat ouvert ni entreprise créée après', async () => {
@@ -228,10 +241,11 @@ describe('person.fr_dirigeants : homonymes de Marie Curie', () => {
     const helene = companiesFor(results, { firstNames: ['Hélène'], lastName: 'Curie' }, { birth: { year: 1985, month: 3 } })
     expect(helene[0].label).toBe('THICU')
     expect(helene[0].linkLabel).toBe('Associé indéfiniment responsable · né(e) 03/1985')
+    expect(helene[0].review).toBeUndefined()
     // Cherchée sous « Marie », Hélène Marie Curie reste un homonyme possible malgré la date.
     const marie = companiesFor(results, name, { birth: { year: 1985, month: 3 } })
     expect(marie.length).toBeLessThanOrEqual(10)
-    expect(marie.every((e) => /homonyme possible$/.test(e.linkLabel ?? ''))).toBe(true)
+    expect(marie.every((e) => e.review === true)).toBe(true)
     expect(marie.some((e) => /né\(e\) (?!03\/1985)\d/.test(e.linkLabel ?? ''))).toBe(false)
   })
 })

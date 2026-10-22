@@ -620,3 +620,21 @@ describe('roso.iban', () => {
     await expectError(rosoIban.run(entity('iban', 'FR7630006000011234567890188'), ctx), 'invalid_input')
   })
 })
+
+describe('roso.domain : contacts RDAP', () => {
+  it('ignore les valeurs masquées et les contacts du registrar', async () => {
+    const { rdapContacts } = await import('../../src/main/modules/roso/domain')
+    const vcard = (fields: Array<[string, string]>): unknown => ['vcard', fields.map(([k, v]) => [k, {}, 'text', v])]
+    const { registrar, contacts } = rdapContacts({
+      entities: [
+        { roles: ['registrar'], vcardArray: vcard([['fn', 'Exemple Registrar SA']]) },
+        { roles: ['registrant'], vcardArray: vcard([['fn', '***'], ['email', 'REDACTED FOR PRIVACY']]) },
+        { roles: ['administrative'], vcardArray: vcard([['fn', 'Ano Nymous']]) },
+        { roles: ['technical'], vcardArray: vcard([['fn', 'Exemple Registrar SA'], ['email', 'tech@registrar.example']]) },
+        { roles: ['billing'], vcardArray: vcard([['fn', 'Dupont Conseil SARL']]) }
+      ]
+    })
+    expect(registrar).toBe('Exemple Registrar SA')
+    expect(contacts).toEqual([{ role: 'billing', org: 'Dupont Conseil SARL' }])
+  })
+})
