@@ -110,11 +110,12 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
         icon={n.style.icon}
       />
       <div className="min-w-0 flex-1 leading-tight">
-        <div className="flex items-center gap-1">
-          <div className="min-w-0 flex-1 truncate text-[7.5px] font-semibold tracking-[0.08em]" style={{ color: 'var(--muted)' }}>
-            {kicker}
-          </div>
-          {seenElsewhere > 0 && (
+        {seenElsewhere > 0 ? (
+          // Pastille « vu dans N autres enquêtes » à droite du type ; ligne simple sinon (moins d'éléments).
+          <div className="flex items-center gap-1">
+            <div className="min-w-0 flex-1 truncate text-[7.5px] font-semibold tracking-[0.08em]" style={{ color: 'var(--muted)' }}>
+              {kicker}
+            </div>
             <span
               className="flex shrink-0 items-center gap-0.5 text-[7.5px] font-semibold"
               style={{ color: 'var(--muted)' }}
@@ -124,8 +125,12 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
               <Icon name="FolderSymlink" size={8} />
               {seenElsewhere}
             </span>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="truncate text-[7.5px] font-semibold tracking-[0.08em]" style={{ color: 'var(--muted)' }}>
+            {kicker}
+          </div>
+        )}
         <div className={`truncate text-[11.5px] font-semibold ${n.label ? 'text-fg' : 'italic text-faint'}`}>{n.label || t('node.untitled')}</div>
         {subtitle && <div className="truncate text-[8.5px] text-muted">{subtitle}</div>}
       </div>
