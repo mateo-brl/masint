@@ -6,8 +6,9 @@ import { detectEntity } from '@shared/detect'
 import type { GraphNode, ModuleInfo, NodeInput } from '@shared/types'
 import { useApp } from '../store/app'
 import { useGraph, type FlowEdge, type FlowNode } from '../store/graph'
+import { confirmDialog } from '../components/ui'
 import { api } from './api'
-import i18n from './i18n'
+import i18n, { currentLang } from './i18n'
 import { errorMessage } from './errors'
 import { placeAround, visibleCenter } from './viewport'
 import { ENTITY_HEIGHT } from '@shared/placement'
@@ -47,8 +48,22 @@ export function useApplicable(node: GraphNode | undefined): { auto: Set<string>;
 
 export async function enrichNode(nodeId: string, moduleIds?: string[]): Promise<void> {
   const { investigation } = useGraph.getState()
-  const { toast } = useApp.getState()
+  const { toast, settings, modules } = useApp.getState()
   if (!investigation) return
+  // Mode passif : un module qui contacte la cible ne part que choisi à la main, après avertissement.
+  if (moduleIds?.length && settings?.passiveMode) {
+    const noisy = modules.filter((m) => m.noisy && moduleIds.includes(m.id))
+    const lang = currentLang()
+    if (
+      noisy.length &&
+      !(await confirmDialog(
+        i18n.t('enrich.noisyTitle', { count: noisy.length }),
+        i18n.t('enrich.noisyBody', { count: noisy.length, list: noisy.map((m) => m.name[lang]).join(', ') }),
+        false
+      ))
+    )
+      return
+  }
   try {
     const { jobId } = await api('modules:enrich', investigation.id, nodeId, moduleIds)
     const job = useApp.getState().jobs[jobId]
@@ -56,6 +71,29 @@ export async function enrichNode(nodeId: string, moduleIds?: string[]): Promise<
   } catch (e) {
     toast('error', errorMessage(e))
   }
+}
+
+/** Au-delà de ce nombre de nœuds, « Enrichir » demande confirmation. */
+export const BULK_ENRICH_CONFIRM = 10
+
+/**
+ * Enrichit plusieurs nœuds. Au-delà de dix, une confirmation annonce le volume (« 100 nœuds ×
+ * 25 modules environ ») : une rafale vers les mêmes services déclenche des refus (429) et peut
+ * faire repérer la sortie Tor.
+ */
+export async function enrichNodes(nodes: GraphNode[]): Promise<void> {
+  const list = nodes.filter(canEnrich)
+  if (list.length > BULK_ENRICH_CONFIRM) {
+    const counts = await Promise.all(list.map((n) => api('modules:applicable', n.id).then((r) => r.auto.length, () => 0)))
+    const perNode = Math.round(counts.reduce((a, b) => a + b, 0) / list.length)
+    const ok = await confirmDialog(
+      i18n.t('enrich.bulkTitle', { count: list.length }),
+      i18n.t('enrich.bulkBody', { nodes: list.length, count: perNode }),
+      false
+    )
+    if (!ok) return
+  }
+  for (const n of list) void enrichNode(n.id)
 }
 
 /**
@@ -99,11 +137,27 @@ export async function addFromText(text: string, at: { x: number; y: number }): P
   return addEntityAt(d.type, at, { label: d.value, platform: d.platform ?? null })
 }
 
-/** Crée une entité par ligne reconnue, rangées ensemble dans un espace libre près de `at`. */
+/** Lignes prises en compte au plus par un collage. */
+export const PASTE_MAX_LINES = 200
+
+/**
+ * Crée une entité par ligne reconnue, rangées ensemble dans un espace libre près de `at`.
+ * Un collage plus long est coupé, avec un message ; l'enrichissement automatique passe par
+ * `enrichNodes` (confirmation au-delà de dix nœuds).
+ */
 export async function addFromLines(lines: string[], at: { x: number; y: number }): Promise<void> {
-  const found = lines.map((l) => detectEntity(l)).filter((d) => d !== null)
+  const { toast, settings } = useApp.getState()
+  if (lines.length > PASTE_MAX_LINES) toast('info', i18n.t('canvas.pasteTruncated', { count: PASTE_MAX_LINES, total: lines.length }))
+  const found = lines
+    .slice(0, PASTE_MAX_LINES)
+    .map((l) => detectEntity(l))
+    .filter((d) => d !== null)
+  if (!found.length) return
   const spots = placeAround(at, found.map(() => ENTITY_SIZE))
-  await Promise.all(found.map((d, i) => createEntity(d.type, spots[i], { label: d.value, platform: d.platform ?? null })))
+  const created = await useGraph
+    .getState()
+    .addNodes(found.map((d, i) => ({ kind: 'entity' as const, type: d.type, label: d.value, platform: d.platform ?? null, x: spots[i].x, y: spots[i].y })))
+  if (settings?.autoEnrich) await enrichNodes(created)
 }
 
 export async function fileToBase64(file: File): Promise<string> {

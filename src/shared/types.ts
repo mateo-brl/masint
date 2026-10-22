@@ -254,17 +254,35 @@ export interface ProxySettings {
   perModule: Record<string, ModuleRoute>
 }
 
+/**
+ * Ouverture des liens d'enquête : `internal` dans le navigateur d'enquête de MASINT (proxy ou
+ * Tor, session isolée), `external` dans le navigateur de l'enquêteur, `auto` en interne dès
+ * qu'un proxy ou Tor est actif.
+ */
+export type LinkOpening = 'auto' | 'internal' | 'external'
+
 export interface Settings {
   lang: Lang
   theme: 'dark' | 'light'
   proxy: ProxySettings
+  /** En-tête navigateur des requêtes et du navigateur intégré (calculé d'après le système si vide). */
   userAgent: string
   /** Modules exécutés en parallèle pour un même nœud. */
   concurrency: number
+  /** Modules exécutés en parallèle au total, tous nœuds confondus. */
+  globalConcurrency: number
   timeoutMs: number
   disabledModules: string[]
   /** Lancer automatiquement les modules applicables à la création d'un nœud. */
   autoEnrich: boolean
+  /** Mode passif : les modules qui contactent la cible (`noisy`) ne partent pas avec « Enrichir ». */
+  passiveMode: boolean
+  linkOpening: LinkOpening
+  /**
+   * Sel de l'identifiant SOCKS envoyé à Tor (`masint-<enquête>`) : le changer (« Nouvelle
+   * identité Tor ») fait ouvrir de nouveaux circuits.
+   */
+  torSalt: string
   autoUpdate: boolean
   edgeStyle: 'bezier' | 'smoothstep' | 'straight'
   /** `auto` : libellés masqués autour des nœuds très reliés, sauf pour la sélection. */

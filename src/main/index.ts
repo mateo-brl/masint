@@ -1,18 +1,20 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { app, BrowserWindow, Menu, protocol, safeStorage, screen, session, shell } from 'electron'
+import { app, BrowserWindow, Menu, protocol, safeStorage, screen, session } from 'electron'
 import { ATTACHMENT_PROTOCOL } from '@shared/api'
+import { chromiumLocale } from '@shared/network'
 import type { EventChannel, EventMap } from '@shared/api'
 import type { Settings } from '@shared/types'
 import { openArchiveOnce } from './archive'
-import { openDatabase } from './db/database'
+import { openDatabase, readStoredLang, vacuumIfPending } from './db/database'
 import { Repo } from './db/repo'
 import { moveNoiseToReview } from './cleanup'
-import { ASSIST_PARTITION, proxyConfig } from './assist'
+import { applyAssistIdentity, ASSIST_PARTITION, proxyConfig } from './assist'
+import { closeInvestigationBrowsers, openLink } from './browser'
 import { Engine } from './engine/runner'
 import { registerIpc } from './ipc'
 import { queueOpen } from './openQueue'
-import { SettingsService, type Cipher } from './settings'
+import { DEFAULT_SETTINGS, SettingsService, type Cipher } from './settings'
 import { initUpdater } from './updater'
 
 protocol.registerSchemesAsPrivileged([
@@ -20,6 +22,11 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 if (!app.requestSingleInstanceLock()) app.quit()
+
+// Langue de Chromium alignée sur celle de MASINT : `navigator.language` du navigateur intégré
+// reste cohérent avec son en-tête Accept-Language. Fixée au lancement (changement de langue
+// pris en compte au redémarrage suivant).
+app.commandLine.appendSwitch('lang', chromiumLocale(readStoredLang(join(app.getPath('userData'), 'masint.db')) ?? DEFAULT_SETTINGS.lang))
 
 let mainWindow: BrowserWindow | null = null
 let openFile: (path: string) => void = () => undefined
@@ -82,7 +89,7 @@ function saveWindowState(win: BrowserWindow, repo: Repo): void {
   }
 }
 
-function createWindow(repo: Repo): BrowserWindow {
+function createWindow(repo: Repo, settings: SettingsService): BrowserWindow {
   const state = restoredState(repo)
   const win = new BrowserWindow({
     x: state.x,
@@ -113,8 +120,9 @@ function createWindow(repo: Repo): BrowserWindow {
   win.webContents.on('console-message', (details) => {
     if (details.level === 'warning' || details.level === 'error') console.log(`[interface:${details.level}] ${details.message}`)
   })
+  // Lien cliqué dans l'interface : navigateur d'enquête ou navigateur personnel (réglage `linkOpening`).
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https?:\/\//i.test(url)) void shell.openExternal(url)
+    openLink(url, settings.get())
     return { action: 'deny' }
   })
   win.webContents.on('will-navigate', (e, url) => {
@@ -122,7 +130,7 @@ function createWindow(repo: Repo): BrowserWindow {
     if (devUrl && url.startsWith(devUrl)) return
     if (url.startsWith('file://')) return
     e.preventDefault()
-    if (/^https?:\/\//i.test(url)) void shell.openExternal(url)
+    openLink(url, settings.get())
   })
   if (!app.isPackaged && process.env['ELECTRON_RENDERER_URL']) {
     void win.loadURL(process.env['ELECTRON_RENDERER_URL'])
@@ -168,6 +176,7 @@ void app.whenReady().then(async () => {
   })
 
   await applySessionProxy(settings.get())
+  applyAssistIdentity(settings.get())
 
   registerIpc({
     repo,
@@ -180,8 +189,12 @@ void app.whenReady().then(async () => {
 
   initUpdater((s) => send('update:status', s), settings.get().autoUpdate)
 
-  mainWindow = createWindow(repo)
-  mainWindow.on('closed', () => (mainWindow = null))
+  mainWindow = createWindow(repo, settings)
+  mainWindow.on('closed', () => {
+    mainWindow = null
+    // Fermer MASINT ferme aussi les fenêtres du navigateur d'enquête.
+    closeInvestigationBrowsers()
+  })
 
   openFile = (path) => {
     void readFile(path)
@@ -197,11 +210,13 @@ void app.whenReady().then(async () => {
   })
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) mainWindow = createWindow(repo)
+    if (BrowserWindow.getAllWindows().length === 0) mainWindow = createWindow(repo, settings)
   })
   // `before-quit` précède la fermeture des fenêtres : on enregistre leur taille avant de fermer la base.
   app.on('before-quit', () => {
     if (mainWindow && !mainWindow.isDestroyed()) saveWindowState(mainWindow, repo)
+    // Compactage reporté d'une grosse base après la suppression d'une enquête.
+    vacuumIfPending(db)
     db.close()
   })
 })

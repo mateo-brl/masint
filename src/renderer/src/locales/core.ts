@@ -73,7 +73,9 @@ const fr = {
     mergeBody: 'Les nœuds sélectionnés seront fusionnés dans « {{label}} » : liens et propriétés repris, les autres supprimés.',
     merged: 'Nœuds fusionnés',
     deleteMany_one: 'Supprimer {{count}} nœud',
-    deleteMany_other: 'Supprimer {{count}} nœuds'
+    deleteMany_other: 'Supprimer {{count}} nœuds',
+    pasteTruncated_one: 'Collage limité à la première ligne sur {{total}}.',
+    pasteTruncated_other: 'Collage limité aux {{count}} premières lignes sur {{total}}.'
   },
   node: { untitled: 'Sans libellé' },
   enrich: {
@@ -89,7 +91,15 @@ const fr = {
     none: 'Aucun module disponible pour ce nœud.',
     none_: 'Tout décocher',
     noneForType: 'Aucun module pour ce type d’entité.',
-    notApplicable: 'Ne s’applique pas à cette valeur (voir la description).'
+    notApplicable: 'Ne s’applique pas à cette valeur (voir la description).',
+    bulkTitle_one: 'Enrichir {{count}} nœud ?',
+    bulkTitle_other: 'Enrichir {{count}} nœuds ?',
+    bulkBody_one: '{{nodes}} nœuds × {{count}} module environ. Une rafale de requêtes vers les mêmes services peut déclencher des refus (quotas) et faire repérer votre sortie Tor.',
+    bulkBody_other: '{{nodes}} nœuds × {{count}} modules environ. Une rafale de requêtes vers les mêmes services peut déclencher des refus (quotas) et faire repérer votre sortie Tor.',
+    noisyTitle_one: 'Ce module contacte la cible',
+    noisyTitle_other: 'Ces modules contactent la cible',
+    noisyBody_one: '{{list}} interroge directement la cible et peut l’alerter ou laisser une trace chez elle. Le mode passif l’exclut de « Enrichir ». Le lancer quand même ?',
+    noisyBody_other: '{{list}} interrogent directement la cible et peuvent l’alerter ou laisser une trace chez elle. Le mode passif les exclut de « Enrichir ». Les lancer quand même ?'
   },
   jobs: {
     finished: 'terminé · {{results}} · {{errors}}',
@@ -343,6 +353,12 @@ const fr = {
     autoEnrichHint: 'Lance les modules applicables dès qu’une entité est ajoutée avec une valeur.',
     concurrency: 'Modules en parallèle',
     concurrencyHint: 'Par nœud enrichi (1 à 32).',
+    globalConcurrency: 'Modules en parallèle au total',
+    globalConcurrencyHint: 'Tous nœuds confondus (1 à 64) : enrichir cent nœuds ne lance pas des centaines de modules à la fois.',
+    passiveMode: 'Mode passif',
+    passiveModeHint: 'Les modules qui contactent directement la cible (page web, favicon, robots.txt…) ne partent pas avec « Enrichir ». Ils restent lançables un par un, après avertissement.',
+    userAgentAuto: 'En-tête automatique',
+    userAgentHint: 'Par défaut : Chrome sur votre système, à la version du navigateur intégré, pour une empreinte cohérente. Utilisé aussi par le navigateur d’enquête.',
     timeout: 'Délai par requête (s)',
     timeoutHint: 'Au-delà, la requête est abandonnée.',
     userAgent: 'User-Agent des requêtes',
@@ -356,6 +372,17 @@ const fr = {
     testOk: 'IP de sortie {{ip}} ({{country}})',
     viaTor: 'via Tor',
     proxyNote: 'Le routage peut être ajusté module par module dans la vue Modules.',
+    torIdentity: 'Identité Tor',
+    torIdentityHint: 'Chaque enquête passe par ses propres circuits Tor. Une nouvelle identité en ouvre de nouveaux (autre IP de sortie).',
+    torIdentityDone: 'Nouvelle identité : les prochaines requêtes passent par de nouveaux circuits.',
+    torIdentityButton: 'Nouvelle identité Tor',
+    linkOpening: 'Ouverture des liens',
+    linkOpeningMode: { auto: 'Automatique', internal: 'Navigateur d’enquête', external: 'Mon navigateur' },
+    linkOpeningHint: {
+      auto: 'Navigateur d’enquête de MASINT dès qu’un proxy ou Tor est actif, sinon votre navigateur.',
+      internal: 'Fenêtre de MASINT : même réseau que les modules, sans vos sessions ouvertes.',
+      external: 'Votre navigateur, hors proxy et Tor, avec vos sessions ouvertes : certains sites signalent la visite à la cible.'
+    },
     keysIntro: 'Les clés sont chiffrées avec le coffre du système (DPAPI sous Windows, trousseau GNOME ou KWallet sous Linux) et ne quittent jamais votre machine, sauf vers le service concerné.',
     noKeys: 'Aucun module ne demande de clé.',
     rosoCheck: 'Vérifier',
@@ -469,7 +496,9 @@ const en: typeof fr = {
     mergeBody: 'Selected nodes will be merged into “{{label}}”: links and properties are kept, the others are deleted.',
     merged: 'Nodes merged',
     deleteMany_one: 'Delete {{count}} node',
-    deleteMany_other: 'Delete {{count}} nodes'
+    deleteMany_other: 'Delete {{count}} nodes',
+    pasteTruncated_one: 'Paste limited to the first line out of {{total}}.',
+    pasteTruncated_other: 'Paste limited to the first {{count}} lines out of {{total}}.'
   },
   node: { untitled: 'Untitled' },
   enrich: {
@@ -485,7 +514,15 @@ const en: typeof fr = {
     none: 'No module available for this node.',
     none_: 'Uncheck all',
     noneForType: 'No module for this entity type.',
-    notApplicable: 'Does not apply to this value (see the description).'
+    notApplicable: 'Does not apply to this value (see the description).',
+    bulkTitle_one: 'Enrich {{count}} node?',
+    bulkTitle_other: 'Enrich {{count}} nodes?',
+    bulkBody_one: '{{nodes}} nodes × about {{count}} module. A burst of requests to the same services can trigger refusals (quotas) and make your Tor exit easier to spot.',
+    bulkBody_other: '{{nodes}} nodes × about {{count}} modules. A burst of requests to the same services can trigger refusals (quotas) and make your Tor exit easier to spot.',
+    noisyTitle_one: 'This module contacts the target',
+    noisyTitle_other: 'These modules contact the target',
+    noisyBody_one: '{{list}} queries the target directly and may alert it or leave a trace on its side. Passive mode keeps it out of “Enrich”. Run it anyway?',
+    noisyBody_other: '{{list}} query the target directly and may alert it or leave a trace on its side. Passive mode keeps them out of “Enrich”. Run them anyway?'
   },
   jobs: {
     finished: 'done · {{results}} · {{errors}}',
@@ -739,6 +776,12 @@ const en: typeof fr = {
     autoEnrichHint: 'Runs applicable modules as soon as an entity with a value is added.',
     concurrency: 'Parallel modules',
     concurrencyHint: 'Per enriched node (1 to 32).',
+    globalConcurrency: 'Parallel modules in total',
+    globalConcurrencyHint: 'Across all nodes (1 to 64): enriching a hundred nodes does not start hundreds of modules at once.',
+    passiveMode: 'Passive mode',
+    passiveModeHint: 'Modules that contact the target directly (web page, favicon, robots.txt…) are left out of “Enrich”. They can still be run one by one, after a warning.',
+    userAgentAuto: 'Automatic header',
+    userAgentHint: 'Default: Chrome on your system, at the built-in browser version, for a consistent fingerprint. Also used by the investigation browser.',
     timeout: 'Request timeout (s)',
     timeoutHint: 'Requests are abandoned after this delay.',
     userAgent: 'Request User-Agent',
@@ -752,6 +795,17 @@ const en: typeof fr = {
     testOk: 'Exit IP {{ip}} ({{country}})',
     viaTor: 'via Tor',
     proxyNote: 'Routing can be adjusted per module in the Modules view.',
+    torIdentity: 'Tor identity',
+    torIdentityHint: 'Each investigation goes through its own Tor circuits. A new identity opens new ones (another exit IP).',
+    torIdentityDone: 'New identity: the next requests go through new circuits.',
+    torIdentityButton: 'New Tor identity',
+    linkOpening: 'Opening links',
+    linkOpeningMode: { auto: 'Automatic', internal: 'Investigation browser', external: 'My browser' },
+    linkOpeningHint: {
+      auto: 'MASINT investigation browser whenever a proxy or Tor is active, your browser otherwise.',
+      internal: 'MASINT window: same network as the modules, without your open sessions.',
+      external: 'Your browser, outside the proxy and Tor, with your open sessions: some sites tell the target about the visit.'
+    },
     keysIntro: 'Keys are encrypted with the system vault (DPAPI on Windows, GNOME keyring or KWallet on Linux) and never leave your machine except to the matching service.',
     noKeys: 'No module requires a key.',
     rosoCheck: 'Check',

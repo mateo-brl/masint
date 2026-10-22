@@ -14,6 +14,19 @@ export function useEvent<E extends EventChannel>(event: E, listener: (payload: E
   useEffect(() => onEvent(event, listener), [event, listener])
 }
 
+/**
+ * Navigateur personnel de l'enquêteur, hors proxy et Tor, avec ses sessions ouvertes : réservé
+ * à la documentation, à GitHub et aux pages d'inscription aux clés d'API. Un lien d'enquête
+ * passe par `openLink`.
+ */
 export function openExternal(url: string): void {
   void api('app:openExternal', url)
+}
+
+/**
+ * Lien d'enquête (profil, résultat, recherche) : navigateur d'enquête de MASINT (proxy ou Tor,
+ * session isolée) ou navigateur personnel, selon le réglage « Ouverture des liens ».
+ */
+export function openLink(url: string): void {
+  void api('app:openLink', url)
 }
