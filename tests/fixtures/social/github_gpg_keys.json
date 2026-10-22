@@ -1,0 +1,32 @@
+[
+ {
+  "id": 3,
+  "name": "Cle de signature (exemple)",
+  "primary_key_id": null,
+  "key_id": "668AF837654F9416",
+  "public_key": "xjMEYE36wBYJKwYBBAHaRw8BAQdA",
+  "emails": [
+   {
+    "email": "alice@example.com",
+    "verified": true
+   },
+   {
+    "email": "alice.travail@example.org",
+    "verified": false
+   },
+   {
+    "email": "1+octocat@users.noreply.github.com",
+    "verified": true
+   }
+  ],
+  "subkeys": [],
+  "can_sign": true,
+  "can_encrypt_comms": false,
+  "can_encrypt_storage": false,
+  "can_certify": true,
+  "created_at": "2021-03-14T12:00:00Z",
+  "expires_at": null,
+  "revoked": false,
+  "raw_key": "-----BEGIN PGP PUBLIC KEY BLOCK-----\nComment: cle fictive pour les tests\n\nxjMEYE36wBYJKwYBBAHaRw8BAQdANlr3irGCXq1sYlehVtSV0YpO0ZNqvcfGyg79\neEDxfjXNIkV4ZW1wbGUgRmljdGlmIDxhbGljZUBleGFtcGxlLmNvbT7NNEV4ZW1w\nbGUgRmljdGlmICh0cmF2YWlsKSA8YWxpY2UudHJhdmFpbEBleGFtcGxlLm9yZz4=\n=9EuD\n-----END PGP PUBLIC KEY BLOCK-----\n"
+ }
+]
