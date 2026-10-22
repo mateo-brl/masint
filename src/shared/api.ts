@@ -53,6 +53,8 @@ export interface ApiMap {
   // Pièces jointes (servies par le protocole `masint-file://att/<id>`)
   'attachments:add': (investigationId: string, file: { name: string; mime: string; base64: string }) => Attachment
   'attachments:pick': (investigationId: string) => Attachment[]
+  /** Images du presse-papiers : image copiée (navigateur, capture) ou fichiers image copiés dans l'explorateur. */
+  'attachments:paste': (investigationId: string) => Attachment[]
   'attachments:get': (id: string) => Attachment | null
   'attachments:readBase64': (id: string) => string | null
   /** Métadonnées EXIF d'une image jointe (GPS, appareil, date). */

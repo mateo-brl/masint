@@ -35,6 +35,8 @@ export interface NodeStyle {
   fontSize?: number
   strokeWidth?: number
   hideSubtitle?: boolean
+  /** Descendance repliée dans ce nœud (clic droit, « Réduire »). */
+  collapsed?: boolean
 }
 
 export interface GraphNode {

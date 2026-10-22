@@ -33,9 +33,10 @@ export function BottomBar(): React.JSX.Element {
     void addNodes([{ kind: 'text', type: 'text', label: t('bottombar.newText'), x: p.x, y: p.y, width: 220, height: 60, style: { fontSize: 16 } }])
   }
 
-  const addPhoto = async (): Promise<void> => {
+  const addPhoto = async (source: 'file' | 'clipboard'): Promise<void> => {
     if (!investigation) return
-    const atts = await api('attachments:pick', investigation.id)
+    const atts = await api(source === 'file' ? 'attachments:pick' : 'attachments:paste', investigation.id)
+    if (source === 'clipboard' && !atts.length) useApp.getState().toast('info', t('props.noClipboardImage'))
     const spots = place(atts.map(() => ({ width: 260, height: 180 })))
     if (atts.length)
       await addNodes(
@@ -81,7 +82,16 @@ export function BottomBar(): React.JSX.Element {
       />
       <Divider />
       <BarButton icon="Type" label={t('bottombar.text')} onClick={addText} />
-      <BarButton icon="ImagePlus" label={t('bottombar.photo')} onClick={() => void addPhoto()} />
+      <Dropdown
+        up
+        align="center"
+        width={250}
+        trigger={() => <BarButton icon="ImagePlus" label={t('bottombar.photo')} />}
+        items={[
+          { label: t('bottombar.photoFile'), icon: 'FolderOpen', onClick: () => void addPhoto('file') },
+          { label: t('bottombar.photoPaste'), icon: 'ClipboardPaste', hint: 'Ctrl+V', onClick: () => void addPhoto('clipboard') }
+        ]}
+      />
       <BarButton icon="MapPin" label={t('bottombar.map')} onClick={addMap} />
       <div className="relative flex items-center">
         <BarButton icon="Pencil" label={t('bottombar.draw')} active={tool === 'draw'} onClick={() => setTool(tool === 'draw' ? 'select' : 'draw')} />

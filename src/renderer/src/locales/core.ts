@@ -98,6 +98,22 @@ const fr = {
     moreRunning: '+{{count}} autres en cours',
     running: 'en cours'
   },
+  collapse: {
+    collapse: 'Réduire',
+    expand: 'Déplier',
+    hidden_one: '{{count}} nœud',
+    hidden_other: '{{count}} nœuds',
+    regroup: 'Regrouper',
+    expandAll: 'Tout déplier',
+    regroupAll: 'Regrouper automatiquement'
+  },
+  bundle: {
+    count_one: '{{type}} · {{count}}',
+    count_other: '{{type}} · {{count}}',
+    expand: 'Déplier le groupe',
+    members: 'Éléments du groupe',
+    intro: 'Feuilles semblables regroupées pour alléger le graphe. Rien n’est supprimé : dépliez le groupe pour les voir sur le canevas.'
+  },
   review: {
     title: 'À vérifier',
     intro: 'Résultats non confirmés et recherches que MASINT ne peut pas faire seul. Seul ce que vous validez entre dans le graphe.',
@@ -159,6 +175,8 @@ const fr = {
     text: 'Texte',
     newText: 'Nouveau texte',
     photo: 'Photo',
+    photoFile: 'Choisir un fichier…',
+    photoPaste: 'Coller l’image copiée',
     map: 'Carte',
     draw: 'Dessiner',
     style: 'Style'
@@ -200,6 +218,8 @@ const fr = {
     imageInfo: 'Image et informations',
     dropImage: 'Glissez une image ici',
     orBrowse: 'ou cliquez pour parcourir',
+    pasteImage: 'Coller l’image copiée (Ctrl+V)',
+    noClipboardImage: 'Aucune image dans le presse-papiers. Copiez une image ou un fichier image, puis réessayez.',
     replaceImage: 'Remplacer l’image',
     removeImage: 'Retirer l’image',
     accounts: 'Comptes',
@@ -449,6 +469,22 @@ const en: typeof fr = {
     moreRunning: '+{{count}} more running',
     running: 'running'
   },
+  collapse: {
+    collapse: 'Collapse',
+    expand: 'Expand',
+    hidden_one: '{{count}} node',
+    hidden_other: '{{count}} nodes',
+    regroup: 'Group again',
+    expandAll: 'Expand all',
+    regroupAll: 'Group automatically'
+  },
+  bundle: {
+    count_one: '{{type}} · {{count}}',
+    count_other: '{{type}} · {{count}}',
+    expand: 'Expand the group',
+    members: 'Group members',
+    intro: 'Similar leaves grouped to lighten the graph. Nothing is deleted: expand the group to see them on the canvas.'
+  },
   review: {
     title: 'To review',
     intro: 'Unconfirmed results and searches MASINT cannot do on its own. Only what you approve goes into the graph.',
@@ -510,6 +546,8 @@ const en: typeof fr = {
     text: 'Text',
     newText: 'New text',
     photo: 'Photo',
+    photoFile: 'Choose a file…',
+    photoPaste: 'Paste copied image',
     map: 'Map',
     draw: 'Draw',
     style: 'Style'
@@ -551,6 +589,8 @@ const en: typeof fr = {
     imageInfo: 'Image and details',
     dropImage: 'Drop an image here',
     orBrowse: 'or click to browse',
+    pasteImage: 'Paste copied image (Ctrl+V)',
+    noClipboardImage: 'No image in the clipboard. Copy an image or an image file, then try again.',
     replaceImage: 'Replace image',
     removeImage: 'Remove image',
     accounts: 'Accounts',

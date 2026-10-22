@@ -13,6 +13,8 @@ import { useApp } from '../../store/app'
 import { useGraph } from '../../store/graph'
 import { Button, confirmDialog, Dialog, Spinner, Switch, Tabs } from '../ui'
 import { ReviewList } from './ReviewList'
+import { revealNode, useView } from '../../store/view'
+import { computeView } from '../../lib/collapse'
 
 const SWATCHES = ['#e5484d', '#f76b15', '#ffc53d', '#30a46c', '#12a594', '#0090ff', '#6e56cf', '#d6409f', '#8d8d93', '#ededef']
 
@@ -33,8 +35,10 @@ export function PropertiesPanel(): React.JSX.Element | null {
   const selNodes = useMemo(() => nodes.filter((n) => n.selected).map((n) => n.data.node), [nodes])
   const selEdges = useMemo(() => edges.filter((e) => e.selected).map((e) => e.data!.edge), [edges])
 
+  const selBundle = useView((s) => Object.entries(s.bundles).find(([, b]) => b.selected)?.[0])
   let content: React.JSX.Element | null = null
-  if (selNodes.length === 1) content = <NodePanel key={selNodes[0].id} node={selNodes[0]} />
+  if (selBundle && !selNodes.length) content = <BundlePanel key={selBundle} bundleId={selBundle} />
+  else if (selNodes.length === 1) content = <NodePanel key={selNodes[0].id} node={selNodes[0]} />
   else if (selNodes.length > 1) content = <MultiPanel nodes={selNodes} />
   else if (selEdges.length === 1) content = <EdgePanel key={selEdges[0].id} edge={selEdges[0]} />
   if (!content) return null
@@ -43,6 +47,51 @@ export function PropertiesPanel(): React.JSX.Element | null {
     <aside data-panel="properties" className="glass absolute top-4 right-4 bottom-20 z-20 flex w-[318px] flex-col overflow-hidden rounded-2xl">
       {content}
     </aside>
+  )
+}
+
+/** Groupe automatique sélectionné : liste de ses éléments, dépliage. */
+function BundlePanel({ bundleId }: { bundleId: string }): React.JSX.Element | null {
+  const { t } = useTranslation()
+  const { tx } = useLang()
+  const nodes = useGraph((s) => s.nodes)
+  const edges = useGraph((s) => s.edges)
+  const expanded = useView((s) => s.expanded)
+  const bundle = useMemo(
+    () =>
+      computeView(
+        nodes.map((n) => n.data.node),
+        edges.map((e) => e.data!.edge),
+        expanded
+      ).bundles.find((b) => b.id === bundleId),
+    [nodes, edges, expanded, bundleId]
+  )
+  if (!bundle) return null
+  const members = bundle.members.map((id) => nodes.find((n) => n.id === id)?.data.node).filter((n): n is GraphNode => !!n)
+  const typeLabel = tx(getEntityType(bundle.type).label)
+  return (
+    <>
+      <PanelHeader title={t('bundle.count', { count: members.length, type: typeLabel })} kicker={bundle.linkLabel || typeLabel} />
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-4 pt-3 pb-4">
+        <p className="text-[12px] leading-snug text-muted">{t('bundle.intro')}</p>
+        <Button variant="primary" icon="UnfoldVertical" onClick={() => void useView.getState().expandBundle(bundle.id)}>
+          {t('bundle.expand')}
+        </Button>
+        <div className="text-[12.5px] font-semibold">{t('bundle.members')}</div>
+        <div className="flex flex-col gap-1">
+          {members.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => void revealNode(m.id).then(() => useGraph.getState().select([m.id]))}
+              className="flex items-center gap-2 rounded-lg px-2 py-1 text-left text-[12px] hover:bg-panel-2"
+            >
+              <EntityBadge type={m.type} platform={m.platform} size={18} />
+              <span className="min-w-0 flex-1 truncate">{m.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -55,7 +104,10 @@ function PanelHeader({ title, kicker }: { title: string; kicker: string }): Reac
         <div className="mt-1 text-[17px] font-semibold">{title}</div>
       </div>
       <button
-        onClick={() => useGraph.getState().select([])}
+        onClick={() => {
+          useGraph.getState().select([])
+          useView.getState().selectBundle(null)
+        }}
         className="rounded-md p-1 text-muted hover:bg-panel-3 hover:text-fg"
         title={t('common.close')}
       >
@@ -236,28 +288,40 @@ function ImageDrop({ node }: { node: GraphNode }): React.JSX.Element {
       </div>
     )
 
+  const paste = async (): Promise<void> => {
+    if (!inv) return
+    const [att] = await api('attachments:paste', inv.id)
+    if (att) await updateNode(node.id, { imageId: att.id, label: node.label || (node.kind === 'entity' ? att.name : node.label) })
+    else useApp.getState().toast('info', t('props.noClipboardImage'))
+  }
+
   return (
-    <button
-      onClick={() => void pick()}
-      onDragOver={(e) => {
-        e.preventDefault()
-        setOver(true)
-      }}
-      onDragLeave={() => setOver(false)}
-      onDrop={(e) => {
-        e.preventDefault()
-        setOver(false)
-        const f = e.dataTransfer.files[0]
-        if (f) void setFromFile(f)
-      }}
-      className={`flex flex-col items-center gap-1.5 rounded-xl border border-dashed px-4 py-6 text-center transition ${
-        over ? 'border-accent bg-accent-soft' : 'border-line-strong hover:border-muted'
-      }`}
-    >
-      <Icon name="ImagePlus" size={20} className="text-accent" />
-      <span className="text-[12.5px]">{t('props.dropImage')}</span>
-      <span className="text-[11px] text-faint">{t('props.orBrowse')}</span>
-    </button>
+    <div className="flex flex-col gap-1.5">
+      <button
+        onClick={() => void pick()}
+        onDragOver={(e) => {
+          e.preventDefault()
+          setOver(true)
+        }}
+        onDragLeave={() => setOver(false)}
+        onDrop={(e) => {
+          e.preventDefault()
+          setOver(false)
+          const f = e.dataTransfer.files[0]
+          if (f) void setFromFile(f)
+        }}
+        className={`flex flex-col items-center gap-1.5 rounded-xl border border-dashed px-4 py-6 text-center transition ${
+          over ? 'border-accent bg-accent-soft' : 'border-line-strong hover:border-muted'
+        }`}
+      >
+        <Icon name="ImagePlus" size={20} className="text-accent" />
+        <span className="text-[12.5px]">{t('props.dropImage')}</span>
+        <span className="text-[11px] text-faint">{t('props.orBrowse')}</span>
+      </button>
+      <Button size="sm" icon="ClipboardPaste" onClick={() => void paste()}>
+        {t('props.pasteImage')}
+      </Button>
+    </div>
   )
 }
 

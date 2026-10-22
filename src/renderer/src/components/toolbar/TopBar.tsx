@@ -10,6 +10,7 @@ import { computeLayout, type LayoutKind } from '../../lib/layout'
 import { useApp } from '../../store/app'
 import { useGraph, type FlowEdge, type FlowNode } from '../../store/graph'
 import { fitGraph } from '../../lib/viewport'
+import { currentView, revealNode, useView } from '../../store/view'
 import { exportGraph, type ExportFormat } from '../export/exporters'
 import { Dialog, Dropdown, Spinner } from '../ui'
 import { ReviewAll } from '../panels/ReviewList'
@@ -33,19 +34,35 @@ export function TopBar(): React.JSX.Element {
 
   const layout = (kind: LayoutKind): void => {
     const { nodes, edges, setPositions } = useGraph.getState()
+    // Disposition de ce qui est affiché : nœuds masqués exclus, groupes traités comme un nœud.
+    const view = currentView()
+    const bundleState = useView.getState().bundles
     const selected = nodes.filter((n) => n.selected)
-    const scope = (selected.length > 1 ? selected : nodes).filter((n) => n.data.node.kind === 'entity')
-    const pos = computeLayout(
-      kind,
-      scope.map((n) => ({
-        id: n.id,
-        x: n.position.x,
-        y: n.position.y,
-        width: n.measured?.width ?? 196,
-        height: n.measured?.height ?? 40
-      })),
-      edges.map((e) => ({ source: e.source, target: e.target }))
-    )
+    const scope = (selected.length > 1 ? selected : nodes).filter((n) => n.data.node.kind === 'entity' && !view.hidden.has(n.id))
+    const items = scope.map((n) => ({
+      id: n.id,
+      x: n.position.x,
+      y: n.position.y,
+      width: n.measured?.width ?? 196,
+      height: n.measured?.height ?? 40
+    }))
+    const byId = new Map(nodes.map((n) => [n.id, n]))
+    if (selected.length <= 1)
+      for (const b of view.bundles) {
+        const st = bundleState[b.id]
+        const first = byId.get(b.members[0])!.position
+        items.push({ id: b.id, x: st?.position?.x ?? first.x, y: st?.position?.y ?? first.y, width: st?.measured?.width ?? 212, height: st?.measured?.height ?? 48 })
+      }
+    const links = [
+      ...edges.filter((e) => !view.hidden.has(e.source) && !view.hidden.has(e.target)).map((e) => ({ source: e.source, target: e.target })),
+      ...view.bundles.map((b) => ({ source: b.parentId, target: b.id }))
+    ]
+    const all = computeLayout(kind, items, links)
+    const pos: Record<string, { x: number; y: number }> = {}
+    for (const [id, p] of Object.entries(all)) {
+      if (id.startsWith('bundle:')) useView.getState().patchBundle(id, { position: p }, true)
+      else pos[id] = p
+    }
     void setPositions(pos).then(() => setTimeout(() => fitGraph(rf, 400), 50))
   }
 
@@ -149,10 +166,11 @@ export function TopBar(): React.JSX.Element {
       {searching && <GraphSearch onClose={() => setSearching(false)} />}
       <Dialog open={reviewOpen} onClose={() => setReviewOpen(false)} title={t('review.title')} width={620}>
         <ReviewAll
-          onPick={(id) => {
+          onPick={async (id) => {
+            setReviewOpen(false)
+            await revealNode(id)
             const n = useGraph.getState().nodes.find((x) => x.id === id)
             if (!n) return
-            setReviewOpen(false)
             useGraph.getState().select([id])
             void rf.setCenter(n.position.x + 98, n.position.y + 26, { zoom: 1.2, duration: 400 })
           }}
@@ -188,12 +206,14 @@ function GraphSearch({ onClose }: { onClose: () => void }): React.JSX.Element {
       })
       .slice(0, 12)
   }, [q, nodes])
-  const focus = (id: string): void => {
-    const n = nodes.find((x) => x.id === id)
+  const focus = async (id: string): Promise<void> => {
+    onClose()
+    // Un nœud replié ou regroupé est d'abord rendu visible.
+    await revealNode(id)
+    const n = useGraph.getState().nodes.find((x) => x.id === id)
     if (!n) return
     useGraph.getState().select([id])
     void rf.setCenter(n.position.x + 98, n.position.y + 20, { zoom: 1.3, duration: 400 })
-    onClose()
   }
   return (
     <div className="glass w-96 rounded-xl p-1.5">
@@ -203,7 +223,7 @@ function GraphSearch({ onClose }: { onClose: () => void }): React.JSX.Element {
         onChange={(e) => setQ(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Escape') onClose()
-          if (e.key === 'Enter' && matches[0]) focus(matches[0].id)
+          if (e.key === 'Enter' && matches[0]) void focus(matches[0].id)
         }}
         placeholder={t('topbar.searchPlaceholder')}
         className="field"
@@ -211,7 +231,7 @@ function GraphSearch({ onClose }: { onClose: () => void }): React.JSX.Element {
       {matches.length > 0 && (
         <div className="mt-1 max-h-72 overflow-auto">
           {matches.map((m) => (
-            <button key={m.id} onClick={() => focus(m.id)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-panel-3">
+            <button key={m.id} onClick={() => void focus(m.id)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-panel-3">
               <EntityBadge type={m.data.node.type} platform={m.data.node.platform} size={18} />
               <span className="truncate text-[12.5px]">{m.data.node.label || '…'}</span>
             </button>

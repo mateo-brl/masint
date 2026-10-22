@@ -10,8 +10,10 @@ import {
 import { create } from 'zustand'
 import type { EdgeInput, GraphChange, GraphEdge, GraphNode, Investigation, NodeInput, Suggestion } from '@shared/types'
 import { api } from '../lib/api'
+import type { Bundle } from '../lib/collapse'
 
-export type FlowNode = Node<{ node: GraphNode }>
+/** `bundle` : nœud d'affichage qui regroupe des feuilles semblables (voir lib/collapse). */
+export type FlowNode = Node<{ node: GraphNode; bundle?: Bundle }>
 export type FlowEdge = Edge<{ edge: GraphEdge }>
 
 const RESIZABLE = new Set(['text', 'image', 'map', 'drawing'])
