@@ -1,0 +1,18 @@
+#
+# firehol_level1
+#
+# ipv4 hash:net ipset
+#
+# A firewall blacklist composed from IP lists, providing 
+# maximum protection with minimum false positives. Suitable 
+# for basic protection on all internet facing servers, 
+# routers and firewalls. (includes: dshield feodo fullbogons 
+# spamhaus_drop)
+#
+# Maintainer      : FireHOL
+0.0.0.0/8
+1.10.16.0/20
+1.19.0.0/16
+5.0.0.0/8
+5.188.10.0/23
+198.51.100.99

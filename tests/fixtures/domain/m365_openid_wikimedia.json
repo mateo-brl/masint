@@ -1,0 +1,7 @@
+{
+ "token_endpoint": "https://login.microsoftonline.com/f47551bd-24af-4b1e-9c28-af616350e082/oauth2/token",
+ "issuer": "https://sts.windows.net/f47551bd-24af-4b1e-9c28-af616350e082/",
+ "authorization_endpoint": "https://login.microsoftonline.com/f47551bd-24af-4b1e-9c28-af616350e082/oauth2/authorize",
+ "tenant_region_scope": "NA",
+ "cloud_instance_name": "microsoftonline.com"
+}

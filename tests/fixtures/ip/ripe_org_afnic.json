@@ -1,0 +1,33 @@
+{
+ "objects": {
+  "object": [
+   {
+    "type": "organisation",
+    "attributes": {
+     "attribute": [
+      {
+       "name": "organisation",
+       "value": "ORG-AFpl1-RIPE"
+      },
+      {
+       "name": "org-name",
+       "value": "AFNIC (Association Francaise pour le Nommage Internet en Cooperation)"
+      },
+      {
+       "name": "country",
+       "value": "FR"
+      },
+      {
+       "name": "org-type",
+       "value": "LIR"
+      },
+      {
+       "name": "source",
+       "value": "RIPE"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

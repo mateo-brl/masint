@@ -1,0 +1,10 @@
+{
+ "status": "ok",
+ "data": {
+  "resource": "2485",
+  "prefix": "192.134.5.0/24",
+  "validating_roas": [],
+  "status": "unknown",
+  "validator": "routinator"
+ }
+}

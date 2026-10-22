@@ -1,0 +1,128 @@
+{
+ "comment": "Free Service!, Do not abuse",
+ "processed_domain": "cnil.fr",
+ "matching_records": 91,
+ "domains": [
+  {
+   "domain": "cnil.fr",
+   "last_seen_on": "2026-09-29"
+  },
+  {
+   "domain": "agrement.cnil.fr",
+   "last_seen_on": "2026-09-18"
+  },
+  {
+   "domain": "agrements.cnil.fr",
+   "last_seen_on": "2026-09-18"
+  },
+  {
+   "domain": "aide.cnil.fr",
+   "last_seen_on": "2025-07-08"
+  },
+  {
+   "domain": "www.aide.cnil.fr",
+   "last_seen_on": "2025-07-08"
+  },
+  {
+   "domain": "atelier-rgpd.cnil.fr",
+   "last_seen_on": "2026-01-10"
+  },
+  {
+   "domain": "www.atelier-rgpd.cnil.fr",
+   "last_seen_on": "2026-01-10"
+  },
+  {
+   "domain": "autodiscover.cnil.fr",
+   "last_seen_on": "2026-07-15"
+  },
+  {
+   "domain": "backoffice.cnil.fr",
+   "last_seen_on": "2025-10-16"
+  },
+  {
+   "domain": "backoffice-design.cnil.fr",
+   "last_seen_on": "2025-10-11"
+  },
+  {
+   "domain": "beta.cnil.fr",
+   "last_seen_on": "2026-02-09"
+  },
+  {
+   "domain": "apparences-trompeuses.beta.cnil.fr",
+   "last_seen_on": "2026-07-16"
+  },
+  {
+   "domain": "apparencestrompeuses.beta.cnil.fr",
+   "last_seen_on": "2025-10-23"
+  },
+  {
+   "domain": "carto-eds.beta.cnil.fr",
+   "last_seen_on": "2026-02-09"
+  },
+  {
+   "domain": "cartoeds.beta.cnil.fr",
+   "last_seen_on": "2026-02-09"
+  },
+  {
+   "domain": "mes-donnees.beta.cnil.fr",
+   "last_seen_on": "2026-10-01"
+  },
+  {
+   "domain": "mesdonnees.beta.cnil.fr",
+   "last_seen_on": "2026-02-09"
+  },
+  {
+   "domain": "observatoire-exercice-droits.beta.cnil.fr",
+   "last_seen_on": "2026-02-09"
+  },
+  {
+   "domain": "observatoireexercicedroits.beta.cnil.fr",
+   "last_seen_on": "2026-02-09"
+  },
+  {
+   "domain": "xn--mes-donnes-i7a.beta.cnil.fr",
+   "last_seen_on": "2026-02-09"
+  },
+  {
+   "domain": "xn--mesdonnes-h4a.beta.cnil.fr",
+   "last_seen_on": "2026-02-09"
+  },
+  {
+   "domain": "dai.cnil.fr",
+   "last_seen_on": "2026-08-31"
+  },
+  {
+   "domain": "dbadmin-preprod.cnil.fr",
+   "last_seen_on": "2024-12-11"
+  },
+  {
+   "domain": "declarations.cnil.fr",
+   "last_seen_on": "2026-08-31"
+  },
+  {
+   "domain": "www.declarations.cnil.fr",
+   "last_seen_on": "2026-08-31"
+  },
+  {
+   "domain": "design.cnil.fr",
+   "last_seen_on": "2026-01-20"
+  },
+  {
+   "domain": "www.design.cnil.fr",
+   "last_seen_on": "2026-01-20"
+  },
+  {
+   "domain": "design-preprod.cnil.fr",
+   "last_seen_on": "2024-12-11"
+  },
+  {
+   "domain": "designations.cnil.fr",
+   "last_seen_on": "2026-08-31"
+  },
+  {
+   "domain": "www.designations.cnil.fr",
+   "last_seen_on": "2026-08-31"
+  }
+ ],
+ "next_page_state": ""
+}

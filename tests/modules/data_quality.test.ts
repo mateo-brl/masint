@@ -13,7 +13,7 @@ import { parseOtx, type OtxGeneral, type OtxPassiveDns } from '../../src/main/mo
 import { parseUrlscan, type UrlscanResult } from '../../src/main/modules/domain/urlscan'
 import { eventbriteOrigin, modules as accountModules } from '../../src/main/modules/email/accounts'
 import emailInfo from '../../src/main/modules/email/info'
-import { buildGeoOutput, fromIpWhoIs, type IpApi, type IpWhoIs } from '../../src/main/modules/ip/geo'
+import { buildGeoOutput, fromIpWhoIs, type IpWhoIs } from '../../src/main/modules/ip/geo'
 import greynoise, { parseGreyNoise, type GreyNoiseCommunity } from '../../src/main/modules/ip/greynoise'
 import { parseReverseIp } from '../../src/main/modules/ip/reverseIp'
 import { parseGeopf } from '../../src/main/modules/location/_geo'
@@ -265,10 +265,9 @@ describe('noms de pays traduits', () => {
 
   it('ip.geo suit la langue de l’interface', () => {
     const g = fromIpWhoIs(fixtureJson<IpWhoIs>('ip/ipwhois_8.8.8.8.json'))
-    const flags = fixtureJson<IpApi>('ip/ipapi_8.8.8.8.json')
-    expect(buildGeoOutput(g, flags, 'fr').properties?.country).toBe('États-Unis')
-    expect(buildGeoOutput(g, flags, 'en').properties?.country).toBe('United States')
-    expect(buildGeoOutput(g, flags, 'fr').entities?.[0].data?.country).toBe('États-Unis')
+    expect(buildGeoOutput(g, 'fr').properties?.country).toBe('États-Unis')
+    expect(buildGeoOutput(g, 'en').properties?.country).toBe('United States')
+    expect(buildGeoOutput(g, 'fr').entities?.[0].data?.country).toBe('États-Unis')
   })
 })
 

@@ -1,5 +1,8 @@
 // Services révélés par les enregistrements MX et TXT : messagerie hébergée,
-// plateformes d'envoi autorisées par SPF, jetons de vérification de propriété.
+// plateformes d'envoi autorisées par SPF, jetons de vérification de propriété,
+// destinataires des rapports DMARC et TLS-RPT, BIMI et sélecteurs DKIM.
+
+import { isDomain, isIPv4, isIPv6, registrableDomain, uniq } from './_util'
 
 const MX_RULES: Array<[RegExp, string]> = [
   [/(^|\.)(aspmx\.l\.google\.com|googlemail\.com|google\.com|smtp\.google\.com)$/, 'Google Workspace'],
@@ -78,7 +81,26 @@ const SPF_RULES: Array<[RegExp, string]> = [
   [/qualtrics\.com/, 'Qualtrics'],
   [/ionos\.(com|fr|de)|kundenserver\.de/, 'IONOS Mail'],
   [/o2switch\.net/, 'o2switch Mail'],
-  [/mailinblack\.com/, 'Mailinblack']
+  [/mailinblack\.com/, 'Mailinblack'],
+  [/vali\.email/, 'Valimail'],
+  [/messagelabs\.com/, 'Broadcom Email Security'],
+  [/iphmx\.com/, 'Cisco Secure Email'],
+  [/barracudanetworks\.com/, 'Barracuda'],
+  [/constantcontact\.com/, 'Constant Contact'],
+  [/pardot\.com/, 'Salesforce Pardot'],
+  [/eloqua\.com/, 'Oracle Eloqua'],
+  [/customeriomail\.com|customer\.io/, 'Customer.io'],
+  [/createsend\.com|cmail\d*\.com/, 'Campaign Monitor'],
+  [/emarsys\.net/, 'Emarsys'],
+  [/sendpulse\.com/, 'SendPulse'],
+  [/surveymonkey(user)?\.com/, 'SurveyMonkey'],
+  [/vadesecure\.com/, 'Vade Secure'],
+  [/sparkpost\.com/, 'SparkPost'],
+  [/mailpace\.com/, 'MailPace'],
+  [/zcsend\.net/, 'Zoho Campaigns'],
+  [/mailup\.(it|com|net)/, 'MailUp'],
+  [/sarbacane\.com|tipimail\.com/, 'Sarbacane'],
+  [/docusign\.(com|net)/, 'DocuSign']
 ]
 
 const VERIFICATION_RULES: Array<[RegExp, string]> = [
@@ -233,4 +255,253 @@ function capitalize(s: string): string {
 export function dmarcPolicy(record: string | undefined): string | null {
   if (!record || !/^v=DMARC1/i.test(record)) return null
   return record.match(/\bp=([a-z]+)/i)?.[1]?.toLowerCase() ?? null
+}
+
+// ---------------------------------------------------------------------------
+// SPF en profondeur : include suivis, plages d'adresses autorisées, domaines tiers.
+
+/** Fournisseur d'envoi reconnu dans le nom d'un include SPF (`_spf.google.com` → Google Workspace). */
+export function spfProvider(host: string): string | null {
+  const h = host.toLowerCase()
+  return SPF_RULES.find(([re]) => re.test(h))?.[1] ?? null
+}
+
+export interface SpfTerms {
+  includes: string[]
+  redirect: string | null
+  /** Blocs `ip4:` et `ip6:` autorisés (`185.24.184.82`, `63.245.208.0/20`). */
+  ranges: string[]
+}
+
+/** Mécanismes utiles d'un enregistrement SPF ; les termes en échec (`-ip4:`) sont ignorés. */
+export function parseSpf(record: string): SpfTerms {
+  const out: SpfTerms = { includes: [], redirect: null, ranges: [] }
+  for (const raw of record.trim().split(/\s+/).slice(1)) {
+    const fail = raw.startsWith('-')
+    const term = raw.replace(/^[+?~-]/, '')
+    const include = term.match(/^include:(.+)$/i)
+    const redirect = term.match(/^redirect=(.+)$/i)
+    const range = term.match(/^ip[46]:(.+)$/i)
+    if (include && !fail) out.includes.push(include[1].toLowerCase().replace(/\.$/, ''))
+    else if (redirect) out.redirect = redirect[1].toLowerCase().replace(/\.$/, '')
+    else if (range && !fail) out.ranges.push(range[1].toLowerCase())
+  }
+  return out
+}
+
+/** Limite de la RFC 7208 (§4.6.4) sur les requêtes DNS d'une évaluation SPF. */
+export const SPF_MAX_LOOKUPS = 10
+
+/** Include à suivre : ni macro (`%{i}`), ni fournisseur connu dont les plages n'apprennent rien. */
+function followable(host: string): boolean {
+  return !host.includes('%') && isDomain(host) && !spfProvider(host)
+}
+
+function nextHosts(record: string): string[] {
+  const t = parseSpf(record)
+  return [...t.includes, ...(t.redirect ? [t.redirect] : [])].filter(followable)
+}
+
+/**
+ * Suit les `include:` et `redirect=` qui ne désignent pas un fournisseur connu, niveau par
+ * niveau, au plus 10 résolutions comme le prévoit la RFC 7208. Renvoie l'enregistrement SPF
+ * trouvé pour chaque nom suivi (chaîne vide s'il n'en publie pas).
+ */
+export async function expandSpf(
+  spf: string,
+  resolveTxt: (name: string) => Promise<string[]>,
+  maxLookups = SPF_MAX_LOOKUPS
+): Promise<Record<string, string>> {
+  const out: Record<string, string> = {}
+  let lookups = 0
+  let level = nextHosts(spf)
+  while (level.length && lookups < maxLookups) {
+    const batch = uniq(level)
+      .filter((h) => !(h in out))
+      .slice(0, maxLookups - lookups)
+    lookups += batch.length
+    const records = await Promise.all(
+      batch.map(async (h) => {
+        const txt = await resolveTxt(h).catch(() => [] as string[])
+        return txt.find((t) => /^v=spf1\b/i.test(t.trim())) ?? ''
+      })
+    )
+    level = []
+    batch.forEach((h, i) => {
+      out[h] = records[i]
+      if (records[i]) level.push(...nextHosts(records[i]))
+    })
+  }
+  return out
+}
+
+export interface SpfAnalysis {
+  /** Fournisseurs d'envoi reconnus dans tous les enregistrements suivis. */
+  senders: string[]
+  /** Domaines enregistrables tiers inclus : ni fournisseur connu, ni la cible. */
+  domains: string[]
+  /** Tous les noms inclus (y compris ceux des fournisseurs). */
+  includes: string[]
+  /** Blocs `ip4:` et `ip6:` de la cible et des include suivis. */
+  ranges: string[]
+  /** Adresses isolées (`/32`, `/128` ou sans masque) : de vraies machines d'envoi. */
+  hosts: string[]
+}
+
+/** `1.2.3.4/32` → `1.2.3.4` ; null pour un bloc plus large ou une valeur invalide. */
+function isolatedAddress(range: string): string | null {
+  const [ip, mask] = range.split('/')
+  if (isIPv4(ip)) return !mask || mask === '32' ? ip : null
+  if (isIPv6(ip)) return !mask || mask === '128' ? ip : null
+  return null
+}
+
+/** Analyse le SPF de la cible et des include suivis par `expandSpf`. */
+export function analyzeSpf(domain: string, spf: string | null, expanded: Record<string, string> = {}): SpfAnalysis {
+  const own = registrableDomain(domain)
+  const senders = new Set<string>()
+  const domains = new Set<string>()
+  const includes = new Set<string>()
+  const ranges = new Set<string>()
+  const visited = new Set<string>()
+  const walk = (record: string): void => {
+    const t = parseSpf(record)
+    for (const r of t.ranges) ranges.add(r)
+    for (const host of [...t.includes, ...(t.redirect ? [t.redirect] : [])]) {
+      includes.add(host)
+      const provider = spfProvider(host)
+      if (provider) {
+        senders.add(provider)
+        continue
+      }
+      if (host.includes('%') || !isDomain(host)) continue
+      const reg = registrableDomain(host)
+      if (reg !== own) domains.add(reg)
+      if (!visited.has(host) && expanded[host]) {
+        visited.add(host)
+        walk(expanded[host])
+      }
+    }
+  }
+  if (spf) walk(spf)
+  return {
+    senders: Array.from(senders),
+    domains: Array.from(domains),
+    includes: Array.from(includes),
+    ranges: Array.from(ranges),
+    hosts: uniq(Array.from(ranges).map(isolatedAddress).filter((ip): ip is string => !!ip))
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Destinataires des rapports DMARC (`rua`, `ruf`) et TLS-RPT (`rua`).
+
+const REPORT_RULES: Array<[RegExp, string]> = [
+  [/(^|\.)(vali\.email|valimail\.com)$/, 'Valimail'],
+  [/(^|\.)dmarcian(-eu)?\.(com|eu)$/, 'dmarcian'],
+  [/(^|\.)agari\.com$/, 'Agari'],
+  [/(^|\.)proofpoint\.com$/, 'Proofpoint'],
+  [/(^|\.)easydmarc\.(com|us|eu|co|io)$/, 'EasyDMARC'],
+  [/(^|\.)dmarcmanager\.app$/, 'DMARC Manager'],
+  [/(^|\.)(mimecast\.(com|net|co\.za)|dmarcanalyzer\.com)$/, 'Mimecast'],
+  [/(^|\.)(ondmarc\.com|redsift\.(cloud|io|com))$/, 'Red Sift OnDMARC'],
+  [/(^|\.)powerdmarc\.com$/, 'PowerDMARC'],
+  [/(^|\.)uriports\.com$/, 'URIports'],
+  [/(^|\.)postmarkapp\.com$/, 'Postmark'],
+  [/(^|\.)dmarc-reports\.cloudflare\.net$/, 'Cloudflare DMARC Management'],
+  [/(^|\.)(dmarc-report\.com|mxtoolbox\.com)$/, 'MxToolbox'],
+  [/(^|\.)fraudmarc\.com$/, 'Fraudmarc'],
+  [/(^|\.)sendmarc\.com$/, 'Sendmarc'],
+  [/(^|\.)dmarcly\.com$/, 'Dmarcly'],
+  [/(^|\.)mailhardener\.com$/, 'Mailhardener'],
+  [/(^|\.)report-uri\.com$/, 'Report URI'],
+  [/(^|\.)250ok\.net$/, 'Validity (250ok)'],
+  [/(^|\.)dmarcadvisor\.com$/, 'DMARC Advisor'],
+  [/(^|\.)dmarc\.brevo\.com$/, 'Brevo'],
+  [/(^|\.)mailinblack\.com$/, 'Mailinblack'],
+  [/(^|\.)vadesecure\.com$/, 'Vade Secure']
+]
+
+/** Destinataires d'une balise de rapport (`rua=mailto:a@b.com,mailto:c@d.org!10m`) : adresses ou URL. */
+export function reportUris(record: string | null | undefined, tag: 'rua' | 'ruf'): string[] {
+  const value = record?.match(new RegExp(`(?:^|;)\\s*${tag}\\s*=\\s*([^;]+)`, 'i'))?.[1]
+  if (!value) return []
+  return uniq(
+    value
+      .split(',')
+      .map((u) => u.trim())
+      .map((u) => (/^mailto:/i.test(u) ? u.slice(7).replace(/!\d+[kmgt]?$/i, '').toLowerCase() : u))
+      .filter(Boolean)
+  )
+}
+
+/** Domaine qui reçoit un rapport : partie après `@` d'une adresse, hôte d'une URL. */
+function reportHost(uri: string): string | null {
+  let host: string | undefined
+  if (/^https?:\/\//i.test(uri)) {
+    try {
+      host = new URL(uri).hostname.toLowerCase()
+    } catch {
+      return null
+    }
+  } else host = uri.split('@')[1]?.toLowerCase()
+  return host && isDomain(host) ? host : null
+}
+
+export interface ReportRecipients {
+  /** Prestataires d'analyse reconnus (Valimail, dmarcian...). */
+  providers: string[]
+  /** Domaines enregistrables tiers qui reçoivent les rapports (organisation liée). */
+  domains: string[]
+}
+
+/** Qui reçoit les rapports ; les adresses de la cible elle-même n'apprennent rien. */
+export function reportRecipients(domain: string, uris: string[]): ReportRecipients {
+  const own = registrableDomain(domain)
+  const providers = new Set<string>()
+  const domains = new Set<string>()
+  for (const uri of uris) {
+    const host = reportHost(uri)
+    if (!host) continue
+    const provider = REPORT_RULES.find(([re]) => re.test(host))?.[1]
+    if (provider) providers.add(provider)
+    else if (registrableDomain(host) !== own) domains.add(registrableDomain(host))
+  }
+  return { providers: Array.from(providers), domains: Array.from(domains) }
+}
+
+// ---------------------------------------------------------------------------
+// BIMI et DKIM.
+
+/** Logo et certificat (VMC) déclarés par BIMI (`v=BIMI1; l=<logo>; a=<certificat>`). */
+export function parseBimi(record: string | null | undefined): { logo: string | null; certificate: string | null } {
+  if (!record || !/^v=BIMI1/i.test(record.trim())) return { logo: null, certificate: null }
+  const tag = (t: string): string | null => {
+    const v = record.match(new RegExp(`(?:^|;)\\s*${t}=([^;]*)`, 'i'))?.[1]?.trim()
+    return v && /^https:\/\//i.test(v) ? v : null
+  }
+  return { logo: tag('l'), certificate: tag('a') }
+}
+
+/** Sélecteurs DKIM courants, testés en TXT sur `<sélecteur>._domainkey.<domaine>`. */
+export const DKIM_SELECTORS = ['selector1', 'selector2', 'google', 'k1', 's1', 's2', 'default', 'dkim', 'mail', 'mxvault', 'mandrill', 'smtp']
+
+// Sélecteurs propres à un service : Microsoft 365 publie selector1 et selector2, Google
+// Workspace « google », Mailchimp et Mandrill « k1 ».
+const DKIM_PROVIDERS: Record<string, string> = {
+  selector1: 'Microsoft 365',
+  selector2: 'Microsoft 365',
+  google: 'Google Workspace',
+  k1: 'Mailchimp',
+  mandrill: 'Mandrill'
+}
+
+/** Vraie clé DKIM, pas un joker TXT du domaine qui répondrait pour tous les sélecteurs. */
+export function isDkimRecord(txt: string): boolean {
+  return /(^|;)\s*(v=DKIM1\b|k=(rsa|ed25519)\b|p=)/i.test(txt.trim())
+}
+
+/** Services d'envoi signalés par les sélecteurs DKIM trouvés. */
+export function dkimProviders(selectors: string[]): string[] {
+  return uniq(selectors.map((s) => DKIM_PROVIDERS[s]).filter((p): p is string => !!p))
 }

@@ -11,6 +11,7 @@ export function normalizeTracker(raw: string): { id: string; kind: string | null
   if ((m = s.match(/^GTM-([A-Z0-9]{4,9})$/i))) return { id: `GTM-${m[1].toUpperCase()}`, kind: 'Google Tag Manager', account: null }
   if ((m = s.match(/^AW-(\d{9,11})$/i))) return { id: `AW-${m[1]}`, kind: 'Google Ads', account: null }
   if ((m = s.match(/^(?:ca-)?pub-(\d{10,20})$/i))) return { id: `ca-pub-${m[1]}`, kind: 'Google AdSense', account: `pub-${m[1]}` }
+  if ((m = s.match(/^DC-(\d{6,10})$/i))) return { id: `DC-${m[1]}`, kind: 'Google Floodlight (Campaign Manager)', account: null }
   if (/^[\w.#:-]{4,64}$/.test(s)) return { id: s, kind: null, account: null }
   return null
 }
@@ -86,11 +87,29 @@ export function buildTrackerOutput(
   }
 }
 
+/**
+ * La page BuiltWith porte-t-elle bien sur l'identifiant demandé ? BuiltWith a déjà renvoyé, en
+ * HTTP 200, la page d'un autre identifiant (octobre 2026, pour `pub-9273264035880389`) : on exige
+ * l'identifiant exact dans le titre, l'en-tête principal ou l'en-tête du tableau des domaines.
+ */
+export function builtWithMatches(html: string, tag: string): boolean {
+  const escaped = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  // Pas de chiffre ni de lettre accolé : `ca-pub-123` ne valide pas la page de `ca-pub-1234`.
+  const exact = new RegExp(`(^|[^A-Za-z0-9-])${escaped}(?![A-Za-z0-9])`, 'i')
+  const heads = [
+    html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1],
+    html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1],
+    html.match(/<div class="card-header">([\s\S]*?)<br/i)?.[1]
+  ]
+  return heads.some((h) => !!h && exact.test(h.trim()))
+}
+
 async function builtWith(ctx: ModuleContext, tag: string): Promise<BuiltWithDomain[] | null> {
   try {
     const res = await ctx.fetch(`https://builtwith.com/relationships/tag/${encodeURIComponent(tag)}`, { timeoutMs: 20000 })
     const html = await res.text()
     if (!res.ok || !/Connected Domains|Usage and History/.test(html)) throw new Error(`HTTP ${res.status}`)
+    if (!builtWithMatches(html, tag)) throw new Error(`page d'un autre identifiant que ${tag}, ignorée`)
     return parseBuiltWith(html)
   } catch (e) {
     ctx.log(`BuiltWith : ${e instanceof Error ? e.message : String(e)}`)

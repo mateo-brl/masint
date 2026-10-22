@@ -1,0 +1,19 @@
+{
+ "status": "ok",
+ "data": {
+  "resource": "192.134.5.0/24",
+  "announced": true,
+  "asns": [
+   {
+    "asn": 2485,
+    "holder": "NIC-FR-SITES-SQY-TH3 - AFNIC (Association Francaise pour le Nommage Internet en Cooperation)"
+   }
+  ],
+  "block": {
+   "resource": "192.0.0.0/8",
+   "desc": "Administered by ARIN",
+   "name": "IANA IPv4 Address Space Registry"
+  },
+  "is_less_specific": true
+ }
+}
