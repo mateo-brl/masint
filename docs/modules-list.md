@@ -3,7 +3,7 @@
 <!-- Fichier généré : ne pas modifier à la main. -->
 <!-- Régénérer avec : node build/scripts/list-modules.mjs > docs/modules-list.md -->
 
-162 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
+171 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
 
 Légende des remarques : **à la demande** (lancé seulement sur demande explicite, service à crédits), **bruyant** (peut alerter la personne recherchée), **expérimental** (résultats à vérifier). Une clé suivie de « (facultative) » améliore les résultats sans être obligatoire.
 
@@ -18,13 +18,13 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | [Site web](#web) | 8 |
 | [Crypto](#crypto) | 14 |
 | [Finance](#finance) | 2 |
-| [Entreprise](#company) | 5 |
-| [Localisation](#location) | 3 |
+| [Entreprise](#company) | 11 |
+| [Localisation](#location) | 5 |
 | [Image](#image) | 4 |
 | [Messagerie](#messaging) | 2 |
 | [Réseaux sociaux](#social) | 29 |
 | [Forensic / IOC](#forensic) | 8 |
-| [Divers](#misc) | 3 |
+| [Divers](#misc) | 4 |
 | [roso.info](#roso) | 9 |
 
 <a id="phone"></a>
@@ -195,9 +195,15 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
+| `administration.annuaire` | Annuaire de l'administration (Service-Public.fr) | `administration`, `organization` |  |  |
+| `company.ares` | Entreprise tchèque (ARES) | `company` |  |  |
+| `company.brreg` | Entreprise norvégienne (Brønnøysund) | `company` |  |  |
 | `company.companies_house` | Société britannique (Companies House) | `company` | `companies_house` | expérimental |
+| `company.cro` | Entreprise irlandaise (CRO) | `company` |  |  |
 | `company.fr_registry` | Entreprise française (annuaire officiel) | `company` |  |  |
 | `company.opencorporates` | Registres mondiaux (OpenCorporates) | `company` | `opencorporates` | expérimental |
+| `company.prh` | Entreprise finlandaise (PRH / YTJ) | `company` |  |  |
+| `company.sitadel` | Permis de construire de l'entreprise (Sitadel) | `company` |  |  |
 | `company.vies` | TVA intracommunautaire (VIES) | `vat` |  |  |
 | `company.wikidata` | Wikidata (organisation) | `company`, `organization` |  | expérimental |
 
@@ -207,7 +213,9 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
+| `location.entreprises_adresse` | Entreprises à une adresse (SIRENE) | `address`, `coordinates` |  |  |
 | `location.geocode` | Géocodage (BAN / OpenStreetMap) | `address`, `city`, `place` |  |  |
+| `location.immobilier` | Immobilier (cadastre, DVF, DPE, permis) | `address`, `coordinates` |  |  |
 | `location.map_links` | Liens cartographiques | `address`, `city`, `place`, `coordinates` |  |  |
 | `location.reverse` | Géocodage inverse | `coordinates` |  |  |
 
@@ -291,6 +299,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `misc.license_plate` | Analyse de la plaque d'immatriculation | `license_plate` |  |  |
 | `misc.mac_vendor` | Constructeur de l'adresse MAC | `mac_address` |  |  |
 | `misc.snowflake` | Date cachée dans l'identifiant | `account`, `group` |  |  |
+| `vehicle.rdw` | Véhicule néerlandais (RDW) | `license_plate` |  |  |
 
 <a id="roso"></a>
 
