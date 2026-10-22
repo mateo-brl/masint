@@ -969,6 +969,56 @@ export const PROPERTY_LABELS: Record<string, { fr: string; en: string }> = {
   amf_url: { fr: "Listes noires de l'AMF", en: 'AMF blacklists' },
   amf_possible_matches: { fr: 'Noms proches sur la liste noire AMF', en: 'Similar names on the AMF blacklist' },
 
+  // Annuaire des entreprises : compléments (company.fr_registry)
+  company_labels: { fr: 'Labels et indicateurs', en: 'Labels and indicators' },
+  collective_agreements: { fr: 'Conventions collectives', en: 'Collective agreements' },
+  finess_ids: { fr: 'Numéros FINESS', en: 'FINESS numbers' },
+  training_org_ids: { fr: 'Numéros de déclaration (formation)', en: 'Training organization numbers' },
+  elected_officials: { fr: 'Élus de la collectivité', en: 'Elected officials' },
+  elected_officials_count: { fr: "Nombre d'élus", en: 'Elected officials count' },
+  trade_name: { fr: 'Nom commercial', en: 'Trade name' },
+
+  // Mandats d'élu local (person.fr_elus)
+  elected_offices_count: { fr: "Mandats d'élu trouvés (homonymes possibles)", en: 'Elected offices found (possible namesakes)' },
+  elected_offices_excluded: { fr: "Mandats d'élu écartés (naissance incompatible)", en: 'Elected offices dropped (inconsistent birth date)' },
+
+  // BODACC et BALO d'une entreprise (company.bodacc)
+  bodacc_type: { fr: "Type d'annonce BODACC", en: 'BODACC notice type' },
+  bodacc_id: { fr: 'Identifiant BODACC', en: 'BODACC ID' },
+  bodacc_url: { fr: 'Annonces au BODACC', en: 'BODACC notices' },
+  judgment: { fr: 'Jugement', en: 'Judgment' },
+  court: { fr: 'Tribunal', en: 'Court' },
+  collective_proceedings: { fr: 'Procédures collectives', en: 'Insolvency proceedings' },
+  former_officers: { fr: 'Anciens dirigeants (BODACC)', en: 'Former officers (BODACC)' },
+  former_officers_count: { fr: "Nombre d'anciens dirigeants (BODACC)", en: 'Former officers count (BODACC)' },
+  former_addresses: { fr: 'Anciennes adresses du siège (BODACC)', en: 'Former head office addresses (BODACC)' },
+  former_addresses_count: { fr: "Nombre d'anciennes adresses (BODACC)", en: 'Former addresses count (BODACC)' },
+  balo_type: { fr: "Type d'annonce BALO", en: 'BALO notice type' },
+  balo_announcements: { fr: 'Annonces BALO', en: 'BALO notices' },
+  balo_last_date: { fr: 'Dernière annonce BALO', en: 'Latest BALO notice' },
+
+  // GLEIF (company.gleif)
+  lei_status: { fr: "Statut de l'enregistrement LEI", en: 'LEI registration status' },
+  lei_entity_status: { fr: "Statut de l'entité (GLEIF)", en: 'Entity status (GLEIF)' },
+  lei_url: { fr: 'Fiche GLEIF', en: 'GLEIF record' },
+  lei_headquarters: { fr: 'Siège (GLEIF)', en: 'Headquarters (GLEIF)' },
+  lei_other_names: { fr: 'Autres noms (GLEIF)', en: 'Other names (GLEIF)' },
+  lei_registered_at: { fr: 'Enregistrement du LEI', en: 'LEI registered on' },
+  lei_parent: { fr: 'Société mère directe (GLEIF)', en: 'Direct parent (GLEIF)' },
+  lei_ultimate_parent: { fr: 'Société mère ultime (GLEIF)', en: 'Ultimate parent (GLEIF)' },
+  lei_children_count: { fr: 'Filiales directes (GLEIF)', en: 'Direct subsidiaries (GLEIF)' },
+
+  // Journal officiel des associations (company.jo_associations)
+  association_name: { fr: "Titre de l'association", en: 'Association name' },
+  association_object: { fr: "Objet de l'association", en: 'Association purpose' },
+  dissolved_on: { fr: 'Dissolution publiée le', en: 'Dissolution published on' },
+  jo_type: { fr: "Type d'annonce (JO)", en: 'Notice type (Official Journal)' },
+  jo_id: { fr: 'Identifiant de l’annonce (JO)', en: 'Notice ID (Official Journal)' },
+  jo_announcements: { fr: 'Annonces au Journal officiel', en: 'Official Journal notices' },
+  jo_last_date: { fr: 'Dernière annonce au JO', en: 'Latest Official Journal notice' },
+  jo_name_matches: { fr: 'Associations de même nom (JO)', en: 'Associations with the same name (Official Journal)' },
+  osop_accounts: { fr: 'Comptes publiés (OSOP)', en: 'Published accounts (OSOP)' },
+
   // roso.info
   roso_credits_left: { fr: 'Crédits roso.info restants', en: 'roso.info credits left' },
   roso_tier: { fr: 'Formule roso.info', en: 'roso.info plan' },

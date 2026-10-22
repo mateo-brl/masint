@@ -1,0 +1,56 @@
+{
+ "data": {
+  "type": "lei-records",
+  "id": "969500KMUQ2B6CBAF162",
+  "attributes": {
+   "lei": "969500KMUQ2B6CBAF162",
+   "entity": {
+    "legalName": {
+     "name": "DANONE",
+     "language": "fr"
+    },
+    "otherNames": [],
+    "legalAddress": {
+     "language": "fr",
+     "addressLines": [
+      "59 RUE LA FAYETTE"
+     ],
+     "addressNumber": null,
+     "addressNumberWithinBuilding": null,
+     "mailRouting": null,
+     "city": "PARIS",
+     "region": "FR-75C",
+     "country": "FR",
+     "postalCode": "75009"
+    },
+    "headquartersAddress": {
+     "language": "fr",
+     "addressLines": [
+      "59 RUE LA FAYETTE"
+     ],
+     "addressNumber": null,
+     "addressNumberWithinBuilding": null,
+     "mailRouting": null,
+     "city": "PARIS",
+     "region": "FR-75C",
+     "country": "FR",
+     "postalCode": "75009"
+    },
+    "registeredAt": {
+     "id": "RA000189",
+     "other": null
+    },
+    "registeredAs": "552032534",
+    "jurisdiction": "FR",
+    "status": "ACTIVE"
+   },
+   "registration": {
+    "status": "ISSUED",
+    "initialRegistrationDate": "2013-07-17T22:00:00Z"
+   },
+   "bic": [
+    "DAFIFRPPXXX"
+   ]
+  }
+ }
+}
