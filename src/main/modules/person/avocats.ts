@@ -181,7 +181,7 @@ export interface FirmLookup {
   complete: boolean
 }
 
-/** Avocats d'un cabinet, par SIREN (exact) ou par raison sociale (contient le nom). */
+/** Avocats d'un cabinet, par SIREN (exact) ou par raison sociale (qui commence par le nom). */
 export async function lookupFirm(ctx: ModuleContext, label: string, data: Record<string, unknown>): Promise<FirmLookup | null> {
   const siren = sirenOf(label, data)
   const name = companyName(label, data)

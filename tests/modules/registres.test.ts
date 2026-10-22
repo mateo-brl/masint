@@ -653,6 +653,21 @@ describe.skipIf(!LIVE)('registres publics : services réels', () => {
     })
   }, 300000)
 
+  it('Transparence Santé : RPPS fictif, requêtes valides et aucun versement', async (t) => {
+    await live(t, async () => {
+      const out = await runModule(byId(transparence, 'person.transparence_sante'), entity('id_document', '10999999997'))
+      expect(out.properties ?? {}).toEqual({})
+    })
+  }, 300000)
+
+  it('aides de minimis : Cordon Electronics', async (t) => {
+    await live(t, async () => {
+      const out = await runModule(aides, entity('company', 'CORDON ELECTRONICS', { data: { siren: '432371342' } }))
+      expect(Number(out.properties?.de_minimis_aids_count)).toBeGreaterThanOrEqual(8)
+      expect(out.entities?.[0]).toMatchObject({ type: 'event', data: { aid_authority: expect.any(String) } })
+    })
+  }, 300000)
+
   it('Géorisques : AXIOMAUTO à Amiens', async (t) => {
     await live(t, async () => {
       const out = await runModule(icpe, entity('company', '52788711100021'))
