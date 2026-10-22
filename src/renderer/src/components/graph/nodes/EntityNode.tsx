@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useRef } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { useTranslation } from 'react-i18next'
 import { attachmentUrl } from '@shared/api'
@@ -9,7 +9,7 @@ import { nodeSubtitle } from '@shared/subtitle'
 import { useLang } from '../../../lib/i18n'
 import { EntityBadge, Icon } from '../../../lib/icons'
 import { useApp } from '../../../store/app'
-import { useCanvas, useCommunityColor, useLowZoom, useNodeEmphasis } from '../../../store/canvas'
+import { useCanvas, useLowZoom, useNodeDecor, useOnPath } from '../../../store/canvas'
 import { useCrossRefCount } from '../../../store/correlation'
 import { useGraph, type FlowNode } from '../../../store/graph'
 
@@ -46,20 +46,21 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
   const hiddenCount = useCanvas((s) => s.collapsedCount.get(n.id) ?? 0)
   const dense = useCanvas((s) => s.dense)
   const low = useLowZoom()
-  // Analyse et filtre : estompé (filtre « estomper », hors du chemin), mis en évidence (chemin),
-  // couleur de communauté ; autres enquêtes où l'entité apparaît.
-  const emphasis = useNodeEmphasis(n.id)
-  const community = useCommunityColor(n.id)
+  // Analyse et filtre : chemin mis en évidence (re-rendu des seuls nœuds du chemin) ; estompé et
+  // couleur de communauté écrits dans le DOM sans re-rendu (voir useNodeDecor). Autres
+  // enquêtes où l'entité apparaît.
+  const root = useRef<HTMLDivElement>(null)
+  const onPath = useOnPath(n.id)
+  useNodeDecor(n.id, root)
   const seenElsewhere = useCrossRefCount(n.id)
   const box: React.CSSProperties = {
     width,
     minHeight: 38,
     background: n.style.bg ?? 'var(--node)',
-    borderColor: selected || emphasis === 2 ? 'var(--accent)' : n.style.color && n.imageId ? n.style.color : 'var(--node-border)',
+    borderColor: selected || onPath ? 'var(--accent)' : n.style.color && n.imageId ? n.style.color : 'var(--node-border)',
     // Contour plutôt qu'ombre : peu coûteux à dessiner, n'altère pas la taille mesurée.
-    outline: emphasis === 2 ? '2px solid var(--accent)' : community ? `2px solid ${community}aa` : undefined,
+    ...(onPath ? { outline: '2px solid var(--accent)' } : {}),
     outlineOffset: 2,
-    opacity: emphasis === 1 ? 0.2 : undefined,
     // L'ombre floue coûte cher à dessiner : simple contour sur les grands graphes et à faible zoom.
     boxShadow:
       dense || low
@@ -75,7 +76,7 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
   // hauteur pour que le nœud garde sa taille (pas de nouvelle mesure, liens inchangés).
   if (low)
     return (
-      <div className="relative flex items-center gap-2 rounded-[7px] border px-1.5 py-1.5" style={box}>
+      <div ref={root} className="relative flex items-center gap-2 rounded-[7px] border px-1.5 py-1.5" style={box}>
         <Handle type="target" position={Position.Top} />
         <EntityBadge
           type={n.type}
@@ -98,7 +99,7 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
     )
 
   return (
-    <div className="relative flex items-center gap-2 rounded-[7px] border px-1.5 py-1.5" style={box}>
+    <div ref={root} className="relative flex items-center gap-2 rounded-[7px] border px-1.5 py-1.5" style={box}>
       <Handle type="target" position={Position.Top} />
       <EntityBadge
         type={n.type}

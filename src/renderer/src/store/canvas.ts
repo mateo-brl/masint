@@ -2,6 +2,7 @@
 // valeur (ses pastilles, la sélection de ses extrémités) : glisser un nœud ou changer la
 // sélection ne re-rend que les éléments concernés, et non les milliers d'autres.
 
+import { useEffect, useLayoutEffect, useRef, type RefObject } from 'react'
 import { useStore, type ReactFlowState } from '@xyflow/react'
 import { create } from 'zustand'
 
@@ -38,27 +39,71 @@ export const useCanvas = create<CanvasState>(() => ({
   community: null
 }))
 
-/** 0 : normal, 1 : estompé, 2 : mis en évidence. */
-export type Emphasis = 0 | 1 | 2
-
-/** Mise en avant d'un nœud : un nombre, pour ne re-rendre que les nœuds dont l'état change. */
-export function useNodeEmphasis(id: string): Emphasis {
-  return useCanvas((s) => (s.focus ? (s.focus.nodes.has(id) ? 2 : 1) : s.dimmed.has(id) ? 1 : 0))
-}
-
-/** Mise en avant d'un lien : chemin en évidence, ou extrémité estompée par le filtre. */
-export function useEdgeEmphasis(id: string, source: string, target: string): Emphasis {
-  return useCanvas((s) => (s.focus ? (s.focus.edges.has(id) ? 2 : 1) : s.dimmed.has(source) || s.dimmed.has(target) ? 1 : 0))
-}
-
 /** Couleurs des communautés, de la plus grande à la plus petite ; les suivantes ne sont pas colorées. */
 export const COMMUNITY_COLORS = ['#0090ff', '#30a46c', '#f76b15', '#d6409f', '#6e56cf', '#12a594', '#ffc53d', '#e5484d', '#a18072', '#8d8d93']
 
-/** Couleur de la communauté d'un nœud, ou `undefined`. */
-export function useCommunityColor(id: string): string | undefined {
-  return useCanvas((s) => {
+/** Opacité d'un élément estompé (filtre « estomper », hors du chemin mis en évidence). */
+export const DIM_NODE = '0.2'
+export const DIM_EDGE = '0.12'
+
+/** Nœud sur le chemin mis en évidence : booléen, seuls les nœuds du chemin sont re-rendus. */
+export function useOnPath(id: string): boolean {
+  return useCanvas((s) => !!s.focus?.nodes.has(id))
+}
+
+/** Lien sur le chemin mis en évidence. */
+export function useEdgeOnPath(id: string): boolean {
+  return useCanvas((s) => !!s.focus?.edges.has(id))
+}
+
+/**
+ * Abonnement fin d'un élément du canevas qui écrit directement dans le DOM, sans re-rendu :
+ * estomper 2000 nœuds (filtre, chemin) ou les colorer par communauté ne fait re-rendre aucun
+ * d'eux. `decor` renvoie une clé : le DOM n'est touché que si elle change. Après chaque rendu
+ * (élément remplacé, style recalculé par React), le décor est appliqué de nouveau.
+ */
+function useDecor(decor: (s: CanvasState, apply: boolean) => string): void {
+  const last = useRef<string | null>(null)
+  const fn = useRef(decor)
+  fn.current = decor
+  useLayoutEffect(() => {
+    last.current = fn.current(useCanvas.getState(), true)
+  })
+  useEffect(
+    () =>
+      useCanvas.subscribe((s) => {
+        const key = fn.current(s, false)
+        if (key !== last.current) last.current = fn.current(s, true)
+      }),
+    []
+  )
+}
+
+/** Décor d'un nœud : estompé, contour de sa communauté (sauf sur le chemin, contour rendu par React). */
+export function useNodeDecor(id: string, ref: RefObject<HTMLElement | null>): void {
+  useDecor((s, apply) => {
+    const onPath = !!s.focus?.nodes.has(id)
+    const dim = s.focus ? !onPath : s.dimmed.has(id)
     const c = s.community?.get(id)
-    return c === undefined ? undefined : COMMUNITY_COLORS[c]
+    const color = c === undefined || onPath ? '' : `2px solid ${COMMUNITY_COLORS[c]}aa`
+    const el = ref.current
+    if (apply && el) {
+      el.style.opacity = dim ? DIM_NODE : ''
+      if (!onPath) el.style.outline = color
+    }
+    return `${dim ? 1 : 0}${onPath ? 1 : 0}${color}`
+  })
+}
+
+/** Décor d'un lien : estompé (hors du chemin, ou extrémité estompée par le filtre), libellé masqué. */
+export function useEdgeDecor(id: string, source: string, target: string, ref: RefObject<SVGGElement | null>, label: RefObject<HTMLElement | null>): void {
+  useDecor((s, apply) => {
+    const dim = s.focus ? !s.focus.edges.has(id) : s.dimmed.has(source) || s.dimmed.has(target)
+    if (apply) {
+      if (ref.current) ref.current.style.opacity = dim ? DIM_EDGE : ''
+      if (label.current) label.current.style.visibility = dim ? 'hidden' : ''
+    }
+    return dim ? '1' : '0'
   })
 }
 

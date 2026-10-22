@@ -109,7 +109,7 @@ export function buildCommands(t: TFunction): Command[] {
       ['grid', 'layout.grid', 'Grid3x3']
     ]
     for (const [kind, key, icon] of layouts)
-      add({ id: `layout:${kind}`, title: `${t('topbar.layout')} : ${t(key)}`, section: 'layout', icon, run: () => onCanvas(() => void runLayout(kind)) })
+      add({ id: `layout:${kind}`, title: t('palette.cmd.layout', { name: t(key) }), section: 'layout', icon, run: () => onCanvas(() => void runLayout(kind)) })
 
     const exports: Array<[ExportFormat | 'archive', string, string]> = [
       ['png', 'export.png', 'Image'],
@@ -124,7 +124,7 @@ export function buildCommands(t: TFunction): Command[] {
       ['archive', 'export.archive', 'Archive']
     ]
     for (const [format, key, icon] of exports)
-      add({ id: `export:${format}`, title: `${t('topbar.export')} : ${t(key)}`, section: 'export', icon, keywords: format, run: () => doExport(format, t) })
+      add({ id: `export:${format}`, title: t('palette.cmd.export', { name: t(key) }), section: 'export', icon, keywords: format, run: () => doExport(format, t) })
 
     add({ id: 'filters', title: t('palette.cmd.filters'), section: 'analysis', icon: 'Funnel', run: () => onCanvas(() => app.togglePanel('filtersOpen', true)) })
     if (isFilterActive(useFilters.getState().filter)) add({ id: 'filters:reset', title: t('filters.reset'), section: 'analysis', icon: 'RotateCcw', run: () => useFilters.getState().reset() })
