@@ -4,6 +4,7 @@
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
 import { compact, getJson, num, tr } from '../misc/_util'
 import { frenchVat, headcountLabel, legalFormLabel, nafLabel, normName, titleCase } from './_fr'
+import { complementProperties, establishmentEntities, type ReComplements, type ReEtablissement } from './_complements'
 
 const API = 'https://recherche-entreprises.api.gouv.fr/search'
 const MAX_DIRIGEANTS = 25
@@ -54,7 +55,9 @@ export interface ReResult {
   siege?: ReSiege
   dirigeants?: ReDirigeant[]
   finances?: Record<string, { ca?: number | null; resultat_net?: number | null }> | null
-  complements?: { est_association?: boolean; est_entrepreneur_individuel?: boolean; identifiant_association?: string | null }
+  complements?: ReComplements | null
+  /** Établissements qui correspondent à la recherche (10 au plus), siège compris. */
+  matching_etablissements?: ReEtablissement[] | null
 }
 
 export interface ReResponse {
@@ -113,7 +116,9 @@ export function companyOutput(ctx: Pick<ModuleContext, 'lang'>, r: ReResult): Mo
     revenue: fin?.ca != null ? `${fin.ca.toLocaleString('fr-FR')} € (${lastYear})` : null,
     net_income: fin?.resultat_net != null ? `${fin.resultat_net.toLocaleString('fr-FR')} € (${lastYear})` : null,
     rna: r.complements?.identifiant_association ?? null,
-    url: `https://annuaire-entreprises.data.gouv.fr/entreprise/${r.siren}`
+    url: `https://annuaire-entreprises.data.gouv.fr/entreprise/${r.siren}`,
+    // Labels, indicateurs, conventions collectives et élus d'une collectivité.
+    ...complementProperties(ctx, r.complements)
   }
 
   const entities: OutEntity[] = []
@@ -135,6 +140,7 @@ export function companyOutput(ctx: Pick<ModuleContext, 'lang'>, r: ReResult): Mo
     })
   }
   entities.push({ type: 'vat', label: frenchVat(r.siren), linkLabel: tr(ctx, 'TVA intracommunautaire', 'EU VAT number') })
+  entities.push(...establishmentEntities(ctx, r.matching_etablissements, s?.siret))
 
   for (const d of (r.dirigeants ?? []).slice(0, MAX_DIRIGEANTS)) {
     const role = d.qualite ? d.qualite : tr(ctx, 'dirigeant', 'officer')
@@ -219,7 +225,23 @@ export default defineModule({
     const results = res?.results ?? []
     if (!results.length) return {}
     const hit = pickResult(results, input.label, siren)
-    if (hit) return companyOutput(ctx, hit)
+    if (hit) return companyOutput(ctx, await withEstablishments(ctx, hit))
     return siren ? {} : candidatesOutput(ctx, results)
   }
 })
+
+/**
+ * Une recherche par SIREN ne renvoie pas d'établissement : pour une entreprise qui en a
+ * plusieurs, une seconde recherche par raison sociale les fournit (10 au plus).
+ */
+export async function withEstablishments(ctx: ModuleContext, hit: ReResult): Promise<ReResult> {
+  if (hit.matching_etablissements?.some((e) => !e.est_siege) || (hit.nombre_etablissements ?? 0) < 2) return hit
+  try {
+    const res = await search(ctx, hit.nom_complet)
+    const same = res?.results.find((r) => r.siren === hit.siren)
+    return same?.matching_etablissements?.length ? { ...hit, matching_etablissements: same.matching_etablissements } : hit
+  } catch {
+    // Complément facultatif : la fiche reste valable sans les établissements.
+    return hit
+  }
+}

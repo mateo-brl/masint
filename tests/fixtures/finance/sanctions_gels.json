@@ -1,0 +1,275 @@
+{
+ "Publications": {
+  "DatePublication": "2026-10-22T08:42:44.2355066+02:00",
+  "PublicationDetail": [
+   {
+    "IdRegistre": 7805,
+    "Nature": "Personne morale",
+    "Nom": "JSC Gruppa Kremniy El",
+    "RegistreDetail": [
+     {
+      "TypeChamp": "ALIAS",
+      "Valeur": [
+       {
+        "Alias": "АО Группа Кремний Эл",
+        "Commentaire": "En russe"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "IDENTIFICATION",
+      "Valeur": [
+       {
+        "Identification": "/",
+        "Commentaire": "Type d’entité: société par actions  - Principal établissement: Fédération de Russie"
+       },
+       {
+        "Identification": "1023202741781",
+        "Commentaire": "Numéro d’enregistrement"
+       },
+       {
+        "Identification": "3234043140",
+        "Commentaire": "Numéro d’identification fiscale"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "ADRESSE_PM",
+      "Valeur": [
+       {
+        "Adresse": "Krasnoarmeyskaya Str. 103, 241050 Bryansk, Bryanskaya Oblast, Fédération de Russie",
+        "Pays": "RUSSIE"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "TELEPHONE",
+      "Valeur": [
+       {
+        "Telephone": "+ 7 (4832) 41-43-11"
+       },
+       {
+        "Telephone": "+ 7 (4832)  41-42-34"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "SITE_INTERNET",
+      "Valeur": [
+       {
+        "SiteInternet": "https://group-kremny.ru/"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "COURRIEL",
+      "Valeur": [
+       {
+        "Courriel": "group@kremny.032.ru"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "MOTIFS",
+      "Valeur": [
+       {
+        "Motifs": "JSC Gruppa Kremniy El est le deuxième plus grand fabricant de microélectronique en Russie et, en particulier, un fabricant de micropuces. Les micropuces produit"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "FONDEMENT_JURIDIQUE",
+      "Valeur": [
+       {
+        "FondementJuridique": 3855,
+        "FondementJuridiqueLabel": "(UE) 2024/3183 du 16/12/2024 (UE Ukraine intégrité territoriale - R (UE) 269/2014)"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "REFERENCE_UE",
+      "Valeur": [
+       {
+        "ReferenceUe": "EU.12598.59"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "IdRegistre": 7932,
+    "Nature": "Personne morale",
+    "Nom": "Garantex",
+    "RegistreDetail": [
+     {
+      "TypeChamp": "IDENTIFICATION",
+      "Valeur": [
+       {
+        "Identification": "/",
+        "Commentaire": "Type d'entité: plateforme d'échange de cryptomonnaies - Lieu d'enregistrement: Moscou, Fédération de Russie - Principal établissement: Fédération de Russie"
+       },
+       {
+        "Identification": "ETH: 0x002471b8A185f9980708d0eAEC5B289714F56f8d",
+        "Commentaire": "Adresse de portefeuille de chaîne de blocs connues de Garantex"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "ADRESSE_PM",
+      "Valeur": [
+       {
+        "Adresse": "Presnenskaya embankment 12, Moscou, Fédération de Russie",
+        "Pays": "RUSSIE"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "MOTIFS",
+      "Valeur": [
+       {
+        "Motifs": "Garantex est une plateforme d'échange de cryptomonnaies basée en Russie. Des fonds peuvent être déposés auprès de Garantex et retirés de Garantex avec les carte"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "FONDEMENT_JURIDIQUE",
+      "Valeur": [
+       {
+        "FondementJuridique": 3878,
+        "FondementJuridiqueLabel": "(UE) 2025/389 du 24/02/2025 (UE Ukraine intégrité territoriale - R (UE) 269/2014)"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "REFERENCE_UE",
+      "Valeur": [
+       {
+        "ReferenceUe": "EU.12747.39"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "IdRegistre": 4272,
+    "Nature": "Personne physique",
+    "Nom": "LAVROV",
+    "RegistreDetail": [
+     {
+      "TypeChamp": "PRENOM",
+      "Valeur": [
+       {
+        "Prenom": "Sergueï Viktorovich"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "DATE_DE_NAISSANCE",
+      "Valeur": [
+       {
+        "Jour": "21",
+        "Mois": "03",
+        "Annee": "1950",
+        "Commentaire": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "LIEU_DE_NAISSANCE",
+      "Valeur": [
+       {
+        "Lieu": "Moscou",
+        "Pays": "RUSSIE"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "TITRE",
+      "Valeur": [
+       {
+        "Titre": "ministre des affaires étrangères de la Fédération de Russie"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "MOTIFS",
+      "Valeur": [
+       {
+        "Motifs": "Ministre des affaires étrangères de la Fédération de Russie. En tant que membre du Conseil de sécurité de la Russie, il a soutenu la reconnaissance immédiate pa"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "FONDEMENT_JURIDIQUE",
+      "Valeur": [
+       {
+        "FondementJuridique": 2329,
+        "FondementJuridiqueLabel": "(UE) 2022/332 du 25/02/2022 (UE Ukraine intégrité territoriale - R (UE) 269/2014)"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "IdRegistre": 4271,
+    "Nature": "Personne physique",
+    "Nom": "POUTINE",
+    "RegistreDetail": [
+     {
+      "TypeChamp": "PRENOM",
+      "Valeur": [
+       {
+        "Prenom": "Vladimir Vladimirovich"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "DATE_DE_NAISSANCE",
+      "Valeur": [
+       {
+        "Jour": "07",
+        "Mois": "10",
+        "Annee": "1952",
+        "Commentaire": ""
+       }
+      ]
+     },
+     {
+      "TypeChamp": "LIEU_DE_NAISSANCE",
+      "Valeur": [
+       {
+        "Lieu": "Léningrad, aujourd'hui Saint-Pétersbourg",
+        "Pays": "RUSSIE"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "TITRE",
+      "Valeur": [
+       {
+        "Titre": "président de la Fédération de Russie"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "MOTIFS",
+      "Valeur": [
+       {
+        "Motifs": "Vladimir Poutine est le président de la Fédération de Russie. Le 22 février 2022, il a signé un décret reconnaissant l'\"indépendance et la souveraineté\" des zon"
+       }
+      ]
+     },
+     {
+      "TypeChamp": "FONDEMENT_JURIDIQUE",
+      "Valeur": [
+       {
+        "FondementJuridique": 2329,
+        "FondementJuridiqueLabel": "(UE) 2022/332 du 25/02/2022 (UE Ukraine intégrité territoriale - R (UE) 269/2014)"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
