@@ -139,6 +139,11 @@ describe('vérifications de comptes email, suite (modules, fetch simulé)', () =
     expect(out.entities).toBeUndefined()
   })
 
+  it('service injoignable : erreur explicite, pas une absence', async () => {
+    const ctx = { ...makeContext(), fetch: async () => Promise.reject(new TypeError('fetch failed')) }
+    await expect(runModule(byId('email.rambler'), entity('email', 'jean@example.com'), ctx)).rejects.toMatchObject({ code: 'unavailable' })
+  })
+
   it('quota dépassé', async () => {
     const ctx = fakeContext([[/plurk/, { status: 429, body: '' }]])
     await expect(runModule(byId('email.plurk'), entity('email', 'jean@example.com'), ctx)).rejects.toMatchObject({ code: 'rate_limited' })
@@ -183,7 +188,7 @@ describe.skipIf(!LIVE)('vérifications de comptes email, suite (live)', () => {
         // Flickr ne conclut jamais à l'absence.
         expect((await runModule(m, entity('email', absent), ctx)).found).toBe(m.id === 'email.flickr' ? undefined : false)
       } catch (e) {
-        if (e instanceof ModuleError && (e.code === 'blocked' || e.code === 'rate_limited')) t.skip(e.message)
+        if (e instanceof ModuleError && ['blocked', 'rate_limited', 'unavailable'].includes(e.code)) t.skip(e.message)
         throw e
       }
     })
