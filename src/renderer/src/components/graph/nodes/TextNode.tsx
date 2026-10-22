@@ -89,6 +89,7 @@ function TextNodeImpl({ id, data, selected }: NodeProps<FlowNode>): React.JSX.El
             <button
               key={c}
               title={t('canvas2.postit')}
+              aria-label={`${t('canvas2.postit')} ${c}`}
               onClick={() => setStyle({ bg: c })}
               className="mx-0.5 h-[18px] w-[18px] rounded-[4px]"
               style={{ background: c, outline: n.style.bg === c ? '2px solid var(--accent)' : '1px solid rgb(0 0 0 / .15)', outlineOffset: n.style.bg === c ? 2 : -1 }}

@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import { Icon } from '../../lib/icons'
 import { useApp } from '../../store/app'
 
@@ -59,6 +60,67 @@ export function Spinner({ size = 14 }: { size?: number }): React.JSX.Element {
   return <Icon name="LoaderCircle" size={size} className="spin" />
 }
 
+/** Fenêtres modales ouvertes, de la plus ancienne à la plus récente : seule la dernière répond. */
+const modalStack: Array<RefObject<HTMLElement | null>> = []
+
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+/**
+ * Comportement d'une fenêtre modale : Échap la ferme (la plus récente seulement, si plusieurs
+ * sont empilées), Tab reste à l'intérieur, le focus y entre à l'ouverture et revient à
+ * l'élément d'origine à la fermeture.
+ */
+export function useModal(ref: RefObject<HTMLElement | null>, open: boolean, onClose: () => void): void {
+  const close = useRef(onClose)
+  close.current = onClose
+  useEffect(() => {
+    if (!open) return
+    const previous = document.activeElement as HTMLElement | null
+    modalStack.push(ref)
+    // Focus d'entrée, sauf si un champ s'en est déjà chargé (autoFocus).
+    const raf = requestAnimationFrame(() => {
+      const el = ref.current
+      if (!el || el.contains(document.activeElement)) return
+      const first = el.querySelector<HTMLElement>(`[data-autofocus], ${FOCUSABLE}`)
+      ;(first ?? el).focus()
+    })
+    const onKey = (e: KeyboardEvent): void => {
+      if (modalStack[modalStack.length - 1] !== ref) return
+      if (e.key === 'Escape') {
+        e.stopPropagation()
+        close.current()
+        return
+      }
+      if (e.key !== 'Tab' || !ref.current) return
+      const items = Array.from(ref.current.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((x) => x.offsetParent !== null || x === document.activeElement)
+      if (!items.length) {
+        e.preventDefault()
+        ref.current.focus()
+        return
+      }
+      const first = items[0]
+      const last = items[items.length - 1]
+      const active = document.activeElement
+      if (e.shiftKey && (active === first || !ref.current.contains(active))) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && (active === last || !ref.current.contains(active))) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('keydown', onKey, true)
+      const i = modalStack.lastIndexOf(ref)
+      if (i >= 0) modalStack.splice(i, 1)
+      // Retour du focus à l'élément qui l'avait, s'il est encore là.
+      if (previous && document.contains(previous)) previous.focus()
+    }
+  }, [open, ref])
+}
+
 export function Dialog({
   open,
   onClose,
@@ -74,25 +136,28 @@ export function Dialog({
   width?: number
   footer?: ReactNode
 }): React.JSX.Element | null {
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  const { t } = useTranslation()
+  const box = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+  useModal(box, open, onClose)
   if (!open) return null
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6" onMouseDown={onClose}>
       <div
-        className="glass flex max-h-full flex-col rounded-2xl"
+        ref={box}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="glass flex max-h-full flex-col rounded-2xl outline-none"
         style={{ width, maxWidth: '100%' }}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
-          <div className="text-[15px] font-semibold">{title}</div>
-          <IconButton icon="X" onClick={onClose} />
+          <h2 id={titleId} className="text-[15px] font-semibold">
+            {title}
+          </h2>
+          <IconButton icon="X" title={t('common.close')} onClick={onClose} />
         </div>
         <div className="min-h-0 flex-1 overflow-auto px-5 py-4">{children}</div>
         {footer && <div className="flex justify-end gap-2 border-t border-line px-5 py-3">{footer}</div>}
@@ -215,7 +280,7 @@ export function Dropdown({
                     it.danger ? 'text-accent hover:bg-accent-soft' : 'text-fg hover:bg-panel-3'
                   }`}
                 >
-                  {it.icon && <Icon name={it.icon} size={14} className="shrink-0 text-muted" />}
+                  {it.icon && <Icon name={it.icon} size={14} className="shrink-0 text-muted" aria-hidden />}
                   <span className="min-w-0 flex-1 truncate">{it.label}</span>
                   {it.hint && <span className="text-[11px] text-faint">{it.hint}</span>}
                 </button>
@@ -270,11 +335,23 @@ export function Toasts(): React.JSX.Element {
   )
 }
 
-export function Switch({ checked, onChange, disabled }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }): React.JSX.Element {
+export function Switch({
+  checked,
+  onChange,
+  disabled,
+  label
+}: {
+  checked: boolean
+  onChange: (v: boolean) => void
+  disabled?: boolean
+  /** Nom lu par les lecteurs d'écran quand l'interrupteur n'est pas dans un `<label>`. */
+  label?: string
+}): React.JSX.Element {
   return (
     <button
       role="switch"
       aria-checked={checked}
+      aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`relative h-5 w-9 shrink-0 rounded-full transition disabled:opacity-40 ${checked ? 'bg-accent' : 'bg-panel-3 border border-line'}`}

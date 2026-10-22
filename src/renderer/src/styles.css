@@ -17,7 +17,8 @@
   --border-strong: #303036;
   --text: #ededef;
   --muted: #8d8d93;
-  --faint: #5c5c63;
+  /* Texte discret : contraste d'au moins 4,5:1 sur les panneaux (4,9:1 sur --panel). */
+  --faint: #808087;
   --accent: #e5484d;
   --accent-strong: #dc2626;
   --accent-soft: #e5484d22;
@@ -40,7 +41,8 @@
   --border-strong: #d4d4d8;
   --text: #18181b;
   --muted: #63636b;
-  --faint: #a1a1aa;
+  /* Texte discret : contraste d'au moins 4,5:1 sur les panneaux (5,3:1 sur --panel). */
+  --faint: #6b6b73;
   --accent: #dc2626;
   --accent-strong: #b91c1c;
   --accent-soft: #dc262618;
