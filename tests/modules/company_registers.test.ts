@@ -171,6 +171,12 @@ describe('company.jo_associations', () => {
     expect(out.entities?.every((e) => e.review)).toBe(true)
   })
 
+  it('entreprise acceptée seulement si c’est une association', () => {
+    expect(joAssociations.accepts!(company('Danone', { siren: '552032534', legal_form: 'SA à conseil d’administration' }))).toBe(false)
+    expect(joAssociations.accepts!(company('Restos 52', { siren: '439687765', legal_form: 'Association déclarée' }))).toBe(true)
+    expect(joAssociations.accepts!(entity('organization', 'Restos du coeur'))).toBe(true)
+  })
+
   it('module : SIREN puis RNA', async () => {
     const ctx = fakeContext([
       [/jo_associations\/records/, { body: fixtureJson('company/joa_rna.json') }],
