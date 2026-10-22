@@ -1,0 +1,613 @@
+{
+ "entities": {
+  "Q3052772": {
+   "id": "Q3052772",
+   "labels": {
+    "mul": {
+     "language": "mul",
+     "value": "Emmanuel Macron"
+    }
+   },
+   "descriptions": {
+    "fr": {
+     "language": "fr",
+     "value": "homme d'État français"
+    },
+    "en": {
+     "language": "en",
+     "value": "President of France and Co-Prince of Andorra since 2017"
+    }
+   },
+   "claims": {
+    "P31": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 5,
+         "id": "Q5"
+        }
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P19": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 41604,
+         "id": "Q41604"
+        }
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P39": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 17618126,
+         "id": "Q17618126"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2014-08-26T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2016-08-30T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 17618189,
+         "id": "Q17618189"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2012-05-15T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2014-07-15T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 191954,
+         "id": "Q191954"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2017-05-14T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 19808845,
+         "id": "Q19808845"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2017-05-14T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 140686,
+         "id": "Q140686"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2016-04-06T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2017-05-08T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P2389": [
+        {
+         "datavalue": {
+          "value": {
+           "entity-type": "item",
+           "numeric-id": 23731823,
+           "id": "Q23731823"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ],
+    "P108": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 3022385,
+         "id": "Q3022385"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2008-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2012-01-01T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ],
+    "P69": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 273579,
+         "id": "Q273579"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P582": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2004-00-00T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ],
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2002-00-00T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 859363,
+         "id": "Q859363"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 1878600,
+         "id": "Q1878600"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 1394262,
+         "id": "Q1394262"
+        }
+       }
+      },
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 29889309,
+         "id": "Q29889309"
+        }
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P22": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 28838206,
+         "id": "Q28838206"
+        }
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P25": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 28838264,
+         "id": "Q28838264"
+        }
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P26": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 21511883,
+         "id": "Q21511883"
+        }
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2007-10-20T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ],
+    "P2002": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "EmmanuelMacron"
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2013-10-20T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ],
+    "P2003": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "emmanuelmacron"
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2016-09-00T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 10,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ],
+    "P2013": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "EmmanuelMacron"
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2014-08-29T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ],
+    "P6634": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "emmanuelmacron"
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P7085": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "emmanuelmacron"
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P2397": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "UCFqGa9uitcB-fWyNZK2xImw"
+       }
+      },
+      "rank": "normal",
+      "qualifiers": {
+       "P580": [
+        {
+         "datavalue": {
+          "value": {
+           "time": "+2017-10-03T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ],
+    "P3789": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "emmanuelmacron"
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P856": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "https://www.elysee.fr/emmanuel-macron"
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P569": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": {
+         "time": "+1977-12-21T00:00:00Z",
+         "timezone": 0,
+         "before": 0,
+         "after": 0,
+         "precision": 11,
+         "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+        }
+       }
+      },
+      "rank": "normal"
+     }
+    ],
+    "P18": [
+     {
+      "mainsnak": {
+       "datavalue": {
+        "value": "Emmanuel Macron 2025 (cropped).jpg"
+       }
+      },
+      "rank": "normal"
+     }
+    ]
+   }
+  }
+ }
+}

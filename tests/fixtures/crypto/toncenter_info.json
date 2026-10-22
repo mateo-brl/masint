@@ -1,0 +1,26 @@
+{
+ "ok": true,
+ "result": {
+  "@type": "raw.fullAccountState",
+  "balance": "1592542221079555",
+  "extra_currencies": [],
+  "last_transaction_id": {
+   "@type": "internal.transactionId",
+   "lt": "109633787000015",
+   "hash": "10beCuKo9PUZEz6P/6NcvPePRnh8BPumR+7KzQOZyPU="
+  },
+  "block_id": {
+   "@type": "ton.blockIdExt",
+   "workchain": -1,
+   "shard": "-9223372036854775808",
+   "seqno": 100686837,
+   "root_hash": "jSOdKypqWN0FpHi8XK4uBb7ADSNxMa5PFU2tCDjs+Sw=",
+   "file_hash": "73Uu7Eza84w8yid0WDqC37mhDSMco8dlhA+eyeH1hgY="
+  },
+  "frozen_hash": "",
+  "sync_utime": 1792687609,
+  "state": "active",
+  "suspended": false
+ },
+ "@extra": "1792687609:14:13.788"
+}

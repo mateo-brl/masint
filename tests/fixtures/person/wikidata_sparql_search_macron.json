@@ -1,0 +1,136 @@
+{
+ "results": {
+  "bindings": [
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q3052772"
+    },
+    "itemLabel": {
+     "xml:lang": "mul",
+     "type": "literal",
+     "value": "Emmanuel Macron"
+    },
+    "itemDescription": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "homme d'État français"
+    },
+    "human": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+     "type": "literal",
+     "value": "true"
+    },
+    "org": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+     "type": "literal",
+     "value": "false"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q29889275"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Emmanuel Macron, les coulisses d’une victoire"
+    },
+    "itemDescription": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "film sur la campagne présidentielle 2017 d'Emmanuel Macron"
+    },
+    "human": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+     "type": "literal",
+     "value": "false"
+    },
+    "org": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+     "type": "literal",
+     "value": "false"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q107153248"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "incident de claque portée sur Emmanuel Macron"
+    },
+    "itemDescription": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "attaque à Tain-l'Hermitage, en France, survenue le 8 juin 2021"
+    },
+    "human": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+     "type": "literal",
+     "value": "false"
+    },
+    "org": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+     "type": "literal",
+     "value": "false"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q54870847"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "campagne présidentielle d'Emmanuel Macron de 2017"
+    },
+    "itemDescription": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "campagne politique"
+    },
+    "human": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+     "type": "literal",
+     "value": "false"
+    },
+    "org": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+     "type": "literal",
+     "value": "false"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q54315680"
+    },
+    "itemLabel": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Visite officielle en fédération de Russie"
+    },
+    "itemDescription": {
+     "xml:lang": "fr",
+     "type": "literal",
+     "value": "Visite officielle d'Emmanuel Macron"
+    },
+    "human": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+     "type": "literal",
+     "value": "false"
+    },
+    "org": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+     "type": "literal",
+     "value": "false"
+    }
+   }
+  ]
+ }
+}

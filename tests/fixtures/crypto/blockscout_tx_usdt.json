@@ -1,0 +1,99 @@
+{
+ "hash": "0x41de369e66d852212da7a81451fb7f2c01fe4fe6c9d484c571f77686a433847d",
+ "timestamp": "2026-10-22T13:54:11.000000Z",
+ "block_number": 26248583,
+ "value": "0",
+ "fee": {
+  "type": "actual",
+  "value": "118771278438008"
+ },
+ "result": "success",
+ "status": "ok",
+ "method": "handleOps",
+ "created_contract": null,
+ "from": {
+  "hash": "0x3333333333333333333333333333333333333333",
+  "ens_domain_name": null,
+  "name": null,
+  "is_contract": false,
+  "metadata": {
+   "tags": [
+    {
+     "meta": {},
+     "name": "ERC-4337 Bundler",
+     "ordinal": 0,
+     "slug": "erc4337-bundler",
+     "tagType": "generic"
+    }
+   ]
+  },
+  "public_tags": []
+ },
+ "to": {
+  "hash": "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
+  "ens_domain_name": null,
+  "name": "EntryPoint",
+  "is_contract": true,
+  "metadata": {
+   "tags": [
+    {
+     "meta": {
+      "projectName": "ERC-4337",
+      "tagIcon ": "https://blockscout-icons.s3.us-east-1.amazonaws.com/OLI_tag_logo.svg",
+      "tagUrl": "https://app.klerosscout.eth.limo/#/?registry=Single_Tags&itemdetails=0x488d9ee5b7451c5de00ffe71459ae278334242e096eeddaf7ba1cb305d929ffb@0x66260c69d03837016d88c9877e61e08ef74c59f2",
+      "textColor": "#C163D4",
+      "tooltipAttribution": "https://www.openlabelsinitiative.org?utm_source=blockscout",
+      "tooltipAttributionIcon": "https://blockscout-icons.s3.us-east-1.amazonaws.com/OLI_tag_logo.svg",
+      "tooltipDescription": "This smart contract is used as an entry point for ERC-4337 Account Abstraction transactions.",
+      "tooltipUrl": "https://twitter.com/erc4337"
+     },
+     "name": "Entry Point 0.6.0",
+     "ordinal": 10,
+     "slug": "entry-point-060",
+     "tagType": "name"
+    },
+    {
+     "meta": {
+      "alertStatus": "info",
+      "data": "Wallets and apps are strongly encouraged to use the Entry Point 0.9.0 as described here on this X's post."
+     },
+     "name": "note_0",
+     "ordinal": 0,
+     "slug": "note0",
+     "tagType": "note"
+    }
+   ]
+  },
+  "public_tags": []
+ },
+ "token_transfers": [
+  {
+   "from": {
+    "hash": "0x1111111111111111111111111111111111111111",
+    "ens_domain_name": null,
+    "name": null,
+    "is_contract": true,
+    "metadata": null,
+    "public_tags": []
+   },
+   "to": {
+    "hash": "0x2222222222222222222222222222222222222222",
+    "ens_domain_name": null,
+    "name": null,
+    "is_contract": true,
+    "metadata": null,
+    "public_tags": []
+   },
+   "token": {
+    "symbol": "USDT",
+    "decimals": "6",
+    "type": "ERC-20",
+    "address_hash": "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+   },
+   "total": {
+    "decimals": "6",
+    "value": "20000000"
+   }
+  }
+ ]
+}

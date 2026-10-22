@@ -23,7 +23,7 @@ export function addressType(chain: string, a: string): string | null {
     case 'monero':
       return a.startsWith('8') ? 'Subaddress' : 'Standard'
     case 'ton':
-      return a.startsWith('UQ') ? 'Non-bounceable' : 'Bounceable'
+      return /^-?\d:/.test(a) ? 'Raw' : a.startsWith('UQ') ? 'Non-bounceable' : 'Bounceable'
     default:
       return EVM_CHAINS.includes(chain) ? (/[A-F]/.test(a) && /[a-f]/.test(a) ? 'EVM (EIP-55 checksum)' : 'EVM') : null
   }

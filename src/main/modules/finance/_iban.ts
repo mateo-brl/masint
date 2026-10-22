@@ -1,6 +1,7 @@
 // Structure des IBAN par pays : longueur officielle et position du code banque / guichet
 // (registre IBAN SWIFT). Table des banques françaises, monégasques et espagnoles extraite
-// de la liste des institutions financières monétaires de la BCE (code RIAD = code banque).
+// de la liste des institutions financières monétaires de la BCE (code RIAD = code banque),
+// complétée des néobanques (REGAFI, Bundesbank).
 
 import { isValidIban } from '@shared/detect'
 import banks from './_banks.json'
@@ -65,6 +66,30 @@ const HISTORIC: Record<string, Record<string, [string, string, string]>> = {
   FR: { '30076': ['Crédit du Nord (groupe Société Générale)', 'NORDFRPPXXX', 'PARIS'] }
 }
 
+// Néobanques absentes de la liste BCE, qui ne recense que les établissements de crédit.
+// - France : établissements de paiement et de monnaie électronique. Codes interbancaires (CIB)
+//   relevés dans le registre REGAFI de l'ACPR (regafi.fr, jeu `prd-jdd-recherche`, consulté le
+//   22/10/2026) ; BIC d'après le fichier LEI-BIC de la GLEIF (api.gleif.org).
+// - Allemagne : banques en ligne courantes chez les clients français (IBAN DE), d'après le
+//   fichier des codes banque de la Bundesbank (blz-aktuell, consulté le 22/10/2026).
+// Revolut (28233, 17988), N26 France (20433), Boursorama (40618) et Memo Bank (17338) sont déjà
+// dans la liste BCE ; Hello bank! est une marque de BNP Paribas (30004).
+const NEOBANKS: Record<string, Record<string, [string, string, string]>> = {
+  FR: {
+    '16598': ['Financière des paiements électroniques (Nickel)', 'FPELFR21XXX', 'CHARENTON LE PONT'],
+    '16798': ['Treezor', 'TRZOFR21XXX', 'PARIS'],
+    '16958': ['Qonto', 'QNTOFRP1XXX', 'PARIS'],
+    '17328': ['Swan', 'SWNBFR22XXX', 'PARIS'],
+    '17418': ['Shine', 'SNNNFR22XXX', 'PARIS'],
+    '17598': ['Lydia Solutions (Lydia, Sumeria)', 'LYDIFRP2XXX', 'PARIS']
+  },
+  DE: {
+    '10011001': ['N26 Bank', 'NTSBDEB1XXX', 'Berlin'],
+    '10010178': ['Revolut Bank, Zweigniederlassung Deutschland', 'REVODEB2XXX', 'Berlin'],
+    '10010123': ['Qonto Zweigniederlassung Deutschland', 'QNTODEB2XXX', 'Berlin']
+  }
+}
+
 export interface IbanInfo {
   iban: string
   formatted: string
@@ -98,11 +123,11 @@ export function analyzeIban(raw: string): IbanInfo {
   }
 }
 
-/** Banque connue localement (France, Monaco, Espagne). */
+/** Banque connue localement (France, Monaco, Espagne, néobanques allemandes). */
 export function localBank(country: string, bankCode: string | null): { name: string; bic: string | null; city: string } | null {
   if (!bankCode) return null
   // Les banques monégasques utilisent la même numérotation que la France.
   const table = country === 'MC' ? 'FR' : country
-  const row = BANK_TABLE[table]?.[bankCode] ?? HISTORIC[table]?.[bankCode]
+  const row = BANK_TABLE[table]?.[bankCode] ?? NEOBANKS[table]?.[bankCode] ?? HISTORIC[table]?.[bankCode]
   return row ? { name: row[0], bic: row[1] || null, city: row[2] } : null
 }
