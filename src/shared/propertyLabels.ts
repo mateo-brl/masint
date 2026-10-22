@@ -686,6 +686,7 @@ export const PROPERTY_LABELS: Record<string, { fr: string; en: string }> = {
   registered_address: { fr: 'Adresse enregistrée', en: 'Registered address' },
   rcs: { fr: 'Greffe du RCS', en: 'Trade register (RCS)' },
   key_ok: { fr: 'Clé de contrôle valide', en: 'Valid check key' },
+  vies_status: { fr: 'État de VIES', en: 'VIES status' },
 
   // Banque
   bic: { fr: 'BIC', en: 'BIC' },

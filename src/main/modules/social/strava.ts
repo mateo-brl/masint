@@ -52,7 +52,7 @@ export default defineModule({
   accepts: acceptsPlatform('strava'),
   homepage: 'https://www.strava.com',
   async run(input, ctx) {
-    const username = requireUsername(input, /^[\w-]{2,40}$/)
+    const username = requireUsername(input, /^[\w-]{1,40}$/)
     const res = await ctx.fetch(`https://www.strava.com/athletes/${encodeURIComponent(username)}`, { headers: { 'accept-language': 'en-US,en;q=0.9' } })
     if (res.status === 404) return notFound()
     const html = await res.text()

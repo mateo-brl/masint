@@ -84,13 +84,15 @@ export default defineModule({
   inputTypes: ['username', 'account'],
   accepts: acceptsPlatform('kick'),
   homepage: 'https://kick.com',
-  // Cloudflare bloque par intermittence les clients non navigateurs (HTTP 403).
-  experimental: true,
   async run(input, ctx) {
     const slug = requireUsername(input, /^[\w-]{1,30}$/).toLowerCase()
     let channel: KickChannel
     try {
-      channel = await ctx.fetchJson<KickChannel>(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}`)
+      // Kick refuse (403) l'en-tête de navigateur envoyé sans empreinte de navigateur, mais
+      // répond à un client qui se présente comme un outil.
+      channel = await ctx.fetchJson<KickChannel>(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}`, {
+        headers: { 'user-agent': 'MASINT (+https://github.com/mateo-brl/masint)' }
+      })
     } catch (e) {
       if (httpStatus(e) === 404) return notFound()
       rethrow(e, 'Kick')

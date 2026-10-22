@@ -90,15 +90,23 @@ export function jorfEntity(e: JorfEntry, birth: PartialDate | null, lang: 'fr' |
   }
 }
 
-export function legifranceCheck(name: PersonName, lang: 'fr' | 'en'): OutManualCheck {
+export function legifranceCheck(name: PersonName, lang: 'fr' | 'en', unavailable = false): OutManualCheck {
   const q = `"${displayName(name)}"`
+  // La recherche automatique n'a pas pu se faire : l'enquêteur doit le savoir, une absence de
+  // mention ne vaut rien tant que la recherche manuelle n'est pas faite.
+  const down = unavailable
+    ? lang === 'fr'
+      ? 'JORFSearch n’a pas répondu, la recherche automatique n’a pas été faite. '
+      : 'JORFSearch did not answer, the automatic search was not done. '
+    : ''
   return {
     label: 'Légifrance (Journal officiel)',
     url: `https://www.legifrance.gouv.fr/search/jorf?tab_selection=jorf&searchField=ALL&query=${encodeURIComponent(q)}&page=1&init=true`,
     hint:
-      lang === 'fr'
+      down +
+      (lang === 'fr'
         ? 'Nominations, décorations, naturalisations et changements de nom publiés au Journal officiel.'
-        : 'Appointments, decorations, naturalisations and name changes published in the Official Journal.'
+        : 'Appointments, decorations, naturalisations and name changes published in the Official Journal.')
   }
 }
 
@@ -132,7 +140,7 @@ export default defineModule({
     const name = splitName(input)
     if (!name) throw new ModuleError('Indiquer au moins un prénom et un nom', 'invalid_input')
     const entries = await search(ctx, name)
-    if (!entries) return { manual: [legifranceCheck(name, ctx.lang)] }
+    if (!entries) return { manual: [legifranceCheck(name, ctx.lang, true)] }
     const birth = parsePartialDate(input.data.birth_date)
     const kept = entries.filter((e) => sameName(e, name) && !otherBirth(e, birth)).sort((a, b) => (b.source_date ?? '').localeCompare(a.source_date ?? ''))
     if (!kept.length) return { raw: { total: entries.length, kept: 0 } }

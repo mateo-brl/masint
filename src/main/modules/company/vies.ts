@@ -79,6 +79,16 @@ export function viesOutput(ctx: Pick<ModuleContext, 'lang'>, d: ViesResponse): M
   return { properties: compact(properties!), entities, raw: d }
 }
 
+const TRANSIENT = /CONCURRENT_REQ|UNAVAILABLE|TIMEOUT/
+
+function wait(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) return reject(signal.reason)
+    const t = setTimeout(resolve, ms)
+    signal.addEventListener('abort', () => (clearTimeout(t), reject(signal.reason)), { once: true })
+  })
+}
+
 async function check(ctx: ModuleContext, country: string, number: string): Promise<ViesResponse> {
   try {
     return await ctx.fetchJson<ViesResponse>(API, { method: 'POST', json: { countryCode: country, vatNumber: number }, timeoutMs: 30000 })
@@ -101,10 +111,16 @@ export default defineModule({
     const vat = parseVat(input.label)
     if (!vat) throw new ModuleError('Numéro de TVA non reconnu (préfixe pays attendu, ex. FR...)', 'invalid_input')
     let d = await check(ctx, vat.country, vat.number)
-    // Services nationaux souvent saturés : une seconde tentative.
-    if (d.actionSucceed === false && /CONCURRENT_REQ|UNAVAILABLE|TIMEOUT/.test(d.errorWrappers?.[0]?.error ?? '')) {
-      await new Promise((r) => setTimeout(r, 2500))
+    // Services nationaux souvent saturés (le service français l'est souvent) : trois nouvelles
+    // tentatives espacées.
+    for (const delay of [3000, 6000, 12000]) {
+      if (!(d.actionSucceed === false && TRANSIENT.test(d.errorWrappers?.[0]?.error ?? ''))) break
+      await wait(delay, ctx.signal)
       d = await check(ctx, vat.country, vat.number)
+    }
+    // Service toujours indisponible : pour la France, le SIREN se déduit sans VIES.
+    if (d.actionSucceed === false && TRANSIENT.test(d.errorWrappers?.[0]?.error ?? '') && vat.country === 'FR' && /^\d{11}$/.test(vat.number)) {
+      return { properties: { siren: vat.number.slice(2), key_ok: frenchKeyOk(vat.number), vies_status: tr(ctx, 'VIES indisponible, réessayer plus tard', 'VIES unavailable, try again later') } }
     }
     return viesOutput(ctx, d)
   }
