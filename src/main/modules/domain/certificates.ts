@@ -31,7 +31,15 @@ export function parseCertSpotterCerts(host: string, rows: CertSpotterCert[], lan
     .sort((a, b) => (b.not_before ?? '').localeCompare(a.not_before ?? ''))
   if (!certs.length) return {}
   const fr = lang === 'fr'
-  const entities: OutEntity[] = certs.slice(0, MAX_CERTS).map((c) => {
+  // Renouvellements (mêmes noms couverts, même émetteur) : seul le plus récent devient une entité.
+  const seen = new Set<string>()
+  const distinct = certs.filter((c) => {
+    const key = [c.issuer?.friendly_name ?? c.issuer?.name ?? '', ...[...(c.dns_names ?? [])].sort()].join('|')
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+  const entities: OutEntity[] = distinct.slice(0, MAX_CERTS).map((c) => {
     const issuer = c.issuer?.friendly_name ?? c.issuer?.name ?? null
     return {
       type: 'certificate',

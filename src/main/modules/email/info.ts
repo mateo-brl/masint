@@ -154,7 +154,15 @@ export default defineModule({
       entities.push({ type: 'email', label: canonical, linkLabel: tr(ctx, 'adresse canonique', 'canonical address') })
     }
     const user = usernameCandidate(local)
-    if (user && !disposable) entities.push({ type: 'username', label: user, linkLabel: tr(ctx, 'pseudo possible', 'possible username') })
+    if (user && !disposable)
+      entities.push({
+        type: 'username',
+        label: user,
+        linkLabel: tr(ctx, 'pseudo possible', 'possible username'),
+        // Partie locale de l'adresse : souvent réutilisée comme pseudo, mais rien ne le prouve.
+        review: true,
+        reviewReason: tr(ctx, 'partie locale de l’adresse, non vérifiée comme pseudo', 'local part of the address, not checked as a username')
+      })
 
     return {
       properties: compact({

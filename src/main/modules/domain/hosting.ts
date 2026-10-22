@@ -1,4 +1,5 @@
 import { defineModule, ModuleError, type ModuleOutput, type OutEntity } from '@shared/modules'
+import { getPlatform } from '@shared/platforms'
 import type { PropValue } from '@shared/types'
 import { abuseContacts, optional, prefixOverview, rirCountry } from '../ip/_ripestat'
 import { cleanOrg, detectDnsProvider, detectHosting } from './_hosting'
@@ -36,9 +37,11 @@ export function buildHostingOutput(f: HostingFacts, lang: 'fr' | 'en'): ModuleOu
     })
   }
   if (dns && !(hosting && dns.platform && dns.platform === hosting.platform)) {
+    // Libellé de la plateforme (« Amazon Web Services » et non « Amazon Route 53 ») : un seul nœud
+    // par société, partagé avec l'hébergeur, le registrar et les modules IP. Le service reste dans `dns_provider`.
     entities.push({
       type: 'hosting',
-      label: dns.name,
+      label: getPlatform(dns.platform)?.name ?? dns.name,
       platform: dns.platform,
       linkLabel: fr ? 'DNS géré par' : 'DNS hosted by'
     })

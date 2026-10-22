@@ -1,0 +1,60 @@
+{
+  "request": { "sort": [{ "score": "desc" }], "fuzzy": "false", "firstName": "Camille", "lastName": "Exemple" },
+  "response": {
+    "total": 3,
+    "maxScoreES": 12.5,
+    "size": 50,
+    "page": 1,
+    "delay": 12,
+    "persons": [
+      {
+        "score": 0.94,
+        "source": "2019",
+        "sourceLine": 1,
+        "scores": { "score": 0.94 },
+        "id": "fictif0001AB",
+        "name": { "first": ["Camille", "Louise"], "last": "Exemple" },
+        "sex": "F",
+        "birth": {
+          "date": "19400312",
+          "location": { "city": ["Lyon", "Lyon 3e Arrondissement"], "code": "69383", "codePostal": ["69003"], "departmentCode": "69", "country": "France", "countryCode": "FRA", "latitude": 45.7597, "longitude": 4.8422 }
+        },
+        "death": {
+          "date": "20190500",
+          "certificateId": "000",
+          "age": 79,
+          "location": { "city": "Villeurbanne", "code": "69266", "codePostal": ["69100"], "departmentCode": "69", "country": "France", "countryCode": "FRA", "latitude": 45.7719, "longitude": 4.8902 }
+        }
+      },
+      {
+        "score": 0.9,
+        "source": "1998",
+        "sourceLine": 2,
+        "scores": { "score": 0.9 },
+        "id": "fictif0002CD",
+        "name": { "first": ["Marie", "Camille"], "last": "Exemple" },
+        "sex": "F",
+        "birth": {
+          "date": "19121101",
+          "location": { "city": "Casablanca", "country": "Maroc", "countryCode": "MAR" }
+        },
+        "death": {
+          "date": "19980207",
+          "age": 85,
+          "location": { "city": "Nantes", "code": "44109", "departmentCode": "44", "country": "France", "countryCode": "FRA" }
+        }
+      },
+      {
+        "score": 0.4,
+        "source": "2005",
+        "sourceLine": 3,
+        "scores": { "score": 0.4 },
+        "id": "fictif0003EF",
+        "name": { "first": ["Camille"], "last": "Exemples" },
+        "sex": "M",
+        "birth": { "date": "19300000", "location": { "city": "Brest", "departmentCode": "29", "country": "France", "countryCode": "FRA" } },
+        "death": { "date": "20050101", "location": { "city": "Brest", "departmentCode": "29", "country": "France", "countryCode": "FRA" } }
+      }
+    ]
+  }
+}

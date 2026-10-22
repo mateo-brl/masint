@@ -6,7 +6,7 @@ import cidrInfo, { cidrFacts, compressIPv6 } from '../../src/main/modules/ip/cid
 import geo, { buildGeoOutput, fromIpApi, fromIpWhoIs, type IpApi, type IpWhoIs } from '../../src/main/modules/ip/geo'
 import greynoise, { parseGreyNoise, type GreyNoiseCommunity } from '../../src/main/modules/ip/greynoise'
 import internetdb, { cpeToTechnology, parseInternetDb, type InternetDb } from '../../src/main/modules/ip/internetdb'
-import reverseDns, { arpaName, expandIPv6 } from '../../src/main/modules/ip/reverseDns'
+import reverseDns, { arpaName, buildPtrOutput, expandIPv6 } from '../../src/main/modules/ip/reverseDns'
 import reverseIp, { parseReverseIp } from '../../src/main/modules/ip/reverseIp'
 import ripestat from '../../src/main/modules/ip/ripestat'
 import { modules as shodanModules, parseShodanHost } from '../../src/main/modules/ip/shodan'
@@ -60,6 +60,12 @@ describe('ip.reverse_dns', () => {
     expect(out.properties).toMatchObject({ reverse: 'dns.google', reverse_confirmed: true })
     expect(types(out, 'domain')).toEqual(['dns.google'])
   })
+
+  it('garde en propriété le nom générique d’une machine d’hébergeur', () => {
+    const out = buildPtrOutput(['reverse-proxy-ip-1.infomaniak.ch.', 'ec2-3-5-140-2.eu-west-3.compute.amazonaws.com', 'www.exemple.fr'], {}, 'fr')
+    expect(out.properties?.reverse).toBe('reverse-proxy-ip-1.infomaniak.ch')
+    expect(types(out, 'domain')).toEqual(['www.exemple.fr'])
+  })
 })
 
 describe('ip.internetdb', () => {
@@ -70,6 +76,12 @@ describe('ip.internetdb', () => {
     expect(types(out, 'cve').length).toBe(20)
     expect(types(out, 'technology')).toEqual(expect.arrayContaining(['Apache HTTP Server', 'OpenBSD OpenSSH']))
     expect(cpeToTechnology('cpe:/a:apache:http_server:2.4.7')).toEqual({ name: 'Apache HTTP Server', version: '2.4.7', kind: 'Software' })
+  })
+
+  it('ne relie pas les noms des machines d’un hébergeur connu', () => {
+    const out = parseInternetDb({ ip: '185.125.25.1', hostnames: ['reverse-proxy-ip-1.infomaniak.ch', 'haproxy-site-infomaniak.infomaniak.ch', 'exemple.fr'] }, 'fr')
+    expect(types(out, 'domain')).toEqual(['exemple.fr'])
+    expect(out.properties?.hostnames).toHaveLength(3)
   })
 
   it('renvoie un résultat vide pour une IP inconnue (404)', async () => {

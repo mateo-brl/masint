@@ -134,6 +134,16 @@ describe('Engine.applyOutput', () => {
     expect(repo.getNode(blocker.id)!.y).toBe(130)
   })
 
+  it('cumule les libellés quand deux modules relient les mêmes nœuds', async () => {
+    const inv = repo.createInvestigation({ name: 'Libellés' })
+    const [input] = repo.upsertNodes(inv.id, [{ type: 'email', label: 'a@exemple.fr' }])
+    const out = (linkLabel: string) => ({ entities: [{ type: 'domain', label: 'exemple.fr', linkLabel }] })
+    await engine.applyOutput(input, mod, out('domaine'), fakeCtx)
+    await engine.applyOutput(input, mod, out('hébergé chez'), fakeCtx)
+    await engine.applyOutput(input, mod, out('domaine'), fakeCtx)
+    expect(repo.listEdges(inv.id).map((e) => e.label)).toEqual(['domaine · hébergé chez'])
+  })
+
   it('déduit le fournisseur des emails trouvés', async () => {
     const inv = repo.createInvestigation({ name: 'Test' })
     const [input] = repo.upsertNodes(inv.id, [{ type: 'username', label: 'john' }])

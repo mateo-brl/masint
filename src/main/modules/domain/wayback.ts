@@ -1,6 +1,5 @@
-import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
-import type { PropValue } from '@shared/types'
-import { normalizeDomain, serviceError } from './_util'
+import { defineModule, ModuleError, type ModuleContext, type ModuleOutput } from '@shared/modules'
+import { compact, normalizeDomain, serviceError } from './_util'
 
 const CDX = 'https://web.archive.org/cdx/search/cdx'
 
@@ -63,33 +62,22 @@ export function summarizeSparkline(s: Sparkline): WaybackSummary {
 
 const snapshotUrl = (c: Capture, target: string): string => `https://web.archive.org/web/${c.timestamp}/${c.original || target}`
 
-export function buildWaybackOutput(target: string, w: WaybackSummary, lang: 'fr' | 'en'): ModuleOutput {
+/**
+ * Les archives sont des propriétés du domaine (dates, liens, nombre de captures) : des nœuds
+ * `web.archive.org` encombreraient le graphe sans rien apprendre de plus sur la cible.
+ */
+export function buildWaybackOutput(target: string, w: WaybackSummary): ModuleOutput {
   if (!w.first && !w.last) return {}
-  const fr = lang === 'fr'
-  const entities: OutEntity[] = []
-  if (w.first)
-    entities.push({
-      type: 'url',
-      label: snapshotUrl(w.first, target),
-      data: { archived_at: waybackDate(w.first.timestamp) } as Record<string, PropValue>,
-      linkLabel: fr ? 'première archive' : 'first capture'
-    })
-  if (w.last && w.last.timestamp !== w.first?.timestamp)
-    entities.push({
-      type: 'url',
-      label: snapshotUrl(w.last, target),
-      data: { archived_at: waybackDate(w.last.timestamp) } as Record<string, PropValue>,
-      linkLabel: fr ? 'dernière archive' : 'last capture'
-    })
-  const properties: Record<string, PropValue> = {
+  const properties = compact({
     wayback_first_seen: waybackDate(w.first?.timestamp),
+    wayback_first_url: w.first ? snapshotUrl(w.first, target) : null,
     wayback_last_seen: waybackDate(w.last?.timestamp),
+    wayback_last_url: w.last && w.last.timestamp !== w.first?.timestamp ? snapshotUrl(w.last, target) : null,
     wayback_captures: w.captures ?? null,
-    wayback_years: w.years?.length ? w.years : null,
+    wayback_years: w.years ?? [],
     wayback_url: `https://web.archive.org/web/*/${target}*`
-  }
-  for (const k of Object.keys(properties)) if (properties[k] === null) delete properties[k]
-  return { properties, entities, raw: w }
+  })
+  return { properties, raw: w }
 }
 
 async function cdxOne(ctx: ModuleContext, target: string, limit: number): Promise<Capture | null> {
@@ -155,6 +143,6 @@ export default defineModule({
         throw serviceError(e2, 'Wayback Machine')
       }
     }
-    return buildWaybackOutput(target, summary, ctx.lang)
+    return buildWaybackOutput(target, summary)
   }
 })

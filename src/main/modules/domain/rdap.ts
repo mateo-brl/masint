@@ -1,6 +1,9 @@
 import { defineModule, ModuleError, type ModuleContext, type ModuleOutput, type OutEntity } from '@shared/modules'
+import { emailProvider } from '@shared/platforms'
 import type { PropValue } from '@shared/types'
-import { domainAndParents, getJsonOrNull, isDomain, normalizeDomain, uniq } from './_util'
+import { detectDnsProvider, detectHosting } from './_hosting'
+import { compact, countryName, domainAndParents, getJsonOrNull, isDomain, normalizeDomain, uniq } from './_util'
+import { companyCore, domainBase, foldText, isCompanyName, isProxyEmail, looksLikePerson, sameCompany, visibleName, visibleValue } from './_whois'
 
 type VcardProp = [string, Record<string, unknown>, string, unknown]
 
@@ -11,6 +14,7 @@ export interface RdapEntity {
   entities?: RdapEntity[]
   publicIds?: Array<{ type: string; identifier: string }>
   links?: Array<{ rel?: string; href?: string; type?: string }>
+  remarks?: Array<{ title?: string; type?: string; description?: string[] }>
 }
 
 export interface RdapDomain {
@@ -35,18 +39,44 @@ export interface Contact {
   postcode: string | null
   country: string | null
   url: string | null
+  /** Nature déclarée par le registre (vCard `kind`, remarque AFNIC « contact type »). */
+  kind: 'organization' | 'person' | null
+  /** Publication restreinte demandée par le titulaire (AFNIC) : nom et adresse ne sont pas les siens. */
+  restricted: boolean
 }
 
-const HIDDEN =
-  /redacted|privacy|withheld|not disclosed|non[- ]public|data protected|gdpr|statutory masking|domains by proxy|whoisguard|perfect privacy|contact privacy|identity protect|private registration|registration private|please query|hidden|not available|^n\/?a$/i
-
-const visible = (v: unknown): string | null => {
-  const s = typeof v === 'string' ? v.trim() : ''
-  return s && !HIDDEN.test(s) ? s : null
+/** Email exploitable : syntaxe valide, ni étoilé, ni adresse relais d'un service d'anonymat. */
+export function visibleEmail(v: unknown): string | null {
+  const e = typeof v === 'string' ? v.trim().replace(/^mailto:/i, '').toLowerCase() : ''
+  if (!/^[^@\s*]+@[^@\s*]+\.[a-z]{2,}$/i.test(e) || isProxyEmail(e)) return null
+  return e
 }
 
-export function parseVcard(entity: RdapEntity): Contact {
+/** Numéro au format E.164 (`tel:+41.228203544` → `+41228203544`), sans les numéros factices (`+33.000000000`). */
+export function visiblePhone(v: unknown): string | null {
+  const t = visibleValue(v)
+  const digits = t?.replace(/^tel:/i, '').replace(/;ext=.*$/i, '').replace(/[.\s()-]/g, '')
+  if (!digits || !/^\+?\d{6,15}$/.test(digits) || /^\+?\d{0,3}0{6,}$/.test(digits)) return null
+  // Préfixe international `00` (`0041228203541`, Verisign) : même numéro que `+41228203541`.
+  return digits.startsWith('+') ? digits : digits.startsWith('00') ? '+' + digits.slice(2) : '+' + digits
+}
+
+const remark = (e: RdapEntity, type: string): string =>
+  (e.remarks ?? [])
+    .filter((r) => (r.type ?? r.title ?? '').toLowerCase() === type)
+    .flatMap((r) => r.description ?? [])
+    .join(' ')
+    .trim()
+    .toLowerCase()
+
+/**
+ * Contact d'une vCard RDAP, valeurs masquées retirées. `masked` à faux pour le registrar,
+ * dont le nom n'est jamais masqué mais peut contenir un mot de la liste (« Privacy », « Domains »).
+ */
+export function parseVcard(entity: RdapEntity, masked = true): Contact {
   const props = entity.vcardArray?.[1] ?? []
+  const name = (v: unknown): string | null => (masked ? visibleName(v) : typeof v === 'string' && v.trim() ? v.trim().replace(/\s+/g, ' ') : null)
+  const declared = remark(entity, 'contact type')
   const c: Contact = {
     roles: entity.roles ?? [],
     name: null,
@@ -57,45 +87,83 @@ export function parseVcard(entity: RdapEntity): Contact {
     city: null,
     postcode: null,
     country: null,
-    url: null
+    url: null,
+    kind: declared === 'organization' ? 'organization' : declared === 'person' ? 'person' : null,
+    restricted: /^(yes|oui|true)$/.test(remark(entity, 'contact restricted publication'))
   }
-  for (const [name, params, , value] of props) {
-    switch (name) {
+  for (const [prop, params, , value] of props) {
+    switch (prop) {
       case 'fn':
-        c.name = visible(value)
+        c.name = name(value)
         break
       case 'org':
-        c.org = visible(Array.isArray(value) ? value.join(' ') : value)
+        c.org = name(Array.isArray(value) ? value.join(' ') : value)
+        break
+      case 'kind':
+        if (value === 'org' || value === 'group') c.kind = 'organization'
+        else if (value === 'individual') c.kind = 'person'
         break
       case 'email': {
-        const e = visible(value)?.replace(/^mailto:/i, '').toLowerCase()
-        if (e && /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(e)) c.emails.push(e)
+        const e = visibleEmail(value)
+        if (e) c.emails.push(e)
         break
       }
       case 'tel': {
-        const t = visible(value)
-        const digits = t?.replace(/^tel:/i, '').replace(/[.\s()-]/g, '').replace(/;ext=.*$/i, '')
-        if (digits && /^\+?\d{6,15}$/.test(digits)) c.phones.push(digits.startsWith('+') ? digits : '+' + digits)
+        // Les numéros de fax n'apportent rien à l'enquête.
+        const types = ([] as unknown[]).concat(params?.type ?? []).map((t) => String(t).toLowerCase())
+        const p = types.includes('fax') ? null : visiblePhone(value)
+        if (p) c.phones.push(p)
         break
       }
       case 'adr': {
         const parts = Array.isArray(value) ? value.map((p) => (Array.isArray(p) ? p.join(', ') : String(p ?? ''))) : []
-        c.street = visible([parts[0], parts[1], parts[2]].filter(Boolean).join(', ')) ?? c.street
-        c.city = visible(parts[3]) ?? c.city
-        c.postcode = visible(parts[5]) ?? c.postcode
-        const cc = typeof params?.cc === 'string' ? params.cc : visible(parts[6])
-        c.country = cc ? cc.toUpperCase() : c.country
+        c.street = visibleValue([parts[0], parts[1], parts[2]].map((p) => visibleValue(p)).filter(Boolean).join(', ')) ?? c.street
+        c.city = visibleValue(parts[3]) ?? c.city
+        c.postcode = visibleValue(parts[5]) ?? c.postcode
+        const cc = typeof params?.cc === 'string' ? params.cc : visibleValue(parts[6])
+        c.country = cc && /^[a-z]{2}$/i.test(cc) ? cc.toUpperCase() : c.country
         break
       }
       case 'url':
       case 'contact-uri':
-        c.url = c.url ?? visible(value)
+        c.url = c.url ?? visibleValue(value)
         break
     }
+  }
+  if (c.restricted) {
+    c.name = null
+    c.org = null
+    c.street = null
+    c.city = null
+    c.postcode = null
   }
   c.emails = uniq(c.emails)
   c.phones = uniq(c.phones)
   return c
+}
+
+/** Titulaire réel d'un contact : organisation ou personne, ou `null` s'il est masqué. */
+export interface Holder {
+  type: 'organization' | 'person'
+  label: string
+  /** Personne citée à côté de la raison sociale (contact nommé de la société). */
+  contactName?: string
+}
+
+export function contactHolder(c: Contact): Holder | null {
+  const { name, org } = c
+  const person = (v: string | null): string | undefined => (v && looksLikePerson(v) ? v : undefined)
+  if (name && org && foldText(name) === foldText(org)) return { type: c.kind === 'person' ? 'person' : 'organization', label: org }
+  if (name && org && sameCompany(name, org)) return { type: 'organization', label: org }
+  // Champs inversés (AFNIC) : raison sociale dans `fn`, personne dans `org`.
+  if (name && org && isCompanyName(name) && !isCompanyName(org)) return { type: 'organization', label: name, contactName: person(org) }
+  if (org) return { type: 'organization', label: org, contactName: person(name) }
+  if (!name) return null
+  // Identifiant plutôt qu'un nom (« Customer 12345 »).
+  if (/\d/.test(name) && name.includes(' ') && !isCompanyName(name)) return null
+  if (c.kind === 'person' && !isCompanyName(name)) return { type: 'person', label: name }
+  if (c.kind === 'organization' || isCompanyName(name) || !looksLikePerson(name)) return { type: 'organization', label: name }
+  return { type: 'person', label: name }
 }
 
 /** Toutes les entités RDAP, sous-entités comprises (contact abus du registrar...). */
@@ -110,17 +178,25 @@ const ROLE_LABELS: Record<string, { fr: string; en: string }> = {
   billing: { fr: 'contact facturation', en: 'billing contact' }
 }
 
+/** Contact du titulaire (ou d'un tiers), regroupé entre rôles et entre réponses. */
+interface ContactGroup {
+  roles: string[]
+  holder: Holder | null
+  card: Contact
+}
+
 /** Analyse la réponse RDAP du registre et, si disponible, celle du registrar. */
 export function parseRdap(domain: string, registry: RdapDomain, registrar: RdapDomain | null, lang: 'fr' | 'en'): ModuleOutput {
   const fr = lang === 'fr'
   const all = [...flatten(registry.entities), ...flatten(registrar?.entities)]
   const registrarEnt = all.find(({ e }) => e.roles?.includes('registrar'))?.e
-  const registrarContact = registrarEnt ? parseVcard(registrarEnt) : null
-  const registrarName = registrarContact?.org ?? registrarContact?.name ?? null
+  const registrarCard = registrarEnt ? parseVcard(registrarEnt, false) : null
+  const registrarName = registrarCard?.org ?? registrarCard?.name ?? null
   const ianaId = registrarEnt?.publicIds?.find((p) => /iana/i.test(p.type))?.identifier ?? null
-  const registrarSite = registrarEnt?.links?.find((l) => l.rel === 'about' && /^https?:/.test(l.href ?? ''))?.href ?? registrarContact?.url ?? null
-  const abuse = all.filter(({ e, parentRoles }) => e.roles?.includes('abuse') && parentRoles.includes('registrar')).map(({ e }) => parseVcard(e))
-  const abuseEmail = abuse.flatMap((a) => a.emails)[0] ?? null
+  const registrarSite = registrarEnt?.links?.find((l) => l.rel === 'about' && /^https?:/.test(l.href ?? ''))?.href ?? registrarCard?.url ?? null
+  const abuse = all.filter(({ e, parentRoles }) => e.roles?.includes('abuse') && parentRoles.includes('registrar')).map(({ e }) => parseVcard(e, false))
+  // AFNIC publie l'adresse d'abus directement dans la fiche du registrar.
+  const abuseEmail = abuse.flatMap((a) => a.emails)[0] ?? registrarCard?.emails.find((e) => /abuse/.test(e)) ?? null
   const abusePhone = abuse.flatMap((a) => a.phones)[0] ?? null
 
   const events: Record<string, string> = {}
@@ -141,58 +217,144 @@ export function parseRdap(domain: string, registry: RdapDomain, registrar: RdapD
   const nameservers = uniq((registry.nameservers ?? registrar?.nameservers ?? []).map((n) => (n.ldhName ?? '').toLowerCase()).filter(Boolean))
   const status = uniq([...(registry.status ?? []), ...(registrar?.status ?? [])])
 
-  const entities: OutEntity[] = []
-  if (registrarName) {
-    entities.push({
-      ref: 'registrar',
-      type: 'organization',
-      label: registrarName,
-      data: { kind: 'Registrar', website: registrarSite ?? undefined, country: registrarContact?.country ?? undefined } as Record<string, PropValue>,
-      linkLabel: 'registrar'
-    })
-  }
+  // Coordonnées du registrar : sa fiche, son contact d'abus, les domaines de ses adresses et sa raison sociale.
+  const alnum = (s: string | null): string => (s ?? '').replace(/[^a-z0-9]/g, '')
+  const registrarEmails = uniq([...(registrarCard?.emails ?? []), ...abuse.flatMap((a) => a.emails)])
+  const registrarPhones = new Set([...(registrarCard?.phones ?? []), ...abuse.flatMap((a) => a.phones)])
+  // Les messageries grand public (gmail.com...) ne désignent personne en particulier.
+  const registrarBases = new Set(
+    [registrarSite, ...registrarEmails.filter((m) => !emailProvider(m))]
+      .map((v) => alnum(v ? domainBase(v) : null))
+      .concat(registrarName ? [alnum(companyCore(registrarName).join(''))] : [])
+      .filter((b) => b.length >= 3)
+  )
+  const onRegistrarDomain = (email: string): boolean => !emailProvider(email) && registrarBases.has(alnum(domainBase(email)))
+  // Registrar qui est aussi un hébergeur connu (Infomaniak, OVHcloud, Gandi...) : même nœud que celui
+  // de domain.hosting et des modules IP (type, plateforme et libellé identiques).
+  const known = registrarName ? detectHosting({ org: registrarName }) : null
+  const provider = known?.platform ? known : null
+  const isRegistrar = (c: Contact): boolean =>
+    !!registrarName &&
+    [c.name, c.org].some((v) => sameCompany(v, registrarName) || (!!v && !!provider && detectHosting({ org: v })?.platform === provider.platform))
 
   // Contacts publics (titulaire, administratif, technique), dédoublonnés entre rôles et entre réponses.
-  const contacts = new Map<string, Contact>()
+  // Ceux du registrar et ceux qui sont masqués ne deviennent pas des entités.
+  const groups = new Map<string, ContactGroup>()
+  const registrarRoles: string[] = []
+  const maskedRoles: string[] = []
+  const extraEmails: string[] = []
+  const extraPhones: string[] = []
   for (const { e } of all) {
     const roles = (e.roles ?? []).filter((r) => r in ROLE_LABELS)
     if (!roles.length) continue
     const c = parseVcard(e)
-    if (!c.name && !c.org && !c.emails.length && !c.phones.length) continue
-    const key = (c.org ?? c.name ?? c.emails[0] ?? c.phones[0] ?? '').toLowerCase()
-    const prev = contacts.get(key)
+    const holder = contactHolder(c)
+    const fromRegistrar = isRegistrar(c) || (!holder && c.emails.length > 0 && c.emails.every(onRegistrarDomain))
+    if (fromRegistrar || (!holder && !c.emails.length && c.phones.length > 0 && c.phones.every((p) => registrarPhones.has(p)))) {
+      registrarRoles.push(...roles)
+      extraEmails.push(...c.emails)
+      extraPhones.push(...c.phones)
+      continue
+    }
+    // Adresse ou numéro du registrar recopié dans le contact du titulaire : rangé chez le registrar.
+    const emails = c.emails.filter((m) => !onRegistrarDomain(m) && !registrarEmails.includes(m))
+    const phones = c.phones.filter((p) => !registrarPhones.has(p))
+    extraEmails.push(...c.emails.filter((m) => !emails.includes(m)))
+    extraPhones.push(...c.phones.filter((p) => !phones.includes(p)))
+    if (!holder && !emails.length && !phones.length) {
+      maskedRoles.push(...roles)
+      continue
+    }
+    const card = { ...c, emails, phones }
+    const key = holder ? `${holder.type}|${foldText(holder.label)}` : `masked|${emails[0] ?? phones[0]}`
+    const prev = groups.get(key)
     if (prev) {
       prev.roles = uniq([...prev.roles, ...roles])
-      prev.emails = uniq([...prev.emails, ...c.emails])
-      prev.phones = uniq([...prev.phones, ...c.phones])
-      prev.street = prev.street ?? c.street
-      prev.city = prev.city ?? c.city
-      prev.postcode = prev.postcode ?? c.postcode
-      prev.country = prev.country ?? c.country
-    } else contacts.set(key, { ...c, roles })
+      prev.card.emails = uniq([...prev.card.emails, ...emails])
+      prev.card.phones = uniq([...prev.card.phones, ...phones])
+      prev.card.street = prev.card.street ?? c.street
+      prev.card.city = prev.card.city ?? c.city
+      prev.card.postcode = prev.card.postcode ?? c.postcode
+      prev.card.country = prev.card.country ?? c.country
+      if (prev.holder && holder?.contactName) prev.holder.contactName = prev.holder.contactName ?? holder.contactName
+    } else groups.set(key, { roles: uniq(roles), holder, card })
   }
 
+  const order = Object.keys(ROLE_LABELS)
+  const rolesLabel = (roles: string[]): string =>
+    uniq(roles)
+      .sort((a, b) => order.indexOf(a) - order.indexOf(b))
+      .map((r) => ROLE_LABELS[r][fr ? 'fr' : 'en'])
+      .join(', ')
+  const entities: OutEntity[] = []
   const summaries: string[] = []
+
+  if (registrarName) {
+    const dns = detectDnsProvider(nameservers)
+    const holderToo = registrarRoles.includes('registrant')
+    const sameDns = !!provider && dns?.platform === provider.platform
+    const linkLabel =
+      'registrar' + (holderToo ? (fr ? ' et titulaire' : ' and registrant') : '') + (sameDns ? (fr ? ' (et DNS)' : ' (and DNS)') : '')
+    entities.push({
+      ref: 'registrar',
+      type: provider ? 'hosting' : 'organization',
+      label: provider ? provider.name : registrarName,
+      platform: provider?.platform,
+      data: compact({
+        kind: 'Registrar',
+        legal_name: provider && foldText(provider.name) !== foldText(registrarName) ? registrarName : null,
+        website: registrarSite,
+        country: countryName(registrarCard?.country, lang) ?? registrarCard?.country ?? null,
+        registrar_iana_id: ianaId,
+        abuse_email: abuseEmail,
+        abuse_phone: abusePhone,
+        emails: uniq([...registrarEmails, ...extraEmails]).filter((m) => m !== abuseEmail),
+        phones: uniq([...registrarPhones, ...extraPhones]).filter((p) => p !== abusePhone)
+      }),
+      linkLabel
+    })
+    if (registrarRoles.length) summaries.push(`${rolesLabel(registrarRoles)}: ${registrarName} (registrar)`)
+  }
+
   let i = 0
-  for (const c of contacts.values()) {
-    const roleLabel = c.roles.map((r) => ROLE_LABELS[r][fr ? 'fr' : 'en']).join(', ')
-    const holder = c.org ?? c.name
-    const sameAsRegistrar = !!holder && !!registrarName && holder.toLowerCase() === registrarName.toLowerCase()
+  for (const { roles, holder, card: c } of groups.values()) {
+    const roleLabel = rolesLabel(roles)
+    summaries.push(`${roleLabel}: ${[holder?.label, ...c.emails, ...c.phones, c.country].filter(Boolean).join(' / ')}`)
     let parent = '$input'
-    if (holder && !sameAsRegistrar) {
+    if (holder) {
+      // Contact technique ou administratif tenu par un hébergeur connu (autre que le registrar) :
+      // ses coordonnées vont dans la fiche de l'hébergeur, pas dans le graphe.
+      const known = roles.includes('registrant') ? null : detectHosting({ org: holder.label })
+      if (known?.platform) {
+        entities.push({
+          type: 'hosting',
+          label: known.name,
+          platform: known.platform,
+          data: compact({
+            legal_name: foldText(known.name) !== foldText(holder.label) ? holder.label : null,
+            emails: c.emails,
+            phones: c.phones
+          }),
+          linkLabel: roleLabel
+        })
+        continue
+      }
       const ref = `contact${i++}`
       entities.push({
         ref,
-        type: c.org ? 'organization' : 'person',
-        label: holder,
-        data: c.org ? ({ country: c.country ?? undefined } as Record<string, PropValue>) : {},
+        type: holder.type,
+        label: holder.label,
+        data:
+          holder.type === 'organization'
+            ? compact({ country: countryName(c.country, lang) ?? c.country, contact_name: holder.contactName ?? null })
+            : {},
         linkLabel: roleLabel
       })
       parent = ref
-    } else if (sameAsRegistrar) parent = 'registrar'
+    }
     for (const email of c.emails.slice(0, 3)) entities.push({ type: 'email', label: email, from: parent, linkLabel: parent === '$input' ? roleLabel : 'email' })
     for (const phone of c.phones.slice(0, 2)) entities.push({ type: 'phone', label: phone, from: parent, linkLabel: parent === '$input' ? roleLabel : fr ? 'téléphone' : 'phone' })
-    if (c.street && c.city && !sameAsRegistrar) {
+    if (holder && c.street && c.city) {
       const label = [c.street, [c.postcode, c.city].filter(Boolean).join(' '), c.country].filter(Boolean).join(', ')
       entities.push({
         type: 'address',
@@ -202,10 +364,10 @@ export function parseRdap(domain: string, registry: RdapDomain, registrar: RdapD
         linkLabel: fr ? 'adresse' : 'address'
       })
     }
-    summaries.push(`${roleLabel}: ${[holder, ...c.emails, ...c.phones, c.country].filter(Boolean).join(' / ')}`)
   }
+  if (maskedRoles.length) summaries.push(`${rolesLabel(maskedRoles)}: ${fr ? 'masqué' : 'redacted'}`)
 
-  const properties: Record<string, PropValue> = {
+  const properties = compact({
     ...events,
     registrar: registrarName,
     registrar_iana_id: ianaId,
@@ -214,13 +376,9 @@ export function parseRdap(domain: string, registry: RdapDomain, registrar: RdapD
     status,
     nameservers,
     dnssec: registry.secureDNS?.delegationSigned ?? null,
-    whois_contacts: summaries
-  }
-  for (const k of Object.keys(properties)) {
-    const v = properties[k]
-    if (v === null || (Array.isArray(v) && !v.length)) delete properties[k]
-  }
-  if (domain !== normalizeDomain(registry.ldhName ?? domain)) properties.registered_domain = (registry.ldhName ?? '').toLowerCase()
+    whois_contacts: summaries,
+    registered_domain: domain !== normalizeDomain(registry.ldhName ?? domain) ? (registry.ldhName ?? '').toLowerCase() : null
+  })
   return { properties, entities, raw: { registry, registrar } }
 }
 

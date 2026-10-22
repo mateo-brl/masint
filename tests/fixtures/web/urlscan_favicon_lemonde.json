@@ -1,0 +1,87 @@
+{
+ "total": 9,
+ "results": [
+  {
+   "task": {
+    "time": "2026-10-22T06:45:07.193Z"
+   },
+   "page": {
+    "domain": "www.lemonde.fr",
+    "url": "https://www.lemonde.fr/"
+   }
+  },
+  {
+   "task": {
+    "time": "2026-10-22T06:08:18.716Z"
+   },
+   "page": {
+    "domain": "www.lemonde.fr",
+    "url": "https://www.lemonde.fr/"
+   }
+  },
+  {
+   "task": {
+    "time": "2026-10-22T03:26:54.427Z"
+   },
+   "page": {
+    "domain": "www.lemonde.fr",
+    "url": "https://www.lemonde.fr/en/"
+   }
+  },
+  {
+   "task": {
+    "time": "2026-10-21T16:45:31.896Z"
+   },
+   "page": {
+    "domain": "www.lemonde.fr",
+    "url": "https://www.lemonde.fr/"
+   }
+  },
+  {
+   "task": {
+    "time": "2026-10-21T10:59:33.172Z"
+   },
+   "page": {
+    "domain": "www.lemonde.fr",
+    "url": "https://www.lemonde.fr/"
+   }
+  },
+  {
+   "task": {
+    "time": "2026-10-08T18:45:01.761Z"
+   },
+   "page": {
+    "domain": "infoevolve.pro",
+    "url": "https://infoevolve.pro/landers/fr_gilles_bouleau_acule_vincent_bollor_gregory_clone_%283%29_copy/"
+   }
+  },
+  {
+   "task": {
+    "time": "2026-10-08T18:45:00.704Z"
+   },
+   "page": {
+    "domain": "infoevolve.pro",
+    "url": "https://infoevolve.pro/landers/fr_gilles_bouleau_acule_vincent_bollor_gregory_clone_(3)_copy/"
+   }
+  },
+  {
+   "task": {
+    "time": "2026-10-08T18:44:59.072Z"
+   },
+   "page": {
+    "domain": "infoevolve.pro",
+    "url": "https://infoevolve.pro/landers/fr_gilles_bouleau_acule_vincent_bollor_gregory_clone_(3)_copy/"
+   }
+  },
+  {
+   "task": {
+    "time": "2026-09-25T13:48:02.396Z"
+   },
+   "page": {
+    "domain": "klyroo.site",
+    "url": "https://klyroo.site/"
+   }
+  }
+ ],
+ "has_more": false
+}

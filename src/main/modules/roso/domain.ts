@@ -5,6 +5,7 @@
 import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
 import { localizeCountry, MAX_LIST_ENTITIES } from '../domain/_util'
+import { isCompanyName, sameCompany, visibleName, visibleValue } from '../domain/_whois'
 import { creditsOf, redact, ROSO_COMMON, RosoClient, scanProgress, toRosoError, type Json, type RosoResponse } from './_client'
 import {
   asArr,
@@ -55,11 +56,18 @@ export function rdapContacts(rdap: Obj): { registrar?: string; contacts: Contact
         const row = asArr(f)
         const key = str(row[0])
         const val = row[3]
-        if (key === 'fn' && !card.name) card.name = clean(str(val))
-        if (key === 'org' && !card.org) card.org = clean(Array.isArray(val) ? str(val[0]) : str(val))
-        if (key === 'email' && !card.email && isEmail(clean(str(val)))) card.email = str(val)
-        if (key === 'tel' && !card.phone) card.phone = clean(str(val).replace(/^tel:/, ''))
-        if (key === 'adr' && !card.address) card.address = clean(asArr(val).map(str).filter(Boolean).join(', ') || str(asObj(asObj(row[1]).label)))
+        // Valeurs masquées (« *** », « REDACTED », « Ano Nymous »...) ignorées, comme dans domain.rdap.
+        if (key === 'fn' && !card.name) card.name = visibleName(clean(str(val))) ?? undefined
+        if (key === 'org' && !card.org) card.org = visibleName(clean(Array.isArray(val) ? str(val[0]) : str(val))) ?? undefined
+        if (key === 'email' && !card.email && isEmail(clean(str(val))) && visibleValue(str(val))) card.email = str(val)
+        if (key === 'tel' && !card.phone) card.phone = visibleValue(clean(str(val).replace(/^tel:/, ''))) ?? undefined
+        if (key === 'adr' && !card.address)
+          card.address = visibleValue(clean(asArr(val).map(str).filter(Boolean).join(', ') || str(asObj(asObj(row[1]).label)))) ?? undefined
+      }
+      // Une raison sociale dans le champ du nom est une organisation, pas une personne.
+      if (card.name && !card.org && isCompanyName(card.name)) {
+        card.org = card.name
+        card.name = undefined
       }
       if (roles.includes('registrar')) registrar = registrar ?? (card.name || card.org)
       else if (card.name || card.org || card.email || card.phone) contacts.push(card)
@@ -67,7 +75,8 @@ export function rdapContacts(rdap: Obj): { registrar?: string; contacts: Contact
     }
   }
   walk(rdap.entities)
-  return { registrar, contacts }
+  // Les contacts tenus par le registrar lui-même ne disent rien du titulaire.
+  return { registrar, contacts: contacts.filter((c) => !registrar || !sameCompany(c.org ?? c.name, registrar)) }
 }
 
 export function rdapProps(rdap: Obj): Record<string, PropValue | undefined> {

@@ -371,11 +371,18 @@ export class Engine {
       if (ent.ref) refs.set(ent.ref, node)
       changedNodes.set(node.id, node)
       inGraph++
-      if (node.id !== parent.id && !this.repo.findEdge(invId, parent.id, node.id)) {
-        const [edge] = this.repo.upsertEdges(invId, [
-          { source: parent.id, target: node.id, label: ent.linkLabel ?? '', sourceModule: m.id }
-        ])
-        changedEdges.push(edge)
+      if (node.id !== parent.id) {
+        const existing = this.repo.findEdge(invId, parent.id, node.id)
+        if (!existing) {
+          const [edge] = this.repo.upsertEdges(invId, [
+            { source: parent.id, target: node.id, label: ent.linkLabel ?? '', sourceModule: m.id }
+          ])
+          changedEdges.push(edge)
+        } else {
+          // Lien déjà posé par un autre module : on ajoute ce libellé (« registrar · hébergé chez »).
+          const label = joinLabels(existing.label, ent.linkLabel)
+          if (label !== existing.label) changedEdges.push(...this.repo.upsertEdges(invId, [{ ...existing, label }]))
+        }
       }
       if (ent.image && !node.imageId) pending.push({ node, image: ent.image })
     }
@@ -477,6 +484,12 @@ export class Engine {
       .map(nodeBox)
     return childSlot(nodeBox(parent), occupied)
   }
+}
+
+function joinLabels(current: string, added: string | undefined): string {
+  if (!added || !added.trim()) return current
+  const parts = current.split(' · ').filter(Boolean)
+  return parts.includes(added) ? current : [...parts, added].join(' · ')
 }
 
 function cleanData(data: Record<string, PropValue>): Record<string, PropValue> {

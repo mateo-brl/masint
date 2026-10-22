@@ -1,0 +1,441 @@
+{
+ "rdapConformance": [
+  "rdap_level_0",
+  "icann_rdap_response_profile_1",
+  "icann_rdap_technical_implementation_guide_1",
+  "redacted"
+ ],
+ "objectClassName": "domain",
+ "handle": "605682_DOMAIN_COM-VRSN",
+ "ldhName": "infomaniak.com",
+ "events": [
+  {
+   "eventAction": "registration",
+   "eventDate": "1997-06-10T04:00:00.000Z"
+  },
+  {
+   "eventAction": "registrar expiration",
+   "eventDate": "2027-06-09T04:00:00.000Z"
+  },
+  {
+   "eventAction": "last changed",
+   "eventDate": "2026-05-26T02:00:30.000Z"
+  },
+  {
+   "eventAction": "last update of RDAP database",
+   "eventDate": "2026-10-22T09:09:29.716Z"
+  }
+ ],
+ "nameservers": [
+  {
+   "objectClassName": "nameserver",
+   "ipAddresses": {
+    "v4": [],
+    "v6": []
+   },
+   "ldhName": "ns1.infomaniak.ch"
+  },
+  {
+   "objectClassName": "nameserver",
+   "ipAddresses": {
+    "v4": [],
+    "v6": []
+   },
+   "ldhName": "ns2.infomaniak.ch"
+  }
+ ],
+ "status": [
+  "client transfer prohibited"
+ ],
+ "entities": [
+  {
+   "objectClassName": "entity",
+   "remarks": [
+    {
+     "description": [
+      "Some of the data in this object has been removed"
+     ],
+     "title": "REDACTED FOR PRIVACY",
+     "type": "object redacted due to authorization"
+    }
+   ],
+   "roles": [
+    "registrant"
+   ],
+   "vcardArray": [
+    "vcard",
+    [
+     [
+      "version",
+      {},
+      "text",
+      "4.0"
+     ],
+     [
+      "fn",
+      {},
+      "text",
+      ""
+     ]
+    ]
+   ]
+  },
+  {
+   "objectClassName": "entity",
+   "remarks": [
+    {
+     "description": [
+      "Some of the data in this object has been removed"
+     ],
+     "title": "REDACTED FOR PRIVACY",
+     "type": "object redacted due to authorization"
+    }
+   ],
+   "roles": [
+    "technical"
+   ],
+   "vcardArray": [
+    "vcard",
+    [
+     [
+      "version",
+      {},
+      "text",
+      "4.0"
+     ],
+     [
+      "fn",
+      {},
+      "text",
+      ""
+     ]
+    ]
+   ]
+  },
+  {
+   "handle": "3240",
+   "roles": [
+    "registrar",
+    "sponsor"
+   ],
+   "vcardArray": [
+    "vcard",
+    [
+     [
+      "version",
+      {},
+      "text",
+      "4.0"
+     ],
+     [
+      "fn",
+      {},
+      "text",
+      "Infomaniak Network SA"
+     ]
+    ]
+   ],
+   "links": [
+    {
+     "rel": "service",
+     "href": "https://www.infomaniak.com/",
+     "value": "https://www.infomaniak.com/"
+    },
+    {
+     "href": "https://www.infomaniak.com/",
+     "rel": "about",
+     "type": "text/html",
+     "value": "https://rdap.infomaniak.com/"
+    }
+   ],
+   "objectClassName": "entity",
+   "publicIds": [
+    {
+     "identifier": "3240",
+     "type": "IANA Registrar ID"
+    }
+   ],
+   "entities": [
+    {
+     "objectClassName": "entity",
+     "roles": [
+      "abuse"
+     ],
+     "handle": "3240",
+     "vcardArray": [
+      "vcard",
+      [
+       [
+        "version",
+        {},
+        "text",
+        "4.0"
+       ],
+       [
+        "fn",
+        {},
+        "text",
+        "Infomaniak Network SA"
+       ],
+       [
+        "tel",
+        {
+         "type": [
+          "voice",
+          "work"
+         ]
+        },
+        "uri",
+        "tel:+41.228203544"
+       ],
+       [
+        "email",
+        {
+         "type": "work"
+        },
+        "text",
+        "abuse@infomaniak.com"
+       ]
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "port43": "whois.infomaniak.com",
+ "redacted": [
+  {
+   "method": "emptyValue",
+   "name": {
+    "type": "Registrant Name"
+   },
+   "postPath": "$.entities[?(@.roles[0]=='registrant')].vcardArray[1][?(@[0]=='fn')][3]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "removal",
+   "name": {
+    "type": "Registrant Organization"
+   },
+   "prePath": "$.entities[?(@.roles[0]=='registrant')].vcardArray[1][?(@[0]=='org')]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "emptyValue",
+   "name": {
+    "type": "Registrant City"
+   },
+   "postPath": "$.entities[?(@.roles[0]=='registrant')].vcardArray[1][?(@[0]=='adr')][3][3]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "emptyValue",
+   "name": {
+    "type": "Registrant State/Province"
+   },
+   "postPath": "$.entities[?(@.roles[0]=='registrant')].vcardArray[1][?(@[0]=='adr')][3][4]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "emptyValue",
+   "name": {
+    "type": "Registrant Postal Code"
+   },
+   "postPath": "$.entities[?(@.roles[0]=='registrant')].vcardArray[1][?(@[0]=='adr')][3][5]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "emptyValue",
+   "name": {
+    "type": "Registrant Country"
+   },
+   "postPath": "$.entities[?(@.roles[0]=='registrant')].vcardArray[1][?(@[0]=='adr')][3][6]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "removal",
+   "name": {
+    "type": "Registrant Phone"
+   },
+   "prePath": "$.entities[?(@.roles[0]=='registrant')].vcardArray[1][?(@[1].type=='voice')]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "removal",
+   "name": {
+    "type": "Registrant Fax"
+   },
+   "prePath": "$.entities[?(@.roles[0]=='registrant')].vcardArray[1][?(@[1].type=='fax')]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "removal",
+   "name": {
+    "type": "Registrant Email"
+   },
+   "prePath": "$.entities[?(@.roles[0]=='registrant')].vcardArray[1][?(@[0]=='email')]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "removal",
+   "name": {
+    "type": "Registry Registrant ID"
+   },
+   "prePath": "$.entities[?(@.roles[0]=='registrant')].handle",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "emptyValue",
+   "name": {
+    "type": "Tech Name"
+   },
+   "postPath": "$.entities[?(@.roles[0]=='technical')].vcardArray[1][?(@[0]=='fn')][3]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "removal",
+   "name": {
+    "type": "Tech Organization"
+   },
+   "prePath": "$.entities[?(@.roles[0]=='technical')].vcardArray[1][?(@[0]=='org')]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "emptyValue",
+   "name": {
+    "type": "Tech City"
+   },
+   "postPath": "$.entities[?(@.roles[0]=='technical')].vcardArray[1][?(@[0]=='adr')][3][3]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "emptyValue",
+   "name": {
+    "type": "Tech State/Province"
+   },
+   "postPath": "$.entities[?(@.roles[0]=='technical')].vcardArray[1][?(@[0]=='adr')][3][4]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "emptyValue",
+   "name": {
+    "type": "Tech Postal Code"
+   },
+   "postPath": "$.entities[?(@.roles[0]=='technical')].vcardArray[1][?(@[0]=='adr')][3][5]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "emptyValue",
+   "name": {
+    "type": "Tech Country"
+   },
+   "postPath": "$.entities[?(@.roles[0]=='technical')].vcardArray[1][?(@[0]=='adr')][3][6]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "removal",
+   "name": {
+    "type": "Tech Phone"
+   },
+   "prePath": "$.entities[?(@.roles[0]=='technical')].vcardArray[1][?(@[1].type=='voice')]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "removal",
+   "name": {
+    "type": "Tech Fax"
+   },
+   "prePath": "$.entities[?(@.roles[0]=='technical')].vcardArray[1][?(@[1].type=='fax')]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "removal",
+   "name": {
+    "type": "Tech Email"
+   },
+   "prePath": "$.entities[?(@.roles[0]=='technical')].vcardArray[1][?(@[0]=='email')]",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  },
+  {
+   "method": "removal",
+   "name": {
+    "type": "Registry Tech ID"
+   },
+   "path": "$.entities[?(@.roles[0]=='technical')].handle",
+   "pathLang": "jsonpath",
+   "reason": {
+    "description": "Server policy"
+   }
+  }
+ ],
+ "secureDNS": {
+  "zoneSigned": true,
+  "delegationSigned": true,
+  "dsData": [
+   {
+    "keyTag": 12965,
+    "algorithm": 13,
+    "digestType": 2,
+    "digest": "FB7687993C7452ED4C8D33B4865E4390CF1F207A2325B0BF1E250A28D19A3D95"
+   }
+  ],
+  "keyData": []
+ }
+}

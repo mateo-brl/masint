@@ -1,0 +1,151 @@
+{
+ "objectClassName": "domain",
+ "handle": "605682_DOMAIN_COM-VRSN",
+ "ldhName": "INFOMANIAK.COM",
+ "links": [
+  {
+   "value": "https://rdap.verisign.com/com/v1/domain/infomaniak.com",
+   "rel": "self",
+   "href": "https://rdap.verisign.com/com/v1/domain/infomaniak.com",
+   "type": "application/rdap+json"
+  },
+  {
+   "value": "https://rdap.verisign.com/com/v1/domain/infomaniak.com",
+   "rel": "related",
+   "href": "https://rdap.infomaniak.com/domain/INFOMANIAK.COM",
+   "type": "application/rdap+json"
+  }
+ ],
+ "status": [
+  "client transfer prohibited"
+ ],
+ "entities": [
+  {
+   "objectClassName": "entity",
+   "handle": "3240",
+   "roles": [
+    "registrar"
+   ],
+   "links": [
+    {
+     "href": "http://www.infomaniak.com",
+     "type": "text/html",
+     "value": "https://rdap.infomaniak.com/",
+     "rel": "about"
+    }
+   ],
+   "publicIds": [
+    {
+     "type": "IANA Registrar ID",
+     "identifier": "3240"
+    }
+   ],
+   "vcardArray": [
+    "vcard",
+    [
+     [
+      "version",
+      {},
+      "text",
+      "4.0"
+     ],
+     [
+      "fn",
+      {},
+      "text",
+      "Infomaniak Network SA"
+     ]
+    ]
+   ],
+   "entities": [
+    {
+     "objectClassName": "entity",
+     "roles": [
+      "abuse"
+     ],
+     "vcardArray": [
+      "vcard",
+      [
+       [
+        "version",
+        {},
+        "text",
+        "4.0"
+       ],
+       [
+        "fn",
+        {},
+        "text",
+        ""
+       ],
+       [
+        "tel",
+        {
+         "type": "voice"
+        },
+        "uri",
+        "tel:0041228203541"
+       ],
+       [
+        "email",
+        {},
+        "text",
+        "abuse@infomaniak.com"
+       ]
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "events": [
+  {
+   "eventAction": "registration",
+   "eventDate": "1997-06-10T04:00:00Z"
+  },
+  {
+   "eventAction": "expiration",
+   "eventDate": "2027-06-09T04:00:00Z"
+  },
+  {
+   "eventAction": "last changed",
+   "eventDate": "2026-05-26T02:00:20Z"
+  },
+  {
+   "eventAction": "last update of RDAP database",
+   "eventDate": "2026-10-22T09:08:35Z"
+  }
+ ],
+ "secureDNS": {
+  "delegationSigned": true,
+  "dsData": [
+   {
+    "keyTag": 12965,
+    "algorithm": 13,
+    "digestType": 2,
+    "digest": "FB7687993C7452ED4C8D33B4865E4390CF1F207A2325B0BF1E250A28D19A3D95"
+   },
+   {
+    "keyTag": 12965,
+    "algorithm": 13,
+    "digestType": 1,
+    "digest": "D739EDFDF1ACE7BD4D7E4BBD43AED899D583F27E"
+   }
+  ]
+ },
+ "nameservers": [
+  {
+   "objectClassName": "nameserver",
+   "ldhName": "NS1.INFOMANIAK.CH"
+  },
+  {
+   "objectClassName": "nameserver",
+   "ldhName": "NS2.INFOMANIAK.CH"
+  }
+ ],
+ "rdapConformance": [
+  "rdap_level_0",
+  "icann_rdap_technical_implementation_guide_1",
+  "icann_rdap_response_profile_1"
+ ]
+}
