@@ -1,0 +1,17 @@
+{
+ "total_count": 2,
+ "results": [
+  {
+   "raison_sociale": "LABORATOIRE FICTIF SA",
+   "numero_siren": "999999993",
+   "n": 9,
+   "total": 5200.0
+  },
+  {
+   "raison_sociale": "PHARMA IMAGINAIRE",
+   "numero_siren": "NULL",
+   "n": 10,
+   "total": 3334.5
+  }
+ ]
+}

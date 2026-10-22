@@ -1,0 +1,138 @@
+{
+ "id": "5c34c4d1634f4173183a64f1",
+ "slug": "repertoire-national-des-elus-1",
+ "resources": [
+  {
+   "id": "3b6b2281-b9d9-4959-ae9d-c2c166dff118",
+   "title": "elus-conseillers-darrondissements-ca.csv",
+   "type": "main",
+   "format": "csv",
+   "last_modified": "2026-08-11T15:45:42.460000+00:00",
+   "extras": {
+    "analysis:parsing:finished_at": "2026-10-19T16:23:08.694069+00:00",
+    "analysis:parsing:parsing_table": "3256f319b6c5461b15cdd1548e114ba9"
+   }
+  },
+  {
+   "id": "d5f400de-ae3f-4966-8cb6-a85c70c6c24a",
+   "title": "elus-conseillers-municipaux-cm.csv",
+   "type": "main",
+   "format": "csv",
+   "last_modified": "2026-08-11T15:48:08.592000+00:00",
+   "extras": {
+    "analysis:parsing:finished_at": "2026-10-19T16:09:29.862045+00:00",
+    "analysis:parsing:parsing_table": "20815c6c84d8f857688229e6302d7d4e"
+   }
+  },
+  {
+   "id": "41d95d7d-b172-4636-ac44-32656367cdc7",
+   "title": "elus-conseillers-communautaires-epci.csv",
+   "type": "main",
+   "format": "csv",
+   "last_modified": "2026-08-11T15:48:56.522000+00:00",
+   "extras": {
+    "analysis:parsing:finished_at": "2026-10-19T16:23:07.225184+00:00",
+    "analysis:parsing:parsing_table": "34790e7f11300d808d16da51756d302e"
+   }
+  },
+  {
+   "id": "601ef073-d986-4582-8e1a-ed14dc857fba",
+   "title": "elus-conseillers-departementaux-cd.csv",
+   "type": "main",
+   "format": "csv",
+   "last_modified": "2026-08-11T15:49:10.168000+00:00",
+   "extras": {
+    "analysis:parsing:finished_at": "2026-10-19T16:05:06.081411+00:00",
+    "analysis:parsing:parsing_table": "56b199b98095467bae630f08f76c243a"
+   }
+  },
+  {
+   "id": "430e13f9-834b-4411-a1a8-da0b4b6e715c",
+   "title": "elus-conseillers-regionaux-cr.csv",
+   "type": "main",
+   "format": "csv",
+   "last_modified": "2026-08-11T15:49:33.063000+00:00",
+   "extras": {
+    "analysis:parsing:finished_at": "2026-10-19T15:55:07.998086+00:00",
+    "analysis:parsing:parsing_table": "2c634219d030beb4510e6ebacc27f566"
+   }
+  },
+  {
+   "id": "a595be27-cfab-4810-b9d4-22e193bffe35",
+   "title": "elus-membres-assemblee-ma.csv",
+   "type": "main",
+   "format": "csv",
+   "last_modified": "2026-08-11T15:49:46.417000+00:00",
+   "extras": {
+    "analysis:parsing:finished_at": "2026-10-19T16:05:12.586251+00:00",
+    "analysis:parsing:parsing_table": "ae5ddc0d396cfe8c4d99fafe516d1284"
+   }
+  },
+  {
+   "id": "70957bb0-f19f-40c5-b97b-90b3d4d71f9e",
+   "title": "elus-representants-Parlement-européen-rpe.csv",
+   "type": "main",
+   "format": "csv",
+   "last_modified": "2026-08-11T15:50:00.903000+00:00",
+   "extras": {
+    "analysis:parsing:finished_at": "2026-10-19T16:09:19.301753+00:00",
+    "analysis:parsing:parsing_table": "1e29249340650191decc28ba6dcc5c00"
+   }
+  },
+  {
+   "id": "b78f8945-509f-4609-a4a7-3048b8370479",
+   "title": "elus-senateurs-sen.csv",
+   "type": "main",
+   "format": "csv",
+   "last_modified": "2026-08-11T15:50:17.239000+00:00",
+   "extras": {
+    "analysis:parsing:finished_at": "2026-10-19T15:58:33.900815+00:00",
+    "analysis:parsing:parsing_table": "7fa565bb72e3051e481a78e070902127"
+   }
+  },
+  {
+   "id": "1ac42ff4-1336-44f8-a221-832039dbc142",
+   "title": "elus-deputes-dep.csv",
+   "type": "main",
+   "format": "csv",
+   "last_modified": "2026-08-11T15:50:35.538000+00:00",
+   "extras": {
+    "analysis:parsing:finished_at": "2026-10-19T16:05:25.746568+00:00",
+    "analysis:parsing:parsing_table": "9197521931c985208b08893aaeb9543a"
+   }
+  },
+  {
+   "id": "2876a346-d50c-4911-934e-19ee07b0e503",
+   "title": "elus-maires-mai.csv",
+   "type": "main",
+   "format": "csv",
+   "last_modified": "2026-08-11T15:51:01.590000+00:00",
+   "extras": {
+    "analysis:parsing:finished_at": "2026-10-19T15:59:07.110408+00:00",
+    "analysis:parsing:parsing_table": "cbc91a649e64f117eeeb38f9b05e360d"
+   }
+  },
+  {
+   "id": "84949a7b-53e0-4d78-9a66-8446f5ab6ad4",
+   "title": "elus-conseillers-des-francais-de-letranger-consfde.csv",
+   "type": "main",
+   "format": "csv",
+   "last_modified": "2026-05-05T15:21:35.193000+00:00",
+   "extras": {
+    "analysis:parsing:finished_at": "2026-10-19T15:45:08.001746+00:00",
+    "analysis:parsing:parsing_table": "597fdedcce8f8c50eb412e251dcc7a9a"
+   }
+  },
+  {
+   "id": "41cea915-fa63-46f2-825f-97fa354a26bc",
+   "title": "elus-assemblee-des-francais-de-letranger-afe.csv",
+   "type": "main",
+   "format": "csv",
+   "last_modified": "2026-05-05T15:21:48.787000+00:00",
+   "extras": {
+    "analysis:parsing:finished_at": "2026-10-19T15:58:24.786940+00:00",
+    "analysis:parsing:parsing_table": "dc14e6b35975a338740ffac4b2f1be60"
+   }
+  }
+ ]
+}
