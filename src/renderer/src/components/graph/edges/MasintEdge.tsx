@@ -40,19 +40,20 @@ function MasintEdgeImpl(props: EdgeProps<FlowEdge>): React.JSX.Element {
 
   return (
     <>
-      <g ref={group}>
-        <BaseEdge
-          id={id}
-          path={path}
-          markerEnd={markerEnd}
-          style={{
-            stroke: color,
-            strokeWidth: (edge?.style.width ?? 1.1) * (selected ? 1.6 : 1),
-            strokeDasharray: edge?.style.dashed ? '5 4' : undefined
-          }}
-          className={edge?.style.animated ? 'animated' : undefined}
-        />
-      </g>
+      <BaseEdge
+        id={id}
+        path={path}
+        markerEnd={markerEnd}
+        style={{
+          stroke: color,
+          strokeWidth: (edge?.style.width ?? 1.1) * (selected ? 1.6 : 1),
+          strokeDasharray: edge?.style.dashed ? '5 4' : undefined
+        }}
+        className={edge?.style.animated ? 'animated' : undefined}
+        // BaseEdge transmet ses autres propriétés au tracé visible : la référence s'y attache
+        // (React 19), sans groupe SVG supplémentaire par lien.
+        {...({ ref: group } as object)}
+      />
       {edge?.label && !low && (allLabels || siblings <= LABEL_MAX_SIBLINGS || bySelection || onPath) && (
         <EdgeLabelRenderer>
           <div

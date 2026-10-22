@@ -192,7 +192,7 @@ div.masint-on-path {
   border-color: var(--accent) !important;
   outline: 2px solid var(--accent) !important;
 }
-g.masint-on-path .react-flow__edge-path {
+.react-flow__edge-path.masint-on-path {
   stroke: var(--accent) !important;
   stroke-width: 2.4px !important;
 }
