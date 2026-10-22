@@ -36,6 +36,7 @@
     "src/preload/*.d.ts",
     "src/shared/**/*",
     "tests/export*.test.ts",
+    "tests/helpers/xml.ts",
     "tests/layout.test.ts",
     "tests/collapse.test.ts",
     "tests/consistency.test.ts"

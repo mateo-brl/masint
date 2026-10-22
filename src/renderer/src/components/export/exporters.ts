@@ -1,4 +1,5 @@
-// Exports du graphe : PNG, SVG, JSON, CSV (nœuds, liens) et HTML interactif autonome.
+// Exports du graphe : PNG, SVG, JSON, CSV (nœuds, liens), HTML interactif autonome,
+// GraphML, GEXF et CSV pour Maltego.
 
 import { api } from '../../lib/api'
 import { currentLang } from '../../lib/i18n'
@@ -7,9 +8,10 @@ import { captureGraphPng, captureGraphSvg } from './capture'
 import { collectImages, drawingMarkup, graphSnapshot, lucideMarkup, type GraphSnapshot } from './collect'
 import { buildEdgesCsv, buildNodesCsv } from './csv'
 import { exportFileName, exportStrings } from './format'
+import { buildGexf, buildGraphMl, buildMaltegoCsv } from './graphFormats'
 import { buildViewerHtml } from './viewer'
 
-export type ExportFormat = 'png' | 'svg' | 'json' | 'csv-nodes' | 'csv-edges' | 'html'
+export type ExportFormat = 'png' | 'svg' | 'json' | 'csv-nodes' | 'csv-edges' | 'html' | 'graphml' | 'gexf' | 'maltego'
 
 export { captureGraphPng }
 
@@ -90,6 +92,12 @@ export async function exportGraph(format: ExportFormat): Promise<string | null> 
         buildEdgesCsv(snap.nodes, snap.edges, lang, useApp.getState().modules),
         'utf8'
       )
+    case 'graphml':
+      return api('export:save', name('', 'graphml'), [{ name: s.filters.graphml, extensions: ['graphml'] }], buildGraphMl(snap, lang), 'utf8')
+    case 'gexf':
+      return api('export:save', name('', 'gexf'), [{ name: s.filters.gexf, extensions: ['gexf'] }], buildGexf(snap, lang, now), 'utf8')
+    case 'maltego':
+      return api('export:save', name(s.files.maltego, 'csv'), [{ name: s.filters.maltego, extensions: ['csv'] }], buildMaltegoCsv(snap, lang), 'utf8')
     case 'html': {
       const html = await buildInteractiveHtml(snap, now)
       return api('export:save', name(s.files.graph, 'html'), [{ name: s.filters.html, extensions: ['html'] }], html, 'utf8')

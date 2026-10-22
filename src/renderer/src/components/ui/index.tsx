@@ -244,7 +244,26 @@ export function Toasts(): React.JSX.Element {
             size={15}
             className={t.kind === 'error' ? 'text-accent' : t.kind === 'success' ? 'text-success' : 'text-muted'}
           />
-          <span className="break-words">{t.text}</span>
+          <div className="flex min-w-0 flex-col gap-2">
+            <span className="break-words">{t.text}</span>
+            {t.actions && (
+              <div className="flex flex-wrap gap-1.5">
+                {t.actions.map((a) => (
+                  <Button
+                    key={a.label}
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      dismiss(t.id)
+                      a.onClick()
+                    }}
+                  >
+                    {a.label}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       ))}
     </div>

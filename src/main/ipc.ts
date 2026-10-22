@@ -104,11 +104,11 @@ export function registerIpc(deps: IpcDeps): void {
   })
 
   // Graphe -------------------------------------------------------------------
-  handle('graph:upsertNodes', (invId, nodes) => repo.upsertNodes(invId, nodes))
+  handle('graph:upsertNodes', (invId, nodes, opts) => repo.upsertNodes(invId, nodes, opts))
   handle('graph:deleteNodes', (invId, ids) => {
     repo.deleteNodes(invId, ids)
   })
-  handle('graph:upsertEdges', (invId, edges) => repo.upsertEdges(invId, edges))
+  handle('graph:upsertEdges', (invId, edges, opts) => repo.upsertEdges(invId, edges, opts))
   handle('graph:deleteEdges', (invId, ids) => repo.deleteEdges(invId, ids))
   handle('graph:mergeNodes', (invId, targetId, otherIds) => {
     const target = repo.getNode(targetId)
@@ -136,6 +136,7 @@ export function registerIpc(deps: IpcDeps): void {
       }
       edges.push(...repo.upsertEdges(invId, [{ ...e, id: undefined, source, target: target2 }]))
     }
+    repo.reassignNodeHistory(invId, Array.from(otherSet), targetId)
     const deletedEdgeIds = repo.deleteNodes(invId, Array.from(otherSet))
     const change = { investigationId: invId, nodes: [merged] as GraphNode[], edges, deletedNodeIds: Array.from(otherSet), deletedEdgeIds }
     return change
@@ -209,6 +210,7 @@ export function registerIpc(deps: IpcDeps): void {
   handle('modules:enrich', (invId, nodeId, moduleIds) => engine.enrich(invId, nodeId, moduleIds))
   handle('modules:cancel', (jobId) => engine.cancel(jobId))
   handle('modules:runs', (invId, nodeId) => repo.listRuns(invId, nodeId))
+  handle('modules:runStats', (invId) => repo.runStats(invId))
   handle('modules:jobs', () => engine.listJobs())
   handle('suggestions:list', (invId, nodeId) => repo.listSuggestions(invId, nodeId))
   handle('suggestions:resolve', (id, action, found) => engine.resolveSuggestion(id, action, found))

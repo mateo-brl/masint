@@ -41,7 +41,9 @@ const SECTION_ICONS: Record<ReportSectionId, string> = {
   notes: 'NotebookPen',
   entities: 'IdCard',
   links: 'Link',
+  timeline: 'CalendarRange',
   sources: 'ScrollText',
+  attachments: 'Paperclip',
   raw: 'Braces'
 }
 
