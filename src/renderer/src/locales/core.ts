@@ -459,7 +459,24 @@ const fr = {
     getKey: 'Obtenir une clé',
     usedBy: 'Utilisée par : {{list}}',
     keySaved: '•••••••• (enregistrée, saisir pour remplacer)',
-    pasteKey: 'Coller la clé'
+    pasteKey: 'Coller la clé',
+    sites: {
+      title: 'Sites de recherche de pseudo',
+      dbBundled: 'Base Maigret du {{date}}, livrée avec l’application ({{count}} sites)',
+      dbUser: 'Base Maigret du {{date}}, mise à jour ({{count}} sites)',
+      update: 'Mettre à jour la base des sites',
+      updated: 'Nouvelle base installée (empreinte SHA-256 vérifiée).',
+      current: 'La base est déjà à jour.',
+      updateFailed: 'Échec de la mise à jour : {{error}}. La base actuelle reste utilisée.',
+      tier: { essential: 'Essentiel', extended: 'Étendu' },
+      counts: '{{active}} sites actifs, {{failed}} en échec, {{skipped}} sautés',
+      lastCheck: 'Dernière vérification ({{network}}) le {{date}} : {{ok}} sites corrects, {{failed}} en échec, {{inconclusive}} sans conclusion (blocage, délai).',
+      neverChecked: 'Aucune vérification sur cette sortie réseau ({{network}}).',
+      direct: 'connexion directe',
+      proxy: 'proxy',
+      check: 'Vérifier les sites',
+      checkHint: 'Interroge chaque site avec un pseudo témoin public, qui doit être trouvé, et un pseudo aléatoire, qui ne doit pas l’être, par la sortie réseau actuelle. Les sites en échec sont sautés pendant 7 jours. Environ une minute pour le palier Essentiel, plusieurs minutes pour le palier Étendu. Les sites sautés sont écartés d’office (liste noire, protection anti-robot, jeton dynamique).'
+    }
   },
   about: {
     version: 'Version {{version}}',
@@ -942,7 +959,24 @@ const en: typeof fr = {
     getKey: 'Get a key',
     usedBy: 'Used by: {{list}}',
     keySaved: '•••••••• (saved, type to replace)',
-    pasteKey: 'Paste the key'
+    pasteKey: 'Paste the key',
+    sites: {
+      title: 'Username search sites',
+      dbBundled: 'Maigret database of {{date}}, shipped with the app ({{count}} sites)',
+      dbUser: 'Maigret database of {{date}}, updated ({{count}} sites)',
+      update: 'Update the sites database',
+      updated: 'New database installed (SHA-256 checksum verified).',
+      current: 'The database is already up to date.',
+      updateFailed: 'Update failed: {{error}}. The current database is still used.',
+      tier: { essential: 'Essential', extended: 'Extended' },
+      counts: '{{active}} active sites, {{failed}} failing, {{skipped}} skipped',
+      lastCheck: 'Last check ({{network}}) on {{date}}: {{ok}} sites correct, {{failed}} failing, {{inconclusive}} inconclusive (blocked, timed out).',
+      neverChecked: 'No check yet on this network exit ({{network}}).',
+      direct: 'direct connection',
+      proxy: 'proxy',
+      check: 'Check the sites',
+      checkHint: 'Queries each site with a public witness username, which must be found, and a random username, which must not, through the current network exit. Failing sites are skipped for 7 days. About a minute for the Essential tier, several minutes for the Extended tier. Skipped sites are excluded by fixed rules (blacklist, anti-bot protection, dynamic token).'
+    }
   },
   about: {
     version: 'Version {{version}}',
