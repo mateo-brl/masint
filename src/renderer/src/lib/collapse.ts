@@ -1,6 +1,8 @@
-// Ce que le canevas affiche réellement : nœuds repliés par l'enquêteur (« Réduire ») et groupes
-// automatiques de feuilles semblables (« 28 sous-domaines »). Les données ne changent pas : seul
-// l'affichage est réduit.
+// Ce que le canevas affiche réellement : nœuds écartés par le filtre (mode « masquer »), nœuds
+// repliés par l'enquêteur (« Réduire ») et groupes automatiques de feuilles semblables
+// (« 28 sous-domaines »). Les données ne changent pas : seul l'affichage est réduit.
+
+import { isFilterActive, matchesFilter, viewFilterKey, type ViewFilter } from './filters'
 
 export interface ViewNode {
   id: string
@@ -10,6 +12,9 @@ export interface ViewNode {
   platform: string | null
   notes: string
   style: { collapsed?: boolean; color?: string }
+  /** Module qui a créé le nœud (`manual` sinon) : lu par le filtre. */
+  source?: string
+  createdAt?: number
 }
 
 export interface ViewEdge {
@@ -30,8 +35,12 @@ export interface Bundle {
 }
 
 export interface GraphView {
-  /** Nœuds masqués (descendance repliée ou membres d'un groupe). */
+  /** Nœuds masqués (filtre, descendance repliée ou membres d'un groupe). */
   hidden: Set<string>
+  /** Nœuds écartés par le filtre en mode « masquer » (aussi dans `hidden`). */
+  filtered: Set<string>
+  /** Nœuds écartés par le filtre en mode « estomper » : affichés en retrait. */
+  dimmed: Set<string>
   /** Nombre de nœuds masqués sous chaque nœud replié. */
   collapsedCount: Map<string, number>
   bundles: Bundle[]
@@ -46,12 +55,19 @@ export function bundleId(parentId: string, type: string, linkLabel: string): str
   return `bundle:${parentId}:${type}:${linkLabel}`
 }
 
+/** Options du calcul : seuil de regroupement, filtre. */
+export interface ViewOptions {
+  bundleMin?: number
+  filter?: ViewFilter | null
+}
+
 /** Dernier calcul, renvoyé tel quel tant que la structure du graphe ne change pas. */
 let memo: {
   nodes: readonly ViewNode[]
   edges: readonly ViewEdge[]
   expanded: ReadonlySet<string>
   bundleMin: number
+  filter: ViewFilter | null
   key: string
   view: GraphView
 } | null = null
@@ -65,13 +81,23 @@ function sameItems<T>(a: readonly T[], b: readonly T[]): boolean {
 
 /**
  * Tout ce que lit le calcul, et rien d'autre : identifiants, types, plateformes, repli, note et
- * couleur (qui empêchent le regroupement), liens et leurs libellés, groupes dépliés. Les positions
- * n'y figurent pas : déplacer un nœud ne change pas la vue.
+ * couleur (qui empêchent le regroupement), liens et leurs libellés, groupes dépliés, filtre (et,
+ * s'il est actif, l'origine et la date de création des nœuds). Les positions n'y figurent pas :
+ * déplacer un nœud ne change pas la vue.
  */
-function structureKey(nodes: readonly ViewNode[], edges: readonly ViewEdge[], expanded: ReadonlySet<string>, bundleMin: number): string {
-  const parts: string[] = [String(bundleMin)]
-  for (const n of nodes)
+function structureKey(
+  nodes: readonly ViewNode[],
+  edges: readonly ViewEdge[],
+  expanded: ReadonlySet<string>,
+  bundleMin: number,
+  filter: ViewFilter | null
+): string {
+  const fkey = viewFilterKey(filter)
+  const parts: string[] = [String(bundleMin), fkey]
+  for (const n of nodes) {
     parts.push(n.id, n.kind, n.type, n.platform ?? '', n.style.collapsed ? '1' : '0', n.style.color ? '1' : '0', n.notes.trim() ? '1' : '0')
+    if (fkey) parts.push(n.source ?? '', String(n.createdAt ?? 0))
+  }
   parts.push('')
   for (const e of edges) parts.push(e.source, e.target, e.label)
   parts.push('', ...Array.from(expanded).sort())
@@ -83,21 +109,43 @@ function structureKey(nodes: readonly ViewNode[], edges: readonly ViewEdge[], ex
  * nœud, disposition), le même objet est renvoyé, ce qui évite de re-rendre tout le canevas.
  * L'objet renvoyé est partagé : il ne doit pas être modifié.
  */
-export function computeView(nodes: ViewNode[], edges: ViewEdge[], expandedBundles: ReadonlySet<string>, bundleMin = BUNDLE_MIN): GraphView {
+export function computeView(
+  nodes: ViewNode[],
+  edges: ViewEdge[],
+  expandedBundles: ReadonlySet<string>,
+  options: ViewOptions | number = {}
+): GraphView {
+  const opts = typeof options === 'number' ? { bundleMin: options } : options
+  const bundleMin = opts.bundleMin ?? BUNDLE_MIN
+  const filter = opts.filter && isFilterActive(opts.filter.filter) ? opts.filter : null
   // Mêmes objets qu'au dernier appel (cas d'un glisser) : inutile de recalculer la clé.
-  if (memo && memo.bundleMin === bundleMin && memo.expanded === expandedBundles && sameItems(memo.nodes, nodes) && sameItems(memo.edges, edges))
+  if (
+    memo &&
+    memo.bundleMin === bundleMin &&
+    memo.filter === filter &&
+    memo.expanded === expandedBundles &&
+    sameItems(memo.nodes, nodes) &&
+    sameItems(memo.edges, edges)
+  )
     return memo.view
-  const key = structureKey(nodes, edges, expandedBundles, bundleMin)
+  const key = structureKey(nodes, edges, expandedBundles, bundleMin, filter)
   if (memo && memo.key === key) {
-    memo = { ...memo, nodes, edges, expanded: expandedBundles }
+    memo = { ...memo, nodes, edges, expanded: expandedBundles, filter }
     return memo.view
   }
-  const view = buildView(nodes, edges, expandedBundles, bundleMin)
-  memo = { nodes, edges, expanded: expandedBundles, bundleMin, key, view }
+  const view = buildView(nodes, edges, expandedBundles, bundleMin, filter)
+  memo = { nodes, edges, expanded: expandedBundles, bundleMin, filter, key, view }
   return view
 }
 
-function buildView(nodes: ViewNode[], edges: ViewEdge[], expandedBundles: ReadonlySet<string>, bundleMin: number): GraphView {
+function buildView(all: ViewNode[], edges: ViewEdge[], expandedBundles: ReadonlySet<string>, bundleMin: number, filter: ViewFilter | null): GraphView {
+  // 0. Filtre : en mode « masquer », les nœuds écartés sont retirés avant le repli et le
+  // regroupement (un groupe ne compte que ce qui reste) ; en mode « estomper », ils restent.
+  const filtered = new Set<string>()
+  const dimmed = new Set<string>()
+  if (filter)
+    for (const n of all) if (!matchesFilter(n, filter.filter, filter.review)) (filter.mode === 'hide' ? filtered : dimmed).add(n.id)
+  const nodes = filtered.size ? all.filter((n) => !filtered.has(n.id)) : all
   const byId = new Map(nodes.map((n) => [n.id, n]))
   const out = new Map<string, ViewEdge[]>()
   const inc = new Map<string, ViewEdge[]>()
@@ -169,7 +217,8 @@ function buildView(nodes: ViewNode[], edges: ViewEdge[], expandedBundles: Readon
       hidden.add(m)
       bundleOf.set(m, b.id)
     }
-  return { hidden, collapsedCount, bundles, bundleOf }
+  for (const id of filtered) hidden.add(id)
+  return { hidden, filtered, dimmed, collapsedCount, bundles, bundleOf }
 }
 
 /** Nœuds repliés dont il faut déplier la chaîne pour rendre `id` visible. */
