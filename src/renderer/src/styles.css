@@ -187,6 +187,15 @@ select,
 .react-flow__edge.selected .react-flow__edge-path {
   stroke-width: 1.8;
 }
+/* Plus court chemin mis en évidence : classe posée sans re-rendu (voir store/canvas). */
+div.masint-on-path {
+  border-color: var(--accent) !important;
+  outline: 2px solid var(--accent) !important;
+}
+g.masint-on-path .react-flow__edge-path {
+  stroke: var(--accent) !important;
+  stroke-width: 2.4px !important;
+}
 .react-flow__minimap {
   border: 1px solid var(--border);
   border-radius: 10px;
