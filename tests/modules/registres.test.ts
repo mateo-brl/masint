@@ -440,12 +440,12 @@ describe('company.aides', () => {
 
   it('interroge par SIREN, liste et agrégat en parallèle', async () => {
     const ctx = fakeContext([
-      [/data\.economie\.gouv\.fr/, (url) => ({ body: params(url).get('select') ? { total_count: 1, results: [{ n: 8, total: 55400, last: '2026-09-11' }] } : list })]
+      [/data\.economie\.gouv\.fr/, (url) => ({ body: params(url).get('select') ? fx('aides_cordon_agg.json') : list })]
     ])
     const out = await runModule(aides, entity('company', 'CORDON ELECTRONICS', { data: { siren: '432371342' } }), ctx)
     expect(ctx.calls).toHaveLength(2)
     expect(ctx.calls.every((c) => params(c.url).get('where') === 'startswith(identifiant_beneficiaire, "432371342")')).toBe(true)
-    expect(out.properties?.de_minimis_aids_total).toBe('55 400 €')
+    expect(out.properties).toEqual({ de_minimis_aids_count: 8, de_minimis_aids_total: '55 400 €', de_minimis_last_date: '2026-09-11' })
     expect(aides.accepts?.(entity('company', 'Cordon'))).toBe(false)
   })
 })
@@ -572,6 +572,32 @@ describe('Transparence Santé (professionnel fictif)', () => {
     expect(params(ctx.calls[1].url).get('where')).toBe('numero_siren = "999999993" or raison_sociale = "LABORATOIRE FICTIF RECHERCHE"')
     const none = fakeContext([[TS, { body: { results: [{ raison_sociale: 'CABINET ORANGE SANTE', numero_siren: '999999977', n: 1 }] } }]])
     expect(await runModule(company, entity('company', 'Orange'), none)).toEqual({ raw: { total: 0 } })
+  })
+
+  it('Sanofi par nom : réponses réelles agrégées', async () => {
+    const ctx = fakeContext([
+      [
+        TS,
+        (url) => {
+          const q = params(url)
+          if (q.get('group_by') === 'raison_sociale, numero_siren') return { body: fx('transparence_sanofi_entites.json') }
+          if (q.get('group_by') === 'lien_interet') return { body: fx('transparence_sanofi_totaux.json') }
+          return { body: fx('transparence_sanofi_beneficiaires.json') }
+        }
+      ]
+    ])
+    const out = await runModule(company, entity('company', 'sanofi'), ctx)
+    expect(out.properties).toMatchObject({
+      industry_declarations_count: 327704,
+      industry_payments_total: '2 216 593 626 €',
+      industry_agreements_count: 129291,
+      industry_beneficiaries_count: 46424,
+      industry_last_date: '2026-06-30'
+    })
+    expect(out.properties?.industry_declarant_entities).toHaveLength(9)
+    // Un SIREN qui apparaît sous deux raisons sociales n'est cité qu'une fois dans la condition.
+    expect(params(ctx.calls[1].url).get('where')?.match(/713002269/g)).toHaveLength(1)
+    expect(out.entities).toBeUndefined()
   })
 })
 
