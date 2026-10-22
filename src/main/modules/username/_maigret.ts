@@ -96,10 +96,35 @@ export function skipReason(site: MaigretSite, entry: MaigretEntry, engines: Maig
   const url = typeof site.url === 'string' ? site.url : ''
   if (!url.includes('{username}') || !/^(https?:\/\/|\{urlMain\})/.test(url)) return 'url'
   if (!/^https?:\/\//.test(url) && !/^https?:\/\//.test(site.urlMain ?? '')) return 'url'
+  const probe = probeUrl(site, 'x')
+  if (!probe || !isPublicHttpUrl(probe)) return 'url'
   return null
 }
 
 export const isNsfw = (site: Pick<MaigretEntry, 'tags'>): boolean => !!site.tags?.some((t) => NSFW_TAGS.includes(t))
+
+/**
+ * URL interrogeable : HTTP(S) vers un hôte public. Une base mise à jour ne peut pas faire viser
+ * la machine de l'enquêteur ou son réseau local (localhost, adresses privées ou de lien local).
+ */
+export function isPublicHttpUrl(url: string): boolean {
+  let u: URL
+  try {
+    u = new URL(url)
+  } catch {
+    return false
+  }
+  if (u.protocol !== 'https:' && u.protocol !== 'http:') return false
+  const h = u.hostname.toLowerCase().replace(/^\[|\]$/g, '')
+  if (!h || h === 'localhost' || h.endsWith('.localhost') || h.endsWith('.local') || h.endsWith('.internal')) return false
+  const v4 = /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/.exec(h)
+  if (v4) {
+    const [a, b] = [Number(v4[1]), Number(v4[2])]
+    return !(a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127))
+  }
+  if (h.includes(':')) return !(h === '::' || h === '::1' || /^f[cd]/.test(h) || /^fe[89ab]/.test(h) || h.startsWith('::ffff:'))
+  return true
+}
 
 // Gabarits ---------------------------------------------------------------------
 
@@ -407,7 +432,7 @@ export function decodeBody(buf: Buffer, contentType: string | null | undefined):
 export async function checkMaigretSite(site: MaigretSite, username: string, ctx: ModuleContext, timeoutMs = 12000): Promise<SiteResult> {
   const url = profileUrl(site, username)
   const probe = probeUrl(site, username)
-  if (!url || !probe) return { site: site.name, url: url ?? site.urlMain ?? '', status: 'error', error: 'gabarit d’URL invalide' }
+  if (!url || !probe || !isPublicHttpUrl(probe)) return { site: site.name, url: url ?? site.urlMain ?? '', status: 'error', error: 'gabarit d’URL invalide' }
   if (!isLegalFor(site, username)) return { site: site.name, url, status: 'illegal' }
   const method = (site.requestMethod ?? (site.checkType === 'status_code' && site.requestHeadOnly ? 'HEAD' : 'GET')).toUpperCase()
   const headers: Record<string, string> = { accept: '*/*', 'accept-language': 'en-US,en;q=0.9' }
