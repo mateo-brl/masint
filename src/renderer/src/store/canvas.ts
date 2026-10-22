@@ -62,7 +62,7 @@ function setClass(el: Element | null, name: string, on: boolean): void {
 const ON_PATH = 'masint-on-path'
 
 interface DecorSlot {
-  /** Élément décoré (racine du nœud, groupe SVG du lien) et élément secondaire (libellé du lien). */
+  /** Élément décoré (racine du nœud, tracé du lien) et élément secondaire (libellé du lien). */
   el: HTMLElement | SVGElement | null
   extra: HTMLElement | null
   /** Clé du décor écrit et clé de ce qui a été rendu par React. */
@@ -155,7 +155,7 @@ export function useNodeDecor(id: string): { ref: (el: HTMLElement | SVGElement |
 /**
  * Décor d'un lien : estompé (hors du chemin, ou extrémité estompée par le filtre), libellé
  * masqué, mis en évidence sur le chemin. Re-rendu seulement quand il entre sur le chemin ou en
- * sort (son libellé s'affiche alors). Renvoie les références du groupe SVG et du libellé.
+ * sort (son libellé s'affiche alors). Renvoie les références du tracé et du libellé.
  */
 export function useEdgeDecor(
   id: string,
