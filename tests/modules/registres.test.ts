@@ -223,7 +223,7 @@ describe('person.rne_elus', () => {
 
 describe('person.rpps (professionnels fictifs)', () => {
   const nom = fx<{ data: RppsRow[] }>('rpps_nom_fictif.json')
-  const routes = (body: unknown): Route[] => [DATASET_404, [TAB, { body }]]
+  const routes = (body: object): Route[] => [DATASET_404, [TAB, { body }]]
 
   it('regroupe les activités par numéro RPPS', () => {
     const people = groupRpps(nom.data)
@@ -285,7 +285,7 @@ describe('annuaire des avocats (avocats fictifs)', () => {
   const person = byId(avocats, 'person.avocats')
   const firm = byId(avocats, 'company.avocats')
   const list = byId(avocats, 'company.avocats_liste')
-  const routes = (body: unknown): Route[] => [DATASET_404, [TAB, { body }]]
+  const routes = (body: object): Route[] => [DATASET_404, [TAB, { body }]]
 
   it('compare nom et prénoms', () => {
     const rows = fx<{ data: AvocatRow[] }>('avocats_nom_fictif.json').data
@@ -383,8 +383,28 @@ describe('commande publique', () => {
     expect(out.properties?.public_contracts_count).toBe(10)
   })
 
+  it('BOAMP : avis où le nom figure parmi les titulaires, à vérifier', async () => {
+    const res = fx<{ total_count: number; results: BoampRecord[] }>('boamp_capgemini.json')
+    const out = boampOutput(res.results, res.total_count, 'CAPGEMINI TECHNOLOGY SERVICES', 'fr')
+    expect(out.properties).toEqual({ boamp_awards_count: 153 })
+    expect(out.entities).toHaveLength(8)
+    expect(out.entities.every((e) => e.review && e.type === 'event')).toBe(true)
+    expect(out.entities[0]).toMatchObject({
+      label: expect.stringMatching(/^Avis BOAMP 26-89386 : Prestations de tierce maintenance/),
+      data: { date: '2026-09-17', contract_buyer: 'SG-SAAM-Mission des achats', url: 'https://www.boamp.fr/pages/avis/?q=idweb:26-89386' }
+    })
+    expect(out.entities[0].reviewReason).toMatch(/^même raison sociale/)
+    // Titulaire en groupement (« ... (mandataire) / ... ») : nom proche, filiale ou homonyme possible.
+    expect(out.entities.find((e) => e.label.includes('26-79055'))?.reviewReason).toMatch(/^nom proche/)
+    const boamp = byId(marches, 'company.boamp')
+    const ctx = fakeContext([[/boamp-datadila/, { body: res }]])
+    await runModule(boamp, entity('company', 'CAPGEMINI TECHNOLOGY SERVICES'), ctx)
+    expect(params(ctx.calls[0].url).get('where')).toBe('search(titulaire, "CAPGEMINI TECHNOLOGY SERVICES")')
+    expect(boamp.accepts?.(entity('company', '479766842'))).toBe(false)
+  })
+
   it('TED : titre, SIREN du lauréat et avis à vérifier', async () => {
-    expect(tedTitle('France – Services de maintenance – Tierce maintenance applicative')).toBe('Tierce maintenance applicative')
+    expect(tedTitle('France \u2013 Services de maintenance \u2013 Tierce maintenance applicative')).toBe('Tierce maintenance applicative')
     expect(namesWinner(['Capgemini Technology Services SAS'], 'CAPGEMINI TECHNOLOGY SERVICES')).toBe('same')
     expect(namesWinner(['CAPGEMINI CONSULTING'], 'CAPGEMINI')).toBe('contains')
     expect(namesWinner(['SOPRA STERIA'], 'CAPGEMINI')).toBeNull()
@@ -398,6 +418,35 @@ describe('commande publique', () => {
     const run = await runModule(ted, entity('company', 'CAPGEMINI TECHNOLOGY SERVICES', { data: { siren: '479766842' } }), ctx)
     expect(JSON.parse(ctx.calls[0].body!).query).toBe('winner-name ~ "CAPGEMINI TECHNOLOGY SERVICES" SORT BY publication-date DESC')
     expect(run.entities).toHaveLength(2)
+  })
+})
+
+describe('company.aides', () => {
+  const list = fx<{ total_count: number; results: MinimisRecord[] }>('aides_cordon.json')
+
+  it('aides datées et total', () => {
+    const out = minimisOutput(list.results, { n: 8, total: 55400, last: '2026-09-11' }, 'fr')
+    expect(out.properties).toEqual({ de_minimis_aids_count: 8, de_minimis_aids_total: '55 400 €', de_minimis_last_date: '2026-09-11' })
+    expect(out.entities).toHaveLength(8)
+    expect(out.entities[0]).toMatchObject({
+      type: 'event',
+      label: 'Aide de minimis 4557 : 5 850 €, BPIfrance, 11/09/2026',
+      data: { date: '2026-09-11', amount: '5 850 €', aid_authority: 'BPIfrance', aid_instrument: 'Services subventionnés', aid_declaration_date: '2026-09-23' },
+      linkLabel: 'aide de minimis reçue'
+    })
+    // Sans agrégat (requête échouée), le total est recalculé sur la liste.
+    expect(minimisOutput(list.results, {}, 'fr').properties).toMatchObject({ de_minimis_aids_count: 8, de_minimis_aids_total: '55 400 €' })
+  })
+
+  it('interroge par SIREN, liste et agrégat en parallèle', async () => {
+    const ctx = fakeContext([
+      [/data\.economie\.gouv\.fr/, (url) => ({ body: params(url).get('select') ? { total_count: 1, results: [{ n: 8, total: 55400, last: '2026-09-11' }] } : list })]
+    ])
+    const out = await runModule(aides, entity('company', 'CORDON ELECTRONICS', { data: { siren: '432371342' } }), ctx)
+    expect(ctx.calls).toHaveLength(2)
+    expect(ctx.calls.every((c) => params(c.url).get('where') === 'startswith(identifiant_beneficiaire, "432371342")')).toBe(true)
+    expect(out.properties?.de_minimis_aids_total).toBe('55 400 €')
+    expect(aides.accepts?.(entity('company', 'Cordon'))).toBe(false)
   })
 })
 
