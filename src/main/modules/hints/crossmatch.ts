@@ -242,6 +242,8 @@ export default defineModule({
   category: 'email',
   inputTypes: ['*'],
   accepts: (input) => hintsOf(input).length > 0,
+  // Après un scan (roso.info, indices de récupération) qui a trouvé des indices masqués.
+  followUp: true,
   async run(input, ctx) {
     const lang = ctx.lang
     const { deductions, domains, candidates } = analyze(input, lang)

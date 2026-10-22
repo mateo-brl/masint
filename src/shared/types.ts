@@ -198,6 +198,15 @@ export interface JobProgress {
   cancelled: boolean
 }
 
+/** Résultat d'une recherche assistée (navigateur intégré). */
+export interface AssistResult {
+  status: 'ok' | 'cancelled' | 'timeout' | 'error'
+  url: string
+  title: string
+  matches: Array<{ title: string; url: string; snippet: string }>
+  error?: string
+}
+
 /** Résultat en attente de validation par l'enquêteur (voir `OutEntity.review`, `OutManualCheck`). */
 export interface Suggestion {
   id: string

@@ -9,6 +9,7 @@ import type { ApiChannel, ApiMap } from '@shared/api'
 import type { GraphEdge, GraphNode, Settings } from '@shared/types'
 import { buildArchive, duplicateInvestigation, importArchive } from './archive'
 import { mergeData } from './merge'
+import { assistedSearch, needlesFor } from './assist'
 import type { Repo } from './db/repo'
 import { createFetch, resetDispatchers } from './engine/http'
 import { allModules, knownKeyIds, moduleInfo } from './engine/registry'
@@ -204,6 +205,18 @@ export function registerIpc(deps: IpcDeps): void {
   handle('modules:jobs', () => engine.listJobs())
   handle('suggestions:list', (invId, nodeId) => repo.listSuggestions(invId, nodeId))
   handle('suggestions:resolve', (id, action, found) => engine.resolveSuggestion(id, action, found))
+  handle('assist:run', async (id) => {
+    const s = repo.getSuggestion(id)
+    const node = s ? repo.getNode(s.nodeId) : null
+    if (!s?.url || !node) return { status: 'error' as const, url: '', title: '', matches: [], error: 'Recherche introuvable' }
+    return assistedSearch({
+      url: s.url,
+      needles: needlesFor(node.type, node.label),
+      parent: getWindow(),
+      userAgent: settings.get().userAgent,
+      title: `MASINT · ${s.label}`
+    })
+  })
   handle('modules:applicable', (nodeId) => {
     const node = repo.getNode(nodeId)
     return node ? engine.applicable(node) : { auto: [], accepted: [] }

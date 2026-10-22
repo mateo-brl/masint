@@ -37,6 +37,7 @@
   "exclude": [
     "tests/export*.test.ts",
     "tests/layout.test.ts",
-    "tests/collapse.test.ts"
+    "tests/collapse.test.ts",
+    "tests/consistency.test.ts"
   ]
 }

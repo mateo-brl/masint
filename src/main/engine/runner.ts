@@ -170,6 +170,18 @@ export class Engine {
       }
     }
     await Promise.all(Array.from({ length: Math.min(concurrency, modules.length) }, worker))
+    // Modules de suite (`followUp`) que les résultats de la tâche rendent maintenant applicables.
+    const fresh = this.repo.getNode(node.id)
+    if (fresh && !job.controller.signal.aborted) {
+      const ran = new Set(modules.map((m) => m.id))
+      const follow = applicableModules(fresh, this.settings, undefined, this.imageOrigin(fresh)).filter((m) => m.followUp && !ran.has(m.id))
+      if (follow.length) {
+        job.progress.total += follow.length
+        this.emit('job:progress', { ...job.progress, running: [...job.progress.running] })
+        queue.push(...follow)
+        await Promise.all(Array.from({ length: Math.min(concurrency, follow.length) }, worker))
+      }
+    }
     // Les modules restés en file après une annulation sont tracés comme annulés.
     for (const m of queue) {
       this.repo.insertRun({
@@ -450,7 +462,7 @@ export class Engine {
   async resolveSuggestion(
     id: string,
     action: 'accept' | 'reject' | 'checked' | 'reopen',
-    found?: { type: string; label: string; platform?: string | null }
+    found?: { type: string; label: string; platform?: string | null; data?: Record<string, PropValue> }
   ): Promise<void> {
     const s = this.repo.getSuggestion(id)
     if (!s) return
@@ -468,12 +480,19 @@ export class Engine {
       s.kind === 'entity'
         ? { type: s.type, label: s.label, platform: s.platform ?? undefined, data, linkLabel: s.linkLabel, image: typeof __image === 'string' ? __image : undefined }
         : found
-          ? { type: found.type, label: found.label, platform: found.platform ?? undefined, data: { source_url: s.url }, linkLabel: s.label }
+          ? { type: found.type, label: found.label, platform: found.platform ?? undefined, data: { source_url: s.url, ...found.data }, linkLabel: s.label }
           : { type: 'search_link', label: `${s.label} : ${parent.label}`, data: { url: s.url, engine: s.label }, linkLabel: s.linkLabel }
     // Même chemin qu'un résultat de module : dédoublonnage, placement libre, image, événement.
     const ctx = this.createContext({ id: s.moduleId }, AbortSignal.timeout(30_000))
     await this.applyOutput(parent, { id: s.moduleId }, { entities: [entity] }, ctx)
     done('accepted')
+    // Enrichissement automatique activé : l'entité validée est enrichie à son tour.
+    if (this.settings.get().autoEnrich) {
+      // Même plateforme que celle déduite par applyOutput (fournisseur pour un email).
+      const platform = entity.platform ?? (entity.type === 'email' ? (emailProvider(entity.label)?.id ?? null) : null)
+      const created = this.repo.findNodeByDedup(s.investigationId, dedupKey(entity.type, entity.label.trim(), platform))
+      if (created && created.kind === 'entity') this.enrich(s.investigationId, created.id)
+    }
   }
 
   /** Position d'un nouvel enfant : rangées centrées sous le parent, sur des cases libres. */

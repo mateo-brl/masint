@@ -8,6 +8,7 @@ import { openArchiveOnce } from './archive'
 import { openDatabase } from './db/database'
 import { Repo } from './db/repo'
 import { moveNoiseToReview } from './cleanup'
+import { ASSIST_PARTITION, proxyConfig } from './assist'
 import { Engine } from './engine/runner'
 import { registerIpc } from './ipc'
 import { queueOpen } from './openQueue'
@@ -43,13 +44,14 @@ const electronCipher: Cipher = {
   decrypt: (b) => safeStorage.decryptString(b)
 }
 
-/** Applique le proxy à la session de l'interface (tuiles de carte, images distantes). */
+/**
+ * Applique le proxy à la session de l'interface (tuiles de carte, images distantes) et à celle
+ * du navigateur de recherche assistée.
+ */
 async function applySessionProxy(s: Settings): Promise<void> {
-  const p = s.proxy
-  let proxyRules = ''
-  if (p.mode === 'tor') proxyRules = `socks5://127.0.0.1:${p.torPort || 9050}`
-  else if (p.mode !== 'none' && p.url.trim()) proxyRules = p.url.trim()
-  await session.defaultSession.setProxy(proxyRules ? { proxyRules, proxyBypassRules: '<local>' } : { mode: 'direct' })
+  const config = proxyConfig(s)
+  await session.defaultSession.setProxy(config)
+  await session.fromPartition(ASSIST_PARTITION).setProxy(config)
 }
 
 interface WindowState {

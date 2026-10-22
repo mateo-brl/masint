@@ -1,7 +1,7 @@
 {
   "name": "masint",
   "productName": "MASINT",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Application de bureau d'enquête OSINT par graphe : entités, modules d'enrichissement, carte, frise, rapports (Windows, Linux)",
   "keywords": [
     "osint",
