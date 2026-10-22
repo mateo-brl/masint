@@ -25,14 +25,14 @@ function searchDataSql(col: string): string {
  * des déclencheurs : toute écriture (saisie, module, import d'archive, fusion, suppression en
  * cascade d'une enquête) est prise en compte. Un déplacement de nœud ne touche pas l'index.
  * Découpage en trigrammes : une partie de valeur suffit (« 9981234 », « exempl »), sans tenir
- * compte de la casse ni des accents.
+ * compte de la casse ni des accents. Rejouable sans erreur (base remise à une version antérieure).
  */
 function searchIndexMigration(): string {
   const row = (r: string): string => `${r}.id, ${r}.investigation_id, ${r}.label, ${searchDataSql(`${r}.data`)}, ${r}.notes`
   return `
-  CREATE INDEX idx_nodes_dedup_key ON nodes(dedup_key);
+  CREATE INDEX IF NOT EXISTS idx_nodes_dedup_key ON nodes(dedup_key);
 
-  CREATE TABLE node_text (
+  CREATE TABLE IF NOT EXISTS node_text (
     id INTEGER PRIMARY KEY,
     node_id TEXT NOT NULL UNIQUE,
     investigation_id TEXT NOT NULL,
@@ -40,34 +40,34 @@ function searchIndexMigration(): string {
     data TEXT NOT NULL,
     notes TEXT NOT NULL
   );
-  CREATE VIRTUAL TABLE node_fts USING fts5(
+  CREATE VIRTUAL TABLE IF NOT EXISTS node_fts USING fts5(
     label, data, notes,
     content = 'node_text', content_rowid = 'id',
     tokenize = 'trigram remove_diacritics 1'
   );
 
-  CREATE TRIGGER node_text_ai AFTER INSERT ON node_text BEGIN
+  CREATE TRIGGER IF NOT EXISTS node_text_ai AFTER INSERT ON node_text BEGIN
     INSERT INTO node_fts(rowid, label, data, notes) VALUES (new.id, new.label, new.data, new.notes);
   END;
-  CREATE TRIGGER node_text_ad AFTER DELETE ON node_text BEGIN
+  CREATE TRIGGER IF NOT EXISTS node_text_ad AFTER DELETE ON node_text BEGIN
     INSERT INTO node_fts(node_fts, rowid, label, data, notes) VALUES ('delete', old.id, old.label, old.data, old.notes);
   END;
 
-  CREATE TRIGGER nodes_search_ai AFTER INSERT ON nodes WHEN new.deleted_at IS NULL AND new.kind != 'drawing' BEGIN
+  CREATE TRIGGER IF NOT EXISTS nodes_search_ai AFTER INSERT ON nodes WHEN new.deleted_at IS NULL AND new.kind != 'drawing' BEGIN
     INSERT INTO node_text(node_id, investigation_id, label, data, notes) SELECT ${row('new')};
   END;
-  CREATE TRIGGER nodes_search_au AFTER UPDATE ON nodes
+  CREATE TRIGGER IF NOT EXISTS nodes_search_au AFTER UPDATE ON nodes
     WHEN old.label IS NOT new.label OR old.data IS NOT new.data OR old.notes IS NOT new.notes OR old.kind IS NOT new.kind
       OR old.deleted_at IS NOT new.deleted_at OR old.investigation_id IS NOT new.investigation_id
   BEGIN
     DELETE FROM node_text WHERE node_id = old.id;
     INSERT INTO node_text(node_id, investigation_id, label, data, notes) SELECT ${row('new')} WHERE new.deleted_at IS NULL AND new.kind != 'drawing';
   END;
-  CREATE TRIGGER nodes_search_ad AFTER DELETE ON nodes BEGIN
+  CREATE TRIGGER IF NOT EXISTS nodes_search_ad AFTER DELETE ON nodes BEGIN
     DELETE FROM node_text WHERE node_id = old.id;
   END;
 
-  INSERT INTO node_text(node_id, investigation_id, label, data, notes)
+  INSERT OR IGNORE INTO node_text(node_id, investigation_id, label, data, notes)
     SELECT ${row('n')} FROM nodes n WHERE n.deleted_at IS NULL AND n.kind != 'drawing';
   `
 }
