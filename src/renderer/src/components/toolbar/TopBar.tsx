@@ -302,15 +302,33 @@ function JobPill({ job: j }: { job: JobProgress }): React.JSX.Element {
         <button onClick={() => setOpen(!open)} className="rounded-full p-1 text-muted hover:bg-panel-3 hover:text-fg" title={t('jobs.details')}>
           <Icon name={open ? 'ChevronUp' : 'ChevronDown'} size={13} />
         </button>
-        {!j.finished && (
-          <button onClick={() => void api('modules:cancel', j.jobId)} className="rounded-full p-1 text-muted hover:bg-panel-3 hover:text-fg" title={t('common.cancel')}>
-            <Icon name="X" size={12} />
-          </button>
-        )}
+        {!j.finished &&
+          (j.chain ? (
+            <button
+              onClick={() => void api('modules:cancel', j.jobId)}
+              className="shrink-0 rounded-full border border-line px-2 py-0.5 text-[11px] text-muted hover:border-accent hover:text-accent"
+              title={t('jobs.stopTitle')}
+            >
+              {t('jobs.stop')}
+            </button>
+          ) : (
+            <button onClick={() => void api('modules:cancel', j.jobId)} className="rounded-full p-1 text-muted hover:bg-panel-3 hover:text-fg" title={t('common.cancel')}>
+              <Icon name="X" size={12} />
+            </button>
+          ))}
       </div>
       <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-panel-3">
         <div className="h-full bg-accent transition-all" style={{ width: `${pct}%` }} />
       </div>
+      {j.chain && (
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-[11.5px] text-muted">
+          <Icon name="Waypoints" size={12} className="shrink-0 text-faint" />
+          <span>{t('jobs.chain', { depth: j.chain.depth, max: j.chain.maxDepth })}</span>
+          <span>· {t('jobs.chainNodes', { count: j.chain.created })}</span>
+          <span>· {t('jobs.chainEnriched', { count: j.chain.enriched })}</span>
+          {j.chain.budget && <span className="text-warning">· {t('jobs.chainBudget')}</span>}
+        </div>
+      )}
       {!j.finished && j.running.length > 0 && (
         <div className="mt-1.5 flex flex-col gap-0.5 text-[11.5px] text-muted">
           {j.running.slice(0, 3).map((id) => (
@@ -331,9 +349,13 @@ function JobPill({ job: j }: { job: JobProgress }): React.JSX.Element {
 function JobDetails({ job: j, name, step }: { job: JobProgress; name: (id: string) => string; step: (id: string) => string }): React.JSX.Element {
   const { t } = useTranslation()
   const [runs, setRuns] = useState<ModuleRun[]>([])
+  const chained = !!j.chain
   useEffect(() => {
-    void api('modules:runs', j.investigationId, j.nodeId).then((r) => setRuns(r.filter((x) => x.jobId === j.jobId)))
-  }, [j.investigationId, j.nodeId, j.jobId, j.done, j.finished])
+    // Tâche en chaîne : ses exécutions portent sur plusieurs nœuds.
+    void api('modules:runs', j.investigationId, chained ? undefined : j.nodeId).then((r) => setRuns(r.filter((x) => x.jobId === j.jobId)))
+  }, [j.investigationId, j.nodeId, j.jobId, j.done, j.finished, chained])
+  const nodes = useGraph((s) => s.nodes)
+  const labelOf = (id: string): string => nodes.find((n) => n.id === id)?.data.node.label ?? ''
   const order = { running: 0, queued: 1, error: 2, done: 3, cancelled: 4 } as Record<string, number>
   const sorted = [...runs].sort((a, b) => (order[a.status] ?? 5) - (order[b.status] ?? 5) || (b.resultCount || 0) - (a.resultCount || 0))
   return (
@@ -345,7 +367,10 @@ function JobDetails({ job: j, name, step }: { job: JobProgress; name: (id: strin
             size={12}
             className={`mt-px shrink-0 ${r.status === 'running' ? 'spin text-warning' : r.status === 'error' ? 'text-accent' : r.found || r.resultCount > 0 ? 'text-success' : 'text-faint'}`}
           />
-          <span className="min-w-0 flex-1 truncate">{r.status === 'running' ? step(r.moduleId) : name(r.moduleId)}</span>
+          <span className="min-w-0 flex-1 truncate">
+            {r.status === 'running' ? step(r.moduleId) : name(r.moduleId)}
+            {r.nodeId !== j.nodeId && <span className="text-faint"> · {labelOf(r.nodeId)}</span>}
+          </span>
           <span className="max-w-[45%] shrink-0 truncate text-right text-faint" title={r.error ?? undefined}>
             {r.status === 'error'
               ? r.error

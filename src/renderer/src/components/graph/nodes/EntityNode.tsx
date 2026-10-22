@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { attachmentUrl } from '@shared/api'
 import { getEntityType } from '@shared/entityTypes'
 import { getPlatform } from '@shared/platforms'
+import { CORROBORATION_BADGE_MIN } from '@shared/provenance'
 import { nodeSubtitle } from '@shared/subtitle'
 import { useLang } from '../../../lib/i18n'
 import { EntityBadge } from '../../../lib/icons'
@@ -29,7 +30,9 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
   const n = data.node
   const { t } = useTranslation()
   const { tx } = useLang()
-  const running = useApp((s) => Object.values(s.jobs).some((j) => j.nodeId === n.id && !j.finished))
+  const running = useApp((s) => Object.values(s.jobs).some((j) => !j.finished && (j.nodeId === n.id || !!j.chain?.active.includes(n.id))))
+  // Sélecteur par nœud : seul ce nœud est redessiné quand son score change.
+  const sources = useGraph((s) => s.corroboration.nodes[n.id] ?? 0)
   const def = getEntityType(n.type)
   const platform = getPlatform(n.platform)
   const accent = n.style.color ?? platform?.color ?? def.color
@@ -61,8 +64,19 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
         icon={n.style.icon}
       />
       <div className="min-w-0 flex-1 leading-tight">
-        <div className="truncate text-[7.5px] font-semibold tracking-[0.08em]" style={{ color: 'var(--muted)' }}>
-          {kicker}
+        <div className="flex items-center gap-1">
+          <div className="min-w-0 flex-1 truncate text-[7.5px] font-semibold tracking-[0.08em]" style={{ color: 'var(--muted)' }}>
+            {kicker}
+          </div>
+          {sources >= CORROBORATION_BADGE_MIN && (
+            <span
+              className="shrink-0 rounded-[3px] border px-[3px] text-[7.5px] leading-[11px] font-semibold"
+              style={{ borderColor: 'var(--node-border)', color: 'var(--muted)' }}
+              title={t('provenance.seenBy', { count: sources })}
+            >
+              ×{sources}
+            </span>
+          )}
         </div>
         <div className={`truncate text-[11.5px] font-semibold ${n.label ? 'text-fg' : 'italic text-faint'}`}>{n.label || t('node.untitled')}</div>
         {subtitle && <div className="truncate text-[8.5px] text-muted">{subtitle}</div>}

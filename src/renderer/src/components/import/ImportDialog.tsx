@@ -168,7 +168,7 @@ function ImportBody({ seed, onClose }: { seed: ImportSeed | null; onClose: () =>
         if (edgeInputs.length) await useGraph.getState().addEdges(edgeInputs)
       })
       if (enrich && inputs.length) {
-        for (const n of inputs) await enrichNode(n.id!)
+        for (const n of inputs) await enrichNode(n.id!, undefined, inputs.length > 1 ? { chain: false } : {})
         toast('info', t('importer.enriching', { count: inputs.length }))
       }
       setResult({ created: inputs.length, existing: plan.existing.size, ignored: plan.ignored, links: edgeInputs.length })
