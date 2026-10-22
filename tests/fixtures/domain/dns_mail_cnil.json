@@ -1,0 +1,30 @@
+{
+ "cnil.fr|A": [
+  "104.20.39.48",
+  "172.66.152.244"
+ ],
+ "cnil.fr|AAAA": [
+  "2606:4700:10::6814:2730",
+  "2606:4700:10::ac42:98f4"
+ ],
+ "cnil.fr|MX": [
+  "10 mail-premium.cnil.fr",
+  "10 mail-premium2.cnil.fr"
+ ],
+ "cnil.fr|NS": [
+  "magali.ns.cloudflare.com",
+  "matt.ns.cloudflare.com"
+ ],
+ "cnil.fr|TXT": [
+  "9ar6d0ULOKdzu6tMFqJjGXblMFA=",
+  "MS=7D3B6718DE96E24E4E1AA126D25358B98C47166B",
+  "_fvnuoi6c90uffdvr4sh6pm7lkrmwli6",
+  "v=spf1 ip4:185.24.184.82 ip4:185.24.184.83 ip4:185.24.184.86 ip4:94.125.164.25 ip4:40.113.17.15 ip4:52.148.244.33 ip4:4.233.125.199 ip4:57.128.113.111 ip4:46.18.194.189 ip4:46.18.194.15 ip4:46.18.194.182 ip4:46.18.194.185 ip4:46.18.194.184 ip4:141.94.7.71 ip4:46.18.194.133 ip4:46.18.194.134 ip4:46.18.194.162 ip4:37.71.148.2 ip4:82.138.78.27 ip4:141.94.7.72 ip4:141.94.7.73 ip4:146.183.10.161 -all"
+ ],
+ "cnil.fr|SOA": [
+  "magali.ns.cloudflare.com. dns.cloudflare.com. 2418085203 10000 2400 604800 1800"
+ ],
+ "_dmarc.cnil.fr|TXT": [
+  "v=DMARC1; p=quarantine"
+ ]
+}

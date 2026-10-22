@@ -1,0 +1,29 @@
+ownerdomain=mpublicite.fr
+
+
+#DEBUT LE MONDE#
+google.com, pub-9273264035880389, DIRECT, f08c47fec0942fa0 #GAM
+
+
+#PREBID-CS#
+teads.tv, 20307, DIRECT, 15a9c44f6d26cbe1 #PB-TEADS
+indexexchange.com, 197794, DIRECT #PB-IX
+appnexus.com, 8499, DIRECT, f5ab79cb980f11d1 #PB-Xandr
+themediagrid.com, ZLYCS2, DIRECT, 9fac4a4a87c2a44f #PB-CRITEO
+smartadserver.com, 690, DIRECT, 060d053dcf45cbf3 #PB-EQUATIV
+outbrain.com, 00532cf4102db2ad97ecef1d0b3cc806fb, DIRECT #PB OUTBRAIN
+triplelift.com, 5765, direct, 6c33edb13117fd86 #TL
+
+
+#OPENBIDDING#
+
+appnexus.com, 1314, RESELLER #OB-TL
+smartadserver.com, 690-OB, RESELLER, 060d053dcf45cbf3 #OB-Equativ
+adform.com,3061,RESELLER,9f5210a2f0999e32
+google.com,pub-7019376976432612,RESELLER,f08c47fec0942fa0
+appnexus.com,3360,RESELLER,f5ab79cb980f11d1
+
+#Subdomain Permissions - DO NOT REMOVE
+subdomain=arcade.lemonde.fr
+subdomain=paroles2chansons.lemonde.fr
+subdomain=jardinage.lemonde.fr

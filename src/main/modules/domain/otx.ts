@@ -71,7 +71,8 @@ export function parseOtx(
   general: OtxGeneral | null,
   pdns: OtxPassiveDns | null,
   lang: 'fr' | 'en',
-  hint: { asn?: unknown; org?: unknown } = {}
+  hint: { asn?: unknown; org?: unknown } = {},
+  errors: string[] = []
 ): ModuleOutput {
   const fr = lang === 'fr'
   // Les résolutions les plus récentes d'abord : ce sont les plus pertinentes.
@@ -86,11 +87,25 @@ export function parseOtx(
     byValue.set(value, r)
     values.push(value)
   }
+  // Noms d'hôtes observés sous le domaine (section « hostname ») : des sous-domaines.
+  const subdomains =
+    kind === 'domain'
+      ? uniq(rows.map((r) => r.hostname?.toLowerCase().replace(/\.$/, '') ?? '').filter((h) => h.endsWith(`.${indicator}`) && isDomain(h))).sort()
+      : []
   // IP de CDN ou résolveur public : les domaines qui y ont pointé n'ont aucun lien entre eux.
   const shared = kind === 'ip' ? sharedInfrastructure(indicator, { asn: hint.asn ?? rows.find((r) => r.asn)?.asn, org: hint.org }) : null
+  // Domaine : seules les IP du nom lui-même (ou de www) deviennent des entités ; celles des
+  // sous-domaines restent dans la liste.
+  const own = new Set(
+    rows.filter((r) => !r.hostname || [indicator, `www.${indicator}`].includes(r.hostname.toLowerCase())).map((r) => r.address?.toLowerCase())
+  )
   const entities: OutEntity[] = shared
     ? []
-    : values.slice(0, MAX_LIST_ENTITIES).map((value) => {
+    : values
+        // IP de CDN (Cloudflare...) : partagée par des milliers de sites, elle reste dans la liste.
+        .filter((value) => kind === 'ip' || (own.has(value) && !sharedInfrastructure(value)))
+        .slice(0, MAX_LIST_ENTITIES)
+        .map((value) => {
         const r = byValue.get(value)!
         return {
           type: kind === 'domain' ? 'ip' : 'domain',
@@ -104,11 +119,14 @@ export function parseOtx(
     ...compact({
       otx_passive_dns_count: pdns?.count ?? null,
       ...cappedList(kind === 'domain' ? 'otx_resolved_ips' : 'otx_hostnames', values),
+      ...cappedList('otx_subdomains', subdomains),
       shared_infrastructure: shared ? sharedLabel(shared, lang) : null,
+      otx_errors: errors,
       otx_link: `https://otx.alienvault.com/indicator/${kind === 'domain' ? 'domain' : 'ip'}/${indicator}`
     })
   }
-  if (!entities.length && !general?.pulse_info?.count && !pdns?.count) return {}
+  // Indicateur légitime (liste blanche OTX) ou section en échec : l'information reste utile.
+  if (!entities.length && !general?.pulse_info?.count && !pdns?.count && !otxWhitelisted(general) && !errors.length) return {}
   const pulses = (general?.pulse_info?.pulses ?? []).slice(0, 50).map((p) => ({
     name: p.name,
     created: p.created,
@@ -127,31 +145,58 @@ export function parseOtx(
   }
 }
 
-async function otx<T>(ctx: ModuleContext, path: string): Promise<T | null> {
+async function otx<T>(ctx: ModuleContext, path: string, timeoutMs = 40000): Promise<T | null> {
   const key = ctx.key(KEY.id)
   try {
-    return await ctx.fetchJson<T>(`${BASE}/${path}`, { headers: key ? { 'X-OTX-API-KEY': key } : {}, timeoutMs: 40000 })
+    return await ctx.fetchJson<T>(`${BASE}/${path}`, { headers: key ? { 'X-OTX-API-KEY': key } : {}, timeoutMs })
   } catch (e) {
     const status = (e as { status?: number }).status
     if (status === 404 || status === 400) return null
     if (status === 429 && !key) throw new ModuleError('OTX : accès anonyme limité, ajoutez une clé API', 'rate_limited')
+    if (e instanceof Error && (e.name === 'TimeoutError' || /timeout/i.test(e.message))) throw new ModuleError('OTX : délai dépassé', 'unavailable')
     throw serviceError(e, 'AlienVault OTX', !!key)
   }
 }
 
-/** Les deux sections sont indépendantes : une seule réponse suffit (OTX est parfois très lent). */
-async function both<A, B>(a: Promise<A | null>, b: Promise<B | null>): Promise<[A | null, B | null]> {
+/** DNS passif : OTX le sert parfois très lentement, d'où un délai court. */
+const PDNS_TIMEOUT_MS = 15000
+
+/**
+ * DNS passif d'un domaine. En anonyme, la section « domain » répond 429 (« Anonymous access to
+ * this endpoint is limited ») : on se rabat sur la section « hostname », qui répond.
+ */
+async function domainPdns(ctx: ModuleContext, domain: string, section: 'domain' | 'hostname'): Promise<OtxPassiveDns | null> {
+  try {
+    return await otx<OtxPassiveDns>(ctx, `${section}/${domain}/passive_dns`, PDNS_TIMEOUT_MS)
+  } catch (e) {
+    if (section === 'domain' && e instanceof ModuleError && e.code === 'rate_limited') return otx<OtxPassiveDns>(ctx, `hostname/${domain}/passive_dns`, PDNS_TIMEOUT_MS)
+    throw e
+  }
+}
+
+/**
+ * Les deux sections sont indépendantes : une seule réponse suffit (OTX est parfois très lent).
+ * L'échec de l'autre est rapporté dans `errors` au lieu d'être masqué.
+ */
+async function both<A, B>(ctx: ModuleContext, a: Promise<A | null>, b: Promise<B | null>): Promise<[A | null, B | null, string[]]> {
   const [ra, rb] = await Promise.allSettled([a, b])
   if (ra.status === 'rejected' && rb.status === 'rejected') throw ra.reason
-  return [ra.status === 'fulfilled' ? ra.value : null, rb.status === 'fulfilled' ? rb.value : null]
+  const errors: string[] = []
+  for (const [section, r] of [['general', ra], ['passive_dns', rb]] as const) {
+    if (r.status !== 'rejected') continue
+    const message = r.reason instanceof Error ? r.reason.message : String(r.reason)
+    ctx.log(`section ${section} en échec : ${message}`)
+    errors.push(`${section} : ${message.replace(/^OTX : /, '')}`)
+  }
+  return [ra.status === 'fulfilled' ? ra.value : null, rb.status === 'fulfilled' ? rb.value : null, errors]
 }
 
 const otxDomain = defineModule({
   id: 'domain.otx',
   name: { fr: 'AlienVault OTX (domaine)', en: 'AlienVault OTX (domain)' },
   description: {
-    fr: 'Rapports de menace communautaires citant le domaine (pulses, malwares, tags) et historique DNS passif (IP sur lesquelles il a pointé). Clé facultative, recommandée.',
-    en: 'Community threat reports mentioning the domain (pulses, malware, tags) and passive DNS history (IPs it pointed to). Optional key, recommended.'
+    fr: 'Rapports de menace communautaires citant le domaine (pulses, malwares, tags) et historique DNS passif (IP sur lesquelles il a pointé, sous-domaines observés). Clé facultative, recommandée.',
+    en: 'Community threat reports mentioning the domain (pulses, malware, tags) and passive DNS history (IPs it pointed to, observed subdomains). Optional key, recommended.'
   },
   category: 'domain',
   inputTypes: ['domain'],
@@ -161,11 +206,8 @@ const otxDomain = defineModule({
     const domain = normalizeDomain(input.label)
     if (!isDomain(domain)) throw new ModuleError('Domaine invalide', 'invalid_input')
     const section = domain.split('.').length > 2 ? 'hostname' : 'domain'
-    const [general, pdns] = await both(
-      otx<OtxGeneral>(ctx, `${section}/${domain}/general`),
-      otx<OtxPassiveDns>(ctx, `${section}/${domain}/passive_dns`)
-    )
-    return parseOtx(domain, 'domain', general, pdns, ctx.lang)
+    const [general, pdns, errors] = await both(ctx, otx<OtxGeneral>(ctx, `${section}/${domain}/general`), domainPdns(ctx, domain, section))
+    return parseOtx(domain, 'domain', general, pdns, ctx.lang, {}, errors)
   }
 })
 
@@ -184,11 +226,12 @@ const otxIp = defineModule({
     const ip = normalizeHost(input.label)
     const family = isIPv4(ip) ? 'IPv4' : isIPv6(ip) ? 'IPv6' : null
     if (!family) throw new ModuleError('Adresse IP invalide', 'invalid_input')
-    const [general, pdns] = await both(
+    const [general, pdns, errors] = await both(
+      ctx,
       otx<OtxGeneral>(ctx, `${family}/${ip}/general`),
-      otx<OtxPassiveDns>(ctx, `${family}/${ip}/passive_dns`)
+      otx<OtxPassiveDns>(ctx, `${family}/${ip}/passive_dns`, PDNS_TIMEOUT_MS)
     )
-    return parseOtx(ip, 'ip', general, pdns, ctx.lang, { asn: input.data.asn, org: input.data.org ?? input.data.isp })
+    return parseOtx(ip, 'ip', general, pdns, ctx.lang, { asn: input.data.asn, org: input.data.org ?? input.data.isp }, errors)
   }
 })
 

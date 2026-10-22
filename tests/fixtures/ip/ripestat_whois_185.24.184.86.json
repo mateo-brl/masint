@@ -1,0 +1,119 @@
+{
+ "status": "ok",
+ "data": {
+  "records": [
+   [
+    {
+     "key": "inetnum",
+     "value": "185.24.184.0/24",
+     "comment": null,
+     "details_link": "https://stat.ripe.net/185.24.184.0/24"
+    },
+    {
+     "key": "netname",
+     "value": "RIE_184_24",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "country",
+     "value": "FR",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "status",
+     "value": "LIR-PARTITIONED PA",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "created",
+     "value": "2026-04-08T13:00:25Z",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "last-modified",
+     "value": "2026-04-08T13:00:25Z",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "source",
+     "value": "RIPE",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "mnt-by",
+     "value": "DISIC-RIE-MNT",
+     "comment": null,
+     "details_link": "https://rest.db.ripe.net/ripe/mntner/DISIC-RIE-MNT"
+    },
+    {
+     "key": "mnt-by",
+     "value": "RIE-RDNS-MNT",
+     "comment": null,
+     "details_link": "https://rest.db.ripe.net/ripe/mntner/RIE-RDNS-MNT"
+    }
+   ]
+  ],
+  "irr_records": [
+   [
+    {
+     "key": "route",
+     "value": "185.24.184.0/22",
+     "comment": null,
+     "details_link": "https://stat.ripe.net/185.24.184.0/22"
+    },
+    {
+     "key": "descr",
+     "value": "DISIC-RIE Route",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "descr",
+     "value": "Paris, France",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "origin",
+     "value": "60855",
+     "comment": null,
+     "details_link": "https://stat.ripe.net/AS60855"
+    },
+    {
+     "key": "mnt-by",
+     "value": "DISIC-RIE-MNT",
+     "comment": null,
+     "details_link": "https://rest.db.ripe.net/ripe/mntner/DISIC-RIE-MNT"
+    },
+    {
+     "key": "created",
+     "value": "2013-12-12T18:33:31Z",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "last-modified",
+     "value": "2016-10-18T16:00:42Z",
+     "comment": null,
+     "details_link": null
+    },
+    {
+     "key": "source",
+     "value": "RIPE",
+     "comment": null,
+     "details_link": null
+    }
+   ]
+  ],
+  "authorities": [
+   "ripe"
+  ],
+  "resource": "185.24.184.86"
+ }
+}

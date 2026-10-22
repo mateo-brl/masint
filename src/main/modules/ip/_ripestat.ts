@@ -57,12 +57,52 @@ export interface GeoLite {
   }>
 }
 
+export interface WhoisRecord {
+  key: string
+  value: string
+}
+
+export interface Whois {
+  records?: WhoisRecord[][]
+  irr_records?: WhoisRecord[][]
+  /** Registres consultés (`ripe`, `arin`...). */
+  authorities?: string[]
+}
+
+export interface RpkiValidation {
+  /** `valid`, `invalid`, `invalid_asn`, `invalid_length` ou `unknown` (aucun ROA). */
+  status?: string
+  validating_roas?: Array<{ origin?: string; prefix?: string; validity?: string; max_length?: number }>
+}
+
 export const prefixOverview = (ctx: ModuleContext, r: string): Promise<PrefixOverview> => ripe(ctx, 'prefix-overview', r)
 export const asOverview = (ctx: ModuleContext, r: string): Promise<AsOverview> => ripe(ctx, 'as-overview', r)
 export const announcedPrefixes = (ctx: ModuleContext, r: string): Promise<AnnouncedPrefixes> => ripe(ctx, 'announced-prefixes', r)
 export const abuseContacts = (ctx: ModuleContext, r: string): Promise<AbuseContacts> => ripe(ctx, 'abuse-contact-finder', r)
 export const rirCountry = (ctx: ModuleContext, r: string): Promise<RirCountry> => ripe(ctx, 'rir-stats-country', r)
 export const geoLite = (ctx: ModuleContext, r: string): Promise<GeoLite> => ripe(ctx, 'maxmind-geo-lite', r)
+export const whois = (ctx: ModuleContext, r: string): Promise<Whois> => ripe(ctx, 'whois', r)
+/** Validité RPKI de l'annonce `prefix` par l'AS `asn`. */
+export const rpkiValidation = (ctx: ModuleContext, asn: number, prefix: string): Promise<RpkiValidation> =>
+  ripe(ctx, 'rpki-validation', `AS${asn}`, { prefix })
+
+/**
+ * Nom d'une organisation de la base RIPE (`ORG-OS3-RIPE` → `OVH SAS`). Réponse filtrée : la base ne
+ * renvoie ni courriel ni contact personnel.
+ */
+export async function ripeOrgName(ctx: ModuleContext, handle: string): Promise<string | null> {
+  if (!/^ORG-[A-Z0-9-]+-RIPE$/i.test(handle)) return null
+  try {
+    const res = await ctx.fetchJson<{ objects?: { object?: Array<{ attributes?: { attribute?: Array<{ name: string; value: string }> } }> } }>(
+      `https://rest.db.ripe.net/ripe/organisation/${encodeURIComponent(handle)}.json`,
+      { headers: { accept: 'application/json' }, timeoutMs: 20000 }
+    )
+    const attrs = res.objects?.object?.[0]?.attributes?.attribute ?? []
+    return attrs.find((a) => a.name === 'org-name')?.value?.trim() || null
+  } catch (e) {
+    throw serviceError(e, 'Base RIPE')
+  }
+}
 
 /** Variante qui ne fait jamais échouer le module (donnée complémentaire). */
 export async function optional<T>(p: Promise<T>): Promise<T | null> {

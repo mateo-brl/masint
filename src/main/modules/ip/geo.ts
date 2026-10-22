@@ -19,25 +19,23 @@ export interface IpWhoIs {
   timezone?: { id?: string }
 }
 
-export interface IpApi {
-  status?: string
-  message?: string
-  country?: string
-  countryCode?: string
-  regionName?: string
+/**
+ * Réponse de ipinfo.io sans jeton (HTTPS gratuit). `org` réunit l'ASN et son nom
+ * (`AS15169 Google LLC`), `loc` les coordonnées (`37.4056,-122.0775`), `bogon` marque une
+ * adresse privée ou réservée.
+ */
+export interface IpInfo {
+  ip?: string
+  hostname?: string
   city?: string
-  zip?: string
-  lat?: number
-  lon?: number
-  timezone?: string
-  isp?: string
+  region?: string
+  country?: string
+  loc?: string
   org?: string
-  as?: string
-  asname?: string
-  reverse?: string
-  mobile?: boolean
-  proxy?: boolean
-  hosting?: boolean
+  postal?: string
+  timezone?: string
+  anycast?: boolean
+  bogon?: boolean
 }
 
 interface Geo {
@@ -54,6 +52,10 @@ interface Geo {
   org: string | null
   asn: number | null
   asnName: string | null
+  /** Nom d'hôte (PTR) quand le service le donne. */
+  reverse: string | null
+  /** Adresse anycast : servie depuis plusieurs lieux, la position n'a pas de sens. */
+  anycast: boolean | null
   source: string
 }
 
@@ -73,35 +75,41 @@ export function fromIpWhoIs(d: IpWhoIs): Geo | null {
     org: d.connection?.org ?? null,
     asn: d.connection?.asn ?? null,
     asnName: d.connection?.org ?? null,
+    reverse: null,
+    anycast: null,
     source: 'ipwho.is'
   }
 }
 
-export function fromIpApi(d: IpApi, ip: string): Geo | null {
-  if (d.status !== 'success') return null
-  const asn = d.as?.match(/^AS(\d+)/)?.[1]
+export function fromIpInfo(d: IpInfo, ip: string): Geo | null {
+  if (!d.ip || d.bogon) return null
+  const [lat, lon] = (d.loc ?? '').split(',').map((v) => (v.trim() ? Number(v) : NaN))
+  const as = d.org?.match(/^AS(\d+)\s*(.*)$/)
+  const orgName = (as ? as[2] : d.org)?.trim() || null
   return {
     version: isIPv6(ip) ? 'IPv6' : 'IPv4',
-    country: d.country ?? null,
-    country_code: d.countryCode ?? null,
-    region: d.regionName ?? null,
-    city: d.city ?? null,
-    postal: d.zip ?? null,
-    lat: typeof d.lat === 'number' ? d.lat : null,
-    lon: typeof d.lon === 'number' ? d.lon : null,
+    country: null,
+    country_code: d.country ?? null,
+    region: d.region || null,
+    city: d.city || null,
+    postal: d.postal || null,
+    lat: Number.isFinite(lat) ? lat : null,
+    lon: Number.isFinite(lon) ? lon : null,
     timezone: d.timezone ?? null,
-    isp: d.isp ?? null,
-    org: d.org ?? null,
-    asn: asn ? Number(asn) : null,
-    asnName: d.as?.replace(/^AS\d+\s*/, '') || d.asname || null,
-    source: 'ip-api.com'
+    isp: null,
+    org: orgName,
+    asn: as ? Number(as[1]) : null,
+    asnName: orgName,
+    reverse: d.hostname || null,
+    anycast: d.anycast ?? null,
+    source: 'ipinfo.io'
   }
 }
 
-export function buildGeoOutput(g: Geo | null, flags: IpApi | null, lang: 'fr' | 'en'): ModuleOutput {
+export function buildGeoOutput(g: Geo | null, lang: 'fr' | 'en'): ModuleOutput {
   if (!g) return {}
   const fr = lang === 'fr'
-  // Les deux services renvoient le nom du pays en anglais : on le traduit à partir du code ISO.
+  // ipwho.is renvoie le nom du pays en anglais, ipinfo.io seulement le code : on part du code ISO.
   const country = localizeCountry(g.country, g.country_code, lang)
   const entities: OutEntity[] = []
   if (g.asn)
@@ -124,28 +132,29 @@ export function buildGeoOutput(g: Geo | null, flags: IpApi | null, lang: 'fr' | 
     isp: g.isp,
     org: g.org,
     asn: g.asn ? `AS${g.asn}` : null,
-    reverse: flags?.reverse || null,
-    is_mobile: flags?.mobile ?? null,
-    is_proxy: flags?.proxy ?? null,
-    is_hosting: flags?.hosting ?? null,
+    reverse: g.reverse,
+    anycast: g.anycast || null,
     geo_source: g.source
   }) as Record<string, PropValue>
-  return { properties, entities, raw: { geo: g, flags } }
+  return { properties, entities, raw: { geo: g } }
 }
 
-const IPAPI_FIELDS = 'status,message,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,org,as,asname,reverse,mobile,proxy,hosting,query'
+// ip-api.com n'est plus interrogé : son offre gratuite n'existe qu'en HTTP clair, et derrière Tor
+// le nœud de sortie (comme tout intermédiaire) verrait l'adresse visée. Ses indicateurs proxy,
+// hébergeur et mobile sont couverts autrement : hébergeur reconnu par ip.ripestat, nœud Tor par
+// ip.tor, type d'usage par AbuseIPDB, listes de réputation par ip.blocklists.
 
-async function ipApi(ctx: ModuleContext, ip: string): Promise<IpApi> {
-  // ip-api.com n'offre le HTTPS qu'en version payante.
-  return ctx.fetchJson<IpApi>(`http://ip-api.com/json/${ip}`, { query: { fields: IPAPI_FIELDS }, timeoutMs: 15000 })
+/** Repli quand ipwho.is ne répond pas ou refuse (quota mensuel). */
+async function ipInfo(ctx: ModuleContext, ip: string): Promise<IpInfo> {
+  return ctx.fetchJson<IpInfo>(`https://ipinfo.io/${ip}/json`, { headers: { accept: 'application/json' }, timeoutMs: 15000 })
 }
 
 export default defineModule({
   id: 'ip.geo',
   name: { fr: 'Géolocalisation IP', en: 'IP geolocation' },
   description: {
-    fr: 'Pays, ville, coordonnées, fuseau horaire, FAI et ASN de l’adresse (ipwho.is, repli ip-api.com), avec indicateurs proxy / hébergeur / mobile quand disponibles. Précision indicative : souvent la ville du FAI.',
-    en: 'Country, city, coordinates, timezone, ISP and ASN of the address (ipwho.is, falling back to ip-api.com), with proxy / hosting / mobile flags when available. Approximate: often the ISP city.'
+    fr: 'Pays, ville, coordonnées, fuseau horaire, FAI et ASN de l’adresse (ipwho.is, repli ipinfo.io, tous deux en HTTPS). Précision indicative : souvent la ville du FAI.',
+    en: 'Country, city, coordinates, timezone, ISP and ASN of the address (ipwho.is, falling back to ipinfo.io, both over HTTPS). Approximate: often the ISP city.'
   },
   category: 'ip',
   inputTypes: ['ip'],
@@ -153,20 +162,27 @@ export default defineModule({
   async run(input, ctx) {
     const ip = normalizeHost(input.label)
     if (!isIPv4(ip) && !isIPv6(ip)) throw new ModuleError('Adresse IP invalide', 'invalid_input')
-    const flagsP = ipApi(ctx, ip).catch(() => null)
     let geo: Geo | null = null
-    let firstError: unknown
     try {
       const d = await ctx.fetchJson<IpWhoIs>(`https://ipwho.is/${ip}`)
       geo = fromIpWhoIs(d)
       // Adresse réservée / privée : réponse « success: false » normale.
       if (!geo && /reserved|private|invalid/i.test(d.message ?? '')) return {}
+      if (!geo) ctx.log(`ipwho.is : ${d.message ?? 'réponse sans résultat'}`)
     } catch (e) {
-      firstError = e
+      if (ctx.signal.aborted) throw e
+      ctx.log(`ipwho.is en échec : ${e instanceof Error ? e.message : String(e)}`)
     }
-    const flags = await flagsP
-    if (!geo && flags) geo = fromIpApi(flags, ip)
-    if (!geo && firstError) throw serviceError(firstError, 'ipwho.is')
-    return buildGeoOutput(geo, flags?.status === 'success' ? flags : null, ctx.lang)
+    if (!geo) {
+      let d: IpInfo
+      try {
+        d = await ipInfo(ctx, ip)
+      } catch (e) {
+        throw serviceError(e, 'ipinfo.io (repli de ipwho.is)')
+      }
+      if (d.bogon) return {}
+      geo = fromIpInfo(d, ip)
+    }
+    return buildGeoOutput(geo, ctx.lang)
   }
 })
