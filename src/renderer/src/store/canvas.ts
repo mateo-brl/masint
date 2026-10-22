@@ -56,6 +56,11 @@ export function useEdgeOnPath(id: string): boolean {
   return useCanvas((s) => !!s.focus?.edges.has(id))
 }
 
+/** Écrit une propriété de style seulement si elle change : pas d'invalidation inutile au montage. */
+function setStyle(el: HTMLElement | SVGElement | null, prop: 'opacity' | 'outline' | 'visibility', value: string): void {
+  if (el && el.style[prop] !== value) el.style[prop] = value
+}
+
 /**
  * Abonnement fin d'un élément du canevas qui écrit directement dans le DOM, sans re-rendu :
  * estomper 2000 nœuds (filtre, chemin) ou les colorer par communauté ne fait re-rendre aucun
@@ -86,10 +91,9 @@ export function useNodeDecor(id: string, ref: RefObject<HTMLElement | null>): vo
     const dim = s.focus ? !onPath : s.dimmed.has(id)
     const c = s.community?.get(id)
     const color = c === undefined || onPath ? '' : `2px solid ${COMMUNITY_COLORS[c]}aa`
-    const el = ref.current
-    if (apply && el) {
-      el.style.opacity = dim ? DIM_NODE : ''
-      if (!onPath) el.style.outline = color
+    if (apply) {
+      setStyle(ref.current, 'opacity', dim ? DIM_NODE : '')
+      if (!onPath) setStyle(ref.current, 'outline', color)
     }
     return `${dim ? 1 : 0}${onPath ? 1 : 0}${color}`
   })
@@ -100,8 +104,8 @@ export function useEdgeDecor(id: string, source: string, target: string, ref: Re
   useDecor((s, apply) => {
     const dim = s.focus ? !s.focus.edges.has(id) : s.dimmed.has(source) || s.dimmed.has(target)
     if (apply) {
-      if (ref.current) ref.current.style.opacity = dim ? DIM_EDGE : ''
-      if (label.current) label.current.style.visibility = dim ? 'hidden' : ''
+      setStyle(ref.current, 'opacity', dim ? DIM_EDGE : '')
+      setStyle(label.current, 'visibility', dim ? 'hidden' : '')
     }
     return dim ? '1' : '0'
   })
