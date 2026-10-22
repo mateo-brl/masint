@@ -10,6 +10,7 @@ import {
 import { create } from 'zustand'
 import type { EdgeInput, GraphChange, GraphEdge, GraphNode, Investigation, NodeInput, SavedNode, Suggestion } from '@shared/types'
 import { api } from '../lib/api'
+import { useAssist } from './assist'
 import type { Bundle } from '../lib/collapse'
 
 /** `bundle` : nœud d'affichage qui regroupe des feuilles semblables (voir lib/collapse). */
@@ -262,7 +263,11 @@ export const useGraph = create<GraphState>((set, get) => ({
       tool: 'select',
       suggestions: []
     })
-    void get().refreshSuggestions()
+    // Derniers résultats des recherches assistées, gardés en base.
+    useAssist.getState().reset()
+    void get()
+      .refreshSuggestions()
+      .then(() => useAssist.getState().hydrate(get().suggestions))
   },
 
   close() {
