@@ -39,7 +39,8 @@
     "tests/helpers/xml.ts",
     "tests/layout.test.ts",
     "tests/collapse.test.ts",
-    "tests/consistency.test.ts"
+    "tests/consistency.test.ts",
+    "tests/search.test.ts"
   ],
   "exclude": [
     "src/shared/modules.ts"

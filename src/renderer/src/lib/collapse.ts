@@ -46,14 +46,70 @@ export function bundleId(parentId: string, type: string, linkLabel: string): str
   return `bundle:${parentId}:${type}:${linkLabel}`
 }
 
+/** Dernier calcul, renvoyé tel quel tant que la structure du graphe ne change pas. */
+let memo: {
+  nodes: readonly ViewNode[]
+  edges: readonly ViewEdge[]
+  expanded: ReadonlySet<string>
+  bundleMin: number
+  key: string
+  view: GraphView
+} | null = null
+
+function sameItems<T>(a: readonly T[], b: readonly T[]): boolean {
+  if (a === b) return true
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false
+  return true
+}
+
+/**
+ * Tout ce que lit le calcul, et rien d'autre : identifiants, types, plateformes, repli, note et
+ * couleur (qui empêchent le regroupement), liens et leurs libellés, groupes dépliés. Les positions
+ * n'y figurent pas : déplacer un nœud ne change pas la vue.
+ */
+function structureKey(nodes: readonly ViewNode[], edges: readonly ViewEdge[], expanded: ReadonlySet<string>, bundleMin: number): string {
+  const parts: string[] = [String(bundleMin)]
+  for (const n of nodes)
+    parts.push(n.id, n.kind, n.type, n.platform ?? '', n.style.collapsed ? '1' : '0', n.style.color ? '1' : '0', n.notes.trim() ? '1' : '0')
+  parts.push('')
+  for (const e of edges) parts.push(e.source, e.target, e.label)
+  parts.push('', ...Array.from(expanded).sort())
+  return parts.join('\u0000')
+}
+
+/**
+ * Vue du graphe, mémorisée sur sa structure : tant que seules les positions changent (glisser un
+ * nœud, disposition), le même objet est renvoyé, ce qui évite de re-rendre tout le canevas.
+ * L'objet renvoyé est partagé : il ne doit pas être modifié.
+ */
 export function computeView(nodes: ViewNode[], edges: ViewEdge[], expandedBundles: ReadonlySet<string>, bundleMin = BUNDLE_MIN): GraphView {
+  // Mêmes objets qu'au dernier appel (cas d'un glisser) : inutile de recalculer la clé.
+  if (memo && memo.bundleMin === bundleMin && memo.expanded === expandedBundles && sameItems(memo.nodes, nodes) && sameItems(memo.edges, edges))
+    return memo.view
+  const key = structureKey(nodes, edges, expandedBundles, bundleMin)
+  if (memo && memo.key === key) {
+    memo = { ...memo, nodes, edges, expanded: expandedBundles }
+    return memo.view
+  }
+  const view = buildView(nodes, edges, expandedBundles, bundleMin)
+  memo = { nodes, edges, expanded: expandedBundles, bundleMin, key, view }
+  return view
+}
+
+function buildView(nodes: ViewNode[], edges: ViewEdge[], expandedBundles: ReadonlySet<string>, bundleMin: number): GraphView {
   const byId = new Map(nodes.map((n) => [n.id, n]))
   const out = new Map<string, ViewEdge[]>()
   const inc = new Map<string, ViewEdge[]>()
+  const push = (m: Map<string, ViewEdge[]>, id: string, e: ViewEdge): void => {
+    const list = m.get(id)
+    if (list) list.push(e)
+    else m.set(id, [e])
+  }
   for (const e of edges) {
     if (!byId.has(e.source) || !byId.has(e.target) || e.source === e.target) continue
-    out.set(e.source, [...(out.get(e.source) ?? []), e])
-    inc.set(e.target, [...(inc.get(e.target) ?? []), e])
+    push(out, e.source, e)
+    push(inc, e.target, e)
   }
 
   // 1. Descendance des nœuds repliés. Un descendant reste visible s'il est aussi rattaché à un

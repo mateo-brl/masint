@@ -1,0 +1,80 @@
+{
+ "data": {
+  "user": {
+   "id": "19571641",
+   "login": "ninja",
+   "displayName": "Ninja",
+   "description": "Just want to make people happy. Co-Founder @DrinkNutcase. ",
+   "createdAt": "2011-01-16T04:31:20.024666Z",
+   "profileImageURL": "https://static-cdn.jtvnw.net/jtv_user_pictures/90d40495-f467-4911-9035-72d8d10a49c5-profile_image-300x300.png",
+   "followers": {
+    "totalCount": 19229246
+   },
+   "roles": {
+    "isPartner": true,
+    "isAffiliate": false,
+    "isStaff": null
+   },
+   "channel": {
+    "socialMedias": [
+     {
+      "name": "instagram",
+      "title": "Instagram",
+      "url": "https://www.instagram.com/ninja"
+     },
+     {
+      "name": "x",
+      "title": "X",
+      "url": "https://x.com/ninja"
+     },
+     {
+      "name": "tiktok",
+      "title": "TikTok",
+      "url": "https://www.tiktok.com/@ninja"
+     },
+     {
+      "name": "bit",
+      "title": "YouTube",
+      "url": "http://bit.ly/SubscribeNinja"
+     }
+    ]
+   },
+   "panels": [
+    {
+     "title": null,
+     "linkURL": null,
+     "description": null
+    },
+    {
+     "title": null,
+     "linkURL": "https://streamlabscharity.com/teams/@gaming-for-cause-2026/gaming-for-cause-2026?member=999681639384751961",
+     "description": null
+    },
+    {
+     "title": null,
+     "linkURL": "https://www.tiktok.com/@ninja",
+     "description": null
+    },
+    {
+     "title": null,
+     "linkURL": null,
+     "description": "#EPICPARTNER"
+    },
+    {
+     "title": null,
+     "linkURL": "https://www.youtube.com/@Ninja",
+     "description": null
+    },
+    {
+     "title": null,
+     "linkURL": "https://teamninja.com/?srsltid=AfmBOor4Z5ehWRTrALrmBDQyHQGwt0FHRt7TctMpUUfDJ83w-2QwcO-y",
+     "description": null
+    }
+   ]
+  }
+ },
+ "extensions": {
+  "durationMilliseconds": 49,
+  "requestID": "01M5J8KMGJGRHY9T3PWHMJ69DB"
+ }
+}

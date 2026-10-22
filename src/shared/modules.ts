@@ -109,6 +109,11 @@ export interface ModuleContext {
    * pastille de progression. Appels fréquents sans risque : l'envoi est espacé par le moteur.
    */
   progress(done: number, total: number, detail?: string): void
+  /**
+   * Sortie réseau du module (`direct`, `tor` ou `proxy:<empreinte>`), sans adresse ni
+   * identifiant : clé des caches qui dépendent de l'adresse IP de sortie (santé des sites).
+   */
+  egress?: string
 }
 
 export interface OsintModule {

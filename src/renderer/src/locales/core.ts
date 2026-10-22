@@ -19,6 +19,7 @@ const fr = {
     timeline: 'Frise chronologique',
     modules: 'Modules',
     notes: 'Notes',
+    journal: 'Journal d’activité',
     keys: 'Clés API',
     settings: 'Paramètres'
   },
@@ -123,7 +124,9 @@ const fr = {
     found_one: '{{count}} résultat contient la valeur',
     found_other: '{{count}} résultats contiennent la valeur',
     add: 'Ajouter',
-    addTitle: 'Ajouter ce résultat au graphe'
+    addTitle: 'Ajouter ce résultat au graphe',
+    captured: 'Page de résultats capturée (voir Preuves)',
+    savedAt: 'Recherche du {{date}}'
   },
   consistency: {
     title: 'Cohérence des indices',
@@ -194,7 +197,8 @@ const fr = {
     force: 'Organique (forces)',
     radial: 'Radial',
     circle: 'Cercle',
-    grid: 'Grille'
+    grid: 'Grille',
+    running: 'Disposition en cours…'
   },
   export: {
     png: 'Image PNG',
@@ -397,6 +401,92 @@ const fr = {
       roso: 'roso.info'
     }
   },
+  evidence: {
+    title: 'Preuves',
+    capture: 'Capturer',
+    captureTitle: 'Ouvre la page dans une fenêtre cachée du navigateur d’enquête (même proxy ou Tor), attend son chargement et l’enregistre : image pleine page, archive MHTML et contexte, avec leurs empreintes SHA-256. La fenêtre s’affiche si un captcha ou une connexion est nécessaire.',
+    capturing: 'Capture…',
+    captured: 'Page capturée · SHA-256 {{hash}}',
+    failed: 'Capture impossible : {{error}}',
+    empty: 'Aucune capture pour ce nœud.',
+    count_one: '{{count}} capture',
+    count_other: '{{count}} captures',
+    openImage: 'Ouvrir l’image',
+    exportMhtml: 'Exporter le MHTML',
+    exportImage: 'Enregistrer l’image',
+    copyHash: 'Copier l’empreinte SHA-256 du manifeste',
+    copied: 'Empreinte copiée',
+    saved: 'Enregistré : {{path}}',
+    manifest: 'Manifeste',
+    requested: 'Adresse demandée',
+    redirected: 'redirigée vers {{url}}',
+    via: { browser: 'navigateur d’enquête', assist: 'recherche assistée', node: 'fiche' }
+  },
+  journal: {
+    kicker: 'Enquête',
+    title: 'Journal d’activité',
+    intro: 'Qui a fait quoi, et quand. Chaque entrée est scellée par l’empreinte de la précédente : toute modification ultérieure du journal se détecte.',
+    all: 'Tout',
+    groups: {
+      nodes: 'Nœuds',
+      edges: 'Liens',
+      modules: 'Modules',
+      review: 'À vérifier',
+      evidence: 'Preuves',
+      sharing: 'Exports et partages'
+    },
+    refresh: 'Actualiser',
+    verify: 'Vérifier l’intégrité',
+    verifying: 'Vérification…',
+    intact_one: 'Chaîne intacte : {{count}} entrée vérifiée.',
+    intact_other: 'Chaîne intacte : {{count}} entrées vérifiées.',
+    emptyChain: 'Journal vide : rien à vérifier.',
+    broken: 'Chaîne rompue à l’entrée n° {{seq}} ({{action}}, {{date}}) : {{reason}}',
+    reason: {
+      hash: 'son contenu ne correspond plus à son empreinte',
+      link: 'elle ne reprend pas l’empreinte de l’entrée précédente',
+      order: 'une entrée manque ou est en double avant elle'
+    },
+    goto: 'Voir l’entrée',
+    lastHash: 'Dernière empreinte',
+    empty: 'Aucune entrée.',
+    page: '{{from}} à {{to}} sur {{total}}',
+    previous: 'Plus récentes',
+    next: 'Plus anciennes',
+    col: { seq: 'N°', date: 'Date', actor: 'Enquêteur', action: 'Action', subject: 'Objet', detail: 'Détail', hash: 'Empreinte' },
+    copyHash: 'Copier l’empreinte',
+    copied: 'Empreinte copiée',
+    untitled: '(sans libellé)',
+    more: '+{{count}}',
+    modules_one: '{{count}} module',
+    modules_other: '{{count}} modules',
+    followUp: 'modules de suite',
+    removedEdges_one: 'avec {{count}} lien',
+    removedEdges_other: 'avec {{count}} liens',
+    field: {
+      label: 'valeur',
+      type: 'type',
+      platform: 'plateforme',
+      kind: 'nature',
+      data: 'propriétés',
+      notes: 'notes',
+      imageId: 'image',
+      style: 'style',
+      source: 'origine',
+      target: 'cible',
+      sourceModule: 'module'
+    },
+    action: {
+      investigation: { create: 'Enquête créée', duplicate: 'Enquête dupliquée' },
+      node: { create: 'Nœud créé', update: 'Nœud modifié', delete: 'Nœud supprimé', merge: 'Nœuds fusionnés' },
+      edge: { create: 'Lien créé', update: 'Lien modifié', delete: 'Lien supprimé' },
+      module: { run: 'Modules lancés' },
+      suggestion: { accept: 'Résultat validé', reject: 'Résultat écarté', checked: 'Recherche faite, rien trouvé', reopen: 'Résultat rouvert' },
+      capture: { create: 'Page capturée' },
+      export: { file: 'Export', report: 'Rapport exporté' },
+      archive: { export: 'Archive exportée', import: 'Archive importée' }
+    }
+  },
   notes: {
     kicker: 'Enquête',
     title: 'Notes de l’enquête',
@@ -417,6 +507,10 @@ const fr = {
     globalConcurrencyHint: 'Tous nœuds confondus (1 à 64) : enrichir cent nœuds ne lance pas des centaines de modules à la fois.',
     passiveMode: 'Mode passif',
     passiveModeHint: 'Les modules qui contactent directement la cible (page web, favicon, robots.txt…) ne partent pas avec « Enrichir ». Ils restent lançables un par un, après avertissement.',
+    investigatorName: 'Nom de l’enquêteur',
+    investigatorNameHint: 'Inscrit dans le journal d’activité de chaque action. Vide : nom de session du système ({{user}}).',
+    assistCapture: 'Capturer les pages consultées',
+    assistCaptureHint: 'Recherche assistée : la page de résultats est enregistrée comme preuve (image, MHTML, contexte et empreintes) avant la fermeture de sa fenêtre, rattachée au nœud de la recherche.',
     userAgentAuto: 'En-tête automatique',
     userAgentHint: 'Par défaut : Chrome sur votre système, à la version du navigateur intégré, pour une empreinte cohérente. Utilisé aussi par le navigateur d’enquête.',
     timeout: 'Délai par requête (s)',
@@ -459,7 +553,24 @@ const fr = {
     getKey: 'Obtenir une clé',
     usedBy: 'Utilisée par : {{list}}',
     keySaved: '•••••••• (enregistrée, saisir pour remplacer)',
-    pasteKey: 'Coller la clé'
+    pasteKey: 'Coller la clé',
+    sites: {
+      title: 'Sites de recherche de pseudo',
+      dbBundled: 'Base Maigret du {{date}}, livrée avec l’application ({{count}} sites)',
+      dbUser: 'Base Maigret du {{date}}, mise à jour ({{count}} sites)',
+      update: 'Mettre à jour la base des sites',
+      updated: 'Nouvelle base installée (empreinte SHA-256 vérifiée).',
+      current: 'La base est déjà à jour.',
+      updateFailed: 'Échec de la mise à jour : {{error}}. La base actuelle reste utilisée.',
+      tier: { essential: 'Essentiel', extended: 'Étendu' },
+      counts: '{{active}} sites actifs, {{failed}} en échec, {{skipped}} sautés',
+      lastCheck: 'Dernière vérification ({{network}}) le {{date}} : {{ok}} sites corrects, {{failed}} en échec, {{inconclusive}} sans conclusion (blocage, délai).',
+      neverChecked: 'Aucune vérification sur cette sortie réseau ({{network}}).',
+      direct: 'connexion directe',
+      proxy: 'proxy',
+      check: 'Vérifier les sites',
+      checkHint: 'Interroge chaque site avec un pseudo témoin public, qui doit être trouvé, et un pseudo aléatoire, qui ne doit pas l’être, par la sortie réseau actuelle. Les sites en échec sont sautés pendant 7 jours. Environ une minute pour le palier Essentiel, plusieurs minutes pour le palier Étendu. Les sites sautés sont écartés d’office (liste noire, protection anti-robot, jeton dynamique).'
+    }
   },
   about: {
     version: 'Version {{version}}',
@@ -502,6 +613,7 @@ const en: typeof fr = {
     timeline: 'Timeline',
     modules: 'Modules',
     notes: 'Notes',
+    journal: 'Activity log',
     keys: 'API keys',
     settings: 'Settings'
   },
@@ -606,7 +718,9 @@ const en: typeof fr = {
     found_one: '{{count}} result contains the value',
     found_other: '{{count}} results contain the value',
     add: 'Add',
-    addTitle: 'Add this result to the graph'
+    addTitle: 'Add this result to the graph',
+    captured: 'Results page captured (see Evidence)',
+    savedAt: 'Search of {{date}}'
   },
   consistency: {
     title: 'Evidence consistency',
@@ -677,7 +791,8 @@ const en: typeof fr = {
     force: 'Organic (forces)',
     radial: 'Radial',
     circle: 'Circle',
-    grid: 'Grid'
+    grid: 'Grid',
+    running: 'Arranging the graph…'
   },
   export: {
     png: 'PNG image',
@@ -880,6 +995,92 @@ const en: typeof fr = {
       roso: 'roso.info'
     }
   },
+  evidence: {
+    title: 'Evidence',
+    capture: 'Capture',
+    captureTitle: 'Opens the page in a hidden investigation browser window (same proxy or Tor), waits for it to load and saves it: full-page image, MHTML archive and context, with their SHA-256 hashes. The window shows up if a captcha or a login is needed.',
+    capturing: 'Capturing…',
+    captured: 'Page captured · SHA-256 {{hash}}',
+    failed: 'Capture failed: {{error}}',
+    empty: 'No capture for this node.',
+    count_one: '{{count}} capture',
+    count_other: '{{count}} captures',
+    openImage: 'Open image',
+    exportMhtml: 'Export MHTML',
+    exportImage: 'Save image',
+    copyHash: 'Copy the manifest SHA-256 hash',
+    copied: 'Hash copied',
+    saved: 'Saved: {{path}}',
+    manifest: 'Manifest',
+    requested: 'Requested address',
+    redirected: 'redirected to {{url}}',
+    via: { browser: 'investigation browser', assist: 'assisted search', node: 'node sheet' }
+  },
+  journal: {
+    kicker: 'Investigation',
+    title: 'Activity log',
+    intro: 'Who did what, and when. Each entry is sealed with the hash of the previous one: any later change to the log can be detected.',
+    all: 'All',
+    groups: {
+      nodes: 'Nodes',
+      edges: 'Links',
+      modules: 'Modules',
+      review: 'To review',
+      evidence: 'Evidence',
+      sharing: 'Exports and sharing'
+    },
+    refresh: 'Refresh',
+    verify: 'Check integrity',
+    verifying: 'Checking…',
+    intact_one: 'Chain intact: {{count}} entry checked.',
+    intact_other: 'Chain intact: {{count}} entries checked.',
+    emptyChain: 'Empty log: nothing to check.',
+    broken: 'Chain broken at entry #{{seq}} ({{action}}, {{date}}): {{reason}}',
+    reason: {
+      hash: 'its content no longer matches its hash',
+      link: 'it does not carry the hash of the previous entry',
+      order: 'an entry is missing or duplicated before it'
+    },
+    goto: 'Show entry',
+    lastHash: 'Last hash',
+    empty: 'No entries.',
+    page: '{{from}} to {{to}} of {{total}}',
+    previous: 'Newer',
+    next: 'Older',
+    col: { seq: '#', date: 'Date', actor: 'Investigator', action: 'Action', subject: 'Subject', detail: 'Detail', hash: 'Hash' },
+    copyHash: 'Copy hash',
+    copied: 'Hash copied',
+    untitled: '(untitled)',
+    more: '+{{count}}',
+    modules_one: '{{count}} module',
+    modules_other: '{{count}} modules',
+    followUp: 'follow-up modules',
+    removedEdges_one: 'with {{count}} link',
+    removedEdges_other: 'with {{count}} links',
+    field: {
+      label: 'value',
+      type: 'type',
+      platform: 'platform',
+      kind: 'kind',
+      data: 'properties',
+      notes: 'notes',
+      imageId: 'image',
+      style: 'style',
+      source: 'origin',
+      target: 'target',
+      sourceModule: 'module'
+    },
+    action: {
+      investigation: { create: 'Investigation created', duplicate: 'Investigation duplicated' },
+      node: { create: 'Node created', update: 'Node edited', delete: 'Node deleted', merge: 'Nodes merged' },
+      edge: { create: 'Link created', update: 'Link edited', delete: 'Link deleted' },
+      module: { run: 'Modules run' },
+      suggestion: { accept: 'Result accepted', reject: 'Result rejected', checked: 'Searched, nothing found', reopen: 'Result reopened' },
+      capture: { create: 'Page captured' },
+      export: { file: 'Export', report: 'Report exported' },
+      archive: { export: 'Archive exported', import: 'Archive imported' }
+    }
+  },
   notes: {
     kicker: 'Investigation',
     title: 'Investigation notes',
@@ -900,6 +1101,10 @@ const en: typeof fr = {
     globalConcurrencyHint: 'Across all nodes (1 to 64): enriching a hundred nodes does not start hundreds of modules at once.',
     passiveMode: 'Passive mode',
     passiveModeHint: 'Modules that contact the target directly (web page, favicon, robots.txt…) are left out of “Enrich”. They can still be run one by one, after a warning.',
+    investigatorName: 'Investigator name',
+    investigatorNameHint: 'Written in the activity log for each action. Empty: system session name ({{user}}).',
+    assistCapture: 'Capture visited pages',
+    assistCaptureHint: 'Assisted search: the results page is saved as evidence (image, MHTML, context and hashes) before its window closes, attached to the node of the search.',
     userAgentAuto: 'Automatic header',
     userAgentHint: 'Default: Chrome on your system, at the built-in browser version, for a consistent fingerprint. Also used by the investigation browser.',
     timeout: 'Request timeout (s)',
@@ -942,7 +1147,24 @@ const en: typeof fr = {
     getKey: 'Get a key',
     usedBy: 'Used by: {{list}}',
     keySaved: '•••••••• (saved, type to replace)',
-    pasteKey: 'Paste the key'
+    pasteKey: 'Paste the key',
+    sites: {
+      title: 'Username search sites',
+      dbBundled: 'Maigret database of {{date}}, shipped with the app ({{count}} sites)',
+      dbUser: 'Maigret database of {{date}}, updated ({{count}} sites)',
+      update: 'Update the sites database',
+      updated: 'New database installed (SHA-256 checksum verified).',
+      current: 'The database is already up to date.',
+      updateFailed: 'Update failed: {{error}}. The current database is still used.',
+      tier: { essential: 'Essential', extended: 'Extended' },
+      counts: '{{active}} active sites, {{failed}} failing, {{skipped}} skipped',
+      lastCheck: 'Last check ({{network}}) on {{date}}: {{ok}} sites correct, {{failed}} failing, {{inconclusive}} inconclusive (blocked, timed out).',
+      neverChecked: 'No check yet on this network exit ({{network}}).',
+      direct: 'direct connection',
+      proxy: 'proxy',
+      check: 'Check the sites',
+      checkHint: 'Queries each site with a public witness username, which must be found, and a random username, which must not, through the current network exit. Failing sites are skipped for 7 days. About a minute for the Essential tier, several minutes for the Extended tier. Skipped sites are excluded by fixed rules (blacklist, anti-bot protection, dynamic token).'
+    }
   },
   about: {
     version: 'Version {{version}}',

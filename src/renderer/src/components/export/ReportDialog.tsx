@@ -43,7 +43,9 @@ const SECTION_ICONS: Record<ReportSectionId, string> = {
   links: 'Link',
   timeline: 'CalendarRange',
   sources: 'ScrollText',
+  journal: 'FileClock',
   attachments: 'Paperclip',
+  evidence: 'Camera',
   raw: 'Braces'
 }
 
@@ -65,7 +67,8 @@ function ReportForm(): React.JSX.Element {
   const edgeCount = useGraph((s) => s.edges.length)
   const [prefs] = useState(readPrefs)
   const [title, setTitle] = useState(investigation.name)
-  const [investigator, setInvestigator] = useState(prefs.investigator ?? '')
+  // Enquêteur du rapport : le dernier saisi, sinon celui du journal d'activité (paramètres).
+  const [investigator, setInvestigator] = useState(prefs.investigator || useApp.getState().settings?.investigatorName || '')
   const [reference, setReference] = useState(prefs.references?.[investigation.id] ?? '')
   const [classification, setClassification] = useState(prefs.classification ?? '')
   const [lang, setLang] = useState<Lang>(appLang)

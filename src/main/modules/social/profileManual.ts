@@ -34,8 +34,16 @@ function dedicatedModules(): OsintModule[] {
  */
 export function hasDedicatedModule(input: InputEntity, modules: OsintModule[] = dedicatedModules()): boolean {
   const neutral: InputEntity = { ...input, platform: '__aucune__', data: {} }
-  return modules.some((m) => m.id !== ID && !!m.accepts && m.accepts(input) && !m.accepts(neutral))
+  return modules.some(
+    (m) => m.id !== ID && !!m.accepts && m.accepts(input) && !m.accepts(neutral) && !PARTIAL[m.id]?.includes(input.platform ?? '')
+  )
 }
+
+/**
+ * Modules qui lisent une plateforme par un détour, sans remplacer l'ouverture du profil :
+ * Threads ne donne qu'une partie du profil Instagram du même pseudo.
+ */
+const PARTIAL: Record<string, string[]> = { 'social.threads': ['instagram'] }
 
 // Messageries dont la page publique n'est qu'un bouton « ouvrir la conversation ».
 const NO_PROFILE_PAGE = new Set(['whatsapp', 'signal', 'skype', 'teams', 'viber', 'wechat', 'line', 'threema', 'kik', 'session', 'matrix', 'wire'])

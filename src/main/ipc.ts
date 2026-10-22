@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -7,11 +7,14 @@ import { fileURLToPath } from 'node:url'
 import { app, BrowserWindow, clipboard, dialog, ipcMain, session, shell } from 'electron'
 import exifr from 'exifr'
 import type { ApiChannel, ApiMap } from '@shared/api'
-import type { GraphEdge, GraphNode, Settings } from '@shared/types'
+import { captureUrlOf, isSignificantActivity } from '@shared/evidence'
+import type { ActivityAction, ExportMeta, GraphEdge, GraphNode, LinkContext, Settings } from '@shared/types'
+import { changedEdgeFields, changedNodeFields, edgeRefs, isLayoutOnly, nodeRef, nodeRefs, systemUser, type ActivityLog } from './activity'
 import { buildArchive, duplicateInvestigation, importArchive } from './archive'
 import { mergeData } from './merge'
 import { applyAssistIdentity, assistedSearch, assistSession, needlesFor } from './assist'
-import { openInvestigationBrowser, openLink } from './browser'
+import { openInvestigationBrowser, openLink, type PageCapture } from './browser'
+import type { CaptureService } from './capture'
 import { compactLater } from './db/database'
 import type { Repo } from './db/repo'
 import { createFetch, resetDispatchers } from './engine/http'
@@ -21,6 +24,7 @@ import type { SettingsService } from './settings'
 import { takePendingOpen } from './openQueue'
 import { checkForUpdates, installUpdate } from './updater'
 import { creditsOf, RosoClient } from './modules/roso/_client'
+import { SitesService } from './sites'
 
 type Handler<C extends ApiChannel> = (...args: Parameters<ApiMap[C]>) => ReturnType<ApiMap[C]> | Promise<ReturnType<ApiMap[C]>>
 
@@ -44,10 +48,18 @@ export interface IpcDeps {
   getWindow: () => BrowserWindow | null
   emitGraph: (change: import('@shared/types').GraphChange) => void
   applySessionProxy: (s: Settings) => Promise<void>
+  /** Journal d'activité : les actions de l'enquêteur y sont inscrites ici, à la source. */
+  activity: ActivityLog
+  captures: CaptureService
 }
 
+const sha256 = (data: Buffer | string): string => createHash('sha256').update(data).digest('hex')
+
+/** Rapport ou fichier d'export : action du journal selon le format. */
+const exportAction = (meta: ExportMeta): ActivityAction => (meta.kind.startsWith('report') ? 'export.report' : 'export.file')
+
 export function registerIpc(deps: IpcDeps): void {
-  const { repo, settings, engine, getWindow } = deps
+  const { repo, settings, engine, getWindow, activity, captures } = deps
 
   const handle = <C extends ApiChannel>(channel: C, fn: Handler<C>): void => {
     ipcMain.handle(channel, (_event, ...args) => (fn as (...a: unknown[]) => unknown)(...args))
@@ -65,9 +77,69 @@ export function registerIpc(deps: IpcDeps): void {
     repo.setSetting('dialogDirs', { ...repo.getSetting<Record<string, string>>('dialogDirs', {}), [kind]: dirname(file) })
   }
 
+  // Journal : création et modification de nœuds et de liens. Un déplacement ou un
+  // redimensionnement n'est ni relu ni inscrit ; les modifications successives d'un même
+  // élément sont regroupées (voir ActivityLog.group).
+  const journalNodes = (invId: string, inputs: Parameters<ApiMap['graph:upsertNodes']>[1], before: Map<string, GraphNode | null>, saved: GraphNode[]): void => {
+    const inputById = new Map(inputs.filter((i) => i.id).map((i) => [i.id!, i]))
+    const created: GraphNode[] = []
+    const updated: GraphNode[] = []
+    const fields = new Set<string>()
+    for (const n of saved) {
+      const input = inputById.get(n.id)
+      if (input && isLayoutOnly(input)) continue
+      const prev = before.get(n.id)
+      if (!prev || prev.investigationId !== invId) {
+        created.push(n)
+        continue
+      }
+      const changed = changedNodeFields(prev, input ?? {})
+      if (!changed.length) continue
+      updated.push(n)
+      for (const f of changed) fields.add(f)
+    }
+    if (created.length === 1) activity.group(invId, 'node.create', nodeRefs(created), [], [created[0].id])
+    else if (created.length) activity.log(invId, 'node.create', nodeRefs(created))
+    if (updated.length) activity.group(invId, 'node.update', nodeRefs(updated), Array.from(fields), updated.map((n) => n.id))
+  }
+  const labelOf = (nodeId: string): string => repo.getNode(nodeId)?.label ?? ''
+  const journalEdges = (invId: string, inputs: Parameters<ApiMap['graph:upsertEdges']>[1], before: Map<string, GraphEdge | null>, saved: GraphEdge[]): void => {
+    const inputById = new Map(inputs.filter((i) => i.id).map((i) => [i.id!, i]))
+    const created: GraphEdge[] = []
+    const updated: GraphEdge[] = []
+    const fields = new Set<string>()
+    for (const e of saved) {
+      const prev = before.get(e.id)
+      if (!prev || prev.investigationId !== invId) {
+        created.push(e)
+        continue
+      }
+      const changed = changedEdgeFields(prev, inputById.get(e.id) ?? { source: e.source, target: e.target })
+      if (!changed.length) continue
+      updated.push(e)
+      for (const f of changed) fields.add(f)
+    }
+    if (created.length === 1) activity.group(invId, 'edge.create', edgeRefs(created, labelOf), [], [created[0].id])
+    else if (created.length) activity.log(invId, 'edge.create', edgeRefs(created, labelOf))
+    if (updated.length) activity.group(invId, 'edge.update', edgeRefs(updated, labelOf), Array.from(fields), updated.map((e) => e.id))
+  }
+
+  /** Capture proposée par le navigateur d'enquête quand l'enquête d'origine est connue. */
+  const pageCapture = (ctx?: LinkContext): PageCapture | undefined => {
+    if (!ctx?.investigationId || !repo.getInvestigation(ctx.investigationId)) return undefined
+    return async (wc) => {
+      const c = await captures.capture(wc, { investigationId: ctx.investigationId, nodeId: ctx.nodeId ?? null, via: 'browser' })
+      return { sha256: c.manifestSha256 }
+    }
+  }
+
   // Enquêtes -----------------------------------------------------------------
   handle('investigations:list', () => repo.listInvestigations())
-  handle('investigations:create', (input) => repo.createInvestigation(input))
+  handle('investigations:create', (input) => {
+    const inv = repo.createInvestigation(input)
+    activity.log(inv.id, 'investigation.create', { name: inv.name })
+    return inv
+  })
   handle('investigations:update', (id, patch) => repo.updateInvestigation(id, patch))
   handle('investigations:delete', (id) => {
     repo.deleteInvestigation(id)
@@ -75,7 +147,15 @@ export function registerIpc(deps: IpcDeps): void {
     compactLater(repo.db)
   })
   handle('investigations:open', (id) => repo.getBundle(id))
-  handle('investigations:duplicate', (id) => duplicateInvestigation(repo, id))
+  handle('investigations:duplicate', async (id) => {
+    // Modifications en attente écrites d'abord : la copie emporte le journal complet.
+    activity.flush(id)
+    const source = repo.getInvestigation(id)
+    const copy = await duplicateInvestigation(repo, id)
+    activity.log(copy.id, 'investigation.duplicate', { source: { id, name: source?.name ?? '' } })
+    activity.log(id, 'investigation.duplicate', { copy: { id: copy.id, name: copy.name } })
+    return copy
+  })
   handle('investigations:exportArchive', async (id) => {
     const inv = repo.getInvestigation(id)
     if (!inv) return null
@@ -87,7 +167,11 @@ export function registerIpc(deps: IpcDeps): void {
     const res = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
     if (res.canceled || !res.filePath) return null
     rememberDir('archive', res.filePath)
-    await writeFile(res.filePath, await buildArchive(repo, id))
+    activity.flush(id)
+    const buf = await buildArchive(repo, id)
+    await writeFile(res.filePath, buf)
+    // Empreinte de l'archive partagée : le journal dit quel fichier exact a quitté le poste.
+    activity.log(id, 'archive.export', { file: basename(res.filePath), size: buf.length, sha256: sha256(buf) })
     return res.filePath
   })
   handle('investigations:importArchive', async () => {
@@ -100,20 +184,44 @@ export function registerIpc(deps: IpcDeps): void {
     const res = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
     if (res.canceled || !res.filePaths[0]) return null
     rememberDir('archive', res.filePaths[0])
-    return importArchive(repo, await readFile(res.filePaths[0]))
+    const buf = await readFile(res.filePaths[0])
+    const inv = await importArchive(repo, buf)
+    activity.log(inv.id, 'archive.import', { file: basename(res.filePaths[0]), size: buf.length, sha256: sha256(buf) })
+    return inv
   })
 
   // Graphe -------------------------------------------------------------------
-  handle('graph:upsertNodes', (invId, nodes, opts) => repo.upsertNodes(invId, nodes, opts))
-  handle('graph:deleteNodes', (invId, ids) => {
-    repo.deleteNodes(invId, ids)
+  handle('graph:upsertNodes', (invId, nodes, opts) => {
+    // État d'avant, pour le journal ; un simple déplacement n'est pas relu.
+    const before = new Map<string, GraphNode | null>()
+    for (const n of nodes) if (n.id && !isLayoutOnly(n)) before.set(n.id, repo.getNode(n.id))
+    const saved = repo.upsertNodes(invId, nodes, opts)
+    journalNodes(invId, nodes, before, saved)
+    return saved
   })
-  handle('graph:upsertEdges', (invId, edges, opts) => repo.upsertEdges(invId, edges, opts))
-  handle('graph:deleteEdges', (invId, ids) => repo.deleteEdges(invId, ids))
+  handle('graph:deleteNodes', (invId, ids) => {
+    const nodes = repo.getNodes(ids).filter((n) => n.investigationId === invId)
+    const removed = repo.deleteNodes(invId, ids)
+    if (nodes.length) activity.log(invId, 'node.delete', { ...nodeRefs(nodes), ...(removed.length ? { removedEdges: removed.length } : {}) })
+  })
+  handle('graph:upsertEdges', (invId, edges, opts) => {
+    const before = new Map<string, GraphEdge | null>()
+    for (const e of edges) if (e.id) before.set(e.id, repo.getEdge(e.id))
+    const saved = repo.upsertEdges(invId, edges, opts)
+    journalEdges(invId, edges, before, saved)
+    return saved
+  })
+  handle('graph:deleteEdges', (invId, ids) => {
+    const edges = ids.map((id) => repo.getEdge(id)).filter((e): e is GraphEdge => !!e && e.investigationId === invId)
+    const refs = edges.length ? edgeRefs(edges, labelOf) : null
+    repo.deleteEdges(invId, ids)
+    if (refs) activity.log(invId, 'edge.delete', refs)
+  })
   handle('graph:mergeNodes', (invId, targetId, otherIds) => {
     const target = repo.getNode(targetId)
     if (!target) throw new Error('Nœud cible introuvable')
     const others = repo.getNodes(otherIds.filter((id) => id !== targetId))
+    activity.log(invId, 'node.merge', { into: nodeRef(target), ...nodeRefs(others) })
     const data = mergeData(target, others)
     const notes = [target.notes, ...others.map((o) => o.notes)].filter(Boolean).join('\n\n')
     const [merged] = repo.upsertNodes(invId, [
@@ -186,6 +294,42 @@ export function registerIpc(deps: IpcDeps): void {
     return out
   })
   handle('attachments:get', (id) => repo.getAttachment(id))
+  handle('attachments:save', async (id) => {
+    const att = repo.getAttachment(id)
+    const blob = repo.getAttachmentData(id)
+    if (!att || !blob) return null
+    const win = getWindow()
+    const ext = extname(att.name).slice(1)
+    const opts = { defaultPath: join(dirFor('export'), safeName(att.name)), filters: ext ? [{ name: ext.toUpperCase(), extensions: [ext] }] : [] }
+    const res = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
+    if (res.canceled || !res.filePath) return null
+    rememberDir('export', res.filePath)
+    await writeFile(res.filePath, blob.data)
+    activity.log(att.investigationId, 'export.file', { kind: 'attachment', file: basename(res.filePath), size: blob.data.length, sha256: att.sha256 })
+    return res.filePath
+  })
+
+  // Preuves --------------------------------------------------------------------
+  handle('captures:list', (invId, nodeId) => repo.listCaptures(invId, nodeId))
+  handle('captures:capture', async (invId, nodeId) => {
+    const node = repo.getNode(nodeId)
+    if (!node || node.investigationId !== invId) throw new Error('Nœud introuvable')
+    const url = captureUrlOf(node)
+    if (!url) throw new Error('Ce nœud n’a pas d’adresse web à capturer')
+    return captures.captureUrl({ investigationId: invId, nodeId, url, parent: getWindow(), title: `MASINT · ${node.label}` })
+  })
+
+  // Journal d'activité ---------------------------------------------------------
+  handle('activity:list', (invId, opts) => {
+    activity.flush(invId)
+    return { ...repo.listActivity(invId, opts ?? {}), counts: repo.activityCounts(invId) }
+  })
+  handle('activity:verify', (invId) => activity.verify(invId))
+  handle('activity:report', (invId) => {
+    const check = activity.verify(invId)
+    const all = repo.allActivity(invId)
+    return { entries: all.filter(isSignificantActivity), total: all.length, check }
+  })
   handle('attachments:readBase64', (id) => repo.getAttachmentData(id)?.data.toString('base64') ?? null)
   handle('attachments:exif', async (id) => {
     const blob = repo.getAttachmentData(id)
@@ -218,13 +362,27 @@ export function registerIpc(deps: IpcDeps): void {
     const s = repo.getSuggestion(id)
     const node = s ? repo.getNode(s.nodeId) : null
     if (!s?.url || !node) return { status: 'error' as const, url: '', title: '', matches: [], error: 'Recherche introuvable' }
-    return assistedSearch({
+    // Réglage « Capturer les pages consultées » : la page de résultats est gardée comme preuve.
+    const capture = settings.get().assistCapture
+      ? async (wc: Electron.WebContents) =>
+          (await captures.capture(wc, { investigationId: s.investigationId, nodeId: s.nodeId, via: 'assist', requestedUrl: s.url! })).id
+      : undefined
+    const result = await assistedSearch({
       url: s.url,
       needles: needlesFor(node.type, node.label),
       parent: getWindow(),
       userAgent: settings.get().userAgent,
-      title: `MASINT · ${s.label}`
+      title: `MASINT · ${s.label}`,
+      capture
     })
+    // Dernier résultat gardé en base : il revient à la réouverture de l'enquête. Une recherche
+    // annulée (fenêtre fermée) ne remplace pas le résultat précédent.
+    if (result.status !== 'cancelled') repo.setSuggestionAssist(id, { result, added: [], at: Date.now() })
+    return result
+  })
+  handle('assist:markAdded', (id, url) => {
+    const stored = repo.getSuggestion(id)?.assist
+    if (stored && !stored.added.includes(url)) repo.setSuggestionAssist(id, { ...stored, added: [...stored.added, url] })
   })
   handle('modules:applicable', (nodeId) => {
     const node = repo.getNode(nodeId)
@@ -308,8 +466,18 @@ export function registerIpc(deps: IpcDeps): void {
     }
   })
 
+  // Sites de recherche de pseudo ------------------------------------------------
+  const sites = new SitesService(settings, engine, (p) => {
+    const win = getWindow()
+    if (win && !win.isDestroyed()) win.webContents.send('sites:progress', p)
+  })
+  handle('sites:status', () => sites.status())
+  handle('sites:updateDb', () => sites.updateDb())
+  handle('sites:check', (tier) => sites.check(tier))
+  handle('sites:cancelCheck', () => sites.cancel())
+
   // Exports ------------------------------------------------------------------
-  handle('export:pdf', async (html, defaultName) => {
+  handle('export:pdf', async (html, defaultName, meta) => {
     const parent = getWindow()
     const opts = { defaultPath: join(dirFor('export'), `${safeName(defaultName)}.pdf`), filters: [{ name: 'PDF', extensions: ['pdf'] }] }
     const res = parent ? await dialog.showSaveDialog(parent, opts) : await dialog.showSaveDialog(opts)
@@ -332,30 +500,33 @@ export function registerIpc(deps: IpcDeps): void {
           '<div style="font-size:8px;width:100%;text-align:center;color:#888;font-family:sans-serif"><span class="pageNumber"></span> / <span class="totalPages"></span></div>'
       })
       await writeFile(res.filePath, pdf)
+      if (meta) activity.log(meta.investigationId, exportAction(meta), { kind: meta.kind, file: basename(res.filePath), size: pdf.length, sha256: sha256(pdf) })
       return res.filePath
     } finally {
       win.destroy()
       await rm(dir, { recursive: true, force: true })
     }
   })
-  handle('export:save', async (defaultName, filters, content, encoding) => {
+  handle('export:save', async (defaultName, filters, content, encoding, meta) => {
     const win = getWindow()
     const opts = { defaultPath: join(dirFor('export'), defaultName), filters }
     const res = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
     if (res.canceled || !res.filePath) return null
     rememberDir('export', res.filePath)
-    await writeFile(res.filePath, encoding === 'base64' ? Buffer.from(content, 'base64') : content)
+    const data = encoding === 'base64' ? Buffer.from(content, 'base64') : Buffer.from(content, 'utf8')
+    await writeFile(res.filePath, data)
+    if (meta) activity.log(meta.investigationId, exportAction(meta), { kind: meta.kind, file: basename(res.filePath), size: data.length, sha256: sha256(data) })
     return res.filePath
   })
 
   // Application ----------------------------------------------------------------
-  handle('app:info', () => ({ version: app.getVersion(), platform: process.platform, dataPath: app.getPath('userData') }))
+  handle('app:info', () => ({ version: app.getVersion(), platform: process.platform, dataPath: app.getPath('userData'), user: systemUser() }))
   handle('app:openExternal', (url) => {
     if (/^https?:\/\//i.test(url)) void shell.openExternal(url)
   })
-  handle('app:openLink', (url) => openLink(url, settings.get()))
-  handle('browser:open', (url) => {
-    openInvestigationBrowser(url, settings.get())
+  handle('app:openLink', (url, ctx) => openLink(url, settings.get(), pageCapture(ctx)))
+  handle('browser:open', (url, ctx) => {
+    openInvestigationBrowser(url, settings.get(), pageCapture(ctx))
   })
   handle('app:showInFolder', (path) => shell.showItemInFolder(path))
   handle('app:takePendingOpen', () => takePendingOpen())

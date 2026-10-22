@@ -4,9 +4,10 @@ import { childSlot, nodeBox } from '@shared/placement'
 import type { EventMap } from '@shared/api'
 import type { InputEntity, ModuleContext, ModuleOutput, OsintModule, OutEntity } from '@shared/modules'
 import type { GraphEdge, GraphNode, JobProgress, ModuleRun, PropValue, Suggestion } from '@shared/types'
+import { nodeRef, type ActivityWriter } from '../activity'
 import { dedupKey, type Repo } from '../db/repo'
 import type { SettingsService } from '../settings'
-import { createDohResolver, createFetch, jsonHelpers, type FetchFn } from './http'
+import { createDohResolver, createFetch, egressKey, jsonHelpers, type FetchFn } from './http'
 import { Semaphore } from './limits'
 import { allModules, isConfigured } from './registry'
 
@@ -111,7 +112,9 @@ export class Engine {
   constructor(
     private readonly repo: Repo,
     private readonly settings: SettingsService,
-    private readonly emit: Emit
+    private readonly emit: Emit,
+    /** Journal d'activité : modules lancés, résultats validés ou écartés. */
+    private readonly activity?: ActivityWriter
   ) {
     this.slots = new Semaphore(() => this.settings.get().globalConcurrency)
   }
@@ -168,6 +171,7 @@ export class Engine {
       this.jobs.delete(jobId)
       return { jobId }
     }
+    this.activity?.log(investigationId, 'module.run', { node: nodeRef(node), modules: modules.map((m) => m.id), count: modules.length, job: jobId })
     void this.runJob(job, node, modules)
     return { jobId }
   }
@@ -198,6 +202,7 @@ export class Engine {
       const ran = new Set(modules.map((m) => m.id))
       const follow = applicableModules(fresh, this.settings, undefined, this.imageOrigin(fresh)).filter((m) => m.followUp && !ran.has(m.id))
       if (follow.length) {
+        this.activity?.log(fresh.investigationId, 'module.run', { node: nodeRef(fresh), modules: follow.map((m) => m.id), count: follow.length, job: job.progress.jobId, followUp: true })
         job.progress.total += follow.length
         this.emit('job:progress', { ...job.progress, running: [...job.progress.running] })
         queue.push(...follow)
@@ -335,7 +340,8 @@ export class Engine {
       userAgent: settings.userAgent,
       lang: settings.lang,
       log: (msg) => console.log(`[${m.id}] ${msg}`),
-      progress: onProgress
+      progress: onProgress,
+      egress: egressKey(settings.proxy, settings.proxy.perModule[m.id] ?? 'default')
     }
   }
 
@@ -491,6 +497,15 @@ export class Engine {
     const done = (status: Suggestion['status']): void => {
       this.repo.setSuggestionStatus(id, status)
       this.emit('suggestions:changed', { investigationId: s.investigationId, nodeId: s.nodeId })
+      // Décision de l'enquêteur, inscrite avant l'éventuel enrichissement automatique qui la suit.
+      this.activity?.log(s.investigationId, `suggestion.${action}`, {
+        suggestion: s.id,
+        value: s.label,
+        type: s.type,
+        module: s.moduleId,
+        ...(parent ? { node: nodeRef(parent) } : {}),
+        ...(action === 'accept' && found ? { found: { type: found.type, label: found.label } } : {})
+      })
     }
     if (action !== 'accept' || !parent) {
       done(action === 'reopen' ? 'pending' : action === 'checked' ? 'checked' : 'rejected')
