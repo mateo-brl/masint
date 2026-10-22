@@ -93,7 +93,7 @@ describe('vérifications de comptes email, suite (parsing)', () => {
     const ids = modules.map((m) => m.id)
     expect(new Set(ids).size).toBe(ids.length)
     for (const m of [...modules, proton])
-      for (const t of [m.name.fr, m.name.en, m.description.fr, m.description.en]) expect(t).not.toMatch(/[–—]/)
+      for (const t of [m.name.fr, m.name.en, m.description.fr, m.description.en]) expect(t).not.toMatch(/[\u2013\u2014]/)
   })
 })
 
