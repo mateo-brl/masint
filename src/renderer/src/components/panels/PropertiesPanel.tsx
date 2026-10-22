@@ -873,11 +873,10 @@ function NodePath({ path }: { path: ProvenanceStep[] }): React.JSX.Element | nul
           <span className="font-medium text-fg">{moduleName(step.moduleId)}</span>
           {step.fromId && step.fromLabel && (
             <>
-              {' ('}
-              <button onClick={() => go(step.fromId!)} className="underline-offset-2 hover:text-fg hover:underline">
-                {step.fromLabel}
+              {' '}
+              <button onClick={() => go(step.fromId!)} className="inline text-left [overflow-wrap:anywhere] underline-offset-2 hover:text-fg hover:underline">
+                ({step.fromLabel})
               </button>
-              {')'}
             </>
           )}
         </span>
@@ -939,7 +938,7 @@ function SourcesBlock({ observations }: { observations: Observation[] | null }):
               className="mt-0.5 text-muted hover:text-fg"
               title={t('provenance.raw')}
             >
-              <Icon name="FileJson" size={13} />
+              <Icon name="FileBraces" size={13} />
             </button>
           )}
         </div>
