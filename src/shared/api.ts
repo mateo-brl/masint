@@ -4,7 +4,9 @@
 import type {
   AssistResult,
   Attachment,
+  CrossRef,
   EdgeInput,
+  GlobalSearchHit,
   GraphChange,
   GraphEdge,
   Investigation,
@@ -60,6 +62,12 @@ export interface ApiMap {
   'graph:deleteEdges': (investigationId: string, ids: string[]) => void
   /** Fusionne plusieurs nœuds dans le premier (liens et propriétés repris). */
   'graph:mergeNodes': (investigationId: string, targetId: string, otherIds: string[]) => GraphChange
+
+  // Recherche globale et corrélation (vides quand les enquêtes sont cloisonnées)
+  /** Recherche plein texte dans toutes les enquêtes : libellés, propriétés, notes. */
+  'search:global': (query: string, limit?: number) => GlobalSearchHit[]
+  /** Pour chaque nœud donné, les autres enquêtes où la même entité apparaît (clé canonique). */
+  'nodes:crossRefs': (nodeIds: string[]) => Record<string, CrossRef[]>
 
   // Pièces jointes (servies par le protocole `masint-file://att/<id>`)
   'attachments:add': (investigationId: string, file: { name: string; mime: string; base64: string }) => Attachment

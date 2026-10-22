@@ -1,7 +1,9 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type {
   Attachment,
+  CrossRef,
   EdgeInput,
+  GlobalSearchHit,
   GraphEdge,
   GraphNode,
   Investigation,
@@ -15,6 +17,7 @@ import type {
   UpsertOptions
 } from '@shared/types'
 import { canonicalKey } from '@shared/canonical'
+import { ftsQuery, UNCORRELATED_TYPES } from '@shared/correlation'
 import type { DB } from './database'
 
 const now = (): number => Date.now()
@@ -370,6 +373,57 @@ export class Repo {
       }
     }
     return this.upsertNodes(node.investigationId, [{ id, data }])[0]
+  }
+
+  /**
+   * Recherche plein texte dans les nœuds de toutes les enquêtes (libellé, valeurs des
+   * propriétés, notes) : chaque mot de trois caractères ou plus doit apparaître, casse et
+   * accents ignorés. Le libellé pèse plus que les notes, les notes plus que les propriétés.
+   */
+  searchNodes(query: string, opts: { limit?: number; investigationId?: string } = {}): GlobalSearchHit[] {
+    const match = ftsQuery(query)
+    if (!match) return []
+    const rows = this.db
+      .prepare(
+        `SELECT t.node_id AS nodeId, t.investigation_id AS investigationId, i.name AS investigationName, i.color AS investigationColor,
+           n.kind AS kind, n.type AS type, n.platform AS platform, n.label AS label,
+           snippet(node_fts, -1, char(2), char(3), '…', 24) AS snippet
+         FROM node_fts
+         JOIN node_text t ON t.id = node_fts.rowid
+         JOIN nodes n ON n.id = t.node_id AND n.deleted_at IS NULL
+         JOIN investigations i ON i.id = t.investigation_id AND i.deleted_at IS NULL
+         WHERE node_fts MATCH ? ${opts.investigationId ? 'AND t.investigation_id = ?' : ''}
+         ORDER BY bm25(node_fts, 4.0, 1.0, 2.0)
+         LIMIT ?`
+      )
+      .all(...[match, ...(opts.investigationId ? [opts.investigationId] : []), Math.max(1, Math.min(500, opts.limit ?? 100))]) as GlobalSearchHit[]
+    return rows
+  }
+
+  /**
+   * Autres enquêtes où apparaît chacun des nœuds donnés (même clé canonique, valeur non vide,
+   * types de contexte exclus). Une seule requête, quel que soit le nombre de nœuds : la liste
+   * d'identifiants est passée en JSON. Les nœuds sans corrélation sont absents du résultat.
+   */
+  crossRefs(nodeIds: string[]): Record<string, CrossRef[]> {
+    if (!nodeIds.length) return {}
+    const excluded = UNCORRELATED_TYPES.map((t) => `'${t.replace(/'/g, "''")}'`).join(', ')
+    const rows = this.db
+      .prepare(
+        `SELECT n.id AS sourceId, o.investigation_id AS investigationId, i.name AS investigationName, i.color AS investigationColor,
+           o.id AS nodeId, MIN(o.created_at) AS firstSeen
+         FROM json_each(?) j
+         JOIN nodes n ON n.id = j.value AND n.deleted_at IS NULL AND n.kind = 'entity' AND n.dedup_key IS NOT NULL
+           AND trim(n.label) != '' AND n.type NOT IN (${excluded})
+         JOIN nodes o ON o.dedup_key = n.dedup_key AND o.investigation_id != n.investigation_id AND o.deleted_at IS NULL AND o.kind = 'entity'
+         JOIN investigations i ON i.id = o.investigation_id AND i.deleted_at IS NULL
+         GROUP BY n.id, o.investigation_id
+         ORDER BY n.id, i.updated_at DESC`
+      )
+      .all(JSON.stringify(nodeIds)) as Array<CrossRef & { sourceId: string; firstSeen: number }>
+    const out: Record<string, CrossRef[]> = {}
+    for (const { sourceId, firstSeen: _first, ...ref } of rows) (out[sourceId] ??= []).push(ref)
+    return out
   }
 
   deleteNodes(investigationId: string, ids: string[]): string[] {

@@ -7,6 +7,71 @@ export type DB = Database.Database
 /** Migration : script SQL, ou fonction quand le calcul ne peut pas se faire en SQL. */
 type Migration = string | ((db: DB) => void)
 
+/** Longueur maximale du texte des propriétés indexé pour un nœud. */
+const SEARCH_DATA_MAX = 20000
+
+/**
+ * Texte des propriétés d'un nœud pour l'index : valeurs textuelles et numériques seulement (ni
+ * clés, ni ponctuation JSON), sans les champs internes `__` (json_tree écrit `$."__image"`).
+ */
+function searchDataSql(col: string): string {
+  return `CASE WHEN json_valid(${col}) THEN COALESCE((SELECT substr(group_concat(value, ' '), 1, ${SEARCH_DATA_MAX}) FROM json_tree(${col})
+    WHERE type IN ('text', 'integer', 'real') AND fullkey NOT GLOB '$.__*' AND fullkey NOT GLOB '$."__*'), '') ELSE '' END`
+}
+
+/**
+ * Index plein texte : `node_text` garde le texte indexé de chaque nœud non supprimé (hors
+ * dessins), `node_fts` l'indexe (contenu externe, sans copie). Les deux sont tenus à jour par
+ * des déclencheurs : toute écriture (saisie, module, import d'archive, fusion, suppression en
+ * cascade d'une enquête) est prise en compte. Un déplacement de nœud ne touche pas l'index.
+ * Découpage en trigrammes : une partie de valeur suffit (« 9981234 », « exempl »), sans tenir
+ * compte de la casse ni des accents.
+ */
+function searchIndexMigration(): string {
+  const row = (r: string): string => `${r}.id, ${r}.investigation_id, ${r}.label, ${searchDataSql(`${r}.data`)}, ${r}.notes`
+  return `
+  CREATE INDEX idx_nodes_dedup_key ON nodes(dedup_key);
+
+  CREATE TABLE node_text (
+    id INTEGER PRIMARY KEY,
+    node_id TEXT NOT NULL UNIQUE,
+    investigation_id TEXT NOT NULL,
+    label TEXT NOT NULL,
+    data TEXT NOT NULL,
+    notes TEXT NOT NULL
+  );
+  CREATE VIRTUAL TABLE node_fts USING fts5(
+    label, data, notes,
+    content = 'node_text', content_rowid = 'id',
+    tokenize = 'trigram remove_diacritics 1'
+  );
+
+  CREATE TRIGGER node_text_ai AFTER INSERT ON node_text BEGIN
+    INSERT INTO node_fts(rowid, label, data, notes) VALUES (new.id, new.label, new.data, new.notes);
+  END;
+  CREATE TRIGGER node_text_ad AFTER DELETE ON node_text BEGIN
+    INSERT INTO node_fts(node_fts, rowid, label, data, notes) VALUES ('delete', old.id, old.label, old.data, old.notes);
+  END;
+
+  CREATE TRIGGER nodes_search_ai AFTER INSERT ON nodes WHEN new.deleted_at IS NULL AND new.kind != 'drawing' BEGIN
+    INSERT INTO node_text(node_id, investigation_id, label, data, notes) SELECT ${row('new')};
+  END;
+  CREATE TRIGGER nodes_search_au AFTER UPDATE ON nodes
+    WHEN old.label IS NOT new.label OR old.data IS NOT new.data OR old.notes IS NOT new.notes OR old.kind IS NOT new.kind
+      OR old.deleted_at IS NOT new.deleted_at OR old.investigation_id IS NOT new.investigation_id
+  BEGIN
+    DELETE FROM node_text WHERE node_id = old.id;
+    INSERT INTO node_text(node_id, investigation_id, label, data, notes) SELECT ${row('new')} WHERE new.deleted_at IS NULL AND new.kind != 'drawing';
+  END;
+  CREATE TRIGGER nodes_search_ad AFTER DELETE ON nodes BEGIN
+    DELETE FROM node_text WHERE node_id = old.id;
+  END;
+
+  INSERT INTO node_text(node_id, investigation_id, label, data, notes)
+    SELECT ${row('n')} FROM nodes n WHERE n.deleted_at IS NULL AND n.kind != 'drawing';
+  `
+}
+
 // Chaque ligne porte un identifiant UUID, `updated_at` et `deleted_at` :
 // ce sont les briques nécessaires à une future synchronisation entre postes.
 const MIGRATIONS: Migration[] = [
@@ -127,8 +192,12 @@ const MIGRATIONS: Migration[] = [
   CREATE UNIQUE INDEX idx_sugg_dedup ON suggestions(investigation_id, node_id, kind, dedup_key);
   `,
   // 3 : clés de dédoublonnage canoniques (numéros en E.164, plateforme ignorée pour les emails...).
-  (db) => recomputeDedupKeys(db)
+  (db) => recomputeDedupKeys(db),
+  // 4 : recherche globale (index plein texte des nœuds) et corrélation entre enquêtes (index sur
+  // la seule clé canonique, pour retrouver une entité dans toutes les enquêtes).
+  searchIndexMigration()
 ]
+
 
 export function openDatabase(file: string): DB {
   const db = new Database(file)
