@@ -8,9 +8,13 @@ import type {
   InvestigationBundle,
   ModuleRun,
   NodeInput,
+  ModuleRunStats,
   PropValue,
-  Suggestion
+  SavedNode,
+  Suggestion,
+  UpsertOptions
 } from '@shared/types'
+import { canonicalKey } from '@shared/canonical'
 import type { DB } from './database'
 
 const now = (): number => Date.now()
@@ -23,14 +27,45 @@ const parse = <T>(s: string | null | undefined, fallback: T): T => {
   }
 }
 
-/** Clé de dédoublonnage : deux entités de même type, plateforme et libellé normalisé sont identiques. */
+/**
+ * Clé de dédoublonnage : deux entités de même type et de même valeur canonique sont identiques
+ * (la plateforme ne compte que pour les comptes, pseudos et types sans règle). Voir `@shared/canonical`.
+ */
 export function dedupKey(type: string, label: string, platform?: string | null): string {
-  let l = label.trim().toLowerCase()
-  if (type === 'phone') l = l.replace(/[^\d+]/g, '')
-  if (type === 'domain' || type === 'website' || type === 'url') l = l.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '')
-  if (type === 'username' || type === 'account') l = l.replace(/^@/, '')
-  return `${type}|${platform ?? ''}|${l}`
+  return canonicalKey(type, label, platform)
 }
+
+/** Exécution archivée avec la réponse brute du service (JSON sérialisé). */
+export type RunWithRaw = ModuleRun & { raw: string | null }
+
+interface RunRow {
+  id: string
+  investigation_id: string
+  node_id: string
+  module_id: string
+  job_id: string
+  status: string
+  found: number | null
+  result_count: number
+  error: string | null
+  raw?: string | null
+  started_at: number | null
+  finished_at: number | null
+}
+
+const toRun = (r: RunRow): ModuleRun => ({
+  id: r.id,
+  investigationId: r.investigation_id,
+  nodeId: r.node_id,
+  moduleId: r.module_id,
+  jobId: r.job_id,
+  status: r.status as ModuleRun['status'],
+  found: r.found === null ? null : r.found === 1,
+  resultCount: r.result_count,
+  error: r.error,
+  startedAt: r.started_at,
+  finishedAt: r.finished_at
+})
 
 interface NodeRow {
   id: string
@@ -231,15 +266,24 @@ export class Repo {
     return ids.map((id) => this.getNode(id)).filter((n): n is GraphNode => n !== null)
   }
 
+  /** Entité de même clé ; la plus ancienne si plusieurs nœuds la partagent (doublons d'avant la migration). */
   findNodeByDedup(investigationId: string, key: string): GraphNode | null {
     const r = this.db
-      .prepare('SELECT * FROM nodes WHERE investigation_id = ? AND dedup_key = ? AND deleted_at IS NULL LIMIT 1')
+      .prepare('SELECT * FROM nodes WHERE investigation_id = ? AND dedup_key = ? AND deleted_at IS NULL ORDER BY created_at, rowid LIMIT 1')
       .get(investigationId, key) as NodeRow | undefined
     return r ? toNode(r) : null
   }
 
-  upsertNodes(investigationId: string, inputs: NodeInput[]): GraphNode[] {
+  /**
+   * Enregistre des nœuds (création ou mise à jour). Une entité dont la valeur vient d'être
+   * saisie ou modifiée et qui existe déjà dans l'enquête porte `duplicateOf` (identifiant de
+   * l'entité déjà présente) : l'interface propose alors d'y aller ou de fusionner.
+   */
+  upsertNodes(investigationId: string, inputs: NodeInput[], opts: UpsertOptions = {}): SavedNode[] {
     const t = now()
+    const findDuplicate = this.db.prepare(
+      'SELECT id FROM nodes WHERE investigation_id = ? AND dedup_key = ? AND id != ? AND deleted_at IS NULL ORDER BY created_at, rowid LIMIT 1'
+    )
     const insert = this.db.prepare(
       `INSERT INTO nodes (id, investigation_id, kind, type, label, platform, data, notes, image_id, x, y, width, height, style, source, dedup_key, created_at, updated_at)
        VALUES (@id, @investigation_id, @kind, @type, @label, @platform, @data, @notes, @image_id, @x, @y, @width, @height, @style, @source, @dedup_key, @created_at, @updated_at)`
@@ -250,11 +294,14 @@ export class Repo {
          dedup_key = @dedup_key, updated_at = @updated_at
        WHERE id = @id AND investigation_id = @investigation_id`
     )
-    const out: GraphNode[] = []
+    const out: SavedNode[] = []
     this.db.transaction(() => {
       for (const input of inputs) {
-        const existing = input.id ? this.getNode(input.id) : null
-        const merged: GraphNode = {
+        const found = input.id ? this.getNode(input.id) : null
+        const existing = found && found.investigationId === investigationId ? found : null
+        // Patch vers un nœud supprimé ou fusionné (annulation tardive...) : ignoré, sans recréer de nœud.
+        if (opts.updateOnly && !existing) continue
+        const merged: SavedNode = {
           id: existing?.id ?? input.id ?? randomUUID(),
           investigationId,
           kind: input.kind ?? existing?.kind ?? 'entity',
@@ -273,6 +320,7 @@ export class Repo {
           createdAt: existing?.createdAt ?? t,
           updatedAt: t
         }
+        const key = merged.kind === 'entity' ? dedupKey(merged.type, merged.label, merged.platform) : null
         const row = {
           id: merged.id,
           investigation_id: investigationId,
@@ -289,12 +337,18 @@ export class Repo {
           height: merged.height,
           style: JSON.stringify(merged.style),
           source: merged.source,
-          dedup_key: merged.kind === 'entity' ? dedupKey(merged.type, merged.label, merged.platform) : null,
+          dedup_key: key,
           created_at: merged.createdAt,
           updated_at: t
         }
         if (existing) update.run(row)
         else insert.run(row)
+        // Valeur nouvelle ou modifiée déjà présente sous un autre nœud : signalée, jamais fusionnée d'office.
+        const identityChanged = !existing || dedupKey(existing.type, existing.label, existing.platform) !== key || existing.kind !== 'entity'
+        if (key && merged.label.trim() && identityChanged) {
+          const dup = findDuplicate.get(investigationId, key, merged.id) as { id: string } | undefined
+          if (dup) merged.duplicateOf = dup.id
+        }
         out.push(merged)
       }
       this.touchInvestigation(investigationId)
@@ -362,9 +416,14 @@ export class Repo {
     return r ? toEdge(r) : null
   }
 
-  upsertEdges(investigationId: string, inputs: EdgeInput[]): GraphEdge[] {
+  /**
+   * Enregistre des liens. Un lien n'est jamais créé vers un nœud absent ou supprimé (il resterait
+   * invisible et orphelin) ; en mise à jour seule, un lien absent est ignoré.
+   */
+  upsertEdges(investigationId: string, inputs: EdgeInput[], opts: UpsertOptions = {}): GraphEdge[] {
     const t = now()
     const out: GraphEdge[] = []
+    const nodeExists = this.db.prepare('SELECT 1 FROM nodes WHERE id = ? AND investigation_id = ? AND deleted_at IS NULL')
     const insert = this.db.prepare(
       `INSERT INTO edges (id, investigation_id, source, target, label, data, style, source_module, created_at, updated_at)
        VALUES (@id, @investigation_id, @source, @target, @label, @data, @style, @source_module, @created_at, @updated_at)`
@@ -375,7 +434,9 @@ export class Repo {
     )
     this.db.transaction(() => {
       for (const input of inputs) {
-        const existing = input.id ? this.getEdge(input.id) : null
+        const found = input.id ? this.getEdge(input.id) : null
+        const existing = found && found.investigationId === investigationId ? found : null
+        if (opts.updateOnly && !existing) continue
         const merged: GraphEdge = {
           id: existing?.id ?? input.id ?? randomUUID(),
           investigationId,
@@ -388,6 +449,7 @@ export class Repo {
           createdAt: existing?.createdAt ?? t,
           updatedAt: t
         }
+        if (!nodeExists.get(merged.source, investigationId) || !nodeExists.get(merged.target, investigationId)) continue
         const row = {
           id: merged.id,
           investigation_id: investigationId,
@@ -577,42 +639,71 @@ export class Repo {
   }
 
   listRuns(investigationId: string, nodeId?: string): ModuleRun[] {
+    // La réponse brute (`raw`, jusqu'à 200 ko par exécution) n'est pas lue ici.
+    const cols = 'id, investigation_id, node_id, module_id, job_id, status, found, result_count, error, started_at, finished_at'
     const rows = (
       nodeId
         ? this.db
-            .prepare(
-              'SELECT * FROM module_runs WHERE investigation_id = ? AND node_id = ? ORDER BY started_at DESC, rowid DESC'
-            )
+            .prepare(`SELECT ${cols} FROM module_runs WHERE investigation_id = ? AND node_id = ? ORDER BY started_at DESC, rowid DESC`)
             .all(investigationId, nodeId)
         : this.db
-            .prepare('SELECT * FROM module_runs WHERE investigation_id = ? ORDER BY started_at DESC, rowid DESC LIMIT 2000')
+            .prepare(`SELECT ${cols} FROM module_runs WHERE investigation_id = ? ORDER BY started_at DESC, rowid DESC LIMIT 2000`)
             .all(investigationId)
-    ) as Array<{
-      id: string
-      investigation_id: string
-      node_id: string
-      module_id: string
-      job_id: string
-      status: string
-      found: number | null
-      result_count: number
-      error: string | null
-      started_at: number | null
-      finished_at: number | null
-    }>
-    return rows.map((r) => ({
-      id: r.id,
-      investigationId: r.investigation_id,
-      nodeId: r.node_id,
-      moduleId: r.module_id,
-      jobId: r.job_id,
-      status: r.status as ModuleRun['status'],
-      found: r.found === null ? null : r.found === 1,
-      resultCount: r.result_count,
-      error: r.error,
-      startedAt: r.started_at,
-      finishedAt: r.finished_at
-    }))
+    ) as RunRow[]
+    return rows.map(toRun)
+  }
+
+  /**
+   * Exécutions à archiver, réponse brute comprise : seulement celles des nœuds encore présents
+   * (les réponses obtenues sur un nœud supprimé ne doivent pas quitter le poste).
+   */
+  listRunsForArchive(investigationId: string): RunWithRaw[] {
+    const rows = this.db
+      .prepare(
+        `SELECT r.* FROM module_runs r JOIN nodes n ON n.id = r.node_id AND n.investigation_id = r.investigation_id AND n.deleted_at IS NULL
+         WHERE r.investigation_id = ? ORDER BY r.started_at, r.rowid`
+      )
+      .all(investigationId) as RunRow[]
+    return rows.map((r) => ({ ...toRun(r), raw: r.raw ?? null }))
+  }
+
+  /**
+   * Statistiques par module (exécutions, résultats, erreurs) calculées en base, sans la limite
+   * de `listRuns` : seules les exécutions des nœuds encore présents comptent, comme dans l'archive.
+   */
+  runStats(investigationId: string): ModuleRunStats[] {
+    const rows = this.db
+      .prepare(
+        `SELECT r.module_id AS moduleId, COUNT(*) AS runs, COALESCE(SUM(r.result_count), 0) AS results,
+           SUM(CASE WHEN r.status = 'error' THEN 1 ELSE 0 END) AS errors
+         FROM module_runs r JOIN nodes n ON n.id = r.node_id AND n.investigation_id = r.investigation_id AND n.deleted_at IS NULL
+         WHERE r.investigation_id = ? GROUP BY r.module_id ORDER BY r.module_id`
+      )
+      .all(investigationId) as ModuleRunStats[]
+    return rows
+  }
+
+  /**
+   * Fusion : les exécutions et résultats à vérifier des nœuds absorbés passent sur la cible,
+   * pour que les sources du rapport et les suggestions en attente ne se perdent pas.
+   */
+  reassignNodeHistory(investigationId: string, fromIds: string[], toId: string): void {
+    const runs = this.db.prepare('UPDATE module_runs SET node_id = ? WHERE investigation_id = ? AND node_id = ?')
+    // Suggestion déjà connue sur la cible (même valeur) : la plus ancienne est gardée.
+    const sugg = this.db.prepare('UPDATE OR IGNORE suggestions SET node_id = ? WHERE investigation_id = ? AND node_id = ?')
+    this.db.transaction(() => {
+      for (const id of fromIds) {
+        if (id === toId) continue
+        runs.run(toId, investigationId, id)
+        sugg.run(toId, investigationId, id)
+      }
+    })()
+  }
+
+  /** Ajoute une exécution reprise d'une archive, avec sa réponse brute. */
+  importRun(run: ModuleRun, raw: string | null): void {
+    this.insertRun(run)
+    if (raw !== null) this.updateRun(run.id, { raw })
   }
 
   getRunRaw(id: string): unknown {
