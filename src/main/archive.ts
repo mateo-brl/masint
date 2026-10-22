@@ -7,12 +7,14 @@
 //   dans `runs/<id>.json` ;
 // - seules les pièces jointes utilisées par un nœud présent sont embarquées (la photo d'un nœud
 //   supprimé ne doit pas partir avec la copie) ; idem pour les exécutions ;
-// - `hashes.json` : empreinte SHA-256 de chaque entrée, vérifiée à l'import.
+// - `hashes.json` : empreinte SHA-256 de chaque entrée, vérifiée à l'import ;
+// - `observations` : provenance fine (quel module a vu quel nœud, lien ou propriété), absente
+//   des archives plus anciennes.
 // Les archives version 1 restent lisibles.
 
 import { createHash, randomUUID } from 'node:crypto'
 import JSZip from 'jszip'
-import type { Attachment, GraphEdge, GraphNode, Investigation, ModuleRun, Suggestion } from '@shared/types'
+import type { Attachment, GraphEdge, GraphNode, Investigation, ModuleRun, Observation, Suggestion } from '@shared/types'
 import type { Repo } from './db/repo'
 
 export const ARCHIVE_FORMAT = 'masint'
@@ -36,6 +38,8 @@ export interface Manifest {
   suggestions?: Suggestion[]
   /** Exécutions des modules (version 2). */
   runs?: ArchivedRun[]
+  /** Observations des modules (provenance, corroboration). */
+  observations?: Observation[]
 }
 
 /** Limites contre les archives piégées (bombe de décompression, milliers d'entrées). */
@@ -71,7 +75,8 @@ export async function buildArchive(repo: Repo, investigationId: string): Promise
     edges: bundle.edges,
     attachments,
     suggestions: repo.listSuggestions(investigationId),
-    runs: runs.map(({ raw, ...run }) => ({ ...run, raw: raw !== null }))
+    runs: runs.map(({ raw, ...run }) => ({ ...run, raw: raw !== null })),
+    observations: repo.listObservationsForArchive(investigationId)
   }
   const zip = new JSZip()
   const hashes: Record<string, string> = {}
@@ -260,11 +265,13 @@ export async function importArchive(repo: Repo, buf: Buffer, limits: ArchiveLimi
       imageId: n.imageId ? (attIds.get(n.imageId) ?? null) : null
     }))
   )
+  const edgeIds = new Map<string, string>()
+  for (const e of manifest.edges) edgeIds.set(e.id, randomUUID())
   repo.upsertEdges(
     inv.id,
     manifest.edges
       .filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target))
-      .map((e) => ({ ...e, id: randomUUID(), source: nodeIds.get(e.source)!, target: nodeIds.get(e.target)! }))
+      .map((e) => ({ ...e, id: edgeIds.get(e.id)!, source: nodeIds.get(e.source)!, target: nodeIds.get(e.target)! }))
   )
   for (const s of manifest.suggestions ?? []) {
     const nodeId = nodeIds.get(s.nodeId)
@@ -275,13 +282,34 @@ export async function importArchive(repo: Repo, buf: Buffer, limits: ArchiveLimi
   }
   // Exécutions : nouveaux identifiants, une tâche d'origine devient une tâche de la copie.
   const jobIds = new Map<string, string>()
+  const runIds = new Map<string, string>()
   for (const r of manifest.runs ?? []) {
     const nodeId = nodeIds.get(r.nodeId)
     if (!nodeId) continue
     if (!jobIds.has(r.jobId)) jobIds.set(r.jobId, randomUUID())
     const { raw: _raw, ...run } = r
-    repo.importRun({ ...run, id: randomUUID(), investigationId: inv.id, nodeId, jobId: jobIds.get(r.jobId)! }, raws.get(r.id) ?? null)
+    runIds.set(r.id, randomUUID())
+    repo.importRun({ ...run, id: runIds.get(r.id)!, investigationId: inv.id, nodeId, jobId: jobIds.get(r.jobId)! }, raws.get(r.id) ?? null)
   }
+  // Observations : nœud, lien et exécution désignés par leurs nouveaux identifiants.
+  const existingEdges = new Set(repo.listEdges(inv.id).map((e) => e.id))
+  repo.addObservations(
+    (manifest.observations ?? [])
+      .filter((o) => nodeIds.has(o.nodeId) && typeof o.moduleId === 'string')
+      .map((o) => {
+        const edgeId = o.edgeId ? (edgeIds.get(o.edgeId) ?? null) : null
+        return {
+          investigationId: inv.id,
+          nodeId: nodeIds.get(o.nodeId)!,
+          edgeId: edgeId && existingEdges.has(edgeId) ? edgeId : null,
+          property: typeof o.property === 'string' ? o.property : null,
+          runId: (o.runId && runIds.get(o.runId)) || '',
+          moduleId: o.moduleId,
+          sourceUrl: typeof o.sourceUrl === 'string' ? o.sourceUrl : null,
+          observedAt: typeof o.observedAt === 'number' ? o.observedAt : Date.now()
+        }
+      })
+  )
   if (manifest.investigation.viewport) repo.updateInvestigation(inv.id, { viewport: manifest.investigation.viewport })
   return repo.getInvestigation(inv.id)!
 }

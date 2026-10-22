@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import Database from 'better-sqlite3'
 import { canonicalKey } from '@shared/canonical'
@@ -127,7 +128,9 @@ const MIGRATIONS: Migration[] = [
   CREATE UNIQUE INDEX idx_sugg_dedup ON suggestions(investigation_id, node_id, kind, dedup_key);
   `,
   // 3 : clés de dédoublonnage canoniques (numéros en E.164, plateforme ignorée pour les emails...).
-  (db) => recomputeDedupKeys(db)
+  (db) => recomputeDedupKeys(db),
+  // 4 : provenance fine (observations par module, corroboration) et profondeur des nœuds.
+  (db) => addObservations(db)
 ]
 
 export function openDatabase(file: string): DB {
@@ -260,6 +263,61 @@ function migrate(db: DB): void {
       db.pragma(`user_version = ${v + 1}`)
     })()
   }
+}
+
+/**
+ * Migration 4 : table `observations` (quel module a vu quel nœud, lien ou propriété, lors de
+ * quelle exécution) et colonne `hop` des nœuds (profondeur depuis une saisie).
+ *
+ * Reprise de l'existant, sans exécution connue (`run_id` vide) : un nœud créé par un module
+ * est observé par ce module (`source`), un lien posé par un module l'est par le sien
+ * (`source_module`). Un nœud créé par un module reçoit la profondeur 1, faute de mieux.
+ */
+export function addObservations(db: DB): void {
+  // Rejouable : une base déjà migrée (version remise en arrière) n'est pas modifiée deux fois.
+  const columns = db.prepare('PRAGMA table_info(nodes)').all() as Array<{ name: string }>
+  if (!columns.some((c) => c.name === 'hop')) {
+    db.exec(`
+      ALTER TABLE nodes ADD COLUMN hop INTEGER NOT NULL DEFAULT 0;
+      UPDATE nodes SET hop = 1 WHERE kind = 'entity' AND source != 'manual';
+    `)
+  }
+  const existed = !!db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'observations'").get()
+  db.exec(`
+    -- Identifiant déjà enrichi récemment, toutes enquêtes confondues (enchaînement).
+    CREATE INDEX IF NOT EXISTS idx_nodes_key ON nodes(dedup_key);
+
+    CREATE TABLE IF NOT EXISTS observations (
+      id TEXT PRIMARY KEY,
+      investigation_id TEXT NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
+      node_id TEXT NOT NULL,
+      edge_id TEXT,
+      property TEXT,
+      run_id TEXT NOT NULL DEFAULT '',
+      module_id TEXT NOT NULL,
+      source_url TEXT,
+      observed_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_obs_node ON observations(investigation_id, node_id);
+    CREATE INDEX IF NOT EXISTS idx_obs_edge ON observations(edge_id) WHERE edge_id IS NOT NULL;
+  `)
+  if (existed) return
+  const insert = db.prepare(
+    `INSERT INTO observations (id, investigation_id, node_id, edge_id, property, run_id, module_id, source_url, observed_at)
+     VALUES (?, ?, ?, ?, NULL, '', ?, NULL, ?)`
+  )
+  const edges = db
+    .prepare("SELECT id, investigation_id, target, source_module, created_at FROM edges WHERE source_module != 'manual' AND deleted_at IS NULL")
+    .all() as Array<{ id: string; investigation_id: string; target: string; source_module: string; created_at: number }>
+  const seen = new Set<string>()
+  for (const e of edges) {
+    insert.run(randomUUID(), e.investigation_id, e.target, e.id, e.source_module, e.created_at)
+    seen.add(`${e.target}|${e.source_module}`)
+  }
+  const nodes = db
+    .prepare("SELECT id, investigation_id, source, created_at FROM nodes WHERE kind = 'entity' AND source != 'manual' AND deleted_at IS NULL")
+    .all() as Array<{ id: string; investigation_id: string; source: string; created_at: number }>
+  for (const n of nodes) if (!seen.has(`${n.id}|${n.source}`)) insert.run(randomUUID(), n.investigation_id, n.id, null, n.source, n.created_at)
 }
 
 /**
