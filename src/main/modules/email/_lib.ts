@@ -18,6 +18,12 @@ import type { I18nText, PropValue } from '@shared/types'
 
 export const tr = (ctx: { lang: 'fr' | 'en' }, fr: string, en: string): string => (ctx.lang === 'fr' ? fr : en)
 
+/**
+ * User-Agent d'outil, pour les API qui refusent un User-Agent de navigateur (Firefox Accounts
+ * répond 406) ou qui demandent qu'un outil s'identifie.
+ */
+export const TOOL_USER_AGENT = 'MASINT (https://github.com/mateo-brl/masint)'
+
 export const md5 = (s: string): string => createHash('md5').update(s).digest('hex')
 export const sha256 = (s: string): string => createHash('sha256').update(s).digest('hex')
 
@@ -220,7 +226,11 @@ export function isoDay(value: string | number | null | undefined): string | unde
 }
 
 export interface CheckResult {
-  found: boolean
+  /**
+   * `true` : compte trouvé ; `false` : absent ; `null` : le service ne permet pas de conclure
+   * à l'absence (Flickr ne confirme que les comptes existants). Ni « trouvé » ni « absent ».
+   */
+  found: boolean | null
   /** Libellé du compte (pseudo) ; par défaut l'identifiant vérifié. */
   label?: string
   data?: Record<string, PropValue | undefined>
@@ -242,6 +252,8 @@ export interface AccountCheckDef {
   name?: I18nText
   homepage?: string
   experimental?: boolean
+  /** Uniquement sur demande explicite (sites pour adultes, services sensibles). */
+  ondemand?: boolean
   keys?: OsintModule['keys']
   accepts?: OsintModule['accepts']
   timeoutMs?: number
@@ -259,12 +271,14 @@ export function accountCheck(def: AccountCheckDef): OsintModule {
     inputTypes,
     homepage: def.homepage,
     experimental: def.experimental,
+    ondemand: def.ondemand,
     keys: def.keys,
     accepts: def.accepts,
     timeoutMs: def.timeoutMs,
     async run(input, ctx): Promise<ModuleOutput> {
       const value = input.type === 'email' ? requireEmail(input) : input.label.trim()
       const r = await def.check(value, ctx, input)
+      if (r.found === null) return { ...(r.properties ? { properties: compact(r.properties) } : {}), raw: r.raw }
       if (!r.found) return { found: false, ...(r.properties ? { properties: compact(r.properties) } : {}), raw: r.raw }
       const entities: OutEntity[] = [
         accountEntity(def.platform, def.service, r.label || value, {
