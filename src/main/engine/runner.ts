@@ -363,20 +363,29 @@ export class Engine {
     const created = await this.runModule(job, entry, m)
     entry.pending--
     if (job.controller.signal.aborted) return
-    let more = this.considerChain(job, entry, m, created)
-    // Modules de suite que les résultats rendent maintenant applicables, une fois les modules
-    // du nœud terminés (même si la tâche ne lançait qu'un module choisi à la main).
-    if (entry.pending === 0 && !entry.followed) {
-      entry.followed = true
-      const fresh = this.repo.getNode(entry.node.id)
-      if (fresh) {
-        const candidates = entry.depth === 0 ? applicableModules(fresh, this.settings, undefined, this.imageOrigin(fresh)) : this.chainModules(fresh, entry.depth)
-        const follow = candidates.filter((x) => x.followUp && !entry.ran.has(x.id))
-        if (follow.length) {
-          this.enqueue(job, entry, follow)
-          more = true
+    let more = false
+    try {
+      more = this.considerChain(job, entry, m, created)
+      // Modules de suite que les résultats rendent maintenant applicables, une fois les modules
+      // du nœud terminés (même si la tâche ne lançait qu'un module choisi à la main).
+      if (entry.pending === 0 && !entry.followed) {
+        entry.followed = true
+        const fresh = this.repo.getNode(entry.node.id)
+        if (fresh) {
+          const candidates = entry.depth === 0 ? applicableModules(fresh, this.settings, undefined, this.imageOrigin(fresh)) : this.chainModules(fresh, entry.depth)
+          const follow = candidates.filter((x) => x.followUp && !entry.ran.has(x.id))
+          // Nœud atteint par enchaînement : ses modules de suite entrent dans le budget.
+          const fits = entry.depth === 0 || !job.chain || job.chain.runs + follow.length <= CHAIN_BUDGET.runs
+          if (follow.length && !fits && job.progress.chain) job.progress.chain.budget = true
+          if (follow.length && fits) {
+            this.enqueue(job, entry, follow)
+            more = true
+          }
         }
       }
+    } catch (e) {
+      // Une suite impossible à programmer ne doit pas bloquer la tâche.
+      console.error(`[engine] suite de ${m.id}`, e)
     }
     if (more) {
       this.emit('job:progress', this.snapshot(job))

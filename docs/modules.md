@@ -184,8 +184,10 @@ l'enquêteur doit ouvrir lui-même n'apporte presque rien. Aucun module ne crée
 
 Quand l'enchaînement est actif (réglage « Enchaînement », avec l'enrichissement automatique ou
 l'action « Enrichir en chaîne »), chaque **nouveau** nœud dont le lien est `same` ou
-`declared` est enrichi à son tour, jusqu'à la profondeur réglée. Déclarez la force de chaque
-entité quand elle ne découle pas de son type :
+`declared` est enrichi à son tour, jusqu'à la profondeur réglée. La profondeur d'un nœud
+(`hop`) vaut 0 pour une saisie ou un import, sinon celle de son parent plus 1 : le parent est
+l'entité d'entrée, ou l'entité désignée par `from`. Déclarez la force de chaque entité quand
+elle ne découle pas de son type :
 
 | Valeur | Sens | Exemples |
 | --- | --- | --- |
@@ -208,7 +210,7 @@ Ce que l'enchaînement ne fait jamais :
 
 - lancer un module `ondemand`, `noisy` ou à clé obligatoire (crédits, quotas) ;
 - lancer `username.sites` ou `username.sites_extended` au-delà de la profondeur 1 ;
-- lancer un module de la famille `web` sur un nœud `url` ;
+- lancer un module de la catégorie `web` (`category: 'web'`, `misc.url_parse` compris) sur un nœud `url` ;
 - enrichir une adresse générique (`noreply@`, `support@github.com`...), un raccourcisseur
   d'URL, la page d'accueil d'une plateforme, un compte de plus de 100 000 abonnés (sauf le nœud
   de départ), un identifiant enrichi depuis moins de 24 heures, ou un pseudo trop courant (moins
