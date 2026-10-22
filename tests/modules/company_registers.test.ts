@@ -126,6 +126,9 @@ describe('company.bodacc', () => {
     expect(h.formerOfficers).toEqual(['Faber, Emmanuel (Administrateur, départ publié en 05/2021)'])
     expect(h.formerAddresses).toEqual(['17 boulevard Haussmann 75009 Paris (publiée jusqu’en 08/2025)'])
     expect(history(casino).proceedings[0]).toMatch(/^10\/11\/2023 : Jugement d'ouverture/)
+    // Annonces anciennes : fonctions séparées par des virgules.
+    const old = { ...records[4], listepersonnes: JSON.stringify({ personne: { typePersonne: 'pm', denomination: 'DANONE', administration: 'Administrateur partant : Faber, Emmanuel, nomination du Président du conseil d’administration : Schnepp, Gilles' } }) }
+    expect(history([old]).formerOfficers).toEqual(['Faber, Emmanuel (Administrateur, départ publié en 04/2021)'])
   })
 
   it('événements datés, les plus récents d’abord, et total', () => {
