@@ -126,10 +126,17 @@ export function isLayoutOnly(input: object): boolean {
 
 const differs = (a: unknown, b: unknown): boolean => canonicalJson(a ?? null) !== canonicalJson(b ?? null)
 
-/** Champs réellement modifiés par un patch de nœud, hors position et taille. */
+/**
+ * Champs réellement modifiés par un patch de nœud, hors position et taille. Replier ou déplier
+ * une descendance (`style.collapsed`) est un état d'affichage, comme un déplacement.
+ */
 export function changedNodeFields(before: GraphNode, input: NodeInput): string[] {
   const fields: Array<keyof GraphNode> = ['kind', 'type', 'label', 'platform', 'data', 'notes', 'imageId', 'style', 'source']
-  return fields.filter((k) => k in input && (input as Record<string, unknown>)[k] !== undefined && differs(before[k], (input as Record<string, unknown>)[k]))
+  const view = (k: keyof GraphNode, v: unknown): unknown => (k === 'style' && v && typeof v === 'object' ? { ...(v as object), collapsed: undefined } : v)
+  return fields.filter((k) => {
+    const next = (input as Record<string, unknown>)[k]
+    return k in input && next !== undefined && differs(view(k, before[k]), view(k, next))
+  })
 }
 
 /** Champs réellement modifiés par un patch de lien. */

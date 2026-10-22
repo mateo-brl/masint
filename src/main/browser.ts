@@ -251,7 +251,7 @@ export function openInvestigationBrowser(url: string, settings: Settings, captur
   pw.on('before-input-event', (e, input) => {
     if (input.type !== 'keyDown') return
     const key = input.key
-    if (key === 'F5' || ((input.control || input.meta) && !input.shift && key.toLowerCase() === 'r')) command('reload')
+    if (key === 'F5' || ((input.control || input.meta) && key.toLowerCase() === 'r')) command('reload')
     else if ((input.control || input.meta) && input.shift && key.toLowerCase() === 's' && capture) command('capture')
     else if (input.alt && key === 'ArrowLeft') command('back')
     else if (input.alt && key === 'ArrowRight') command('forward')

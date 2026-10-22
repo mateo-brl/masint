@@ -43,7 +43,7 @@ const SECTION_ICONS: Record<ReportSectionId, string> = {
   links: 'Link',
   timeline: 'CalendarRange',
   sources: 'ScrollText',
-  journal: 'History',
+  journal: 'FileClock',
   attachments: 'Paperclip',
   evidence: 'Camera',
   raw: 'Braces'

@@ -99,6 +99,27 @@ const timeout = <T>(p: Promise<T>, ms: number, what: string): Promise<T> =>
   })
 
 /**
+ * Une page cachée (fenêtre de recherche assistée ou ouverte pour une fiche, fenêtre réduite) ne
+ * produit pas d'image : la prise de vue DevTools attendrait sans fin. Tant qu'elle attend, de
+ * petites captures `capturePage` (1 pixel) la font tenir pour visible, sans afficher la fenêtre.
+ */
+async function whileRendered<T>(wc: WebContents, task: Promise<T>): Promise<T> {
+  let done = false
+  void (async () => {
+    while (!done && !wc.isDestroyed()) {
+      const start = Date.now()
+      await wc.capturePage({ x: 0, y: 0, width: 1, height: 1 }).catch(() => undefined)
+      if (Date.now() - start < 5) await new Promise((r) => setTimeout(r, 16))
+    }
+  })()
+  try {
+    return await task
+  } finally {
+    done = true
+  }
+}
+
+/**
  * Image pleine page : dimensions du contenu (`Page.getLayoutMetrics`), puis capture au-delà
  * de la partie visible sur toute la page, bornée à `MAX_IMAGE_PX` de haut. Sans débogueur (déjà
  * pris par un outil de développement), seule la partie visible est capturée.
@@ -127,12 +148,15 @@ async function screenshot(wc: WebContents): Promise<{ png: Buffer; page: Capture
     const limit = Math.floor(MAX_IMAGE_PX / dpr)
     const width = Math.max(1, Math.min(Math.ceil(content.width), limit))
     const height = Math.max(1, Math.min(Math.ceil(content.height), limit))
-    const shot = (await dbg.sendCommand('Page.captureScreenshot', {
-      format: 'png',
-      captureBeyondViewport: true,
-      fromSurface: true,
-      clip: { x: 0, y: 0, width, height, scale: 1 }
-    })) as { data: string }
+    const shot = (await whileRendered(
+      wc,
+      dbg.sendCommand('Page.captureScreenshot', {
+        format: 'png',
+        captureBeyondViewport: true,
+        fromSurface: true,
+        clip: { x: 0, y: 0, width, height, scale: 1 }
+      })
+    )) as { data: string }
     return {
       png: Buffer.from(shot.data, 'base64'),
       page: {
