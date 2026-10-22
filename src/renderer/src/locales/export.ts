@@ -105,7 +105,9 @@ const fr = {
         notes: 'Notes de l’enquête',
         entities: 'Fiches des entités',
         links: 'Liens entre entités',
+        timeline: 'Chronologie',
         sources: 'Sources et modules exécutés',
+        attachments: 'Pièces jointes et empreintes',
         raw: 'Annexe : données brutes'
       },
       hint: {
@@ -114,7 +116,9 @@ const fr = {
         notes: 'Note libre de l’enquête',
         entities: 'Groupées par catégorie, avec propriétés, notes et images',
         links: 'Tableau de toutes les relations',
+        timeline: 'Dates relevées dans les fiches, dans l’ordre chronologique',
         sources: 'Historique des modules avec date, heure et statut',
+        attachments: 'Nom, SHA-256 et URL d’origine des images jointes',
         raw: 'Propriétés au format JSON et réponses brutes des services'
       }
     },
@@ -133,7 +137,9 @@ const fr = {
       notes: 'Notes de l’enquête',
       entities: 'Fiches des entités',
       links: 'Liens entre entités',
+      timeline: 'Chronologie',
       sources: 'Sources et modules exécutés',
+      attachmentsTitle: 'Pièces jointes et empreintes',
       raw: 'Annexe : données brutes',
       traceability: 'Traçabilité',
       stats: {
@@ -186,7 +192,18 @@ const fr = {
       runsCount: 'Exécutions',
       errors: 'Erreurs',
       runsLog: 'Journal des exécutions',
-      runsTruncated: 'Seules les {{count}} exécutions les plus récentes sont listées.',
+      runsTruncated: 'Seules les {{count}} exécutions les plus récentes sont listées, sur {{total}} ; les chiffres ci-dessus portent sur toutes.',
+      timelineIntro: 'Dates relevées dans les propriétés des fiches (naissance, création, fuite...) : {{count}}.',
+      timelineTruncated: 'Seules les {{count}} premières dates sont listées.',
+      timelineEmpty: 'Aucune fiche ne porte de date.',
+      event: 'Événement',
+      attachmentsIntro: 'Images jointes aux fiches et au canevas. L’empreinte SHA-256 permet de vérifier qu’un fichier n’a pas été modifié.',
+      attachmentsEmpty: 'Aucune pièce jointe.',
+      fileName: 'Fichier',
+      origin: 'URL d’origine',
+      originUnknown: 'ajoutée à la main',
+      usedBy: 'Utilisée par',
+      bytes: 'octets',
       noRuns: 'Aucun module n’a été exécuté dans cette enquête.',
       status: 'Statut',
       results: 'Résultats',
@@ -210,6 +227,8 @@ const fr = {
       platformOs: 'Système : {{platform}}',
       investigationId: 'Identifiant de l’enquête : {{id}}',
       fingerprint: 'Empreinte SHA-256 des données exportées',
+      fingerprintScope:
+        'Calculée sur une forme canonique triée : entités (type, valeur canonique, libellé, plateforme, propriétés, notes, module source, SHA-256 de l’image), annotations du canevas hors dessins, liens (extrémités désignées par leur valeur canonique, libellé, module) et notes de l’enquête. Elle ne dépend ni des identifiants internes, ni des positions, ni des dates d’enregistrement, ni du nom de l’enquête : une copie importée donne la même empreinte.',
       disclaimer:
         'Ce document a été produit automatiquement à partir des données de l’enquête. Les informations issues de sources ouvertes sont susceptibles d’évoluer et doivent être vérifiées avant toute exploitation.',
       yes: 'oui',
@@ -324,7 +343,9 @@ const en: typeof fr = {
         notes: 'Investigation notes',
         entities: 'Entity sheets',
         links: 'Links between entities',
+        timeline: 'Timeline',
         sources: 'Sources and executed modules',
+        attachments: 'Attachments and hashes',
         raw: 'Appendix: raw data'
       },
       hint: {
@@ -333,7 +354,9 @@ const en: typeof fr = {
         notes: 'Free-form investigation notes',
         entities: 'Grouped by category, with properties, notes and images',
         links: 'Table of every relation',
+        timeline: 'Dates found in the entity sheets, in chronological order',
         sources: 'Module history with date, time and status',
+        attachments: 'Name, SHA-256 and source URL of attached images',
         raw: 'Properties as JSON and raw service responses'
       }
     },
@@ -352,7 +375,9 @@ const en: typeof fr = {
       notes: 'Investigation notes',
       entities: 'Entity sheets',
       links: 'Links between entities',
+      timeline: 'Timeline',
       sources: 'Sources and executed modules',
+      attachmentsTitle: 'Attachments and hashes',
       raw: 'Appendix: raw data',
       traceability: 'Traceability',
       stats: {
@@ -405,7 +430,18 @@ const en: typeof fr = {
       runsCount: 'Runs',
       errors: 'Errors',
       runsLog: 'Execution log',
-      runsTruncated: 'Only the {{count}} most recent runs are listed.',
+      runsTruncated: 'Only the {{count}} most recent runs out of {{total}} are listed; the figures above cover all of them.',
+      timelineIntro: 'Dates found in the entity properties (birth, creation, breach...): {{count}}.',
+      timelineTruncated: 'Only the first {{count}} dates are listed.',
+      timelineEmpty: 'No entity carries a date.',
+      event: 'Event',
+      attachmentsIntro: 'Images attached to entities and to the canvas. The SHA-256 hash lets you check that a file has not been altered.',
+      attachmentsEmpty: 'No attachments.',
+      fileName: 'File',
+      origin: 'Source URL',
+      originUnknown: 'added manually',
+      usedBy: 'Used by',
+      bytes: 'bytes',
       noRuns: 'No module was run in this investigation.',
       status: 'Status',
       results: 'Results',
@@ -429,6 +465,8 @@ const en: typeof fr = {
       platformOs: 'System: {{platform}}',
       investigationId: 'Investigation identifier: {{id}}',
       fingerprint: 'SHA-256 fingerprint of the exported data',
+      fingerprintScope:
+        'Computed on a sorted canonical form: entities (type, canonical value, label, platform, properties, notes, source module, image SHA-256), canvas annotations except drawings, links (endpoints identified by their canonical value, label, module) and investigation notes. It depends neither on internal identifiers, positions, record dates nor the investigation name: an imported copy gives the same fingerprint.',
       disclaimer:
         'This document was produced automatically from the investigation data. Information gathered from open sources may change and must be verified before any use.',
       yes: 'yes',

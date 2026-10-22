@@ -1,8 +1,11 @@
 // Rapport d'enquête : document HTML autonome, mis en page pour l'impression A4
 // (le processus principal l'imprime en PDF). Fonction pure, sans accès au DOM.
 
+import { canonicalKey } from '@shared/canonical'
 import { CATEGORIES, ENTITY_TYPES, getEntityType, type CategoryId } from '@shared/entityTypes'
-import type { GraphEdge, GraphNode, Investigation, Lang, ModuleInfo, ModuleRun } from '@shared/types'
+import { propertyLabel } from '@shared/propertyLabels'
+import type { Attachment, GraphEdge, GraphNode, Investigation, Lang, ModuleInfo, ModuleRun, ModuleRunStats } from '@shared/types'
+import { collectEvents, formatEventDate } from '../../lib/timeline'
 import { entityBadgeHtml, iconSvg, logoHtml, type IconMarkup } from './badges'
 import {
   escapeHtml,
@@ -20,8 +23,8 @@ import {
 } from './format'
 import { renderMarkdown } from './markdown'
 
-export type ReportSectionId = 'summary' | 'graph' | 'notes' | 'entities' | 'links' | 'sources' | 'raw'
-export const REPORT_SECTIONS: ReportSectionId[] = ['summary', 'graph', 'notes', 'entities', 'links', 'sources', 'raw']
+export type ReportSectionId = 'summary' | 'graph' | 'notes' | 'entities' | 'links' | 'timeline' | 'sources' | 'attachments' | 'raw'
+export const REPORT_SECTIONS: ReportSectionId[] = ['summary', 'graph', 'notes', 'entities', 'links', 'timeline', 'sources', 'attachments', 'raw']
 
 export interface ReportOptions {
   title: string
@@ -51,6 +54,13 @@ export interface ReportInput {
   fingerprint?: string | null
   /** Réponses brutes des modules pour l'annexe. */
   rawRuns?: Array<{ run: ModuleRun; raw: unknown }>
+  /**
+   * Statistiques par module calculées en base (toutes les exécutions) ; sans elles, les
+   * chiffres sont tirés de `runs`, qui peut être tronqué.
+   */
+  runStats?: ModuleRunStats[]
+  /** Pièces jointes utilisées par les nœuds (nom, SHA-256, URL d'origine). */
+  attachments?: Attachment[]
 }
 
 export const DEFAULT_SECTIONS: Record<ReportSectionId, boolean> = {
@@ -59,34 +69,73 @@ export const DEFAULT_SECTIONS: Record<ReportSectionId, boolean> = {
   notes: true,
   entities: true,
   links: true,
+  timeline: true,
   sources: true,
+  attachments: true,
   raw: false
 }
 
 const MAX_RUN_ROWS = 1500
+const MAX_EVENT_ROWS = 1500
 const MAX_RAW_CHARS = 4000
 
-/** Données couvertes par l'empreinte de traçabilité, sérialisées de façon stable. */
-export function fingerprintPayload(investigation: Investigation, nodes: GraphNode[], edges: GraphEdge[]): string {
-  const sortKeys = (v: unknown): unknown => {
-    if (Array.isArray(v)) return v.map(sortKeys)
-    if (v && typeof v === 'object') {
-      return Object.fromEntries(
-        Object.keys(v as Record<string, unknown>)
-          .sort()
-          .map((k) => [k, sortKeys((v as Record<string, unknown>)[k])])
-      )
-    }
-    return v
+/** Objet aux clés triées, à toute profondeur (sérialisation stable). */
+function sortKeys(v: unknown): unknown {
+  if (Array.isArray(v)) return v.map(sortKeys)
+  if (v && typeof v === 'object') {
+    return Object.fromEntries(
+      Object.keys(v as Record<string, unknown>)
+        .sort()
+        .map((k) => [k, sortKeys((v as Record<string, unknown>)[k])])
+    )
   }
-  const byId = <T extends { id: string }>(a: T, b: T): number => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
-  return JSON.stringify(
-    sortKeys({
-      investigation: { id: investigation.id, name: investigation.name, notes: investigation.notes },
-      nodes: [...nodes].sort(byId).map((n) => ({ id: n.id, kind: n.kind, type: n.type, label: n.label, platform: n.platform, data: n.data, notes: n.notes, source: n.source, imageId: n.imageId })),
-      edges: [...edges].sort(byId).map((e) => ({ id: e.id, source: e.source, target: e.target, label: e.label, sourceModule: e.sourceModule }))
-    })
-  )
+  return v
+}
+
+/**
+ * Données couvertes par l'empreinte de traçabilité, sous une forme canonique triée qui ne
+ * dépend ni des identifiants internes (régénérés à chaque import), ni des positions, ni des
+ * dates d'enregistrement, ni du nom de l'enquête (suffixé à l'import) :
+ * - entités : clé canonique (type et valeur), libellé, plateforme, propriétés, notes, module
+ *   source et SHA-256 de l'image ;
+ * - annotations du canevas (textes, images, cartes ; dessins exclus) : contenu et image ;
+ * - liens : extrémités désignées par leur clé canonique, libellé ;
+ * - notes de l'enquête.
+ * Une enquête et sa copie (archive, duplication) ont donc la même empreinte.
+ */
+export function fingerprintPayload(
+  investigation: Investigation,
+  nodes: GraphNode[],
+  edges: GraphEdge[],
+  imageHashes: Record<string, string> = {}
+): string {
+  const items = nodes.filter((n) => n.kind !== 'drawing')
+  const keyOf = (n: GraphNode): string => (n.kind === 'entity' ? canonicalKey(n.type, n.label, n.platform) : `${n.kind}|${n.type}|${n.label.trim()}`)
+  const byId = new Map(items.map((n) => [n.id, n]))
+  const sorted = (list: unknown[]): string[] => list.map((x) => JSON.stringify(sortKeys(x))).sort()
+  return JSON.stringify({
+    format: 'masint-fingerprint',
+    version: 2,
+    notes: investigation.notes ?? '',
+    nodes: sorted(
+      items.map((n) => ({
+        key: keyOf(n),
+        kind: n.kind,
+        type: n.type,
+        label: n.label,
+        platform: n.platform,
+        data: n.data,
+        notes: n.notes,
+        source: n.source,
+        image: n.imageId ? (imageHashes[n.imageId] ?? 'image') : null
+      }))
+    ),
+    links: sorted(
+      edges
+        .filter((e) => byId.has(e.source) && byId.has(e.target))
+        .map((e) => ({ from: keyOf(byId.get(e.source)!), to: keyOf(byId.get(e.target)!), label: e.label, module: e.sourceModule }))
+    )
+  })
 }
 
 const TYPE_RANK = new Map(ENTITY_TYPES.map((t, i) => [t.id, i]))
@@ -145,16 +194,23 @@ export function buildReportHtml(input: ReportInput): string {
   const nodeCell = (id: string): string => `${refTag(id)} ${e(nodeName(id))}`
 
   // Sections numérotées dans l'ordre d'apparition.
-  const enabled = (['summary', 'graph', 'notes', 'entities', 'links', 'sources', 'raw'] as ReportSectionId[]).filter((id) => sections[id])
+  const enabled = REPORT_SECTIONS.filter((id) => sections[id])
   const titles: Record<ReportSectionId, string> = {
     summary: S.summary,
     graph: S.graph,
     notes: S.notes,
     entities: S.entities,
     links: S.links,
+    timeline: S.timeline,
     sources: S.sources,
+    attachments: S.attachmentsTitle,
     raw: S.raw
   }
+  // Exécutions : totaux de la requête d'agrégat quand ils sont fournis (la liste est limitée).
+  const runTotal = input.runStats ? input.runStats.reduce((a, s) => a + s.runs, 0) : input.runs.length
+  const resultTotal = input.runStats
+    ? input.runStats.reduce((a, s) => a + s.results, 0)
+    : input.runs.reduce((a, r) => a + (r.resultCount || 0), 0)
   const num = (id: ReportSectionId): number => enabled.indexOf(id) + 1
   const chapterHead = (id: ReportSectionId): string =>
     `<h2 class="chapter-title" id="s-${id}"><span class="num">${num(id)}</span>${e(titles[id])}</h2>`
@@ -176,8 +232,6 @@ export function buildReportHtml(input: ReportInput): string {
 
   // Synthèse -------------------------------------------------------------------
   if (sections.summary) {
-    const runs = input.runs
-    const results = runs.reduce((a, r) => a + (r.resultCount || 0), 0)
     const types = new Set(entities.map((n) => n.type))
     const imageCount = input.nodes.filter((n) => n.imageId).length
     const manual = entities.filter((n) => !n.source || n.source === 'manual').length
@@ -213,7 +267,7 @@ export function buildReportHtml(input: ReportInput): string {
       )
       .join('')
     parts.push(`<section class="chapter summary">${chapterHead('summary')}
-<div class="tiles">${tile(entities.length, S.stats.entities)}${tile(edges.length, S.stats.links)}${tile(types.size, S.stats.types)}${tile(runs.length, S.stats.runs)}${tile(results, S.stats.results)}${tile(imageCount, S.stats.images)}</div>
+<div class="tiles">${tile(entities.length, S.stats.entities)}${tile(edges.length, S.stats.links)}${tile(types.size, S.stats.types)}${tile(runTotal, S.stats.runs)}${tile(resultTotal, S.stats.results)}${tile(imageCount, S.stats.images)}</div>
 <table class="kv"><tbody>
 ${period ? `<tr><th>${e(S.stats.period)}</th><td>${e(period)}</td></tr>` : ''}
 <tr><th>${e(S.stats.manual)}</th><td>${manual}</td></tr>
@@ -328,17 +382,40 @@ ${
 </section>`)
   }
 
+  // Chronologie ----------------------------------------------------------------
+  if (sections.timeline) {
+    // Mêmes dates que la frise : champs de date des fiches (naissance, création, fuite...).
+    const events = collectEvents(entities)
+    const rows = events
+      .slice(0, MAX_EVENT_ROWS)
+      .map((ev) => {
+        const field = ev.field ? ev.field[lang] : propertyLabel(ev.key, lang)
+        return `<tr><td class="nowrap">${e(formatEventDate(ev.t, ev.precision, lang))}</td><td class="wrap">${nodeCell(ev.nodeId)}</td><td class="wrap">${e(typeLabel(ev.node.type, lang))}</td><td class="wrap">${e(field)}</td></tr>`
+      })
+      .join('')
+    parts.push(`<section class="chapter">${chapterHead('timeline')}
+${
+  rows
+    ? `<p class="muted small">${e(fmt(S.timelineIntro, { count: events.length }))}</p>${events.length > MAX_EVENT_ROWS ? `<p class="muted small">${e(fmt(S.timelineTruncated, { count: MAX_EVENT_ROWS }))}</p>` : ''}<table class="grid timeline"><thead><tr><th>${e(S.when)}</th><th>${e(S.entity)}</th><th>${e(S.type)}</th><th>${e(S.event)}</th></tr></thead><tbody>${rows}</tbody></table>`
+    : `<p class="muted">${e(S.timelineEmpty)}</p>`
+}
+</section>`)
+  }
+
   // Sources et modules ---------------------------------------------------------
   if (sections.sources) {
     const runs = [...input.runs].sort((a, b) => (b.startedAt ?? 0) - (a.startedAt ?? 0))
     const stats = new Map<string, { runs: number; results: number; errors: number; created: number }>()
-    for (const r of runs) {
-      const s = stats.get(r.moduleId) ?? { runs: 0, results: 0, errors: 0, created: 0 }
-      s.runs++
-      s.results += r.resultCount || 0
-      if (r.status === 'error') s.errors++
-      stats.set(r.moduleId, s)
-    }
+    if (input.runStats)
+      for (const s of input.runStats) stats.set(s.moduleId, { runs: s.runs, results: s.results, errors: s.errors, created: 0 })
+    else
+      for (const r of runs) {
+        const s = stats.get(r.moduleId) ?? { runs: 0, results: 0, errors: 0, created: 0 }
+        s.runs++
+        s.results += r.resultCount || 0
+        if (r.status === 'error') s.errors++
+        stats.set(r.moduleId, s)
+      }
     for (const n of entities) {
       if (!n.source || n.source === 'manual') continue
       const s = stats.get(n.source) ?? { runs: 0, results: 0, errors: 0, created: 0 }
@@ -354,8 +431,8 @@ ${
       })
       .join('')
     const statusName = (r: ModuleRun): string => S.statuses[r.status] ?? r.status
-    const runRows = runs
-      .slice(0, MAX_RUN_ROWS)
+    const shown = runs.slice(0, MAX_RUN_ROWS)
+    const runRows = shown
       .map((r) => {
         const detail = r.error ? r.error : r.found === true ? S.foundYes : r.found === false ? S.foundNo : ''
         return `<tr class="st-${r.status}"><td class="nowrap">${e(formatShortDateTime(r.startedAt ?? r.finishedAt, lang))}</td><td class="wrap">${e(moduleName(r.moduleId))}</td><td class="wrap">${nodeCell(r.nodeId)}</td><td class="nowrap"><span class="status">${e(statusName(r))}</span></td><td class="num">${r.resultCount}</td><td class="wrap small">${e(detail.length > 160 ? `${detail.slice(0, 160)}…` : detail)}</td></tr>`
@@ -369,8 +446,34 @@ ${
 }
 ${
   runs.length
-    ? `<h3>${e(S.runsLog)}</h3>${runs.length > MAX_RUN_ROWS ? `<p class="muted small">${e(fmt(S.runsTruncated, { count: MAX_RUN_ROWS }))}</p>` : ''}<table class="grid runs"><thead><tr><th>${e(S.when)}</th><th>${e(S.module)}</th><th>${e(S.entity)}</th><th>${e(S.status)}</th><th class="num">${e(S.results)}</th><th>${e(S.detail)}</th></tr></thead><tbody>${runRows}</tbody></table>`
+    ? `<h3>${e(S.runsLog)}</h3>${runTotal > shown.length ? `<p class="muted small">${e(fmt(S.runsTruncated, { count: shown.length, total: runTotal }))}</p>` : ''}<table class="grid runs"><thead><tr><th>${e(S.when)}</th><th>${e(S.module)}</th><th>${e(S.entity)}</th><th>${e(S.status)}</th><th class="num">${e(S.results)}</th><th>${e(S.detail)}</th></tr></thead><tbody>${runRows}</tbody></table>`
     : `<p class="muted">${e(S.noRuns)}</p>`
+}
+</section>`)
+  }
+
+  // Pièces jointes et empreintes -----------------------------------------------
+  if (sections.attachments) {
+    const users = new Map<string, GraphNode[]>()
+    for (const n of input.nodes) if (n.imageId) users.set(n.imageId, [...(users.get(n.imageId) ?? []), n])
+    const atts = (input.attachments ?? []).filter((a) => users.has(a.id)).sort((a, b) => a.name.localeCompare(b.name, lang))
+    const rows = atts
+      .map((a) => {
+        const origin = a.origin ? safeHttpUrl(a.origin) : null
+        const usedBy = users
+          .get(a.id)!
+          .map((n) => (refs.has(n.id) ? nodeCell(n.id) : e(n.label || S.annotationImage)))
+          .join(', ')
+        return `<tr><td class="wrap">${e(a.name)}<div class="small muted">${e(a.mime)} · ${e(formatNumber(a.size, lang))} ${e(S.bytes)}</div></td><td class="wrap"><code class="hash">${e(a.sha256)}</code></td><td class="wrap small">${
+          origin ? `<a href="${e(origin)}">${e(origin)}</a>` : `<span class="muted">${e(S.originUnknown)}</span>`
+        }</td><td class="wrap">${usedBy}</td></tr>`
+      })
+      .join('')
+    parts.push(`<section class="chapter">${chapterHead('attachments')}
+${
+  rows
+    ? `<p class="muted small">${e(S.attachmentsIntro)}</p><table class="grid attachments"><thead><tr><th>${e(S.fileName)}</th><th>SHA-256</th><th>${e(S.origin)}</th><th>${e(S.usedBy)}</th></tr></thead><tbody>${rows}</tbody></table>`
+    : `<p class="muted">${e(S.attachmentsEmpty)}</p>`
 }
 </section>`)
   }
@@ -427,7 +530,7 @@ ${raws ? `<h3>${e(S.rawModules)}</h3>${raws}` : ''}
   ].filter(Boolean)
   parts.push(`<section class="chapter trace" id="s-trace"><h2 class="chapter-title"><span class="num">${enabled.length + 1}</span>${e(S.traceability)}</h2>
 <ul class="trace-list">${trace.map((t) => `<li>${e(t)}</li>`).join('')}</ul>
-${input.fingerprint ? `<div class="fingerprint"><div class="card-sub">${e(S.fingerprint)}</div><code>${e(input.fingerprint)}</code></div>` : ''}
+${input.fingerprint ? `<div class="fingerprint"><div class="card-sub">${e(S.fingerprint)}</div><code>${e(input.fingerprint)}</code><p class="small muted">${e(S.fingerprintScope)}</p></div>` : ''}
 <p class="disclaimer">${e(S.disclaimer)}</p>
 </section>`)
 
@@ -562,6 +665,8 @@ table.links td:nth-child(4){width:16%}
 .ref{display:inline-block;font-family:'JetBrains Mono',Consolas,ui-monospace,monospace;font-size:7pt;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:3px;padding:0 3px;line-height:1.5;vertical-align:1px}
 .ref.big{font-size:8pt;padding:1px 5px;margin-left:auto;align-self:flex-start}
 table.runs td:first-child{width:24mm}
+table.timeline td:first-child{width:30mm}
+code.hash{font-size:7pt;overflow-wrap:anywhere;word-break:break-all}
 .status{display:inline-block;font-size:7pt;border-radius:3px;padding:0 4px;background:#f4f4f5;color:#3f3f46}
 tr.st-done .status{background:#ecfdf3;color:#15803d}
 tr.st-error .status{background:#fef2f2;color:#b91c1c}

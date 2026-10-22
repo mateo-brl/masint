@@ -169,7 +169,7 @@ describe('buildReportHtml', () => {
   it("respecte les sections décochées et l'annexe", () => {
     const h = buildReportHtml(
       input({
-        options: { ...input().options, sections: { summary: false, graph: false, notes: false, entities: false, links: true, sources: false, raw: true } },
+        options: { ...input().options, sections: { summary: false, graph: false, notes: false, entities: false, links: true, timeline: false, sources: false, attachments: false, raw: true } },
         rawRuns: [{ run: runs[0], raw: { result: '<b>ok</b>' } }]
       })
     )
@@ -202,6 +202,61 @@ describe('fingerprintPayload', () => {
     const shuffled = [...nodes].reverse().map((n) => ({ ...n, data: Object.fromEntries(Object.entries(n.data).reverse()) }))
     expect(fingerprintPayload(investigation, shuffled, [...edges].reverse())).toBe(a)
     expect(fingerprintPayload(investigation, nodes.slice(1), edges)).not.toBe(a)
+  })
+
+  it('reste identique pour une copie importée (identifiants, positions, dates et nom changés)', () => {
+    const a = fingerprintPayload(investigation, nodes, edges, { img1: 'f'.repeat(64) })
+    const ids = new Map(nodes.map((n, i) => [n.id, `copie-${i}`]))
+    const copyNodes = nodes.map((n) => ({ ...n, id: ids.get(n.id)!, x: n.x + 500, createdAt: T0 + 9e6, updatedAt: T0 + 9e6, imageId: n.imageId ? 'img-copie' : null }))
+    const copyEdges = edges.map((e) => ({ ...e, id: `${e.id}-copie`, source: ids.get(e.source)!, target: ids.get(e.target)!, createdAt: 0 }))
+    const copy = { ...investigation, id: 'inv-2', name: `${investigation.name} (2)` }
+    expect(fingerprintPayload(copy, copyNodes, copyEdges, { 'img-copie': 'f'.repeat(64) })).toBe(a)
+    // L'image fait partie de l'empreinte, par son contenu.
+    expect(fingerprintPayload(copy, copyNodes, copyEdges, { 'img-copie': '0'.repeat(64) })).not.toBe(a)
+    // Une valeur ou un lien modifiés changent l'empreinte.
+    expect(fingerprintPayload(investigation, nodes.map((n) => (n.id === 'p1' ? { ...n, label: '+33639981235' } : n)), edges)).not.toBe(
+      fingerprintPayload(investigation, nodes, edges)
+    )
+    expect(fingerprintPayload(investigation, nodes, edges.map((e) => ({ ...e, label: 'autre' })))).not.toBe(fingerprintPayload(investigation, nodes, edges))
+  })
+})
+
+describe('chapitres ajoutés', () => {
+  it('liste la chronologie des dates des fiches', () => {
+    const h = buildReportHtml(input())
+    expect(h).toContain('id="s-timeline"')
+    expect(h).toContain('Chronologie')
+    expect(h).toMatch(/1 janv\. 1980<\/td><td class="wrap"><span class="ref">E001<\/span> Jean Dupont<\/td>/)
+    expect(h).toContain('Date de naissance')
+  })
+
+  it('liste les pièces jointes avec SHA-256 et URL d’origine', () => {
+    const attachment = { id: 'img1', investigationId: 'inv-1', name: 'profil<1>.jpg', mime: 'image/jpeg', size: 2048, sha256: 'c'.repeat(64), origin: 'https://example.com/profil.jpg', createdAt: T0 }
+    const orphan = { ...attachment, id: 'orpheline', name: 'orpheline.jpg' }
+    const h = buildReportHtml(input({ attachments: [attachment, orphan] }))
+    expect(h).toContain('id="s-attachments"')
+    expect(h).toContain('profil&lt;1&gt;.jpg')
+    expect(h).toContain('c'.repeat(64))
+    expect(h).toContain('<a href="https://example.com/profil.jpg">')
+    expect(h).toContain('<span class="ref">E003</span> jean.dupont')
+    expect(h).not.toContain('orpheline.jpg')
+    const manual = buildReportHtml(input({ attachments: [{ ...attachment, origin: null }] }))
+    expect(manual).toContain('ajoutée à la main')
+  })
+
+  it('tire les statistiques des sources de la requête d’agrégat', () => {
+    const runStats = [
+      { moduleId: 'fb_lookup', runs: 2400, results: 3100, errors: 12 },
+      { moduleId: 'other', runs: 600, results: 0, errors: 600 }
+    ]
+    const h = buildReportHtml(input({ runStats }))
+    expect(h).toMatch(/<div class="tile-value">3\s000<\/div><div class="tile-label">Exécutions de modules<\/div>/)
+    expect(h).toMatch(/Recherche Facebook<\/td><td class="wrap"><a href="https:\/\/www\.facebook\.com\/">www\.facebook\.com<\/a><\/td><td class="num">2400<\/td><td class="num">3100<\/td><td class="num">12<\/td>/)
+    expect(h).toContain('Seules les 2 exécutions les plus récentes sont listées, sur 3000')
+  })
+
+  it('indique ce que couvre l’empreinte', () => {
+    expect(buildReportHtml(input())).toContain('Elle ne dépend ni des identifiants internes')
   })
 })
 
