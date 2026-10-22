@@ -1,0 +1,141 @@
+{
+ "total_count": 107,
+ "results": [
+  {
+   "id": "B202601671193",
+   "dateparution": "2026-09-02",
+   "numeroannonce": 1193,
+   "typeavis_lib": "Avis initial",
+   "familleavis": "modification",
+   "familleavis_lib": "Modifications diverses",
+   "tribunal": "Greffe du Tribunal des Activités Economiques de Paris",
+   "commercant": "DANONE",
+   "ville": "Paris",
+   "registre": [
+    "552032534",
+    "552 032 534"
+   ],
+   "cp": "75009",
+   "listepersonnes": "{\"personne\": {\"typePersonne\": \"pm\", \"numeroImmatriculation\": {\"numeroIdentification\": \"552 032 534\", \"codeRCS\": \"RCS\", \"nomGreffeImmat\": \"Paris\"}, \"denomination\": \"DANONE\", \"formeJuridique\": \"Société anonyme\", \"capital\": {\"montantCapital\": \"170834294.25\", \"devise\": \"EUR\"}, \"adresseSiegeSocial\": {\"numeroVoie\": \"59/61\", \"typeVoie\": \"rue\", \"nomVoie\": \"La Fayette\", \"codePostal\": \"75009\", \"ville\": \"Paris\"}}}",
+   "jugement": null,
+   "acte": null,
+   "modificationsgenerales": "{\"descriptif\": \"modification survenue sur le capital (augmentation)\"}",
+   "radiationaurcs": null,
+   "depot": null,
+   "divers": null,
+   "url_complete": "https://www.bodacc.fr/pages/annonces-commerciales-detail/?q.id=id:B202601671193"
+  },
+  {
+   "id": "C202601103541",
+   "dateparution": "2026-06-12",
+   "numeroannonce": 3541,
+   "typeavis_lib": "Avis initial",
+   "familleavis": "dpc",
+   "familleavis_lib": "Dépôts des comptes",
+   "tribunal": "Greffe du Tribunal des Activités Economiques de paris",
+   "commercant": "DANONE",
+   "ville": "Paris",
+   "registre": [
+    "552032534",
+    "552 032 534"
+   ],
+   "cp": "75009",
+   "listepersonnes": "{\"personne\": {\"typePersonne\": \"pm\", \"numeroImmatriculation\": {\"numeroIdentification\": \"552 032 534\", \"codeRCS\": \"RCS\", \"nomGreffeImmat\": \"Paris\"}, \"denomination\": \"DANONE\", \"formeJuridique\": \"Société anonyme\", \"adresseSiegeSocial\": {\"numeroVoie\": \"59/61\", \"typeVoie\": \"rue\", \"nomVoie\": \"La Fayette\", \"codePostal\": \"75009\", \"ville\": \"Paris\"}}}",
+   "jugement": null,
+   "acte": null,
+   "modificationsgenerales": null,
+   "radiationaurcs": null,
+   "depot": "{\"dateCloture\": \"2025-12-31\", \"typeDepot\": \"Comptes consolidés et rapports\"}",
+   "divers": null,
+   "url_complete": "https://www.bodacc.fr/pages/annonces-commerciales-detail/?q.id=id:C202601103541"
+  },
+  {
+   "id": "B202502025477",
+   "dateparution": "2025-10-21",
+   "numeroannonce": 5477,
+   "typeavis_lib": "Avis initial",
+   "familleavis": "modification",
+   "familleavis_lib": "Modifications diverses",
+   "tribunal": "Greffe du Tribunal des Activités Economiques de Paris",
+   "commercant": "DANONE",
+   "ville": "Paris",
+   "registre": [
+    "552032534",
+    "552 032 534"
+   ],
+   "cp": "75009",
+   "listepersonnes": "{\"personne\": {\"typePersonne\": \"pm\", \"numeroImmatriculation\": {\"numeroIdentification\": \"552 032 534\", \"codeRCS\": \"RCS\", \"nomGreffeImmat\": \"Paris\"}, \"denomination\": \"DANONE\", \"formeJuridique\": \"Société anonyme\", \"capital\": {\"montantCapital\": \"170348620.75\", \"devise\": \"EUR\"}, \"adresseSiegeSocial\": {\"numeroVoie\": \"59/61\", \"typeVoie\": \"rue\", \"nomVoie\": \"La Fayette\", \"codePostal\": \"75009\", \"ville\": \"Paris\"}, \"adresseEtablissementPrincipal\": {\"numeroVoie\": \"59/61\", \"typeVoie\": \"rue\", \"nomVoie\": \"La Fayette\", \"codePostal\": \"75009\", \"ville\": \"Paris\"}}}",
+   "jugement": null,
+   "acte": null,
+   "modificationsgenerales": "{\"descriptif\": \"modification survenue sur l'adresse du siège et l'adresse de l'établissement\"}",
+   "radiationaurcs": null,
+   "depot": null,
+   "divers": null,
+   "url_complete": "https://www.bodacc.fr/pages/annonces-commerciales-detail/?q.id=id:B202502025477"
+  },
+  {
+   "id": "B202101012913",
+   "dateparution": "2021-05-25",
+   "numeroannonce": 2913,
+   "typeavis_lib": "Avis initial",
+   "familleavis": "modification",
+   "familleavis_lib": "Modifications diverses",
+   "tribunal": "GREFFE DU TRIBUNAL DE COMMERCE DE PARIS",
+   "commercant": "DANONE",
+   "ville": "Paris",
+   "registre": [
+    "552 032 534",
+    "552032534"
+   ],
+   "cp": "75009",
+   "listepersonnes": "{\"personne\": {\"numeroImmatriculation\": {\"numeroIdentification\": \"552 032 534\", \"codeRCS\": \"RCS\", \"nomGreffeImmat\": \"Paris\"}, \"adresseSiegeSocial\": {\"numeroVoie\": \"17\", \"typeVoie\": \"boulevard\", \"nomVoie\": \"Haussmann\", \"codePostal\": \"75009\", \"ville\": \"Paris\", \"pays\": \"france\"}, \"typePersonne\": \"pm\", \"denomination\": \"DANONE\", \"formeJuridique\": \"Société anonyme\", \"capital\": {\"montantCapital\": \"171657400\", \"devise\": \"EUR\"}, \"administration\": \"Administrateur partant : Faber, Emmanuel\"}}",
+   "jugement": null,
+   "acte": null,
+   "modificationsgenerales": "{\"descriptif\": \"modification survenue sur l'administration\"}",
+   "radiationaurcs": null,
+   "depot": null,
+   "divers": null,
+   "url_complete": "https://www.bodacc.fr/pages/annonces-commerciales-detail/?q.id=id:B202101012913"
+  },
+  {
+   "id": "B202100651442",
+   "dateparution": "2021-04-02",
+   "numeroannonce": 1442,
+   "typeavis_lib": "Avis initial",
+   "familleavis": "modification",
+   "familleavis_lib": "Modifications diverses",
+   "tribunal": "GREFFE DU TRIBUNAL DE COMMERCE DE PARIS",
+   "commercant": "DANONE",
+   "ville": "Paris",
+   "registre": [
+    "552 032 534",
+    "552032534"
+   ],
+   "cp": "75009",
+   "listepersonnes": "{\"personne\": {\"numeroImmatriculation\": {\"numeroIdentification\": \"552 032 534\", \"codeRCS\": \"RCS\", \"nomGreffeImmat\": \"Paris\"}, \"adresseSiegeSocial\": {\"numeroVoie\": \"17\", \"typeVoie\": \"boulevard\", \"nomVoie\": \"Haussmann\", \"codePostal\": \"75009\", \"ville\": \"Paris\", \"pays\": \"france\"}, \"typePersonne\": \"pm\", \"denomination\": \"DANONE\", \"formeJuridique\": \"Société anonyme\", \"capital\": {\"montantCapital\": \"171657400\", \"devise\": \"EUR\"}, \"administration\": \"Président directeur général et Administrateur partant : Faber, Emmanuel ; nomination du Président du conseil d’administration : Schnepp, Gilles\"}}",
+   "jugement": null,
+   "acte": null,
+   "modificationsgenerales": "{\"descriptif\": \"modification survenue sur l'administration\"}",
+   "radiationaurcs": null,
+   "depot": null,
+   "divers": null,
+   "url_complete": "https://www.bodacc.fr/pages/annonces-commerciales-detail/?q.id=id:B202100651442"
+  },
+  {
+   "id": "B202501473631",
+   "dateparution": "2025-08-03",
+   "familleavis": "modification",
+   "familleavis_lib": "Modifications diverses",
+   "tribunal": "Greffe du Tribunal des Activités Economiques de Paris",
+   "commercant": "DANONE",
+   "registre": [
+    "552032534",
+    "552 032 534"
+   ],
+   "listepersonnes": "{\"personne\": {\"typePersonne\": \"pm\", \"numeroImmatriculation\": {\"numeroIdentification\": \"552 032 534\", \"codeRCS\": \"RCS\", \"nomGreffeImmat\": \"Paris\"}, \"denomination\": \"DANONE\", \"formeJuridique\": \"Société anonyme\", \"capital\": {\"montantCapital\": \"170348620.75\", \"devise\": \"EUR\"}, \"adresseSiegeSocial\": {\"numeroVoie\": \"17\", \"typeVoie\": \"boulevard\", \"nomVoie\": \"Haussmann\", \"codePostal\": \"75009\", \"ville\": \"Paris\"}}}",
+   "modificationsgenerales": "{\"descriptif\": \"modification survenue sur le capital (augmentation) et l'administration\"}",
+   "depot": null,
+   "url_complete": "https://www.bodacc.fr/pages/annonces-commerciales-detail/?q.id=id:B202501473631"
+  }
+ ]
+}
