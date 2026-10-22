@@ -106,6 +106,18 @@ export interface InvestigationBundle {
 export type NodeInput = Partial<Omit<GraphNode, 'investigationId' | 'createdAt' | 'updatedAt'>> & {
   id?: string
 }
+
+/** Nœud enregistré. `duplicateOf` : entité de même valeur canonique déjà présente dans l'enquête. */
+export type SavedNode = GraphNode & { duplicateOf?: string }
+
+/** Options d'écriture des nœuds et liens. */
+export interface UpsertOptions {
+  /**
+   * Mise à jour seule : un patch (position, style, données) qui vise un élément absent ou
+   * supprimé est ignoré au lieu de le recréer. Sert aux modifications et à l'annulation.
+   */
+  updateOnly?: boolean
+}
 export type EdgeInput = Partial<Omit<GraphEdge, 'investigationId' | 'createdAt' | 'updatedAt'>> & {
   source: string
   target: string
@@ -177,6 +189,14 @@ export interface ModuleRun {
   error: string | null
   startedAt: number | null
   finishedAt: number | null
+}
+
+/** Statistiques d'exécution d'un module dans une enquête (requête d'agrégat, sans limite). */
+export interface ModuleRunStats {
+  moduleId: string
+  runs: number
+  results: number
+  errors: number
 }
 
 export interface JobProgress {

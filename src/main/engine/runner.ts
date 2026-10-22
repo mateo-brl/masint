@@ -386,10 +386,8 @@ export class Engine {
       if (node.id !== parent.id) {
         const existing = this.repo.findEdge(invId, parent.id, node.id)
         if (!existing) {
-          const [edge] = this.repo.upsertEdges(invId, [
-            { source: parent.id, target: node.id, label: ent.linkLabel ?? '', sourceModule: m.id }
-          ])
-          changedEdges.push(edge)
+          // Aucun lien si le parent a été supprimé pendant l'exécution (voir Repo.upsertEdges).
+          changedEdges.push(...this.repo.upsertEdges(invId, [{ source: parent.id, target: node.id, label: ent.linkLabel ?? '', sourceModule: m.id }]))
         } else {
           // Lien déjà posé par un autre module : on ajoute ce libellé (« registrar · hébergé chez »).
           const label = joinLabels(existing.label, ent.linkLabel)
@@ -403,8 +401,7 @@ export class Engine {
       const a = refs.get(link.from)
       const b = refs.get(link.to)
       if (!a || !b || a.id === b.id || this.repo.findEdge(invId, a.id, b.id)) continue
-      const [edge] = this.repo.upsertEdges(invId, [{ source: a.id, target: b.id, label: link.label ?? '', sourceModule: m.id }])
-      changedEdges.push(edge)
+      changedEdges.push(...this.repo.upsertEdges(invId, [{ source: a.id, target: b.id, label: link.label ?? '', sourceModule: m.id }]))
     }
 
     for (const check of output.manual ?? []) {
