@@ -1,0 +1,1 @@
+{"id":"00000000-0000-4000-8000-000000000000","passwordlessAvailable":false,"confirmationRequired":true,"mfaStatus":"REQUIRED","passwordlessChooser":true,"requiredActions":["PASSWORD","MFA"],"deniedCredentials":null,"failedPolicyTypes":null,"requireCaptcha":true,"codeLoginAvailable":false,"isIncompleteForEdu":false,"incompleteForEdu":false}

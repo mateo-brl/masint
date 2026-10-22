@@ -3,16 +3,16 @@
 <!-- Fichier généré : ne pas modifier à la main. -->
 <!-- Régénérer avec : node build/scripts/list-modules.mjs > docs/modules-list.md -->
 
-139 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
+146 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
 
 Légende des remarques : **à la demande** (lancé seulement sur demande explicite, service à crédits), **bruyant** (peut alerter la personne recherchée), **expérimental** (résultats à vérifier). Une clé suivie de « (facultative) » améliore les résultats sans être obligatoire.
 
 | Catégorie | Modules |
 | --- | ---: |
-| [Téléphone](#phone) | 7 |
-| [Email](#email) | 24 |
+| [Téléphone](#phone) | 9 |
+| [Email](#email) | 26 |
 | [Pseudo](#username) | 2 |
-| [Personne](#person) | 4 |
+| [Personne](#person) | 7 |
 | [Domaine](#domain) | 14 |
 | [Adresse IP](#ip) | 13 |
 | [Site web](#web) | 5 |
@@ -34,12 +34,14 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
 | `phone.amazon` | Compte Amazon | `phone` |  |  |
+| `phone.arcep` | Opérateur d'attribution (ARCEP) | `phone` |  |  |
 | `phone.hlr_lookups` | Statut HLR (HLR Lookups) | `phone` | `hlr-lookups`, `hlr-lookups-secret` | à la demande, expérimental |
 | `phone.hlrlookup` | Statut HLR (HLR Lookup) | `phone` | `hlrlookup`, `hlrlookup-secret` | à la demande, expérimental |
 | `phone.info` | Analyse du numéro | `phone` |  |  |
 | `phone.leakcheck` | Fuites de données (LeakCheck) | `phone` |  | expérimental |
-| `phone.links` | Liens de recherche (téléphone) | `phone` |  |  |
+| `phone.links` | Signalements et recherches manuelles (téléphone) | `phone` |  |  |
 | `phone.microsoft` | Compte Microsoft personnel | `phone` |  |  |
+| `phone.sleeper` | Compte Sleeper | `phone` |  | expérimental |
 
 <a id="email"></a>
 
@@ -62,7 +64,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `email.info` | Analyse de l'adresse | `email` |  |  |
 | `email.lastpass` | Compte LastPass | `email` |  |  |
 | `email.leakcheck` | Fuites de données (LeakCheck) | `email` |  |  |
-| `email.links` | Liens de recherche (email) | `email` |  |  |
+| `email.links` | Recherches manuelles (email) | `email` |  |  |
 | `email.mailru` | Boîte Mail.ru existante | `email` |  |  |
 | `email.microsoft` | Compte Microsoft personnel | `email` |  |  |
 | `email.office365` | Compte Microsoft 365 (pro) | `email` |  |  |
@@ -71,6 +73,8 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `email.twitter` | Compte X (Twitter) | `email` |  |  |
 | `email.wordpress` | Compte WordPress.com | `email` |  |  |
 | `email.xposedornot` | Fuites de données (XposedOrNot) | `email` |  |  |
+| `hints.crossmatch` | Recoupement des indices masqués | `*` |  |  |
+| `hints.recovery` | Indices de récupération masqués | `email`, `phone` |  | à la demande, bruyant, expérimental |
 
 <a id="username"></a>
 
@@ -87,9 +91,12 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
+| `person.bodacc` | Annonces BODACC (France) | `person` |  |  |
+| `person.fr_deces` | Décès en France (INSEE) | `person` |  |  |
 | `person.fr_dirigeants` | Mandats de dirigeant (France) | `person` |  |  |
-| `person.search_links` | Liens de recherche manuelle | `person` |  |  |
-| `person.usernames` | Pseudos probables | `person` |  |  |
+| `person.jorf` | Journal officiel (France) | `person` |  |  |
+| `person.search_links` | Recherches manuelles (personne) | `person` |  |  |
+| `person.usernames` | Pseudos possibles (vérifiés) | `person` |  |  |
 | `person.wikidata` | Wikidata (personnalité publique) | `person` |  | expérimental |
 
 <a id="domain"></a>
@@ -140,7 +147,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
 | `tracker.lookup` | Recherche inversée du traceur | `tracker` |  |  |
-| `web.favicon` | Empreinte du favicon | `url`, `website`, `domain` |  | bruyant |
+| `web.favicon` | Empreinte du favicon | `url`, `website`, `domain` | `urlscan` (facultative) | bruyant |
 | `web.page` | Analyse de la page web | `url`, `website` |  | bruyant |
 | `web.robots` | robots.txt et security.txt | `url`, `website`, `domain` |  | bruyant |
 | `web.virustotal` | VirusTotal (URL) | `url`, `website` | `virustotal` | expérimental |
@@ -201,7 +208,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | --- | --- | --- | --- | --- |
 | `image.exif` | Métadonnées de la photo (EXIF) | `photo` |  |  |
 | `image.hashes` | Empreintes du fichier image | `photo` |  |  |
-| `image.reverse_search` | Recherche d'image inversée | `photo` |  |  |
+| `image.reverse_search` | Recherche d'image inversée | `photo` |  | expérimental |
 
 <a id="messaging"></a>
 

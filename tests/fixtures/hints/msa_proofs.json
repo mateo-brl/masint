@@ -1,0 +1,45 @@
+{
+  "Username": "jean.exemple@example.com",
+  "Display": "jean.exemple@example.com",
+  "Location": "",
+  "AliasDisabledForLogin": false,
+  "Credentials": {
+    "PrefCredential": 1,
+    "HasPassword": 1,
+    "IsPasswordDisabled": 0,
+    "HasRemoteNGC": 0,
+    "HasFido": 0,
+    "HasPhone": 1,
+    "OTCNotAutoSent": 1,
+    "OtcLoginEligibleProofs": [
+      {
+        "data": "-Dexemple...",
+        "isDefault": true,
+        "type": 3,
+        "clearDigits": "42",
+        "ctryISO": "FR",
+        "display": "*******42",
+        "otcEnabled": true,
+        "otcSent": false
+      },
+      {
+        "data": "-Dexemple2...",
+        "isDefault": false,
+        "type": 1,
+        "display": "je*****@gmail.com",
+        "otcEnabled": true,
+        "otcSent": false
+      },
+      {
+        "data": "-Dexemple3...",
+        "isDefault": false,
+        "type": 1,
+        "display": "je*****@example.com",
+        "otcEnabled": true,
+        "otcSent": false
+      }
+    ]
+  },
+  "FullPasswordResetExperience": true,
+  "IfExistsResult": 0
+}

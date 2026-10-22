@@ -108,11 +108,14 @@ export async function checkMicrosoft(ctx: ModuleContext, username: string): Prom
       uaid: tokens.uaid,
       isOtherIdpSupported: false,
       checkPhones: true,
-      isRemoteNGCSupported: true,
+      // Authenticator, clé d'accès et code à usage unique annoncés comme non pris en charge :
+      // pour un compte sans mot de passe, le serveur pourrait sinon envoyer une notification
+      // ou un code à la personne dès cette étape.
+      isRemoteNGCSupported: false,
       isCookieBannerShown: false,
-      isFidoSupported: true,
+      isFidoSupported: false,
       forceotclogin: false,
-      otclogindisallowed: false,
+      otclogindisallowed: true,
       isExternalFederationDisallowed: false,
       isRemoteConnectSupported: false,
       federationFlags: 3,
