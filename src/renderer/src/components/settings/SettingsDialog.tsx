@@ -83,10 +83,13 @@ function GeneralTab(): React.JSX.Element | null {
         </select>
       </Row>
       <Row label={t('settings.autoEnrich')} hint={t('settings.autoEnrichHint')}>
-        <Switch checked={settings.autoEnrich} onChange={(v) => void update({ autoEnrich: v })} />
+        <Switch label={t('settings.autoEnrich')} checked={settings.autoEnrich} onChange={(v) => void update({ autoEnrich: v })} />
       </Row>
       <Row label={t('settings.passiveMode')} hint={t('settings.passiveModeHint')}>
-        <Switch checked={settings.passiveMode} onChange={(v) => void update({ passiveMode: v })} />
+        <Switch label={t('settings.passiveMode')} checked={settings.passiveMode} onChange={(v) => void update({ passiveMode: v })} />
+      </Row>
+      <Row label={t('settings.isolate')} hint={t('settings.isolateHint')}>
+        <Switch label={t('settings.isolate')} checked={settings.isolateInvestigations} onChange={(v) => void update({ isolateInvestigations: v })} />
       </Row>
       <Row label={t('settings.concurrency')} hint={t('settings.concurrencyHint')}>
         <input
@@ -542,7 +545,7 @@ function AboutTab(): React.JSX.Element {
         </div>
       </div>
       <Row label={t('about.autoUpdate')} hint={t('about.autoUpdateHint')}>
-        <Switch checked={!!settings?.autoUpdate} onChange={(v) => void updateSettings({ autoUpdate: v })} />
+        <Switch label={t('about.autoUpdate')} checked={!!settings?.autoUpdate} onChange={(v) => void updateSettings({ autoUpdate: v })} />
       </Row>
       <div className="flex items-center gap-3">
         <Button disabled={checking} onClick={() => void check()}>

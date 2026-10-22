@@ -7,9 +7,10 @@ import { getEntityType } from '@shared/entityTypes'
 import { getPlatform } from '@shared/platforms'
 import { nodeSubtitle } from '@shared/subtitle'
 import { useLang } from '../../../lib/i18n'
-import { EntityBadge } from '../../../lib/icons'
+import { EntityBadge, Icon } from '../../../lib/icons'
 import { useApp } from '../../../store/app'
-import { useCanvas, useLowZoom } from '../../../store/canvas'
+import { useCanvas, useCommunityColor, useLowZoom, useNodeEmphasis } from '../../../store/canvas'
+import { useCrossRefCount } from '../../../store/correlation'
 import { useGraph, type FlowNode } from '../../../store/graph'
 
 const SIZES = { sm: 168, md: 196, lg: 240 }
@@ -45,11 +46,20 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
   const hiddenCount = useCanvas((s) => s.collapsedCount.get(n.id) ?? 0)
   const dense = useCanvas((s) => s.dense)
   const low = useLowZoom()
-  const box = {
+  // Analyse et filtre : estompé (filtre « estomper », hors du chemin), mis en évidence (chemin),
+  // couleur de communauté ; autres enquêtes où l'entité apparaît.
+  const emphasis = useNodeEmphasis(n.id)
+  const community = useCommunityColor(n.id)
+  const seenElsewhere = useCrossRefCount(n.id)
+  const box: React.CSSProperties = {
     width,
     minHeight: 38,
     background: n.style.bg ?? 'var(--node)',
-    borderColor: selected ? 'var(--accent)' : n.style.color && n.imageId ? n.style.color : 'var(--node-border)',
+    borderColor: selected || emphasis === 2 ? 'var(--accent)' : n.style.color && n.imageId ? n.style.color : 'var(--node-border)',
+    // Contour plutôt qu'ombre : peu coûteux à dessiner, n'altère pas la taille mesurée.
+    outline: emphasis === 2 ? '2px solid var(--accent)' : community ? `2px solid ${community}aa` : undefined,
+    outlineOffset: 2,
+    opacity: emphasis === 1 ? 0.2 : undefined,
     // L'ombre floue coûte cher à dessiner : simple contour sur les grands graphes et à faible zoom.
     boxShadow:
       dense || low
@@ -99,8 +109,21 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
         icon={n.style.icon}
       />
       <div className="min-w-0 flex-1 leading-tight">
-        <div className="truncate text-[7.5px] font-semibold tracking-[0.08em]" style={{ color: 'var(--muted)' }}>
-          {kicker}
+        <div className="flex items-center gap-1">
+          <div className="min-w-0 flex-1 truncate text-[7.5px] font-semibold tracking-[0.08em]" style={{ color: 'var(--muted)' }}>
+            {kicker}
+          </div>
+          {seenElsewhere > 0 && (
+            <span
+              className="flex shrink-0 items-center gap-0.5 text-[7.5px] font-semibold"
+              style={{ color: 'var(--muted)' }}
+              title={t('correlation.seenIn', { count: seenElsewhere })}
+              aria-label={t('correlation.seenIn', { count: seenElsewhere })}
+            >
+              <Icon name="FolderSymlink" size={8} />
+              {seenElsewhere}
+            </span>
+          )}
         </div>
         <div className={`truncate text-[11.5px] font-semibold ${n.label ? 'text-fg' : 'italic text-faint'}`}>{n.label || t('node.untitled')}</div>
         {subtitle && <div className="truncate text-[8.5px] text-muted">{subtitle}</div>}

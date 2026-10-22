@@ -14,7 +14,7 @@ export default {
       boxSelect: 'Sélection rectangulaire',
       multiSelect: 'Sélection multiple',
       quickAdd: 'Saisie rapide sur le fond, enrichir sur un nœud',
-      escape: 'Quitter l’outil ou le menu',
+      escape: 'Quitter l’outil, le menu ou la mise en évidence',
       help: 'Afficher cette aide'
     }
   },
@@ -31,7 +31,7 @@ export default {
       boxSelect: 'Box selection',
       multiSelect: 'Multiple selection',
       quickAdd: 'Quick entry on the background, enrich on a node',
-      escape: 'Leave the tool or menu',
+      escape: 'Leave the tool, the menu or the highlight',
       help: 'Show this help'
     }
   }

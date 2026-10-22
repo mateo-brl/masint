@@ -1,9 +1,12 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { snippetParts, SEARCH_MIN_TERM } from '@shared/correlation'
 import { detectEntity } from '@shared/detect'
 import { getEntityType } from '@shared/entityTypes'
-import type { Investigation } from '@shared/types'
+import type { GlobalSearchHit, Investigation } from '@shared/types'
 import { api } from '../../lib/api'
+import { openInvestigationAt } from '../../lib/focus'
+import { useUiEvent } from '../../lib/uiEvents'
 import { useLang } from '../../lib/i18n'
 import { EntityBadge, Icon } from '../../lib/icons'
 import { useApp } from '../../store/app'
@@ -26,6 +29,13 @@ export function Home(): React.JSX.Element {
   const [enrich, setEnrich] = useState(true)
   const [filter, setFilter] = useState('')
   const [editing, setEditing] = useState<Investigation | 'new' | null>(null)
+  const isolated = useApp((s) => s.settings?.isolateInvestigations ?? false)
+  const [content, setContent] = useState('')
+  const contentInput = useRef<HTMLInputElement>(null)
+  const filterInput = useRef<HTMLInputElement>(null)
+  // Ctrl+F : recherche dans le contenu des enquêtes (ou par nom si elles sont cloisonnées).
+  useUiEvent('focus-search', () => (isolated ? filterInput : contentInput).current?.focus())
+  useUiEvent('new-investigation', () => setEditing('new'))
 
   const detection = useMemo(() => detectEntity(query), [query])
 
@@ -118,17 +128,35 @@ export function Home(): React.JSX.Element {
           )}
         </div>
 
-        <div className="mt-14 mb-4 flex items-center gap-3">
+        <div className="mt-14 mb-4 flex flex-wrap items-center gap-3">
           <h2 className="text-[15px] font-semibold">{t('home.investigations')}</h2>
           <span className="text-[12px] text-faint">{investigations.length}</span>
           <div className="flex-1" />
           <input
+            ref={filterInput}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder={t('common.filter')}
-            className="field !h-8 !w-56 !py-1"
+            aria-label={t('home.filterByName')}
+            className="field !h-8 !w-44 !py-1"
           />
-          <Button icon="Upload" onClick={() => void importArchive()}>
+          {!isolated && (
+            <div className="relative">
+              <Icon name="TextSearch" size={14} className="absolute top-1/2 left-2.5 -translate-y-1/2 text-faint" aria-hidden />
+              <input
+                ref={contentInput}
+                type="search"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                onKeyDown={(e) => e.key === 'Escape' && setContent('')}
+                placeholder={t('home.contentSearch')}
+                aria-label={t('home.contentSearch')}
+                title={t('home.contentSearchHint')}
+                className="field !h-8 !w-60 !py-1 !pl-8"
+              />
+            </div>
+          )}
+          <Button icon="Upload" className="whitespace-nowrap" onClick={() => void importArchive()}>
             {t('home.import')}
           </Button>
           <input
@@ -141,13 +169,15 @@ export function Home(): React.JSX.Element {
               e.target.value = ''
             }}
           />
-          <Button icon="FileSpreadsheet" title={t('home.fromFileHint')} onClick={() => fileInput.current?.click()}>
+          <Button icon="FileSpreadsheet" className="whitespace-nowrap" title={t('home.fromFileHint')} onClick={() => fileInput.current?.click()}>
             {t('home.fromFile')}
           </Button>
-          <Button variant="primary" icon="Plus" onClick={() => setEditing('new')}>
+          <Button variant="primary" icon="Plus" className="whitespace-nowrap" onClick={() => setEditing('new')}>
             {t('home.new')}
           </Button>
         </div>
+
+        {!isolated && content.trim() && <ContentResults query={content} />}
 
         {list.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-line">
@@ -192,7 +222,11 @@ function InvestigationCard({ inv, onEdit }: { inv: Investigation; onEdit: () => 
           <Dropdown
             align="right"
             trigger={() => (
-              <button className="rounded-md p-1 text-muted opacity-0 transition group-hover:opacity-100 hover:bg-panel-3 hover:text-fg">
+              <button
+                className="rounded-md p-1 text-muted opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-panel-3 hover:text-fg focus-visible:opacity-100"
+                aria-label={t('home.actions', { name: inv.name })}
+                title={t('home.actions', { name: inv.name })}
+              >
                 <Icon name="Ellipsis" size={16} />
               </button>
             )}
@@ -301,6 +335,8 @@ function InvestigationDialog({ value, onClose }: { value: Investigation | 'new';
               <button
                 key={c}
                 onClick={() => setColor(c)}
+                aria-label={t('home.colorChoice', { color: c })}
+                aria-pressed={color === c}
                 className="h-6 w-6 rounded-full transition"
                 style={{ background: c, outline: color === c ? `2px solid ${c}` : 'none', outlineOffset: 2 }}
               />
@@ -309,5 +345,86 @@ function InvestigationDialog({ value, onClose }: { value: Investigation | 'new';
         </div>
       </div>
     </Dialog>
+  )
+}
+
+/**
+ * Résultats de la recherche dans le contenu de toutes les enquêtes (libellés, propriétés,
+ * notes), regroupés par enquête. Un clic ouvre l'enquête sur le nœud trouvé.
+ */
+function ContentResults({ query }: { query: string }): React.JSX.Element {
+  const { t } = useTranslation()
+  const { tx } = useLang()
+  const [hits, setHits] = useState<GlobalSearchHit[] | null>(null)
+  const ready = query.trim().split(/\s+/).some((w) => Array.from(w).length >= SEARCH_MIN_TERM)
+  // Léger différé : pas une requête par frappe.
+  useEffect(() => {
+    if (!ready) return setHits(null)
+    let live = true
+    const timer = setTimeout(() => {
+      void api('search:global', query, 150).then((r) => live && setHits(r))
+    }, 180)
+    return () => {
+      live = false
+      clearTimeout(timer)
+    }
+  }, [query, ready])
+
+  const groups = useMemo(() => {
+    const m = new Map<string, { name: string; color: string; hits: GlobalSearchHit[] }>()
+    for (const h of hits ?? []) {
+      const g = m.get(h.investigationId) ?? { name: h.investigationName, color: h.investigationColor, hits: [] }
+      g.hits.push(h)
+      m.set(h.investigationId, g)
+    }
+    return Array.from(m.entries())
+  }, [hits])
+
+  return (
+    <section aria-label={t('home.contentResults')} aria-live="polite" className="mb-6 rounded-2xl border border-line bg-panel p-3">
+      <div className="mb-2 flex items-center gap-2 px-1 text-[12px] text-muted">
+        <Icon name="TextSearch" size={14} aria-hidden />
+        {!ready
+          ? t('home.contentMin', { count: SEARCH_MIN_TERM })
+          : hits === null
+            ? t('home.contentSearching')
+            : `${t('home.contentCount', { count: hits.length })} ${t('home.contentIn', { count: groups.length })}`}
+      </div>
+      <div className="flex max-h-[360px] flex-col gap-3 overflow-y-auto">
+        {groups.map(([id, g]) => (
+          <div key={id} className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-2 px-1 text-[12px] font-semibold">
+              <span className="h-2 w-2 rounded-full" style={{ background: g.color }} />
+              {g.name}
+              <span className="font-normal text-faint">{g.hits.length}</span>
+            </div>
+            {g.hits.map((h) => (
+              <button
+                key={h.nodeId}
+                onClick={() => void openInvestigationAt(h.investigationId, h.nodeId)}
+                className="flex items-start gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-panel-3"
+              >
+                {h.kind === 'entity' ? <EntityBadge type={h.type} platform={h.platform} size={18} /> : <Icon name="StickyNote" size={16} className="mt-0.5 text-muted" />}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[12.5px] font-medium">{h.label || t('node.untitled')}</span>
+                  <span className="block truncate text-[11.5px] text-muted">
+                    {h.kind === 'entity' && <span className="text-faint">{tx(getEntityType(h.type).label)} · </span>}
+                    {snippetParts(h.snippet).map((p, i) =>
+                      p.hit ? (
+                        <mark key={i} className="rounded-sm bg-accent-soft px-0.5 text-fg">
+                          {p.text}
+                        </mark>
+                      ) : (
+                        <span key={i}>{p.text}</span>
+                      )
+                    )}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        ))}
+      </div>
+    </section>
   )
 }

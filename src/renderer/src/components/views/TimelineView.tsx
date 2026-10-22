@@ -20,6 +20,7 @@ import {
 } from '../../lib/timeline'
 import { useApp } from '../../store/app'
 import { useGraph } from '../../store/graph'
+import { useGraphView } from '../../store/view'
 import { Button, IconButton, Switch } from '../ui'
 import { propertyLabel } from '@shared/propertyLabels'
 
@@ -51,7 +52,9 @@ export function TimelineView(): React.JSX.Element {
   const { lang, tx } = useLang()
   const nodes = useGraph((s) => s.nodes)
   const investigation = useGraph((s) => s.investigation)
-  const graphNodes = useMemo(() => nodes.map((n) => n.data.node), [nodes])
+  // Filtre du canevas en mode « masquer » : la frise montre la même chose.
+  const filtered = useGraphView().filtered
+  const graphNodes = useMemo(() => nodes.filter((n) => !filtered.has(n.id)).map((n) => n.data.node), [nodes, filtered])
   const selected = useMemo(() => new Set(nodes.filter((n) => n.selected).map((n) => n.id)), [nodes])
   const all = useMemo(() => collectEvents(graphNodes), [graphNodes])
   const [hidden, setHidden] = useState<Set<string>>(() => new Set())

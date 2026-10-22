@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { getEntityType } from '@shared/entityTypes'
 import { useLang } from '../../../lib/i18n'
 import { EntityBadge, Icon } from '../../../lib/icons'
+import { useCanvas } from '../../../store/canvas'
 import { useGraph, type FlowNode } from '../../../store/graph'
 import { useView } from '../../../store/view'
 
@@ -34,12 +35,15 @@ function BundleNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
     }
     return labels.join(', ')
   })
+  // Estompé hors du chemin mis en évidence, ou quand le filtre estompe tous ses membres.
+  const dimmed = useCanvas((s) => !!bundle && (s.focus ? true : s.dimmed.size > 0 && bundle.members.every((m) => s.dimmed.has(m))))
   if (!bundle) return null
   const def = getEntityType(bundle.type)
   return (
     <div
       className="relative flex w-[212px] items-center gap-2 rounded-[9px] border border-dashed px-2 py-1.5"
       style={{
+        opacity: dimmed ? 0.2 : undefined,
         background: 'var(--node)',
         borderColor: selected ? 'var(--accent)' : 'var(--node-border)',
         boxShadow: selected ? '0 0 0 1px var(--accent), 0 6px 24px rgb(0 0 0 / .35)' : '0 2px 10px rgb(0 0 0 / .25), 4px 4px 0 -1px var(--node), 4px 4px 0 0 var(--node-border)'
@@ -63,6 +67,7 @@ function BundleNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
           void useView.getState().expandBundle(bundle.id)
         }}
         title={t('bundle.expand')}
+        aria-label={t('bundle.expand')}
       >
         <Icon name="UnfoldVertical" size={11} />
       </button>

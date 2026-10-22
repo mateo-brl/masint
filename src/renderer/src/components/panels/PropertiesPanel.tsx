@@ -13,9 +13,10 @@ import { useApp } from '../../store/app'
 import { useGraph } from '../../store/graph'
 import { Button, confirmDialog, Dialog, Spinner, Switch, Tabs } from '../ui'
 import { ReviewList } from './ReviewList'
-import { revealNode, useView } from '../../store/view'
-import { computeView } from '../../lib/collapse'
+import { revealNode, useGraphView, useView } from '../../store/view'
 import { analyzeConsistency } from '../../lib/consistency'
+import { openInvestigationAt } from '../../lib/focus'
+import { useCorrelation } from '../../store/correlation'
 
 const SWATCHES = ['#e5484d', '#f76b15', '#ffc53d', '#30a46c', '#12a594', '#0090ff', '#6e56cf', '#d6409f', '#8d8d93', '#ededef']
 
@@ -56,17 +57,9 @@ function BundlePanel({ bundleId }: { bundleId: string }): React.JSX.Element | nu
   const { t } = useTranslation()
   const { tx } = useLang()
   const nodes = useGraph((s) => s.nodes)
-  const edges = useGraph((s) => s.edges)
-  const expanded = useView((s) => s.expanded)
-  const bundle = useMemo(
-    () =>
-      computeView(
-        nodes.map((n) => n.data.node),
-        edges.map((e) => e.data!.edge),
-        expanded
-      ).bundles.find((b) => b.id === bundleId),
-    [nodes, edges, expanded, bundleId]
-  )
+  // Même vue que le canevas (filtre compris) : le calcul mémorisé est partagé.
+  const view = useGraphView()
+  const bundle = useMemo(() => view.bundles.find((b) => b.id === bundleId), [view, bundleId])
   if (!bundle) return null
   const members = bundle.members.map((id) => nodes.find((n) => n.id === id)?.data.node).filter((n): n is GraphNode => !!n)
   const typeLabel = tx(getEntityType(bundle.type).label)
@@ -111,6 +104,7 @@ function PanelHeader({ title, kicker }: { title: string; kicker: string }): Reac
         }}
         className="rounded-md p-1 text-muted hover:bg-panel-3 hover:text-fg"
         title={t('common.close')}
+        aria-label={t('common.close')}
       >
         <Icon name="X" size={16} />
       </button>
@@ -242,6 +236,7 @@ function EntitySheet({ node }: { node: GraphNode }): React.JSX.Element {
 
       <NodeReview node={node} />
       <ConsistencyBlock node={node} />
+      <AlsoIn node={node} />
       <div className="border-t border-line" />
       <div className="text-[12.5px] font-semibold">{t('props.imageInfo')}</div>
       <ImageDrop node={node} />
@@ -280,10 +275,10 @@ function ImageDrop({ node }: { node: GraphNode }): React.JSX.Element {
       <div className="group relative overflow-hidden rounded-xl border border-line bg-panel-2">
         <img src={attachmentUrl(node.imageId)} alt="" className="max-h-52 w-full object-contain" draggable={false} />
         <div className="absolute top-2 right-2 flex gap-1 opacity-0 transition group-hover:opacity-100">
-          <button onClick={() => void pick()} className="rounded-md bg-black/60 p-1.5 text-white" title={t('props.replaceImage')}>
+          <button onClick={() => void pick()} className="rounded-md bg-black/60 p-1.5 text-white" title={t('props.replaceImage')} aria-label={t('props.replaceImage')}>
             <Icon name="RefreshCw" size={13} />
           </button>
-          <button onClick={() => void updateNode(node.id, { imageId: null })} className="rounded-md bg-black/60 p-1.5 text-white" title={t('props.removeImage')}>
+          <button onClick={() => void updateNode(node.id, { imageId: null })} className="rounded-md bg-black/60 p-1.5 text-white" title={t('props.removeImage')} aria-label={t('props.removeImage')}>
             <Icon name="X" size={13} />
           </button>
         </div>
@@ -494,6 +489,7 @@ function PropertyRow({
   onCancel?: () => void
   startEditing?: boolean
 }): React.JSX.Element {
+  const { t } = useTranslation()
   const [editing, setEditing] = useState(startEditing)
   const [text, setText] = useState(formatValue(value))
   useEffect(() => setText(formatValue(value)), [value])
@@ -508,7 +504,12 @@ function PropertyRow({
     <div className="group rounded-xl border border-line bg-panel-2 px-3 py-2">
       <div className="flex items-center gap-2">
         <span className="min-w-0 flex-1 truncate text-[11px] text-muted" title={label}>{label}</span>
-        <button onClick={onDelete} className="text-faint opacity-0 transition group-hover:opacity-100 hover:text-accent">
+        <button
+          onClick={onDelete}
+          className="text-faint opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100 hover:text-accent focus-visible:opacity-100"
+          aria-label={t('common.delete')}
+          title={t('common.delete')}
+        >
           <Icon name="X" size={12} />
         </button>
       </div>
@@ -538,7 +539,7 @@ function PropertyRow({
             {str || <span className="text-faint">…</span>}
           </div>
           {isUrl && (
-            <button onClick={() => openLink(value as string)} className="mt-0.5 text-muted hover:text-fg">
+            <button onClick={() => openLink(value as string)} className="mt-0.5 text-muted hover:text-fg" aria-label={t('canvas.openLink')} title={t('canvas.openLink')}>
               <Icon name="ExternalLink" size={13} />
             </button>
           )}
@@ -686,6 +687,33 @@ function ConsistencyBlock({ node }: { node: GraphNode }): React.JSX.Element | nu
       ))}
       {period && <div className="text-muted">{period}</div>}
       {many && <div className="leading-snug text-muted">{t('consistency.hint')}</div>}
+    </div>
+  )
+}
+
+/** « Aussi dans » : autres enquêtes où la même entité apparaît (même clé canonique). */
+function AlsoIn({ node }: { node: GraphNode }): React.JSX.Element | null {
+  const { t } = useTranslation()
+  const refs = useCorrelation((s) => s.refs.get(node.id))
+  if (!refs?.length) return null
+  return (
+    <div className="flex flex-col gap-1.5 rounded-xl border border-line bg-panel-2/40 p-2.5 text-[12px]">
+      <div className="flex items-center gap-2 font-semibold">
+        <Icon name="FolderSymlink" size={14} className="text-muted" />
+        {t('correlation.alsoIn', { count: refs.length })}
+      </div>
+      {refs.map((r) => (
+        <button
+          key={r.investigationId}
+          onClick={() => void openInvestigationAt(r.investigationId, r.nodeId)}
+          className="flex items-center gap-2 rounded-lg px-1.5 py-1 text-left hover:bg-panel-3"
+          title={t('correlation.open')}
+        >
+          <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: r.investigationColor }} />
+          <span className="min-w-0 flex-1 truncate">{r.investigationName}</span>
+          <Icon name="ArrowRight" size={13} className="shrink-0 text-muted" />
+        </button>
+      ))}
     </div>
   )
 }
@@ -861,6 +889,8 @@ function StyleTab({ node }: { node: GraphNode }): React.JSX.Element {
             <button
               key={c}
               onClick={() => set({ color: c })}
+              aria-label={`${t('style.color')} ${c}`}
+              aria-pressed={node.style.color === c}
               className="h-6 w-6 rounded-full"
               style={{ background: c, outline: node.style.color === c ? `2px solid ${c}` : 'none', outlineOffset: 2 }}
             />
@@ -889,6 +919,8 @@ function StyleTab({ node }: { node: GraphNode }): React.JSX.Element {
                 <button
                   key={c || 'none'}
                   onClick={() => set({ bg: c || undefined })}
+                  aria-label={`${t('style.background')} ${c || '-'}`}
+                  aria-pressed={(node.style.bg ?? '') === c}
                   className="h-6 w-6 rounded-md border border-line-strong"
                   style={{ background: c || 'var(--node)', outline: (node.style.bg ?? '') === c ? '2px solid var(--accent)' : 'none', outlineOffset: 2 }}
                 />
@@ -914,6 +946,8 @@ function StyleTab({ node }: { node: GraphNode }): React.JSX.Element {
                 <button
                   key={c || 'none'}
                   onClick={() => set({ bg: c || undefined })}
+                  aria-label={`${t('style.background')} ${c || '-'}`}
+                  aria-pressed={(node.style.bg ?? '') === c}
                   className="h-6 w-6 rounded-md border border-line-strong"
                   style={{ background: c || 'transparent', outline: (node.style.bg ?? '') === c ? '2px solid var(--accent)' : 'none', outlineOffset: 2 }}
                 />
@@ -972,6 +1006,7 @@ function MultiPanel({ nodes }: { nodes: GraphNode[] }): React.JSX.Element {
               <button
                 key={c}
                 onClick={() => void updateNodes(nodes.map((n) => ({ id: n.id, style: { ...n.style, color: c } })))}
+                aria-label={`${t('style.color')} ${c}`}
                 className="h-6 w-6 rounded-full"
                 style={{ background: c }}
               />
@@ -1018,6 +1053,8 @@ function EdgePanel({ edge }: { edge: GraphEdge }): React.JSX.Element {
             <button
               key={c}
               onClick={() => void updateEdge(edge.id, { style: { ...edge.style, color: c } })}
+              aria-label={`${t('style.color')} ${c}`}
+              aria-pressed={edge.style.color === c}
               className="h-6 w-6 rounded-full"
               style={{ background: c, outline: edge.style.color === c ? `2px solid ${c}` : 'none', outlineOffset: 2 }}
             />

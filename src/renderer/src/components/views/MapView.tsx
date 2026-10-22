@@ -22,6 +22,7 @@ import { useLang } from '../../lib/i18n'
 import { EntityBadge, Icon } from '../../lib/icons'
 import { useApp } from '../../store/app'
 import { useGraph } from '../../store/graph'
+import { useGraphView } from '../../store/view'
 import { Button } from '../ui'
 import './geo.css'
 
@@ -98,7 +99,9 @@ export function MapView(): React.JSX.Element {
   const [listOpen, setListOpen] = useState(true)
   const [popup, setPopup] = useState<GeoCluster | null>(null)
 
-  const points = useMemo(() => geoPoints(nodes.map((n) => n.data.node)), [nodes])
+  // Filtre du canevas en mode « masquer » : la carte montre la même chose.
+  const filtered = useGraphView().filtered
+  const points = useMemo(() => geoPoints(nodes.filter((n) => !filtered.has(n.id)).map((n) => n.data.node)), [nodes, filtered])
   const selected = useMemo(() => new Set(nodes.filter((n) => n.selected).map((n) => n.id)), [nodes])
   const links = useMemo(() => {
     const byId = new Map(points.map((p) => [p.id, p]))
@@ -442,7 +445,7 @@ function LocatedList({
           <div className="label-xs">{t('map.kicker')}</div>
           <div className="mt-1 text-[15px] font-semibold">{t('map.located', { count: points.length })}</div>
         </div>
-        <button onClick={onClose} title={t('map.hideList')} className="rounded-md p-1 text-muted hover:bg-panel-3 hover:text-fg">
+        <button onClick={onClose} title={t('map.hideList')} aria-label={t('map.hideList')} className="rounded-md p-1 text-muted hover:bg-panel-3 hover:text-fg">
           <Icon name="PanelLeftClose" size={16} />
         </button>
       </div>
