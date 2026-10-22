@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { computeLayout, type LayoutEdge, type LayoutKind, type LayoutNode } from '../src/renderer/src/lib/layout'
+import { computeLayoutAsync } from '../src/renderer/src/lib/layoutAsync'
 
 const W = 196
 const H = 40
@@ -54,5 +55,16 @@ describe('dispositions sur un graphe en étoile (1 parent, 120 enfants)', () => 
   it('radial : reste compact', () => {
     const { w } = extent(computeLayout('radial', g.nodes, g.edges))
     expect(w).toBeLessThan(4500)
+  })
+})
+
+describe('disposition hors du fil principal', () => {
+  it('sans Worker (tests, environnement réduit), calcule directement le même résultat', async () => {
+    expect(typeof Worker).toBe('undefined')
+    const g = star(30, 4)
+    for (const kind of ['tree-tb', 'force', 'grid'] as LayoutKind[]) {
+      const pos = await computeLayoutAsync(kind, g.nodes, g.edges)
+      expect(pos).toEqual(computeLayout(kind, g.nodes, g.edges))
+    }
   })
 })

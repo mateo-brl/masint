@@ -6,7 +6,9 @@ import { api } from '../../lib/api'
 import { errorMessage } from '../../lib/errors'
 import { useLang } from '../../lib/i18n'
 import { EntityBadge, Icon } from '../../lib/icons'
-import { computeLayout, type LayoutKind } from '../../lib/layout'
+import type { LayoutKind } from '../../lib/layout'
+import { computeLayoutAsync } from '../../lib/layoutAsync'
+import { searchNodes } from '../../lib/search'
 import { useApp } from '../../store/app'
 import { useGraph, type FlowEdge, type FlowNode } from '../../store/graph'
 import { fitGraph } from '../../lib/viewport'
@@ -20,7 +22,12 @@ export function TopBar(): React.JSX.Element {
   const { t } = useTranslation()
   const rf = useReactFlow<FlowNode, FlowEdge>()
   const edgesCount = useGraph((s) => s.edges.length)
-  const nodesCount = useGraph((s) => s.nodes.filter((n) => n.data.node.kind === 'entity').length)
+  const nodesCount = useGraph((s) => {
+    // Simple décompte : ce sélecteur tourne à chaque image d'un glisser.
+    let count = 0
+    for (const n of s.nodes) if (n.data.node.kind === 'entity') count++
+    return count
+  })
   const investigation = useGraph((s) => s.investigation)
   const catalogOpen = useApp((s) => s.catalogOpen)
   const toggleCatalog = useApp((s) => s.toggleCatalog)
@@ -31,9 +38,11 @@ export function TopBar(): React.JSX.Element {
   const pendingReview = useGraph((s) => s.suggestions.filter((x) => x.status === 'pending').length)
   const canUndo = useGraph((s) => s.canUndo)
   const canRedo = useGraph((s) => s.canRedo)
+  const [layingOut, setLayingOut] = useState(false)
 
-  const layout = (kind: LayoutKind): void => {
-    const { nodes, edges, setPositions } = useGraph.getState()
+  const layout = async (kind: LayoutKind): Promise<void> => {
+    if (layingOut) return
+    const { nodes, edges, investigation: inv } = useGraph.getState()
     // Disposition de ce qui est affiché : nœuds masqués exclus, groupes traités comme un nœud.
     const view = currentView()
     const bundleState = useView.getState().bundles
@@ -57,13 +66,27 @@ export function TopBar(): React.JSX.Element {
       ...edges.filter((e) => !view.hidden.has(e.source) && !view.hidden.has(e.target)).map((e) => ({ source: e.source, target: e.target })),
       ...view.bundles.map((b) => ({ source: b.parentId, target: b.id }))
     ]
-    const all = computeLayout(kind, items, links)
+    // Calcul dans un Worker : l'interface reste utilisable, un indicateur signale le calcul.
+    setLayingOut(true)
+    let all: Record<string, { x: number; y: number }>
+    try {
+      all = await computeLayoutAsync(kind, items, links)
+    } catch (e) {
+      toast('error', errorMessage(e))
+      return
+    } finally {
+      setLayingOut(false)
+    }
+    // Le graphe a pu changer pendant le calcul : on ignore une autre enquête et les nœuds supprimés.
+    const current = useGraph.getState()
+    if (current.investigation?.id !== inv?.id) return
+    const present = new Set(current.nodes.map((n) => n.id))
     const pos: Record<string, { x: number; y: number }> = {}
     for (const [id, p] of Object.entries(all)) {
       if (id.startsWith('bundle:')) useView.getState().patchBundle(id, { position: p }, true)
-      else pos[id] = p
+      else if (present.has(id)) pos[id] = p
     }
-    void setPositions(pos).then(() => setTimeout(() => fitGraph(rf, 400), 50))
+    void current.setPositions(pos).then(() => setTimeout(() => fitGraph(rf, 400), 50))
   }
 
   const doExport = async (format: ExportFormat): Promise<void> => {
@@ -110,12 +133,12 @@ export function TopBar(): React.JSX.Element {
           align="center"
           trigger={() => <ToolbarButton icon="LayoutGrid" label={t('topbar.layout')} />}
           items={[
-            { label: t('layout.treeTb'), icon: 'Network', onClick: () => layout('tree-tb') },
-            { label: t('layout.treeLr'), icon: 'Workflow', onClick: () => layout('tree-lr') },
-            { label: t('layout.force'), icon: 'Orbit', onClick: () => layout('force') },
-            { label: t('layout.radial'), icon: 'Radar', onClick: () => layout('radial') },
-            { label: t('layout.circle'), icon: 'CircleDot', onClick: () => layout('circle') },
-            { label: t('layout.grid'), icon: 'Grid3x3', onClick: () => layout('grid') },
+            { label: t('layout.treeTb'), icon: 'Network', onClick: () => void layout('tree-tb') },
+            { label: t('layout.treeLr'), icon: 'Workflow', onClick: () => void layout('tree-lr') },
+            { label: t('layout.force'), icon: 'Orbit', onClick: () => void layout('force') },
+            { label: t('layout.radial'), icon: 'Radar', onClick: () => void layout('radial') },
+            { label: t('layout.circle'), icon: 'CircleDot', onClick: () => void layout('circle') },
+            { label: t('layout.grid'), icon: 'Grid3x3', onClick: () => void layout('grid') },
             { separator: true, label: '' },
             { label: t('canvas.fitView'), icon: 'ScanSearch', hint: 'F', onClick: () => fitGraph(rf) }
           ]}
@@ -167,6 +190,12 @@ export function TopBar(): React.JSX.Element {
           <Icon name="Search" size={15} />
         </button>
       </div>
+      {layingOut && (
+        <div className="glass flex items-center gap-2 rounded-2xl px-3 py-1.5 text-[12px] text-muted">
+          <Spinner size={13} />
+          {t('layout.running')}
+        </div>
+      )}
       {searching && <GraphSearch onClose={() => setSearching(false)} />}
       <Dialog open={reviewOpen} onClose={() => setReviewOpen(false)} title={t('review.title')} width={620}>
         <ReviewAll
@@ -200,16 +229,13 @@ function GraphSearch({ onClose }: { onClose: () => void }): React.JSX.Element {
   const rf = useReactFlow()
   const nodes = useGraph((s) => s.nodes)
   const [q, setQ] = useState('')
-  const matches = useMemo(() => {
-    const s = q.trim().toLowerCase()
-    if (!s) return []
-    return nodes
-      .filter((n) => {
-        const node = n.data.node
-        return node.label.toLowerCase().includes(s) || JSON.stringify(node.data).toLowerCase().includes(s)
-      })
-      .slice(0, 12)
-  }, [q, nodes])
+  // Léger différé : la recherche ne tourne pas à chaque frappe d'une saisie rapide.
+  const [query, setQuery] = useState('')
+  useEffect(() => {
+    const timer = setTimeout(() => setQuery(q), q.trim() ? 120 : 0)
+    return () => clearTimeout(timer)
+  }, [q])
+  const matches = useMemo(() => searchNodes(nodes, query), [query, nodes])
   const focus = async (id: string): Promise<void> => {
     onClose()
     // Un nœud replié ou regroupé est d'abord rendu visible.
@@ -227,7 +253,11 @@ function GraphSearch({ onClose }: { onClose: () => void }): React.JSX.Element {
         onChange={(e) => setQ(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Escape') onClose()
-          if (e.key === 'Enter' && matches[0]) void focus(matches[0].id)
+          if (e.key === 'Enter') {
+            // Saisie pas encore prise en compte (différé) : recherche immédiate.
+            const first = q === query ? matches[0] : searchNodes(nodes, q, 1)[0]
+            if (first) void focus(first.id)
+          }
         }}
         placeholder={t('topbar.searchPlaceholder')}
         className="field"
@@ -269,10 +299,10 @@ function JobPills(): React.JSX.Element | null {
 function JobPill({ job: j }: { job: JobProgress }): React.JSX.Element {
   const { t } = useTranslation()
   const { tx } = useLang()
-  const nodes = useGraph((s) => s.nodes)
+  // Seulement le nœud de la tâche : même objet tant qu'il ne change pas (pas à chaque glisser).
+  const node = useGraph((s) => s.nodes.find((n) => n.id === j.nodeId)?.data.node)
   const modules = useApp((s) => s.modules)
   const [open, setOpen] = useState(false)
-  const node = nodes.find((n) => n.id === j.nodeId)?.data.node
   const label = node?.label || j.nodeLabel
   const name = (id: string): string => {
     const m = modules.find((x) => x.id === id)
