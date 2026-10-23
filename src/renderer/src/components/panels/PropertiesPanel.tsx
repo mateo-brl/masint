@@ -92,7 +92,7 @@ function BundlePanel({ bundleId }: { bundleId: string }): React.JSX.Element | nu
   )
 }
 
-function PanelHeader({ title, kicker }: { title: string; kicker: string }): React.JSX.Element {
+function PanelHeader({ title, kicker, onDelete }: { title: string; kicker: string; onDelete?: () => void }): React.JSX.Element {
   const { t } = useTranslation()
   return (
     <div className="flex items-start justify-between px-5 pt-5 pb-3">
@@ -100,17 +100,29 @@ function PanelHeader({ title, kicker }: { title: string; kicker: string }): Reac
         <div className="label-xs">{kicker}</div>
         <div className="mt-1 text-[17px] font-semibold">{title}</div>
       </div>
-      <button
-        onClick={() => {
-          useGraph.getState().select([])
-          useView.getState().selectBundle(null)
-        }}
-        className="rounded-md p-1 text-muted hover:bg-panel-3 hover:text-fg"
-        title={t('common.close')}
-        aria-label={t('common.close')}
-      >
-        <Icon name="X" size={16} />
-      </button>
+      <div className="flex items-center gap-0.5">
+        {onDelete && (
+          <button
+            onClick={onDelete}
+            className="rounded-md p-1 text-muted hover:bg-accent-soft hover:text-accent"
+            title={t('props.deleteNode')}
+            aria-label={t('props.deleteNode')}
+          >
+            <Icon name="Trash" size={16} />
+          </button>
+        )}
+        <button
+          onClick={() => {
+            useGraph.getState().select([])
+            useView.getState().selectBundle(null)
+          }}
+          className="rounded-md p-1 text-muted hover:bg-panel-3 hover:text-fg"
+          title={t('common.close')}
+          aria-label={t('common.close')}
+        >
+          <Icon name="X" size={16} />
+        </button>
+      </div>
     </div>
   )
 }
@@ -123,7 +135,7 @@ function NodePanel({ node }: { node: GraphNode }): React.JSX.Element {
   const [tab, setTab] = useState<'sheet' | 'style' | 'notes'>('sheet')
   return (
     <>
-      <PanelHeader kicker={t('props.selectedNode')} title={t('props.title')} />
+      <PanelHeader kicker={t('props.selectedNode')} title={t('props.title')} onDelete={() => void useGraph.getState().deleteNodes([node.id])} />
       <div className="px-5 pb-3">
         <Tabs
           value={tab}
