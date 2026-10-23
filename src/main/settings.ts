@@ -1,4 +1,5 @@
 import { buildUserAgent } from '@shared/network'
+import { SEARCH_ENGINES } from '@shared/searchEngines'
 import type { SecretStatus, Settings } from '@shared/types'
 import type { Repo } from './db/repo'
 
@@ -36,6 +37,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showMinimap: true,
   investigatorName: '',
   assistCapture: false,
+  searchEngine: 'auto',
   isolateInvestigations: false
 }
 
@@ -90,6 +92,7 @@ export class SettingsService {
     if (!['auto', 'internal', 'external'].includes(next.linkOpening)) next.linkOpening = 'auto'
     next.investigatorName = String(next.investigatorName ?? '').trim().slice(0, 120)
     next.assistCapture = next.assistCapture === true
+    if (!SEARCH_ENGINES.includes(next.searchEngine)) next.searchEngine = 'auto'
     // En-tête automatique enregistré vide : il suit les mises à jour d'Electron.
     const auto = isAutoUserAgent(next.userAgent)
     next.userAgent = auto ? DEFAULT_USER_AGENT : next.userAgent.trim()

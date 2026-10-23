@@ -1,5 +1,7 @@
 // Types partagés entre le processus principal, le preload et l'interface.
 
+import type { SearchEngine } from './searchEngines'
+
 export type Lang = 'fr' | 'en'
 export type I18nText = { fr: string; en: string }
 
@@ -305,6 +307,9 @@ export interface AssistResult {
   error?: string
   /** Capture de la page de résultats (réglage « Capturer les pages consultées »). */
   captureId?: string
+  /** Moteur réellement utilisé pour une recherche Google, et repli sur Startpage après un captcha. */
+  engine?: 'google' | 'startpage'
+  fallback?: boolean
 }
 
 /** Dernier résultat d'une recherche assistée, gardé en base avec la recherche manuelle. */
@@ -433,6 +438,8 @@ export interface Settings {
   investigatorName: string
   /** Recherche assistée : la page de résultats est capturée (preuve) avant la fermeture de sa fenêtre. */
   assistCapture: boolean
+  /** Moteur des recherches Google assistées : Google avec repli sur Startpage, Google seul ou Startpage. */
+  searchEngine: SearchEngine
   /**
    * Enquêtes cloisonnées (finalité propre à chaque enquête, RGPD) : ni corrélation entre
    * enquêtes, ni recherche globale.

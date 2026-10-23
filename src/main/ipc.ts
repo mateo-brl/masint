@@ -8,11 +8,12 @@ import { app, BrowserWindow, clipboard, dialog, ipcMain, session, shell } from '
 import exifr from 'exifr'
 import type { ApiChannel, ApiMap } from '@shared/api'
 import { captureUrlOf, isSignificantActivity } from '@shared/evidence'
-import type { ActivityAction, ExportMeta, GraphEdge, GraphNode, LinkContext, Settings } from '@shared/types'
+import type { ActivityAction, AssistResult, ExportMeta, GraphEdge, GraphNode, LinkContext, Settings } from '@shared/types'
+import { engineOrder, googleQuery, startpageUrl } from '@shared/searchEngines'
 import { changedEdgeFields, changedNodeFields, edgeRefs, isLayoutOnly, nodeRef, nodeRefs, systemUser, type ActivityLog } from './activity'
 import { buildArchive, duplicateInvestigation, importArchive } from './archive'
 import { mergeNodes } from './merge'
-import { applyAssistIdentity, assistedSearch, assistSession, needlesFor } from './assist'
+import { applyAssistIdentity, assistedSearch, assistSession, engineBlocked, markEngineBlocked, needlesFor } from './assist'
 import { openInvestigationBrowser, openLink, type PageCapture } from './browser'
 import type { CaptureService } from './capture'
 import { crossReferences, globalSearch } from './correlation'
@@ -355,14 +356,27 @@ export function registerIpc(deps: IpcDeps): void {
       ? async (wc: Electron.WebContents) =>
           (await captures.capture(wc, { investigationId: s.investigationId, nodeId: s.nodeId, via: 'assist', requestedUrl: s.url! })).id
       : undefined
-    const result = await assistedSearch({
-      url: s.url,
-      needles: needlesFor(node.type, node.label),
-      parent: getWindow(),
-      userAgent: settings.get().userAgent,
-      title: `MASINT · ${s.label}`,
-      capture
-    })
+    const { searchEngine, lang, userAgent } = settings.get()
+    const base = { needles: needlesFor(node.type, node.label), parent: getWindow(), userAgent, title: `MASINT · ${s.label}`, capture }
+    // Recherche Google : moteurs essayés dans l'ordre du réglage. Un moteur qui demande une
+    // vérification est sauté pendant une heure, sauf s'il est le dernier recours (sa fenêtre
+    // s'affiche alors pour le captcha).
+    const query = googleQuery(s.url)
+    const order = query ? engineOrder(searchEngine).filter((e, i, all) => i === all.length - 1 || !engineBlocked(e)) : [null]
+    let result: AssistResult | null = null
+    let engine: AssistResult['engine']
+    // Repli : moteur sauté (bloqué depuis moins d'une heure) ou abandonné sur un captcha.
+    let fallback = query !== null && order.length < engineOrder(searchEngine).length
+    for (const [i, e] of order.entries()) {
+      const last = i === order.length - 1
+      result = await assistedSearch({ ...base, url: e === 'startpage' ? startpageUrl(query!, lang) : s.url, onChallenge: last ? 'show' : 'abort' })
+      engine = e ?? undefined
+      if (result) break
+      markEngineBlocked(e!)
+      fallback = true
+    }
+    if (!result) result = { status: 'error', url: s.url, title: '', matches: [], error: 'captcha' }
+    if (engine) result = { ...result, engine, ...(fallback ? { fallback: true } : {}) }
     // Dernier résultat gardé en base : il revient à la réouverture de l'enquête. Une recherche
     // annulée (fenêtre fermée) ne remplace pas le résultat précédent.
     if (result.status !== 'cancelled') repo.setSuggestionAssist(id, { result, added: [], at: Date.now() })

@@ -43,7 +43,11 @@ export const useAssist = create<AssistState>((set, get) => ({
   },
 
   async runAll(ids) {
-    for (const id of ids) await get().run(id)
+    for (const id of ids) {
+      await get().run(id)
+      // Fenêtre fermée par l'enquêteur (captcha qu'il ne veut pas résoudre) : la série s'arrête.
+      if (get().entries[id]?.result?.status === 'cancelled') break
+    }
   },
 
   markAdded(id, url) {

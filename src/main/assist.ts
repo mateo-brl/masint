@@ -66,7 +66,7 @@ export function applyAssistIdentity(s: Settings): void {
 
 // Script exécuté dans la page : accepte ou refuse un bandeau de consentement courant et dit
 // si la page attend une action (captcha, vérification anti-robot, connexion).
-const INSPECT = `(() => {
+export const INSPECT = `(() => {
   const text = (document.body?.innerText || '').slice(0, 20000)
   const buttons = [...document.querySelectorAll('button, [role=button], input[type=submit]')]
   const label = (b) => (b.innerText || b.value || b.getAttribute('aria-label') || '').trim().toLowerCase()
@@ -77,11 +77,11 @@ const INSPECT = `(() => {
   const captcha = !!document.querySelector('iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="challenges.cloudflare"], #captcha, .g-recaptcha, [id*="captcha" i]')
     || /unusual traffic|trafic inhabituel|not a robot|pas un robot|verify you are human|vérifiez que vous êtes|checking your browser|vérification de votre navigateur|access denied|accès refusé|are you a human|êtes-vous un humain/i.test(text)
   const login = [...document.querySelectorAll('input[type=password]')].some((i) => i.offsetParent !== null)
-  return { ready: document.readyState === 'complete', consent, captcha, login, title: document.title, length: text.length }
+  return { ready: document.readyState === 'complete', consent, captcha, login, title: document.title, length: text.length, links: document.querySelectorAll('a[href]').length }
 })()`
 
 /** Script d'extraction : liens et blocs de la page qui contiennent l'une des valeurs cherchées. */
-function extractScript(needles: { text: string[]; digits: string[] }): string {
+export function extractScript(needles: { text: string[]; digits: string[] }): string {
   return `(() => {
   const needles = ${JSON.stringify(needles)}
   const fold = (s) => (s || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/\\s+/g, ' ')
@@ -95,7 +95,7 @@ function extractScript(needles: { text: string[]; digits: string[] }): string {
   const engines = /(^|\\.)(google|bing|duckduckgo|yandex|qwant|startpage|ecosia|search\\.brave|yahoo)\\./i
   const host = location.hostname
   const out = []
-  const seen = new Set()
+  const seen = new Map()
   for (const a of document.querySelectorAll('a[href]')) {
     let href = a.href
     if (!/^https?:/i.test(href)) continue
@@ -104,17 +104,27 @@ function extractScript(needles: { text: string[]; digits: string[] }): string {
       // Liens de redirection des moteurs (google.com/url?q=...).
       const q = u.searchParams.get('q') || u.searchParams.get('url') || u.searchParams.get('uddg')
       if (engines.test(u.hostname) && q && /^https?:/i.test(q)) href = q
+      // Résultat Google à adresse opaque (/goto) : le lien est gardé tel quel, il redirige.
+      const opaque = /(^|\\.)google\\./i.test(u.hostname) && u.pathname === '/goto'
       const target = new URL(href)
-      if (engines.test(target.hostname) || (engines.test(host) && target.hostname === host)) continue
+      if (!opaque && (engines.test(target.hostname) || (engines.test(host) && target.hostname === host))) continue
     } catch { continue }
-    const block = a.closest('li, article, tr, [data-hveid], [class*="result" i], [class*="card" i], div') || a
-    const title = (a.innerText || a.title || '').trim().slice(0, 200)
+    // Bloc cherché à partir du parent : un lien titre de classe « result » (Startpage) n'est pas
+    // son propre bloc, l'extrait garde la description du résultat.
+    const block = (a.parentElement || a).closest('li, article, tr, [data-hveid], [class*="result" i], [class*="card" i], div') || a
+    const title = (a.querySelector('h3, h2')?.innerText || a.innerText || a.title || '').trim().split('\\n')[0].slice(0, 200)
     const snippet = (block.innerText || '').trim().replace(/\\s+/g, ' ').slice(0, 400)
     if (!hit(title + ' ' + snippet + ' ' + href)) continue
     const key = href.split('#')[0]
-    if (seen.has(key)) continue
-    seen.add(key)
-    out.push({ title: title || key, url: key, snippet })
+    // Même adresse déjà vue (icône ou adresse affichée du même résultat) : titre complété au besoin.
+    const prev = seen.get(key)
+    if (prev) {
+      if (prev.title === key && title) prev.title = title
+      continue
+    }
+    const entry = { title: title || key, url: key, snippet }
+    seen.set(key, entry)
+    out.push(entry)
     if (out.length >= 20) break
   }
   // Page sans lien exploitable (fiche d'annuaire, résultat unique) : extrait autour de la valeur.
@@ -156,12 +166,50 @@ export function createAssistWindow(opts: { parent: BrowserWindow | null; userAge
   return { win, isClosed: () => closed || win.isDestroyed() }
 }
 
+/** Moteurs qui ont demandé une vérification : sautés (sauf en dernier recours) jusqu'à cette date. */
+const blockedUntil = new Map<string, number>()
+export const engineBlocked = (engine: string): boolean => Date.now() < (blockedUntil.get(engine) ?? 0)
+export function markEngineBlocked(engine: string, ms = 60 * 60_000): void {
+  blockedUntil.set(engine, Date.now() + ms)
+}
+
+/** Dernier chargement par moteur de recherche. */
+const lastSearch = new Map<string, number>()
+const SEARCH_HOSTS = /(^|\.)(google|startpage|bing|duckduckgo|qwant|ecosia|yandex)\.[a-z.]+$|(^|\.)search\.brave\.com$/i
+
 /**
- * Charge une page et attend qu'elle soit prête : chargement terminé, adresse stable depuis
- * 1,5 s, bandeau de consentement traité. Si un captcha ou une connexion demande une action, la
- * fenêtre s'affiche et l'attente reprend d'elle-même une fois la page libérée.
+ * Espace les recherches sur un même moteur (5 à 10 s) : enchaînées sans pause, elles sont prises
+ * pour un robot et déclenchent un captcha.
  */
-export async function settlePage(win: BrowserWindow, isClosed: () => boolean, url: string, title: string): Promise<'ready' | 'timeout' | 'cancelled'> {
+async function paceHost(url: string): Promise<void> {
+  let host = ''
+  try {
+    host = new URL(url).hostname
+  } catch {
+    return
+  }
+  if (!SEARCH_HOSTS.test(host)) return
+  const key = host.replace(/^www\./, '')
+  const gap = 5000 + Math.random() * 5000
+  const delay = (lastSearch.get(key) ?? 0) + gap - Date.now()
+  lastSearch.set(key, Date.now() + Math.max(0, delay))
+  if (delay > 0) await wait(delay)
+}
+
+/**
+ * Charge une page et attend qu'elle soit prête : chargement terminé, adresse et nombre de liens
+ * stables depuis 1,5 s, bandeau de consentement traité. Si un captcha ou une connexion demande
+ * une action, la fenêtre s'affiche et l'attente reprend d'elle-même une fois la page libérée.
+ */
+export async function settlePage(
+  win: BrowserWindow,
+  isClosed: () => boolean,
+  url: string,
+  title: string,
+  /** `abort` : un captcha met fin à l'attente sans afficher la fenêtre (un autre moteur prend le relais). */
+  onChallenge: 'show' | 'abort' = 'show'
+): Promise<'ready' | 'timeout' | 'cancelled' | 'challenged'> {
+  await paceHost(url)
   await win.loadURL(url).catch(() => undefined)
   const start = Date.now()
   let stableSince = 0
@@ -174,8 +222,10 @@ export async function settlePage(win: BrowserWindow, isClosed: () => boolean, ur
       consent: boolean
       captcha: boolean
       login: boolean
+      links: number
     } | null
     if (isClosed()) break
+    if (state?.captcha && onChallenge === 'abort') return 'challenged'
     if (state && (state.captcha || state.login)) {
       // Action de l'enquêteur nécessaire : la fenêtre s'affiche, la recherche reprendra seule.
       if (!win.isVisible()) {
@@ -186,7 +236,9 @@ export async function settlePage(win: BrowserWindow, isClosed: () => boolean, ur
       asked = true
       stableSince = 0
     } else if (state?.ready && !state.consent) {
-      const current = win.webContents.getURL()
+      // Page stable : même adresse et même nombre de liens depuis 1,5 s (les moteurs affichent
+      // leurs résultats après le chargement).
+      const current = `${win.webContents.getURL()}|${state.links}`
       if (current !== lastUrl) {
         lastUrl = current
         stableSince = Date.now()
@@ -207,7 +259,9 @@ export async function assistedSearch(opts: {
   title: string
   /** Capture de la page de résultats avant la fermeture de la fenêtre ; renvoie l'identifiant de la capture. */
   capture?: (wc: WebContents) => Promise<string | null>
-}): Promise<AssistResult> {
+  /** `abort` : un captcha arrête la recherche sans afficher la fenêtre (résultat null). */
+  onChallenge?: 'show' | 'abort'
+}): Promise<AssistResult | null> {
   const { win, isClosed } = createAssistWindow(opts)
   const done = (r: Omit<AssistResult, 'url' | 'title'>): AssistResult => {
     const closed = isClosed()
@@ -216,7 +270,11 @@ export async function assistedSearch(opts: {
     return res
   }
   try {
-    const state = await settlePage(win, isClosed, opts.url, opts.title)
+    const state = await settlePage(win, isClosed, opts.url, opts.title, opts.onChallenge)
+    if (state === 'challenged') {
+      if (!isClosed()) win.destroy()
+      return null
+    }
     if (state === 'cancelled') return { status: 'cancelled', url: opts.url, title: '', matches: [] }
     if (state === 'timeout') return done({ status: 'timeout', matches: [] })
     const matches = (await win.webContents.executeJavaScript(extractScript(opts.needles)).catch(() => [])) as AssistMatch[]

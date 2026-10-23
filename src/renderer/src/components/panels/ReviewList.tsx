@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { detectEntity } from '@shared/detect'
+import { searchUrlFor } from '@shared/searchEngines'
 import { getEntityType } from '@shared/entityTypes'
 import type { LinkContext, PropValue, Suggestion } from '@shared/types'
 import { api, openLink } from '../../lib/api'
@@ -94,6 +95,9 @@ function EntityRow({ s }: { s: Suggestion }): React.JSX.Element {
 }
 
 function ManualRow({ s }: { s: Suggestion }): React.JSX.Element {
+  // « Ouvrir » suit le moteur choisi : une recherche Google peut passer par Startpage.
+  const engine = useApp((st) => st.settings?.searchEngine ?? 'auto')
+  const lang = useApp((st) => st.settings?.lang ?? 'fr')
   const { t } = useTranslation()
   const { tx } = useLang()
   const [finding, setFinding] = useState(false)
@@ -124,7 +128,7 @@ function ManualRow({ s }: { s: Suggestion }): React.JSX.Element {
           strong
           onClick={() => void useAssist.getState().run(s.id)}
         />
-        <RowButton icon="ExternalLink" label={t('review.openShort')} title={t('review.open')} onClick={() => s.url && openLink(s.url, ctxOf(s))} />
+        <RowButton icon="ExternalLink" label={t('review.openShort')} title={t('review.open')} onClick={() => s.url && openLink(searchUrlFor(s.url, engine, lang), ctxOf(s))} />
         <RowButton label={t('review.nothingShort')} title={t('review.nothing')} onClick={() => void resolve(s.id, 'checked')} />
         <RowButton icon="Plus" label={t('review.foundShort')} title={t('review.found')} onClick={() => setFinding(!finding)} />
       </div>
@@ -161,6 +165,9 @@ function AssistResults({ s }: { s: Suggestion }): React.JSX.Element | null {
   const list = r.matches.filter((m) => !entry.added.includes(m.url))
   return (
     <div className="mt-1.5 flex flex-col gap-1 pl-[22px]">
+      {r.engine && (
+        <div className="text-[10.5px] text-faint">{t(r.fallback ? 'assist.viaFallback' : 'assist.via', { engine: r.engine === 'startpage' ? 'Startpage' : 'Google' })}</div>
+      )}
       {(entry.at || r.captureId) && (
         <div className="flex flex-wrap items-center gap-x-2 text-[10.5px] text-faint">
           {entry.at && <span>{t('assist.savedAt', { date: new Date(entry.at).toLocaleString() })}</span>}
