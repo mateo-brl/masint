@@ -43,13 +43,21 @@ export function phoneManualChecks(p: PhoneNumber, lang: 'fr' | 'en' = 'fr'): Out
     {
       label: 'WhatsApp',
       url: `https://wa.me/${digits}`,
-      hint: t(lang, 'Depuis un téléphone d’enquête : photo de profil, statut, compte professionnel.', 'From an investigation phone: profile picture, status, business account.')
+      hint: t(
+        lang,
+        'La page web wa.me n’affiche ni nom ni photo. Depuis un téléphone d’enquête, enregistrez le numéro puis ouvrez la conversation sans écrire : photo de profil, « À propos » et compte professionnel, selon les réglages de confidentialité de la personne.',
+        'The wa.me web page shows neither name nor picture. From an investigation phone, save the number and open the chat without writing: profile picture, “About” and business account, depending on the person’s privacy settings.'
+      )
     },
     facebookIdentifyCheck(lang),
     {
       label: 'Telegram',
       url: `https://t.me/+${digits}`,
-      hint: t(lang, 'Nom et photo affichés si le compte accepte d’être trouvé par son numéro.', 'Name and picture shown if the account can be found by its number.')
+      hint: t(
+        lang,
+        'Le nom et la photo s’affichent dans l’application Telegram (pas sur la page web t.me), si le compte accepte d’être trouvé par son numéro : ouvrez le lien depuis un compte d’enquête.',
+        'The name and picture show up in the Telegram app (not on the t.me web page), if the account allows being found by its number: open the link from an investigation account.'
+      )
     }
   ]
   if (p.country) {
