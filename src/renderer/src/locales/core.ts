@@ -381,6 +381,7 @@ const fr = {
   },
   props: {
     selectedNode: 'Nœud sélectionné',
+    deleteNode: 'Supprimer le nœud (Suppr, Ctrl+Z pour annuler)',
     selectedEdge: 'Lien sélectionné',
     selection: 'Sélection',
     selectedCount_one: '{{count}} nœud',
@@ -1193,6 +1194,7 @@ const en: typeof fr = {
   },
   props: {
     selectedNode: 'Selected node',
+    deleteNode: 'Delete the node (Del, Ctrl+Z to undo)',
     selectedEdge: 'Selected link',
     selection: 'Selection',
     selectedCount_one: '{{count}} node',
