@@ -46,7 +46,7 @@ export function textLines(html: string): string[] {
     .replace(/<[^>]+>/g, ' ')
   return decodeEntities(text)
     .split('\n')
-    .map((l) => l.replace(/[\s ]+/g, ' ').trim())
+    .map((l) => l.replace(/[\s\u00a0]+/g, ' ').trim())
     .filter(Boolean)
 }
 

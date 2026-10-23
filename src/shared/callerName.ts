@@ -67,7 +67,7 @@ export const isCallerIdPlatform = (platformOrSite: string | null | undefined): b
 // Classement
 
 /** Emojis, drapeaux, joints et sélecteurs de variante. */
-const EMOJI = /\p{Extended_Pictographic}|[\u{1F1E6}-\u{1F1FF}]|‍|️|[☀-➿]/u
+const EMOJI = /\p{Extended_Pictographic}|[\u{1F1E6}-\u{1F1FF}]|\u200d|\ufe0f|[\u2600-\u27bf]/u
 
 /**
  * Mots qui font d'un nom une étiquette : liens familiaux ou affectifs, métiers et services,
@@ -106,7 +106,10 @@ const GENERIC_WORDS = new Set(
     'spam spammeur spammer arnaque arnaqueur escroc escroquerie scam scammer fraud fraude fraudster demarchage ' +
     'demarcheur prospection telemarketing telemarketer telemarketeur publicite pub pubs sondage robocall robot ' +
     'inconnu inconnue unknown anonyme anonymous masque private prive blocked bloque suspect suspicious harcelement ' +
-    'harceleur relou chiant pasrepondre nepasrepondre ' +
+    'harceleur relou chiant pasrepondre nepasrepondre callcenter ' +
+    // Annuaires allemands, espagnols et italiens (CleverDialer, Tellows...)
+    'unbekannt werbung betrug kostenfalle telefonterror umfrage inkasso gewinnspiel anonym privat schatz arbeit buro ' +
+    'desconocido publicidad estafa encuesta sconosciuto truffa pubblicita sondaggio ' +
     // Services clients, administrations et marques
     'sav service support hotline standard accueil reception info infos contact contacts commercial vente ventes ' +
     'amazon chronopost colissimo laposte dpd ups dhl fedex gls relais mondialrelay edf engie totalenergies gdf orange ' +
@@ -222,7 +225,7 @@ function pseudoShape(t: string): boolean {
 export function classifyCallerName(raw: string): CallerNameClass {
   const clean = String(raw ?? '')
     .normalize('NFC')
-    .replace(/[​‌‎‏⁠]/g, '')
+    .replace(/[\u200b\u200c\u200e\u200f\u2060]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
     .replace(/^["'«»“”‘’]+|["'«»“”‘’]+$/g, '')
