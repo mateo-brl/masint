@@ -2,6 +2,7 @@
 // d'affichage du site : aucun champ n'est garanti, rien ne doit lever d'exception.
 
 import type { OutEntity } from '@shared/modules'
+import { isDefaultAvatar } from '@shared/avatars'
 import type { PropValue } from '@shared/types'
 import { findPlatformByName, getPlatform, profileUrl } from '@shared/platforms'
 import { normalizePhone } from '@shared/detect'
@@ -210,6 +211,8 @@ const NAME_KEYS = ['displayName', 'display_name', 'fullName', 'full_name', 'full
 const USER_KEYS = ['username', 'login', 'handle', 'screenName', 'screen_name', 'uniqueId', 'unique_id', 'userName', 'slug']
 const ID_KEYS = ['userId', 'user_id', 'uid', 'uuid', 'gaiaId', 'id', 'accountId', 'account_id']
 const URL_KEYS = ['profileUrl', 'profile_url', 'accountUrl', 'contribUrl', 'url', 'link', 'permalink']
+/** Adresse d'une image (CDN de photos, extension d'image) plutôt que d'une page de profil. */
+const IMAGE_URL = /\.(jpe?g|png|gif|webp|avif)(\?|$)|(^|\/\/)[^/]*(fbcdn\.net|fbsbx\.com|cdninstagram\.com)\//i
 const PHOTO_KEYS = [
   'profileImage',
   'profileImageUrl',
@@ -424,8 +427,14 @@ export function accountEntities(profile: unknown, opts: AccountOpts): OutEntity[
   const platform = rosoPlatform(opts.site)
   const name = displayNameOf(p)
   const username = pick(p, ...USER_KEYS).replace(/^@/, '')
-  const urlRaw = pick(p, ...URL_KEYS)
-  const url = isHttpUrl(urlRaw) ? urlRaw : platform && username ? profileUrl(platform, username) : undefined
+  // Certains services (Facebook) mettent la photo de profil dans `url` : ce n'est pas l'adresse du
+  // profil, mais une photo de repli.
+  const links = URL_KEYS.map((k) => str(p[k])).filter(isHttpUrl)
+  const urlRaw = links.find((u) => !IMAGE_URL.test(u))
+  const url = urlRaw ?? (platform && username ? profileUrl(platform, username) : undefined)
+  const avatar = avatarOf(p) ?? links.find((u) => IMAGE_URL.test(u))
+  // Silhouette par défaut : aucune photo à analyser, mais le fait est noté.
+  const defaultAvatar = !!avatar && isDefaultAvatar(avatar)
   const emails = emailsOf(p)
   const phones = phonesOf(p)
   const location = locationOf(p, opts.lang)
@@ -452,6 +461,7 @@ export function accountEntities(profile: unknown, opts: AccountOpts): OutEntity[
     masked_emails: emails.masked.length ? emails.masked : undefined,
     masked_phones: phones.masked.length ? phones.masked : undefined,
     site: platform ? undefined : opts.site,
+    default_avatar: defaultAvatar || undefined,
     source: 'roso.info',
     roso_profile: Object.keys(p).length ? (flatProfile(p) as Record<string, unknown>) : undefined
   } as Record<string, PropValue>
@@ -464,7 +474,7 @@ export function accountEntities(profile: unknown, opts: AccountOpts): OutEntity[
       label,
       platform,
       data: dropEmpty(data),
-      image: avatarOf(p),
+      image: defaultAvatar ? undefined : avatar,
       linkLabel: opts.linkLabel ?? ll(opts.lang, `compte ${siteName(opts.site)}`, `${siteName(opts.site)} account`)
     }
   ]

@@ -4,30 +4,13 @@
 // moteur le télécharge à travers le proxy. Les avatars par défaut sont ignorés.
 
 import { defineModule, type InputEntity } from '@shared/modules'
+import { isDefaultAvatar } from '@shared/avatars'
 import { getPlatform } from '@shared/platforms'
 
 // Propriétés où des modules rangent l'URL d'une photo de profil.
 const AVATAR_KEYS = ['avatar', 'avatar_url', 'profile_image', 'profile_image_url', 'profile_picture', 'picture', 'photo_url', 'image', 'image_url']
 
-// Images génériques des plateformes (silhouette, initiales, identicône).
-const DEFAULT_AVATAR =
-  /default|placeholder|missing\.(png|jpe?g|gif)|no[_-]?avatar|noavatar|blank\.(png|jpe?g|gif)|anonymous|silhouette|\/embed\/avatars\/|user-default-pictures|fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb|abs\.twimg\.com\/sticky\/default|static\.licdn\.com\/[^ ]*ghost|telegram\.org\/img\//i
-
-/** Avatar par défaut ou généré (Gravatar `d=identicon`, `d=mp`...), sans intérêt pour l'enquête. */
-export function isDefaultAvatar(url: string): boolean {
-  if (DEFAULT_AVATAR.test(url)) return true
-  try {
-    const u = new URL(url)
-    if (/(^|\.)gravatar\.com$/i.test(u.hostname)) {
-      // `d=404` : Gravatar répond 404 sans vraie photo, l'image jointe est donc réelle.
-      const d = u.searchParams.get('d') ?? u.searchParams.get('default')
-      return !!d && d !== '404'
-    }
-  } catch {
-    return true
-  }
-  return false
-}
+export { isDefaultAvatar }
 
 /** URL de la photo de profil : origine de l'image jointe, sinon propriété du compte. */
 export function avatarUrl(input: InputEntity): string | null {
