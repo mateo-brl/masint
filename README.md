@@ -34,24 +34,38 @@ et de [roso.info](https://roso.info) pour les recherches, avec une priorité : t
 
 - **Graphe d'enquête** : entités, liens annotés, textes, images, cartes et dessins à main levée
   sur le même canevas ; dispositions automatiques, styles, annuler et rétablir, raccourcis
-  clavier.
+  clavier, palette de commandes (Ctrl+K). Fluide jusqu'à plusieurs milliers de nœuds.
+- **Analyse** : plus court chemin entre deux nœuds, nœuds pivots, communautés, filtres et
+  calques, curseur temporel, vue Tableau avec actions en lot.
+- **Provenance** : chaque nœud, lien et propriété garde les modules qui l'ont trouvé et la date ;
+  les résultats confirmés par plusieurs sources sont signalés, les hypothèses vont dans
+  « À vérifier », et une cotation de fiabilité (A à F, 1 à 6) peut être posée.
+- **Enrichissement en chaîne** (facultatif) : les comptes trouvés sont enrichis à leur tour,
+  dans une profondeur, un budget et une liste d'arrêt fixés.
+- **Preuves** : capture pleine page et archive MHTML des pages consultées, horodatées et
+  empreintées (SHA-256), et **journal d'activité** chaîné dont l'intégrité se vérifie.
+- **Corrélation entre enquêtes** : une même entité retrouvée dans une autre enquête est
+  signalée, recherche dans le contenu de toutes les enquêtes (désactivable).
 - **Catalogue de plus de 370 icônes** de types d'entités et de plateformes (réseaux sociaux,
   messageries, opérateurs, hébergeurs, banques, cryptomonnaies...), en 14 catégories.
-- **Modules d'enrichissement** classés par famille : téléphone, email, pseudo, personne,
-  domaine, IP, web, crypto, finance, entreprise, localisation, image, messagerie, réseaux
-  sociaux, forensic (hashes, CVE, IOC). Vérifications de comptes silencieuses, recherche de
-  pseudo sur des centaines de sites, DNS, WHOIS / RDAP, certificats, fuites de données,
+- **Plus de 200 modules d'enrichissement** classés par famille : téléphone, email, pseudo,
+  personne, domaine, IP, web, crypto, finance, entreprise, localisation, image, messagerie,
+  réseaux sociaux, forensic (hashes, CVE, IOC). Vérifications de comptes silencieuses,
+  recherche de pseudo sur environ 700 sites (7 000 à la demande), DNS, WHOIS / RDAP,
+  certificats, fuites de données, sanctions, registres publics français et européens,
   géolocalisation, EXIF... La liste complète est dans
   [docs/modules-list.md](docs/modules-list.md).
 - **Connecteur roso.info**, à la demande uniquement, avec votre propre compte et vos crédits
   (voir [docs/roso.md](docs/roso.md)).
 - **Proxy et Tor** : toutes les requêtes des modules et les tuiles de carte passent par le
   réseau choisi (direct, proxy HTTP, SOCKS5 ou Tor), DNS compris (DNS-over-HTTPS). Routage
-  ajustable module par module.
+  ajustable module par module, un circuit Tor par enquête, navigateur d'enquête intégré
+  (WebRTC bloqué), mode passif qui écarte les modules qui contactent la cible.
 - **Carte** des entités géolocalisées et **frise chronologique** des dates trouvées.
 - **Notes** d'enquête en Markdown.
+- **Import** de listes (CSV, texte ou collage) avec association des colonnes aux types.
 - **Exports** : image PNG ou SVG du graphe, JSON, CSV (nœuds et liens), page HTML interactive
-  autonome.
+  autonome, GraphML, GEXF (Gephi) et CSV pour Maltego.
 - **Rapport PDF** prêt à imprimer : synthèse, capture du graphe, fiches des entités, notes et
   traçabilité des modules.
 - **Archives `.masint`** : une enquête complète (pièces jointes comprises) dans un seul
