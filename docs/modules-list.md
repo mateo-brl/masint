@@ -3,14 +3,14 @@
 <!-- Fichier généré : ne pas modifier à la main. -->
 <!-- Régénérer avec : node build/scripts/list-modules.mjs > docs/modules-list.md -->
 
-210 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
+212 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
 
 Légende des remarques : **à la demande** (lancé seulement sur demande explicite, service à crédits), **bruyant** (peut alerter la personne recherchée), **expérimental** (résultats à vérifier). Une clé suivie de « (facultative) » améliore les résultats sans être obligatoire.
 
 | Catégorie | Modules |
 | --- | ---: |
-| [Téléphone](#phone) | 11 |
-| [Email](#email) | 39 |
+| [Téléphone](#phone) | 12 |
+| [Email](#email) | 40 |
 | [Pseudo](#username) | 3 |
 | [Personne](#person) | 13 |
 | [Domaine](#domain) | 17 |
@@ -40,6 +40,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `phone.hlrlookup` | Statut HLR (HLR Lookup) | `phone` | `hlrlookup`, `hlrlookup-secret` | à la demande, expérimental |
 | `phone.info` | Analyse du numéro | `phone` |  |  |
 | `phone.leakcheck` | Fuites de données (LeakCheck) | `phone` |  | expérimental |
+| `phone.leakcheck_pro` | Fuites de données (LeakCheck Pro) | `phone` | `leakcheck` | à la demande |
 | `phone.links` | Signalements et recherches manuelles (téléphone) | `phone` |  |  |
 | `phone.microsoft` | Compte Microsoft personnel | `phone` |  |  |
 | `phone.sleeper` | Compte Sleeper | `phone` |  | expérimental |
@@ -73,6 +74,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `email.insightly` | Compte Insightly | `email` |  |  |
 | `email.lastpass` | Compte LastPass | `email` |  |  |
 | `email.leakcheck` | Fuites de données (LeakCheck) | `email` |  |  |
+| `email.leakcheck_pro` | Fuites de données (LeakCheck Pro) | `email` | `leakcheck` | à la demande |
 | `email.links` | Recherches manuelles (email) | `email` |  |  |
 | `email.mailru` | Boîte Mail.ru existante | `email` |  |  |
 | `email.microsoft` | Compte Microsoft personnel | `email` |  |  |
