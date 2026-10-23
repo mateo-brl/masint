@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { detectEntity } from '@shared/detect'
 import { searchUrlFor } from '@shared/searchEngines'
 import { getEntityType } from '@shared/entityTypes'
-import type { LinkContext, PropValue, Suggestion } from '@shared/types'
+import { propertyLabel } from '@shared/propertyLabels'
+import { findingKey, type AssistFinding, type AssistResult, type LinkContext, type PropValue, type Suggestion } from '@shared/types'
 import { api, openLink } from '../../lib/api'
 import { errorMessage } from '../../lib/errors'
 import { useLang } from '../../lib/i18n'
@@ -124,7 +125,7 @@ function ManualRow({ s }: { s: Suggestion }): React.JSX.Element {
         <RowButton
           icon={assist?.running ? 'LoaderCircle' : 'ScanSearch'}
           label={assist?.running ? t('assist.running') : t('assist.run')}
-          title={t('assist.runTitle')}
+          title={s.flow ? t('assist.flow.runTitle') : t('assist.runTitle')}
           strong
           onClick={() => void useAssist.getState().run(s.id)}
         />
@@ -160,6 +161,7 @@ function AssistResults({ s }: { s: Suggestion }): React.JSX.Element | null {
   const entry = useAssist((st) => st.entries[s.id])
   const r = entry?.result
   if (!r) return null
+  if (r.extracted) return <FlowResults s={s} r={r} added={entry.added} at={entry.at} />
   if (r.status !== 'ok')
     return <div className="mt-1 pl-[22px] text-[11px] text-muted">{r.status === 'cancelled' ? t('assist.cancelled') : r.status === 'timeout' ? t('assist.timeout') : r.error}</div>
   const list = r.matches.filter((m) => !entry.added.includes(m.url))
@@ -206,6 +208,97 @@ function AssistResults({ s }: { s: Suggestion }): React.JSX.Element | null {
           </div>
         </div>
       ))}
+    </div>
+  )
+}
+
+/**
+ * Ce qu'un parcours scripté a lu (Facebook « Retrouvez votre compte », fiche Tellows) : chaque
+ * élément s'ajoute d'un clic, qui vaut validation. Un nom devient un nœud relié à celui de la
+ * recherche ; un contact masqué rejoint ses indices et relance leur recoupement.
+ */
+function FlowResults({ s, r, added, at }: { s: Suggestion; r: AssistResult; added: string[]; at?: number }): React.JSX.Element {
+  const { t } = useTranslation()
+  const lang = useApp((st) => st.settings?.lang ?? 'fr')
+  const ex = r.extracted!
+  const left = (kind: AssistFinding['kind'], list: string[]): string[] => list.filter((value) => !added.includes(findingKey({ kind, value })))
+  const add = (finding: AssistFinding): void => {
+    useAssist
+      .getState()
+      .addFinding(s.id, finding)
+      .catch((e: unknown) => useApp.getState().toast('error', errorMessage(e)))
+  }
+  const shown = ex.names.length + ex.maskedNames.length
+  const head =
+    r.status === 'ok'
+      ? ex.state === 'candidates' && !shown
+        ? t('assist.flow.state.candidatesNoName')
+        : t(`assist.flow.state.${ex.state}`, { count: shown })
+      : r.status === 'timeout'
+        ? t('assist.timeout')
+        : (r.error ?? '')
+  const props = ex.properties && !added.includes(findingKey({ kind: 'properties', value: '' })) ? Object.entries(ex.properties) : []
+  const associated = new Set(Object.values(ex.photoOf ?? {}))
+  const rows: Array<{ kind: AssistFinding['kind']; icon: string; list: string[]; button: string; title: string }> = [
+    { kind: 'name', icon: 'User', list: left('name', ex.names), button: t('assist.add'), title: t('assist.flow.addName') },
+    { kind: 'username', icon: 'AtSign', list: left('username', ex.usernames), button: t('assist.add'), title: t('assist.flow.addUsername') },
+    { kind: 'masked_name', icon: 'EyeOff', list: left('masked_name', ex.maskedNames), button: t('assist.flow.addHint'), title: t('assist.flow.addHintTitle') },
+    { kind: 'masked_email', icon: 'Mail', list: left('masked_email', ex.maskedEmails), button: t('assist.flow.addHint'), title: t('assist.flow.addHintTitle') },
+    { kind: 'masked_phone', icon: 'Phone', list: left('masked_phone', ex.maskedPhones), button: t('assist.flow.addHint'), title: t('assist.flow.addHintTitle') }
+  ]
+  return (
+    <div className="mt-1.5 flex flex-col gap-1 pl-[22px]">
+      {(at || r.captureId) && (
+        <div className="flex flex-wrap items-center gap-x-2 text-[10.5px] text-faint">
+          {at && <span>{t('assist.savedAt', { date: new Date(at).toLocaleString() })}</span>}
+          {r.captureId && (
+            <span className="flex items-center gap-1">
+              <Icon name="Camera" size={11} /> {t('assist.captured')}
+            </span>
+          )}
+        </div>
+      )}
+      <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted">
+        {head}
+        {ex.state === 'none' && <RowButton label={t('review.nothingShort')} title={t('review.nothing')} onClick={() => void resolve(s.id, 'checked')} />}
+      </div>
+      {ex.note && <div className="text-[11px] [overflow-wrap:anywhere] text-muted">{ex.note}</div>}
+      {rows.flatMap((row) =>
+        row.list.map((value) => {
+          const photo = row.kind === 'name' ? ex.photoOf?.[value] : undefined
+          return (
+            <div key={`${row.kind}:${value}`} className="flex items-center gap-1.5 rounded-md bg-panel-2 px-2 py-1">
+              <Icon name={row.icon} size={12} className="shrink-0 text-faint" />
+              <span className="min-w-0 flex-1 truncate text-[12px]" title={value}>
+                {value}
+              </span>
+              {photo && <RowButton icon="Image" title={t('assist.flow.photo')} onClick={() => openLink(photo, ctxOf(s))} />}
+              <RowButton icon="Plus" label={row.button} title={row.title} strong onClick={() => add({ kind: row.kind, value, ...(photo ? { photo } : {}) })} />
+            </div>
+          )
+        })
+      )}
+      {ex.photos
+        .filter((p) => !associated.has(p))
+        .map((p) => (
+          <button key={p} onClick={() => openLink(p, ctxOf(s))} className="flex items-center gap-1 self-start text-[11px] text-muted hover:text-fg" title={p}>
+            <Icon name="Image" size={12} /> {t('assist.flow.photo')}
+          </button>
+        ))}
+      {props.length > 0 && (
+        <div className="rounded-md bg-panel-2 px-2 py-1.5">
+          {props.map(([k, v]) => (
+            <div key={k} className="text-[11px] [overflow-wrap:anywhere] text-muted">
+              <span className="text-fg">{propertyLabel(k, lang)}</span>
+              {lang === 'fr' ? ' : ' : ': '}
+              {Array.isArray(v) ? v.join(', ') : String(v)}
+            </div>
+          ))}
+          <div className="mt-1 flex justify-end">
+            <RowButton icon="Plus" label={t('assist.flow.addProperties')} title={t('assist.flow.addPropertiesTitle')} strong onClick={() => add({ kind: 'properties', value: '' })} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

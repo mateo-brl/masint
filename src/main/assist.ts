@@ -7,7 +7,8 @@
 
 import { app, BrowserWindow, session, type ProxyConfig, type WebContents } from 'electron'
 import { browserLanguages } from '@shared/network'
-import type { AssistResult, Settings } from '@shared/types'
+import type { AssistFlow, AssistResult, Settings } from '@shared/types'
+import { FACEBOOK_IDENTIFY_URL, facebookExtract, runFacebookIdentify, type FlowPage } from './flows/facebook'
 export { needlesFor } from '@shared/needles'
 
 /** Partition du navigateur intégré : recherche assistée et navigateur d'enquête. */
@@ -64,21 +65,33 @@ export function applyAssistIdentity(s: Settings): void {
   assistSession().setUserAgent(s.userAgent, browserLanguages(s.lang))
 }
 
-// Script exécuté dans la page : accepte ou refuse un bandeau de consentement courant et dit
-// si la page attend une action (captcha, vérification anti-robot, connexion).
-export const INSPECT = `(() => {
+/**
+ * Script exécuté dans la page : dit si elle attend une action (captcha, vérification anti-robot,
+ * connexion) et, avec `consent`, refuse (à défaut accepte) un bandeau de consentement courant,
+ * dont celui de Facebook (« Refuser les cookies optionnels »). Sans `consent`, aucun clic.
+ */
+export function inspectScript(consent: boolean): string {
+  return `(() => {
   const text = (document.body?.innerText || '').slice(0, 20000)
-  const buttons = [...document.querySelectorAll('button, [role=button], input[type=submit]')]
-  const label = (b) => (b.innerText || b.value || b.getAttribute('aria-label') || '').trim().toLowerCase()
-  const refuse = buttons.find((b) => /^(tout refuser|refuser tout|refuser|reject all|decline all|continuer sans accepter)$/.test(label(b)))
-  const accept = buttons.find((b) => /^(tout accepter|accepter tout|accepter|accept all|j'accepte|i agree|agree)$/.test(label(b)))
   let consent = false
-  if (refuse || accept) { (refuse || accept).click(); consent = true }
+  if (${consent}) {
+    const buttons = [...document.querySelectorAll('button, [role=button], input[type=submit]')]
+    const label = (b) => (b.innerText || b.value || b.getAttribute('aria-label') || '').trim().toLowerCase()
+    const refuse = buttons.find((b) => /^(tout refuser|refuser tout|refuser|reject all|decline all|continuer sans accepter|refuser les cookies optionnels|decline optional cookies|autoriser uniquement les cookies essentiels|only allow essential cookies)$/.test(label(b)))
+    const accept = buttons.find((b) => /^(tout accepter|accepter tout|accepter|accept all|j'accepte|i agree|agree)$/.test(label(b)))
+    if (refuse || accept) { (refuse || accept).click(); consent = true }
+  }
   const captcha = !!document.querySelector('iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="challenges.cloudflare"], #captcha, .g-recaptcha, [id*="captcha" i]')
-    || /unusual traffic|trafic inhabituel|not a robot|pas un robot|verify you are human|vérifiez que vous êtes|checking your browser|vérification de votre navigateur|access denied|accès refusé|are you a human|êtes-vous un humain/i.test(text)
+    || /unusual traffic|trafic inhabituel|not a robot|pas un robot|verify you are human|vérifiez que vous êtes|checking your browser|vérification de votre navigateur|access denied|accès refusé|are you a human|êtes-vous un humain|vérification de sécurité en cours|performing security verification|n[’']êtes pas un bot|you are not a bot|checking if the site connection is secure/i.test(text)
+    || /^(just a moment|un instant|einen moment|un momento)/i.test(document.title || '')
   const login = [...document.querySelectorAll('input[type=password]')].some((i) => i.offsetParent !== null)
   return { ready: document.readyState === 'complete', consent, captcha, login, title: document.title, length: text.length, links: document.querySelectorAll('a[href]').length }
 })()`
+}
+
+export const INSPECT = inspectScript(true)
+/** Inspection sans aucun clic, pour les parcours scriptés une fois la valeur saisie. */
+export const INSPECT_PASSIVE = inspectScript(false)
 
 /** Script d'extraction : liens et blocs de la page qui contiennent l'une des valeurs cherchées. */
 export function extractScript(needles: { text: string[]; digits: string[] }): string {
@@ -284,5 +297,92 @@ export async function assistedSearch(opts: {
     return done({ status: 'ok', matches: Array.isArray(matches) ? matches : [], ...(captureId ? { captureId } : {}) })
   } catch (e) {
     return done({ status: 'error', matches: [], error: e instanceof Error ? e.message : String(e) })
+  }
+}
+
+/** Page de la fenêtre d'assistance pour un parcours scripté (voir `FlowPage`). */
+function flowPage(win: BrowserWindow, isClosed: () => boolean, title: string): FlowPage {
+  return {
+    run: async <T>(script: string): Promise<T | null> => {
+      if (isClosed()) return null
+      try {
+        return (await win.webContents.executeJavaScript(script)) as T
+      } catch {
+        return null
+      }
+    },
+    type: async (text) => {
+      if (isClosed()) return
+      await win.webContents.insertText(text)
+      await wait(300)
+    },
+    enter: async () => {
+      if (isClosed()) return
+      for (const type of ['keyDown', 'char', 'keyUp'] as const) win.webContents.sendInputEvent({ type, keyCode: type === 'char' ? '\r' : 'Enter' })
+    },
+    show: () => {
+      if (isClosed() || win.isVisible()) return
+      win.setTitle(`${title} : terminez la vérification, la lecture reprendra seule`)
+      win.show()
+      win.focus()
+    },
+    closed: isClosed,
+    sleep: wait
+  }
+}
+
+const FLOW_ERRORS: Record<string, { fr: string; en: string }> = {
+  facebook_form: { fr: 'Formulaire de recherche de Facebook introuvable', en: 'Facebook search form not found' },
+  facebook_typing: { fr: 'Saisie impossible dans le formulaire de Facebook', en: 'Could not type into the Facebook form' }
+}
+
+/**
+ * Recherche assistée scriptée (`flow` d'une recherche manuelle) : la page est chargée dans la
+ * fenêtre d'assistance (proxy ou Tor, session persistante, fenêtre affichée pour un captcha),
+ * puis le parcours lit ce qui sert l'enquête, sans aucune action qui préviendrait la cible.
+ */
+export async function assistedFlow(opts: {
+  flow: AssistFlow
+  /** Valeur cherchée : numéro E.164 ou email. */
+  value: string
+  url: string
+  parent: BrowserWindow | null
+  userAgent: string
+  title: string
+  lang: 'fr' | 'en'
+  capture?: (wc: WebContents) => Promise<string | null>
+}): Promise<AssistResult> {
+  const start = opts.flow === 'facebook_identify' ? FACEBOOK_IDENTIFY_URL : opts.url
+  const { win, isClosed } = createAssistWindow(opts)
+  const cancelled: AssistResult = { status: 'cancelled', url: start, title: '', matches: [] }
+  const done = async (r: Omit<AssistResult, 'url' | 'title'>): Promise<AssistResult> => {
+    if (isClosed()) return cancelled
+    // Page lue conservée comme preuve (réglage « Capturer les pages consultées »).
+    const captureId = opts.capture ? await opts.capture(win.webContents).catch(() => null) : null
+    if (isClosed()) return cancelled
+    const res: AssistResult = { ...r, url: win.webContents.getURL(), title: win.webContents.getTitle(), ...(captureId ? { captureId } : {}) }
+    win.destroy()
+    return res
+  }
+  try {
+    const loaded = await settlePage(win, isClosed, start, opts.title)
+    if (loaded === 'cancelled') return cancelled
+    if (loaded === 'timeout') return await done({ status: 'timeout', matches: [] })
+    if (opts.flow === 'facebook_identify') {
+      const outcome = await runFacebookIdentify(flowPage(win, isClosed, opts.title), opts.value, (page) =>
+        page.run<{ captcha: boolean }>(INSPECT_PASSIVE)
+      )
+      if (outcome.status === 'cancelled') return cancelled
+      const extracted = facebookExtract(outcome.read, opts.value)
+      const code = outcome.error?.split(':')[0]
+      const error = code ? (FLOW_ERRORS[code]?.[opts.lang] ?? outcome.error) : undefined
+      return await done({ status: outcome.status, matches: [], extracted, ...(error ? { error } : {}) })
+    }
+    return await done({ status: 'error', matches: [], error: `flow ${opts.flow}` })
+  } catch (e) {
+    if (isClosed()) return cancelled
+    const res: AssistResult = { status: 'error', url: start, title: '', matches: [], error: e instanceof Error ? e.message : String(e) }
+    win.destroy()
+    return res
   }
 }

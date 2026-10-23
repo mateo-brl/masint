@@ -5,6 +5,7 @@
 import { defineModule, type ModuleContext, type ModuleOutput, type OutManualCheck } from '@shared/modules'
 import type { PropValue } from '@shared/types'
 import type { PhoneNumber } from 'libphonenumber-js/max'
+import { facebookIdentifyCheck } from '../../flows/facebook'
 import { decodeEntities } from '../web/_html'
 import { parsePhone } from './_phone'
 
@@ -43,6 +44,7 @@ export function phoneManualChecks(p: PhoneNumber, lang: 'fr' | 'en' = 'fr'): Out
       url: `https://wa.me/${digits}`,
       hint: t(lang, 'Depuis un téléphone d’enquête : photo de profil, statut, compte professionnel.', 'From an investigation phone: profile picture, status, business account.')
     },
+    facebookIdentifyCheck(lang),
     {
       label: 'Telegram',
       url: `https://t.me/+${digits}`,
@@ -154,8 +156,8 @@ export default defineModule({
   id: 'phone.links',
   name: { fr: 'Signalements et recherches manuelles (téléphone)', en: 'Reports and manual searches (phone)' },
   description: {
-    fr: "Lit les signalements publics du numéro (doisjerepondre.fr, numéros français) : avis dominant, nombre d'évaluations, type d'appel et derniers commentaires, seulement s'il a été signalé. Propose dans « À vérifier » les recherches impossibles à automatiser : Google (toutes les écritures), WhatsApp, Telegram, Truecaller, Sync.me, Epieos, et pour la France PagesJaunes et Tellows.",
-    en: 'Reads public reports about the number (doisjerepondre.fr, French numbers): overall rating, number of reviews, call type and latest comments, only when it has been reported. Lists in "To review" the searches that cannot be automated: Google (all spellings), WhatsApp, Telegram, Truecaller, Sync.me, Epieos, and for France PagesJaunes and Tellows.'
+    fr: "Lit les signalements publics du numéro (doisjerepondre.fr, numéros français) : avis dominant, nombre d'évaluations, type d'appel et derniers commentaires, seulement s'il a été signalé. Propose dans « À vérifier » les recherches impossibles à automatiser : Google (toutes les écritures), WhatsApp, Facebook (retrouver le compte, lu par la recherche assistée sans envoi de code), Telegram, Truecaller, Sync.me, Epieos, et pour la France PagesJaunes et Tellows.",
+    en: 'Reads public reports about the number (doisjerepondre.fr, French numbers): overall rating, number of reviews, call type and latest comments, only when it has been reported. Lists in "To review" the searches that cannot be automated: Google (all spellings), WhatsApp, Facebook (find the account, read by the assisted search without sending any code), Telegram, Truecaller, Sync.me, Epieos, and for France PagesJaunes and Tellows.'
   },
   category: 'phone',
   inputTypes: ['phone'],

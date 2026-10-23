@@ -57,6 +57,12 @@ describe('phone.links', () => {
     expect(byLabel['PagesJaunes (annuaire inversé)']).toContain('quoiqui=0144442222')
     expect(byLabel.Truecaller).toBe('https://www.truecaller.com/search/fr/0144442222')
     expect(byLabel.Tellows).toBe('https://www.tellows.fr/num/0144442222')
+    // Facebook « retrouver le compte » : parcours scripté, sans envoi de code.
+    expect(out.manual!.find((m) => m.flow === 'facebook_identify')).toMatchObject({
+      label: 'Facebook : retrouver le compte',
+      url: 'https://www.facebook.com/login/identify/?ctx=recover',
+      hint: expect.stringMatching(/aucun code n’est envoyé/)
+    })
     // Doublons de Google retirés.
     expect(Object.keys(byLabel)).not.toContain('Bing')
     expect(Object.keys(byLabel)).not.toContain('DuckDuckGo')

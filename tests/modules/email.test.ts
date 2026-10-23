@@ -124,8 +124,10 @@ describe('email.links', () => {
     const urls = out.manual!.map((m) => m.url)
     expect(urls).toContain('https://www.google.com/search?q=%22john%40example.com%22')
     expect(urls.some((u) => u.startsWith('https://epieos.com/'))).toBe(true)
-    expect(out.manual!.map((m) => m.label)).toEqual(['Google', 'Epieos', 'Intelligence X'])
+    expect(out.manual!.map((m) => m.label)).toEqual(['Google', 'Epieos', 'Facebook : retrouver le compte', 'Intelligence X'])
     expect(out.manual!.every((m) => m.hint)).toBe(true)
+    // Facebook : parcours scripté de la recherche assistée, jamais un envoi de code.
+    expect(out.manual!.find((m) => m.flow)).toMatchObject({ flow: 'facebook_identify', url: 'https://www.facebook.com/login/identify/?ctx=recover' })
   })
 })
 

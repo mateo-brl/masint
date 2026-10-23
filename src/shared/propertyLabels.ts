@@ -125,6 +125,7 @@ export const PROPERTY_LABELS: Record<string, { fr: string; en: string }> = {
   business_email_hidden: { fr: 'Email professionnel (masqué)', en: 'Business email (hidden)' },
   masked_emails: { fr: 'Emails masqués', en: 'Masked emails' },
   masked_phones: { fr: 'Téléphones masqués', en: 'Masked phone numbers' },
+  masked_names: { fr: 'Noms masqués (initiales)', en: 'Masked names (initials)' },
   hint_deductions: { fr: 'Déductions des indices masqués', en: 'Masked hint deductions' },
   hint_email_domains: { fr: 'Fournisseurs email probables', en: 'Likely email providers' },
   hint_warnings: { fr: 'Avertissements (indices masqués)', en: 'Warnings (masked hints)' },

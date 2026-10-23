@@ -173,6 +173,13 @@ dans la liste « À vérifier » de la fiche, où l'enquêteur valide ou écarte
   intégré, session persistante, proxy et Tor respectés ; la fenêtre ne s'affiche que pour un
   captcha ou une connexion) et ne garde que les résultats qui contiennent la valeur, ou ouvre
   la page lui-même, puis note « rien trouvé » ou ce qu'il a trouvé.
+- `manual: [{ ..., flow }]` : recherche manuelle faite par un **parcours scripté** de la
+  recherche assistée plutôt que par l'extraction des liens. `facebook_identify` saisit le numéro
+  ou l'email sur la page « Retrouvez votre compte » de Facebook et lit les comptes candidats et
+  les contacts de récupération masqués, sans jamais cliquer sur « Continuer » (aucun code
+  envoyé) ; `tellows` lit la fiche Tellows d'un numéro. Ce qui est lu s'affiche dans « À
+  vérifier » : un nom s'ajoute au graphe d'un clic, un contact masqué rejoint les indices du nœud
+  et relance leur recoupement.
 - `followUp: true` sur un module : il est relancé à la fin d'une tâche quand les résultats des
   autres modules le rendent applicable (ex. recoupement des indices masqués).
 
