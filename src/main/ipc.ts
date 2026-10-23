@@ -13,7 +13,8 @@ import { engineOrder, googleQuery, startpageUrl } from '@shared/searchEngines'
 import { changedEdgeFields, changedNodeFields, edgeRefs, isLayoutOnly, nodeRef, nodeRefs, systemUser, type ActivityLog } from './activity'
 import { buildArchive, duplicateInvestigation, importArchive } from './archive'
 import { mergeNodes } from './merge'
-import { applyAssistIdentity, assistedSearch, assistSession, engineBlocked, markEngineBlocked, needlesFor } from './assist'
+import { applyAssistIdentity, assistedFlow, assistedSearch, assistSession, engineBlocked, markEngineBlocked, needlesFor } from './assist'
+import { flowValue } from './flows'
 import { openInvestigationBrowser, openLink, type PageCapture } from './browser'
 import type { CaptureService } from './capture'
 import { crossReferences, globalSearch } from './correlation'
@@ -357,6 +358,14 @@ export function registerIpc(deps: IpcDeps): void {
           (await captures.capture(wc, { investigationId: s.investigationId, nodeId: s.nodeId, via: 'assist', requestedUrl: s.url! })).id
       : undefined
     const { searchEngine, lang, userAgent } = settings.get()
+    // Parcours scripté (Facebook « Retrouvez votre compte », fiche Tellows) : lecture dédiée.
+    if (s.flow) {
+      const value = flowValue(s.flow, node.type, node.label)
+      if (!value) return { status: 'error' as const, url: s.url, title: '', matches: [], error: lang === 'fr' ? 'Valeur inexploitable pour cette recherche' : 'Value not usable for this search' }
+      const result = await assistedFlow({ flow: s.flow, value, url: s.url, parent: getWindow(), userAgent, title: `MASINT · ${s.label}`, lang, capture })
+      if (result.status !== 'cancelled') repo.setSuggestionAssist(id, { result, added: [], at: Date.now() })
+      return result
+    }
     const base = { needles: needlesFor(node.type, node.label), parent: getWindow(), userAgent, title: `MASINT · ${s.label}`, capture }
     // Recherche Google : moteurs essayés dans l'ordre du réglage. Un moteur qui demande une
     // vérification est sauté pendant une heure, sauf s'il est le dernier recours (sa fenêtre
@@ -386,6 +395,7 @@ export function registerIpc(deps: IpcDeps): void {
     const stored = repo.getSuggestion(id)?.assist
     if (stored && !stored.added.includes(url)) repo.setSuggestionAssist(id, { ...stored, added: [...stored.added, url] })
   })
+  handle('assist:addFinding', (id, finding) => engine.addAssistFinding(id, finding))
   handle('modules:applicable', (nodeId) => {
     const node = repo.getNode(nodeId)
     return node ? engine.applicable(node) : { auto: [], accepted: [] }

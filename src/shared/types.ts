@@ -298,6 +298,50 @@ export interface ChainProgress {
   budget: boolean
 }
 
+/**
+ * Parcours scripté d'une recherche assistée, à la place de l'extraction des liens :
+ * - `facebook_identify` : page « Retrouvez votre compte » de Facebook, la valeur est saisie puis
+ *   la page de résultats est lue (candidats, contacts de récupération masqués), sans jamais
+ *   demander l'envoi d'un code ;
+ * - `tellows` : lecture de la fiche Tellows d'un numéro (score, recherches, types d'appel, noms).
+ */
+export type AssistFlow = 'facebook_identify' | 'tellows'
+
+/** Ce qu'un parcours scripté a lu sur la page, proposé à l'enquêteur dans « À vérifier ». */
+export interface AssistExtracted {
+  /** Page lue : candidats, options de récupération, fiche, aucun compte, ou page non reconnue. */
+  state: 'candidates' | 'options' | 'profile' | 'none' | 'unknown'
+  /** Noms complets affichés (candidats Facebook, noms d'appelant pris pour des personnes). */
+  names: string[]
+  /** Noms masqués ou initiales (« S... Y... »). */
+  maskedNames: string[]
+  /** Pseudos possibles (noms d'appelant Tellows qui ont la forme d'un pseudo). */
+  usernames: string[]
+  /** Contacts de récupération masqués (« j****@g***.com », « +33 ••• •• •• 03 »). */
+  maskedEmails: string[]
+  maskedPhones: string[]
+  /** Photos de profil (hors silhouettes par défaut). */
+  photos: string[]
+  /** Photo de chaque nom, quand la page les associe (candidats Facebook). */
+  photoOf?: Record<string, string>
+  /** Propriétés lues sur la page (Tellows : score, recherches, types d'appel...). */
+  properties?: Record<string, PropValue>
+  /** Explication à afficher (fiche d'un autre numéro, page non reconnue). */
+  note?: string
+}
+
+/** Élément lu par un parcours scripté, ajouté par l'enquêteur (voir `Engine.addAssistFinding`). */
+export interface AssistFinding {
+  kind: 'name' | 'username' | 'masked_name' | 'masked_email' | 'masked_phone' | 'properties'
+  /** Valeur lue ; vide pour `properties` (toutes les propriétés de la fiche lue). */
+  value: string
+  /** Photo du candidat, jointe au nœud créé pour un nom. */
+  photo?: string
+}
+
+/** Clé d'un élément ajouté, gardée dans `StoredAssist.added` pour le masquer de la liste. */
+export const findingKey = (f: Pick<AssistFinding, 'kind' | 'value'>): string => `${f.kind}:${f.value}`
+
 /** Résultat d'une recherche assistée (navigateur intégré). */
 export interface AssistResult {
   status: 'ok' | 'cancelled' | 'timeout' | 'error'
@@ -310,6 +354,8 @@ export interface AssistResult {
   /** Moteur réellement utilisé pour une recherche Google, et repli sur Startpage après un captcha. */
   engine?: 'google' | 'startpage'
   fallback?: boolean
+  /** Parcours scripté (`flow` de la recherche manuelle) : ce qui a été lu sur la page. */
+  extracted?: AssistExtracted
 }
 
 /** Dernier résultat d'une recherche assistée, gardé en base avec la recherche manuelle. */
@@ -341,6 +387,8 @@ export interface Suggestion {
   status: 'pending' | 'accepted' | 'rejected' | 'checked'
   /** Dernière recherche assistée de cette recherche manuelle. */
   assist?: StoredAssist | null
+  /** Recherche manuelle faite par un parcours scripté (voir `AssistFlow`). */
+  flow?: AssistFlow
   createdAt: number
   updatedAt: number
 }

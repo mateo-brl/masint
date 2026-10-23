@@ -3,6 +3,7 @@
 // le graphe. Les commits GitHub et la validité de la boîte sont vérifiés par d'autres modules.
 
 import { defineModule, type OutManualCheck } from '@shared/modules'
+import { facebookIdentifyCheck } from '../../flows/facebook'
 import { requireEmail } from './_lib'
 
 const q = encodeURIComponent
@@ -22,6 +23,7 @@ export function emailManualChecks(email: string, lang: 'fr' | 'en' = 'fr'): OutM
       url: `https://epieos.com/?q=${q(email)}&t=email`,
       hint: fr ? 'Compte Google (nom, photo, avis Maps) et services où l’adresse est inscrite.' : 'Google account (name, picture, Maps reviews) and services the address is registered with.'
     },
+    facebookIdentifyCheck(lang),
     {
       label: 'Intelligence X',
       url: `https://intelx.io/?s=${q(email)}`,
@@ -34,8 +36,8 @@ export default defineModule({
   id: 'email.links',
   name: { fr: 'Recherches manuelles (email)', en: 'Manual searches (email)' },
   description: {
-    fr: "Propose dans « À vérifier » les recherches impossibles à automatiser sur l'adresse exacte : Google, Epieos, Intelligence X. Aucune requête n'est envoyée.",
-    en: 'Lists in "To review" the searches on the exact address that cannot be automated: Google, Epieos, Intelligence X. No request is sent.'
+    fr: "Propose dans « À vérifier » les recherches impossibles à automatiser sur l'adresse exacte : Google, Epieos, Facebook (retrouver le compte, lu par la recherche assistée sans envoi de code), Intelligence X. Aucune requête n'est envoyée.",
+    en: 'Lists in "To review" the searches on the exact address that cannot be automated: Google, Epieos, Facebook (find the account, read by the assisted search without sending any code), Intelligence X. No request is sent.'
   },
   category: 'email',
   inputTypes: ['email'],

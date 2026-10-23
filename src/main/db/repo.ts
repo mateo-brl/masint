@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type {
   ActivityAction,
+  AssistFlow,
   ActivityEntry,
   ActivityTarget,
   Attachment,
@@ -673,12 +674,22 @@ export class Repo {
     const key = s.kind === 'manual' ? (s.url ?? s.label).trim() : dedupKey(s.type, s.label, s.platform)
     const t = now()
     const id = randomUUID()
+    // Parcours scripté d'une recherche manuelle : rangé dans les données (`__flow`), sans colonne.
+    const data = s.flow ? { ...s.data, __flow: s.flow } : (s.data ?? {})
     const res = this.db
       .prepare(
         `INSERT OR IGNORE INTO suggestions (id, investigation_id, node_id, module_id, kind, type, label, platform, data, link_label, url, reason, status, dedup_key, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)`
       )
-      .run(id, s.investigationId, s.nodeId, s.moduleId, s.kind, s.type, s.label, s.platform, JSON.stringify(s.data ?? {}), s.linkLabel, s.url, s.reason, key, t, t)
+      .run(id, s.investigationId, s.nodeId, s.moduleId, s.kind, s.type, s.label, s.platform, JSON.stringify(data), s.linkLabel, s.url, s.reason, key, t, t)
+    // Recherche manuelle déjà proposée avant que son parcours scripté existe : elle le reçoit.
+    if (!res.changes && s.flow)
+      this.db
+        .prepare(
+          `UPDATE suggestions SET data = json_set(data, '$.__flow', ?)
+           WHERE investigation_id = ? AND node_id = ? AND kind = ? AND dedup_key = ? AND json_extract(data, '$.__flow') IS NULL`
+        )
+        .run(s.flow, s.investigationId, s.nodeId, s.kind, key)
     return res.changes ? this.getSuggestion(id) : null
   }
 
@@ -1225,7 +1236,11 @@ interface SuggestionRow {
   updated_at: number
 }
 
+const FLOWS: readonly AssistFlow[] = ['facebook_identify', 'tellows']
+
 function toSuggestion(r: SuggestionRow): Suggestion {
+  const { __flow, ...data } = parse<Record<string, PropValue>>(r.data, {})
+  const flow = FLOWS.find((f) => f === __flow)
   return {
     id: r.id,
     investigationId: r.investigation_id,
@@ -1235,12 +1250,13 @@ function toSuggestion(r: SuggestionRow): Suggestion {
     type: r.type,
     label: r.label,
     platform: r.platform,
-    data: parse(r.data, {}),
+    data,
     linkLabel: r.link_label,
     url: r.url,
     reason: r.reason,
     status: r.status as Suggestion['status'],
     assist: parse<StoredAssist | null>(r.assist_result, null),
+    ...(flow ? { flow } : {}),
     createdAt: r.created_at,
     updatedAt: r.updated_at
   }

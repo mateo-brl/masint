@@ -6,6 +6,7 @@ import type {
   ActivityCheck,
   ActivityEntry,
   ActivityPage,
+  AssistFinding,
   AssistResult,
   Attachment,
   Capture,
@@ -130,6 +131,11 @@ export interface ApiMap {
   'assist:run': (suggestionId: string) => AssistResult
   /** Résultat de recherche assistée ajouté au graphe : masqué de la liste enregistrée. */
   'assist:markAdded': (suggestionId: string, url: string) => void
+  /**
+   * Élément lu par un parcours scripté (nom, contact masqué, fiche), ajouté par l'enquêteur :
+   * nœud créé, ou propriétés du nœud complétées (voir `Engine.addAssistFinding`).
+   */
+  'assist:addFinding': (suggestionId: string, finding: AssistFinding) => void
   'modules:applicable': (nodeId: string) => { auto: string[]; accepted: string[] }
   'modules:setEnabled': (moduleId: string, enabled: boolean) => void
   /** Données brutes archivées d'une exécution (réponse du service). */

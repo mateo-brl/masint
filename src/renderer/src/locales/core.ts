@@ -207,7 +207,26 @@ const fr = {
     add: 'Ajouter',
     addTitle: 'Ajouter ce résultat au graphe',
     captured: 'Page de résultats capturée (voir Preuves)',
-    savedAt: 'Recherche du {{date}}'
+    savedAt: 'Recherche du {{date}}',
+    flow: {
+      runTitle: 'Lancer le parcours dans MASINT : la page est lue sans rien envoyer à la personne recherchée. Une fenêtre s’ouvre si une vérification est demandée.',
+      state: {
+        candidates_one: '{{count}} compte correspond',
+        candidates_other: '{{count}} comptes correspondent',
+        candidatesNoName: 'Compte trouvé, sans nom affiché',
+        options: 'Un seul compte : options de récupération lues, aucun code envoyé',
+        profile: 'Fiche lue',
+        none: 'Aucun compte trouvé',
+        unknown: 'Page non reconnue : ouvrez-la pour vérifier'
+      },
+      addName: 'Ajouter ce nom au graphe, relié au nœud de la recherche',
+      addUsername: 'Ajouter ce pseudo au graphe, relié au nœud de la recherche',
+      addHint: 'Indice',
+      addHintTitle: 'Ajouter aux indices masqués du nœud et relancer leur recoupement',
+      addProperties: 'Ajouter à la fiche',
+      addPropertiesTitle: 'Verser ces informations dans les propriétés du nœud',
+      photo: 'Voir la photo'
+    }
   },
   consistency: {
     title: 'Cohérence des indices',
@@ -1020,7 +1039,26 @@ const en: typeof fr = {
     add: 'Add',
     addTitle: 'Add this result to the graph',
     captured: 'Results page captured (see Evidence)',
-    savedAt: 'Search of {{date}}'
+    savedAt: 'Search of {{date}}',
+    flow: {
+      runTitle: 'Run the flow inside MASINT: the page is read without sending anything to the person searched. A window opens if a check is required.',
+      state: {
+        candidates_one: '{{count}} account matches',
+        candidates_other: '{{count}} accounts match',
+        candidatesNoName: 'Account found, no name shown',
+        options: 'A single account: recovery options read, no code sent',
+        profile: 'Page read',
+        none: 'No account found',
+        unknown: 'Page not recognised: open it to check'
+      },
+      addName: 'Add this name to the graph, linked to the node of the search',
+      addUsername: 'Add this username to the graph, linked to the node of the search',
+      addHint: 'Hint',
+      addHintTitle: 'Add to the masked hints of the node and run their cross-check again',
+      addProperties: 'Add to the record',
+      addPropertiesTitle: 'Copy this information into the properties of the node',
+      photo: 'See the picture'
+    }
   },
   consistency: {
     title: 'Evidence consistency',

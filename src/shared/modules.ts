@@ -3,7 +3,7 @@
 // Les modules s'exécutent dans le processus principal : ils ont accès au réseau
 // (via ctx.fetch, qui respecte le proxy / Tor) mais pas à l'interface.
 
-import type { I18nText, KeyRequirement, LinkStrength, ModuleCategory, PropValue } from './types'
+import type { AssistFlow, I18nText, KeyRequirement, LinkStrength, ModuleCategory, PropValue } from './types'
 
 export interface InputEntity {
   id: string
@@ -56,6 +56,11 @@ export interface OutManualCheck {
   url: string
   /** Ce qu'il faut regarder sur la page, si utile. */
   hint?: string
+  /**
+   * Parcours scripté de la recherche assistée (saisie sur la page, lecture des résultats) à la
+   * place de l'extraction des liens qui contiennent la valeur. Voir `AssistFlow`.
+   */
+  flow?: AssistFlow
 }
 
 export interface OutLink {

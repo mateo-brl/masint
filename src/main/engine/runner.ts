@@ -3,7 +3,7 @@ import { emailProvider } from '@shared/platforms'
 import { childSlot, nodeBox } from '@shared/placement'
 import type { EventMap } from '@shared/api'
 import type { InputEntity, ModuleContext, ModuleOutput, OsintModule, OutEntity } from '@shared/modules'
-import type { GraphEdge, GraphNode, JobProgress, LinkStrength, ModuleRun, PropValue, Suggestion } from '@shared/types'
+import { findingKey, type AssistExtracted, type AssistFinding, type GraphEdge, type GraphNode, type JobProgress, type LinkStrength, type ModuleRun, type PropValue, type Suggestion } from '@shared/types'
 import { nodeRef, type ActivityWriter } from '../activity'
 import { dedupKey, type ObservationInput, type Repo } from '../db/repo'
 import type { SettingsService } from '../settings'
@@ -743,7 +743,17 @@ export class Engine {
 
     for (const check of output.manual ?? []) {
       if (!check.url || !check.label) continue
-      suggest({ kind: 'manual', type: 'search_link', label: check.label, platform: null, data: {}, linkLabel: check.label, url: check.url, reason: check.hint ?? '' })
+      suggest({
+        kind: 'manual',
+        type: 'search_link',
+        label: check.label,
+        platform: null,
+        data: {},
+        linkLabel: check.label,
+        url: check.url,
+        reason: check.hint ?? '',
+        ...(check.flow ? { flow: check.flow } : {})
+      })
     }
     if (stats.review) this.emit('suggestions:changed', { investigationId: invId, nodeId: input.id })
 
@@ -847,6 +857,87 @@ export class Engine {
     }
   }
 
+  /**
+   * Élément lu par un parcours scripté de la recherche assistée (nom d'un candidat Facebook,
+   * contact de récupération masqué, fiche Tellows), ajouté par l'enquêteur depuis « À vérifier » :
+   * son clic vaut validation. Un nom devient un nœud relié au nœud de la recherche ; un indice
+   * masqué rejoint les propriétés du nœud (`masked_emails`, `masked_phones`), puis le recoupement
+   * des indices est relancé. Seul un élément réellement lu sur la page est accepté. Quand tout ce
+   * qui a été lu est ajouté, la recherche est traitée.
+   */
+  async addAssistFinding(id: string, finding: AssistFinding): Promise<void> {
+    const s = this.repo.getSuggestion(id)
+    const parent = s ? this.repo.getNode(s.nodeId) : null
+    const stored = s?.assist
+    const ex = stored?.result.extracted
+    if (!s || !parent || !stored || !ex || !s.flow) return
+    if (!findingsOf(ex).some((f) => findingKey(f) === findingKey(finding))) return
+    const lang = this.settings.get().lang
+    const source = s.flow === 'tellows' ? 'Tellows' : 'Facebook'
+    const sourceUrl = stored.result.url || s.url || ''
+    const fr = lang === 'fr'
+    const origin: Record<string, PropValue> = sourceUrl ? { source_url: sourceUrl, source } : { source }
+    const listProp = (key: string, value: string): Record<string, PropValue> => {
+      // Valeur isolée déjà présente : convertie en liste pour que l'ajout la complète.
+      const prev = parent.data[key]
+      if (typeof prev === 'string' && prev.trim()) this.repo.mergeProps(parent.id, { [key]: [prev] }, true)
+      return { [key]: [`${value} (${source})`] }
+    }
+    let output: ModuleOutput
+    switch (finding.kind) {
+      case 'name': {
+        const photo = finding.photo && ex.photos.includes(finding.photo) ? finding.photo : undefined
+        output = {
+          entities: [
+            {
+              type: 'person',
+              label: finding.value,
+              linkLabel: fr ? `nom (${source})` : `name (${source})`,
+              data: origin,
+              ...(photo ? { image: photo } : {})
+            }
+          ]
+        }
+        break
+      }
+      case 'username':
+        output = { entities: [{ type: 'username', label: finding.value, linkLabel: fr ? `pseudo (${source})` : `username (${source})`, data: origin }] }
+        break
+      case 'masked_name':
+        output = { properties: listProp('masked_names', finding.value) }
+        break
+      case 'masked_email':
+        output = { properties: listProp('masked_emails', finding.value) }
+        break
+      case 'masked_phone':
+        output = { properties: listProp('masked_phones', finding.value) }
+        break
+      case 'properties':
+        output = { properties: { ...ex.properties } }
+        break
+    }
+    const ctx = this.createContext({ id: s.moduleId }, AbortSignal.timeout(30_000), [], undefined, s.investigationId)
+    await this.applyOutput(this.repo.getNode(parent.id) ?? parent, { id: s.moduleId }, output, ctx)
+    const added = Array.from(new Set([...stored.added, findingKey(finding)]))
+    this.repo.setSuggestionAssist(id, { ...stored, added })
+    const foundType = finding.kind === 'name' ? 'person' : finding.kind === 'username' ? 'username' : 'property'
+    this.activity?.log(s.investigationId, 'suggestion.accept', {
+      suggestion: s.id,
+      value: s.label,
+      type: s.type,
+      module: s.moduleId,
+      node: nodeRef(parent),
+      found: { type: foundType, label: finding.value || source }
+    })
+    if (findingsOf(ex).every((f) => added.includes(findingKey(f)))) this.repo.setSuggestionStatus(id, 'accepted')
+    this.emit('suggestions:changed', { investigationId: s.investigationId, nodeId: s.nodeId })
+    // Nouvel indice masqué : le recoupement des indices du nœud est relancé (sauf s'il est désactivé).
+    if ((finding.kind === 'masked_email' || finding.kind === 'masked_phone') && !this.settings.get().disabledModules.includes('hints.crossmatch')) {
+      const fresh = this.repo.getNode(parent.id)
+      if (fresh && applicableModules(fresh, this.settings, ['hints.crossmatch']).length) this.enrich(s.investigationId, parent.id, ['hints.crossmatch'])
+    }
+  }
+
   /** Position d'un nouvel enfant : rangées centrées sous le parent, sur des cases libres. */
   private placeChild(parent: GraphNode): { x: number; y: number } {
     const occupied = this.repo
@@ -855,6 +946,18 @@ export class Engine {
       .map(nodeBox)
     return childSlot(nodeBox(parent), occupied)
   }
+}
+
+/** Éléments qu'un parcours scripté a lus, que l'enquêteur peut ajouter un par un. */
+export function findingsOf(ex: AssistExtracted): AssistFinding[] {
+  return [
+    ...ex.names.map((value): AssistFinding => ({ kind: 'name', value })),
+    ...ex.usernames.map((value): AssistFinding => ({ kind: 'username', value })),
+    ...ex.maskedNames.map((value): AssistFinding => ({ kind: 'masked_name', value })),
+    ...ex.maskedEmails.map((value): AssistFinding => ({ kind: 'masked_email', value })),
+    ...ex.maskedPhones.map((value): AssistFinding => ({ kind: 'masked_phone', value })),
+    ...(ex.properties && Object.keys(ex.properties).length ? [{ kind: 'properties', value: '' } as AssistFinding] : [])
+  ]
 }
 
 /**
