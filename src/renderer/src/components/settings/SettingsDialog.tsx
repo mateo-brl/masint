@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { KeyRequirement, LinkOpening, ProxyMode, ProxyTestResult, RosoStatus, Settings, SitesStatus, SitesTier } from '@shared/types'
+import { SEARCH_ENGINES } from '@shared/searchEngines'
 import { api, onEvent, openExternal } from '../../lib/api'
 import { useLang } from '../../lib/i18n'
 import { Icon } from '../../lib/icons'
@@ -117,6 +118,15 @@ function GeneralTab(): React.JSX.Element | null {
           onBlur={(e) => e.target.value.trim() !== settings.investigatorName && void update({ investigatorName: e.target.value })}
           className="field !w-48"
         />
+      </Row>
+      <Row label={t('settings.searchEngine')} hint={t('settings.searchEngineHint')}>
+        <select value={settings.searchEngine ?? 'auto'} onChange={(e) => void update({ searchEngine: e.target.value as Settings['searchEngine'] })} className="field !w-48">
+          {SEARCH_ENGINES.map((e) => (
+            <option key={e} value={e}>
+              {t(`settings.searchEngines.${e}`)}
+            </option>
+          ))}
+        </select>
       </Row>
       <Row label={t('settings.assistCapture')} hint={t('settings.assistCaptureHint')}>
         <Switch checked={settings.assistCapture} onChange={(v) => void update({ assistCapture: v })} />
