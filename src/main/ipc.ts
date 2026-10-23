@@ -23,7 +23,7 @@ import { allModules, knownKeyIds, moduleInfo } from './engine/registry'
 import type { Engine } from './engine/runner'
 import type { SettingsService } from './settings'
 import { takePendingOpen } from './openQueue'
-import { checkForUpdates, installUpdate } from './updater'
+import { checkForUpdates, installUpdate, updateStatus } from './updater'
 import { creditsOf, RosoClient } from './modules/roso/_client'
 import { SitesService } from './sites'
 
@@ -519,6 +519,7 @@ export function registerIpc(deps: IpcDeps): void {
   handle('app:showInFolder', (path) => shell.showItemInFolder(path))
   handle('app:takePendingOpen', () => takePendingOpen())
   handle('update:check', () => checkForUpdates())
+  handle('update:get', () => updateStatus())
   handle('update:install', () => installUpdate())
 }
 

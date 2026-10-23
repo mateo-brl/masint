@@ -8,6 +8,7 @@ import { LangSwitch } from './components/LangSwitch'
 import { ShortcutsDialog } from './components/ShortcutsDialog'
 import { CommandPalette } from './components/CommandPalette'
 import { SettingsDialog } from './components/settings/SettingsDialog'
+import { UpdatePrompt } from './components/UpdatePrompt'
 import { useApp } from './store/app'
 
 export default function App(): React.JSX.Element {
@@ -35,6 +36,7 @@ export default function App(): React.JSX.Element {
       <ShortcutsDialog />
       <CommandPalette />
       <SettingsDialog />
+      <UpdatePrompt />
       <Toasts />
       <ConfirmHost okLabel={t('common.confirm')} cancelLabel={t('common.cancel')} />
     </div>
