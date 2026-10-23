@@ -3,13 +3,13 @@
 <!-- Fichier généré : ne pas modifier à la main. -->
 <!-- Régénérer avec : node build/scripts/list-modules.mjs > docs/modules-list.md -->
 
-208 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
+209 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
 
 Légende des remarques : **à la demande** (lancé seulement sur demande explicite, service à crédits), **bruyant** (peut alerter la personne recherchée), **expérimental** (résultats à vérifier). Une clé suivie de « (facultative) » améliore les résultats sans être obligatoire.
 
 | Catégorie | Modules |
 | --- | ---: |
-| [Téléphone](#phone) | 9 |
+| [Téléphone](#phone) | 10 |
 | [Email](#email) | 39 |
 | [Pseudo](#username) | 3 |
 | [Personne](#person) | 13 |
@@ -35,6 +35,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | --- | --- | --- | --- | --- |
 | `phone.amazon` | Compte Amazon | `phone` |  |  |
 | `phone.arcep` | Opérateur d'attribution (ARCEP) | `phone` |  |  |
+| `phone.caller_names` | Nom donné au numéro (annuaires d’appelants) | `account`, `phone` |  |  |
 | `phone.hlr_lookups` | Statut HLR (HLR Lookups) | `phone` | `hlr-lookups`, `hlr-lookups-secret` | à la demande, expérimental |
 | `phone.hlrlookup` | Statut HLR (HLR Lookup) | `phone` | `hlrlookup`, `hlrlookup-secret` | à la demande, expérimental |
 | `phone.info` | Analyse du numéro | `phone` |  |  |

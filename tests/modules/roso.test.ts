@@ -431,6 +431,22 @@ describe('roso.phone', () => {
     // Le compte Apple garde aussi son email masqué.
     expect(out.entities!.find((e) => e.platform === 'apple')?.data).toMatchObject({ masked_emails: ['d•••••@e•••••.com'] })
 
+    // Annuaires d'appelants : le nom donné au numéro n'entre jamais directement dans le graphe.
+    // « QW778 » (Eyecon) est un pseudo possible, « Jean Dupont » (CallApp) une personne possible,
+    // « Livraison Amazon » (ViewCaller) une simple étiquette.
+    expect(find(out, 'username', 'QW778')).toMatchObject({
+      review: true,
+      reviewReason: 'nom sous lequel le numéro est enregistré dans Eyecon : peut-être un pseudo'
+    })
+    const callerPerson = out.entities!.find((e) => e.type === 'person' && e.review)
+    expect(callerPerson).toMatchObject({ label: 'Jean Dupont', reviewReason: 'nom donné au numéro dans CallApp' })
+    expect(out.entities!.some((e) => e.type === 'person' && !e.review && e.from === 'acc_callapp')).toBe(false)
+    expect(find(out, 'person', 'Livraison Amazon')).toBeUndefined()
+    expect(out.properties?.caller_names).toEqual(expect.arrayContaining(['Jean Dupont (CallApp)', 'QW778 (Eyecon)']))
+    expect(out.properties?.caller_tags).toEqual(['Livraison Amazon (ViewCaller)'])
+    // Comptes d'annuaire marqués : le module générique ne les reprend pas.
+    expect(find(out, 'account', 'QW778')).toMatchObject({ platform: 'eyecon', data: expect.objectContaining({ caller_name_kind: 'username' }) })
+
     // Pastille : 0/N au départ, puis une avance par plateforme jusqu'à N/N.
     const total = phonePlatforms('+33612345678').length
     expect(progress[0]).toEqual([0, total, 'plateformes'])

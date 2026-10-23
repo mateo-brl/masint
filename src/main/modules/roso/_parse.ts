@@ -5,6 +5,7 @@ import type { OutEntity } from '@shared/modules'
 import { isDefaultAvatar } from '@shared/avatars'
 import type { PropValue } from '@shared/types'
 import { findPlatformByName, getPlatform, profileUrl } from '@shared/platforms'
+import { callerIdSource } from '@shared/callerName'
 import { normalizePhone } from '@shared/detect'
 import { localizeCountry } from '../domain/_util'
 import { ROSO_BASE } from './_client'
@@ -478,7 +479,9 @@ export function accountEntities(profile: unknown, opts: AccountOpts): OutEntity[
       linkLabel: opts.linkLabel ?? ll(opts.lang, `compte ${siteName(opts.site)}`, `${siteName(opts.site)} account`)
     }
   ]
-  if (name && /\s/.test(name) && !name.includes('@') && name.toLowerCase() !== username.toLowerCase() && name.length <= 80)
+  // Annuaire d'appelants (Eyecon, CallApp...) : le nom est celui qu'un tiers a donné au numéro,
+  // pas un nom affiché par son titulaire. Il est classé à part (voir `callerNamePivots`).
+  if (name && !callerIdSource(opts.site) && /\s/.test(name) && !name.includes('@') && name.toLowerCase() !== username.toLowerCase() && name.length <= 80)
     out.push({ type: 'person', label: name, from: opts.ref, linkLabel: ll(opts.lang, 'nom affiché', 'display name') })
   for (const e of emails.full)
     if (e !== opts.query.toLowerCase()) out.push({ type: 'email', label: e, from: opts.ref, linkLabel: 'email' })
