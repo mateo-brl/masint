@@ -57,6 +57,10 @@ describe('phone.links', () => {
     expect(byLabel['PagesJaunes (annuaire inversé)']).toContain('quoiqui=0144442222')
     expect(byLabel.Truecaller).toBe('https://www.truecaller.com/search/fr/0144442222')
     expect(byLabel.Tellows).toBe('https://www.tellows.fr/num/0144442222')
+    // Telegram et WhatsApp : rien à lire sur la page web, l'explication le dit.
+    const hintOf = (label: string): string => out.manual!.find((m) => m.label === label)?.hint ?? ''
+    expect(hintOf('Telegram')).toMatch(/dans l’application Telegram \(pas sur la page web t\.me\), si le compte accepte d’être trouvé par son numéro/)
+    expect(hintOf('WhatsApp')).toMatch(/La page web wa\.me n’affiche ni nom ni photo/)
     // Facebook « retrouver le compte » : parcours scripté, sans envoi de code.
     expect(out.manual!.find((m) => m.flow === 'facebook_identify')).toMatchObject({
       label: 'Facebook : retrouver le compte',
