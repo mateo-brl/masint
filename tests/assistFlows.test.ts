@@ -27,7 +27,7 @@ const IDENTIFY = 'https://www.facebook.com/login/identify/?ctx=recover'
 // Silhouette par défaut de Facebook (image publique) et photo fictive.
 const SILHOUETTE = 'https://scontent.xx.fbcdn.net/v/t1.30497-1/84628273_176159830277856_972693363922829312_n.jpg?stp=dst-jpg_s200x200'
 const PHOTO = 'https://scontent.xx.fbcdn.net/v/t39.30808-1/100000001_000000000000001_0000000000000000001_n.jpg?_nc_cat=1'
-const SEARCHED = '+33600000012'
+const SEARCHED = '+33639981234'
 
 /** Nouvelle page d'identification : champ sans nom, bouton « Continuer » hors du formulaire. */
 const identifyNew = (extra: Spec[] = []): FakePage =>
@@ -142,9 +142,9 @@ const options = (): FakePage =>
           { tag: 'input', attrs: { type: 'radio', id: 'send_email', name: 'recover_method', value: 'send_email:0', checked: '1' } },
           { tag: 'label', attrs: { for: 'send_email' }, children: [{ tag: 'div', text: 'Envoyer le code par e-mail' }, { tag: 'div', text: 'c*****@e******.fr' }] },
           { tag: 'input', attrs: { type: 'radio', id: 'send_sms', name: 'recover_method', value: 'send_sms:0' } },
-          { tag: 'label', attrs: { for: 'send_sms' }, children: [{ tag: 'div', text: 'Envoyer le code par SMS' }, { tag: 'div', text: '+33 ••• •• •• 12' }] },
+          { tag: 'label', attrs: { for: 'send_sms' }, children: [{ tag: 'div', text: 'Envoyer le code par SMS' }, { tag: 'div', text: '+33 ••• •• •• 34' }] },
           { tag: 'input', attrs: { type: 'radio', id: 'send_sms_2', name: 'recover_method', value: 'send_sms:1' } },
-          { tag: 'label', attrs: { for: 'send_sms_2' }, children: [{ tag: 'div', text: 'Envoyer le code par SMS' }, { tag: 'div', text: '+44 ••••• •••• 34' }] },
+          { tag: 'label', attrs: { for: 'send_sms_2' }, children: [{ tag: 'div', text: 'Envoyer le code par SMS' }, { tag: 'div', text: '+44 ••••• •••• 56' }] },
           { tag: 'div', children: [{ tag: 'img', attrs: { src: PHOTO } }, { tag: 'div', text: 'Camille Exemple' }, { tag: 'div', text: 'Utilisateur Facebook' }] },
           { tag: 'a', attrs: { role: 'button', href: '/login/identify/?ctx=not_me' }, text: 'Ce n’est pas vous ?' },
           { tag: 'button', attrs: { type: 'submit', name: 'reset_action', value: '1' }, text: 'Continuer' },
@@ -167,7 +167,7 @@ describe('Facebook « retrouver le compte » : recherche manuelle', () => {
   })
 
   it('saisit un numéro au format international, un email en minuscules', () => {
-    expect(facebookValue('phone', '06 00 00 00 12')).toBe(SEARCHED)
+    expect(facebookValue('phone', '06 39 98 12 34')).toBe(SEARCHED)
     expect(facebookValue('email', ' Camille.Exemple@Example.org ')).toBe('camille.exemple@example.org')
     expect(facebookValue('username', 'zx445')).toBeNull()
   })
@@ -205,8 +205,8 @@ describe('Facebook « retrouver le compte » : scripts de page', () => {
     expect(read.options).toHaveLength(3)
     const ex = facebookExtract(read, SEARCHED)
     expect(ex.maskedEmails).toEqual(['c*****@e******.fr'])
-    // « +33 ••• •• •• 12 » est le numéro cherché, masqué : rien de nouveau.
-    expect(ex.maskedPhones).toEqual(['+44 ••••• •••• 34'])
+    // « +33 ••• •• •• 34 » est le numéro cherché, masqué : rien de nouveau.
+    expect(ex.maskedPhones).toEqual(['+44 ••••• •••• 56'])
     expect(ex.names).toEqual(['Camille Exemple'])
     expect(ex.photos).toEqual([PHOTO])
     expect(page.clicks).toEqual([])
@@ -286,14 +286,14 @@ describe('Facebook « retrouver le compte » : scripts de page', () => {
   })
 
   it('vérification Cloudflare (« Un instant… ») reconnue comme une action à faire', () => {
-    const page = fakePage([{ tag: 'h2', text: 'Vérification de sécurité en cours' }], { url: 'https://www.tellows.fr/num/0600000012', title: 'Un instant…' })
+    const page = fakePage([{ tag: 'h2', text: 'Vérification de sécurité en cours' }], { url: 'https://www.tellows.fr/num/0639981234', title: 'Un instant…' })
     expect(page.run(INSPECT_PASSIVE)).toMatchObject({ captcha: true })
   })
 
   it('contacts masqués : adresses et numéros dans des libellés', () => {
-    expect(maskedContacts(['Envoyer le code par e-mail c*****@e******.fr', 'Send code via SMS +33 ••• •• •• 12.', 'Recevoir le code sur WhatsApp ********34 (FR)'])).toEqual({
+    expect(maskedContacts(['Envoyer le code par e-mail c*****@e******.fr', 'Send code via SMS +33 ••• •• •• 34.', 'Recevoir le code sur WhatsApp ********34 (FR)'])).toEqual({
       emails: ['c*****@e******.fr'],
-      phones: ['+33 ••• •• •• 12', '********34']
+      phones: ['+33 ••• •• •• 34', '********34']
     })
     expect(maskedContacts(['Continuer', 'Envoyer le code par e-mail'])).toEqual({ emails: [], phones: [] })
   })

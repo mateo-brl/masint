@@ -3,13 +3,13 @@
 <!-- Fichier généré : ne pas modifier à la main. -->
 <!-- Régénérer avec : node build/scripts/list-modules.mjs > docs/modules-list.md -->
 
-209 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
+210 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
 
 Légende des remarques : **à la demande** (lancé seulement sur demande explicite, service à crédits), **bruyant** (peut alerter la personne recherchée), **expérimental** (résultats à vérifier). Une clé suivie de « (facultative) » améliore les résultats sans être obligatoire.
 
 | Catégorie | Modules |
 | --- | ---: |
-| [Téléphone](#phone) | 10 |
+| [Téléphone](#phone) | 11 |
 | [Email](#email) | 39 |
 | [Pseudo](#username) | 3 |
 | [Personne](#person) | 13 |
@@ -43,6 +43,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `phone.links` | Signalements et recherches manuelles (téléphone) | `phone` |  |  |
 | `phone.microsoft` | Compte Microsoft personnel | `phone` |  |  |
 | `phone.sleeper` | Compte Sleeper | `phone` |  | expérimental |
+| `phone.tellows` | Fiche Tellows | `phone` |  | expérimental |
 
 <a id="email"></a>
 
