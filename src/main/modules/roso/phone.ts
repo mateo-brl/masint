@@ -5,6 +5,7 @@ import { defineModule, ModuleError, type OutEntity } from '@shared/modules'
 import type { PropValue } from '@shared/types'
 import { findPlatformByName } from '@shared/platforms'
 import { normalizePhone } from '@shared/detect'
+import { callerIdSource, callerNamePivots, classifyCallerName, type CallerNameSource } from '@shared/callerName'
 import { localizeCountry, MAX_LIST_ENTITIES } from '../domain/_util'
 import { creditsOf, isFatal, redact, ROSO_COMMON, RosoClient, scanProgress, sleep, toRosoError, type Json } from './_client'
 import {
@@ -13,6 +14,7 @@ import {
   addressEntity,
   asArr,
   asObj,
+  displayNameOf,
   dropEmpty,
   isDomain,
   isObj,
@@ -153,6 +155,8 @@ export default defineModule({
 
     const entities: OutEntity[] = []
     const found = results.filter((r) => r.exists === true)
+    // Noms donnés au numéro par les annuaires d'appelants (et le nom d'appelant de Twilio).
+    const callerNames: CallerNameSource[] = []
     for (const r of found) {
       const p = r.data
       if (r.platform === 'twilio') continue
@@ -170,6 +174,13 @@ export default defineModule({
       }
       const ref = `acc_${r.platform}`
       const out = accountEntities(p, { site: r.platform, query: phone, ref, lang: ctx.lang })
+      const callerSource = callerIdSource(r.platform)
+      const callerName = callerSource ? displayNameOf(p) : ''
+      if (callerSource && callerName) {
+        callerNames.push({ name: callerName, source: callerSource })
+        // Nom déjà classé : `phone.caller_names` ne le reprend pas sur ce compte.
+        out[0].data = { ...out[0].data, caller_name_kind: classifyCallerName(callerName).kind }
+      }
       const addr = addressEntity(p, ref, ctx.lang)
       if (addr) out.push(addr)
       addGeneric(out, p, ref, phone, ctx.lang)
@@ -186,6 +197,12 @@ export default defineModule({
       })
     }
 
+    // Noms d'appelant : personnes et pseudos à vérifier, étiquettes en propriétés. Les noms
+    // identiques de plusieurs annuaires sont regroupés (« vu dans Eyecon et CallApp »).
+    if (hlr.twilio_caller_name) callerNames.push({ name: String(hlr.twilio_caller_name), source: 'Twilio (CNAM)' })
+    const callers = callerNamePivots(callerNames, ctx.lang)
+    entities.push(...callers.entities)
+
     // Pivots regroupés sur le numéro : emails et téléphones masqués, lieux (bloc « Pivots » du site).
     const pivots = pivotProperties(
       found.filter((r) => r.platform !== 'twilio').map((r) => ({ site: r.platform, profile: r.data })),
@@ -201,6 +218,7 @@ export default defineModule({
         twilio_valid: hlr.twilio_valid,
         twilio_country: hlr.twilio_country,
         twilio_caller_name: hlr.twilio_caller_name,
+        ...callers.properties,
         ...pivots,
         roso_credits_left: creditsOf(log.data),
         roso_found_count: found.filter((r) => r.platform !== 'twilio').length,
