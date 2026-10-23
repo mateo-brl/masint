@@ -69,7 +69,10 @@ describe('classement des noms d’appelant', () => {
       '🍕',
       'Kevin 🔥',
       '06 12 34 56 78',
-      '+33612345678'
+      '+33612345678',
+      'Unbekannt',
+      'Werbung',
+      'Kostenfalle'
     ])
       expect(kind(name), name).toBe('tag')
   })

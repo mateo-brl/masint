@@ -61,7 +61,7 @@ export const FIRST_NAMES: ReadonlySet<string> = new Set(LIST.split(/\s+/).filter
 export function foldName(s: string): string {
   return s
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/['’]/g, '')
     .trim()
