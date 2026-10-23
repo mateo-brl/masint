@@ -1,0 +1,43 @@
+{
+  "_source": "Réponse FICTIVE au format de la documentation de LeakCheck (https://docs.leakcheck.io/pro-api/lookup) : fuites, noms, adresses, mots de passe, empreintes et sels inventés. Sert à prouver que les champs secrets ne sont jamais gardés.",
+  "success": true,
+  "found": 4,
+  "quota": 397,
+  "result": [
+    {
+      "email": "camille.exemple@example.org",
+      "source": { "name": "ExempleForum.fr", "breach_date": "2019-07", "unverified": 0, "passwordless": 0, "compilation": 0 },
+      "first_name": "Camille",
+      "last_name": "Exemple",
+      "username": "camexemple_77",
+      "dob": "01/04/1990",
+      "address": "1 rue de l'Exemple, 75000 Paris",
+      "password": "MotDePasseFictif-123!",
+      "fields": ["first_name", "last_name", "username", "dob", "address", "password"]
+    },
+    {
+      "email": "camille.exemple@example.org",
+      "source": { "name": "BoutiqueFictive.com", "breach_date": "2021-02", "unverified": 0, "passwordless": 0, "compilation": 0 },
+      "username": "camexemple_77",
+      "hash": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
+      "salt": "sel-fictif-9f2c",
+      "password_hash": "$2y$10$fictif.empreinte.bcrypt.0000000000000000000000000000",
+      "fields": ["username", "hash", "salt"]
+    },
+    {
+      "source": { "name": "Infostealer logs", "unverified": 1 },
+      "collected": "2024-05-12",
+      "username": "qw778",
+      "password": "AutreSecretFictif",
+      "token": "jeton-fictif-abcdef",
+      "fields": ["username", "password"]
+    },
+    {
+      "email": "+33639981234",
+      "source": { "name": "Compilation", "breach_date": "2018" },
+      "name": "Dominique Fictif",
+      "phone": "+33639981234",
+      "fields": ["name", "phone"]
+    }
+  ]
+}
