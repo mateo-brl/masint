@@ -25,7 +25,19 @@ const fr = {
     table: 'Tableau',
     nav: 'Vues de l’enquête'
   },
-  update: { ready: 'Mise à jour {{version}} prête' },
+  update: {
+    ready: 'Mise à jour {{version}} prête',
+    downloading: 'Téléchargement de la version {{version}} : {{progress}} %',
+    title: 'Nouvelle version de MASINT : {{version}}',
+    downloadingTitle: 'Nouvelle version de MASINT : {{version}} (téléchargement)',
+    install: 'Redémarrer et installer',
+    later: 'Plus tard',
+    notes: 'Nouveautés',
+    noNotes: 'Les nouveautés sont décrites sur la page des versions du projet.',
+    jobsRunning_one: 'Un module est en cours : il sera interrompu par le redémarrage.',
+    jobsRunning_other: '{{count}} modules sont en cours : ils seront interrompus par le redémarrage.',
+    onQuit: 'Si vous choisissez « Plus tard », la mise à jour s’installera à la fermeture de MASINT.'
+  },
   errors: {
     resource: 'Une ressource n’a pas pu être chargée{{url}}.',
     unknown: 'Erreur inconnue.'
@@ -820,7 +832,19 @@ const en: typeof fr = {
     table: 'Table',
     nav: 'Investigation views'
   },
-  update: { ready: 'Update {{version}} ready' },
+  update: {
+    ready: 'Update {{version}} ready',
+    downloading: 'Downloading version {{version}}: {{progress}} %',
+    title: 'New version of MASINT: {{version}}',
+    downloadingTitle: 'New version of MASINT: {{version}} (downloading)',
+    install: 'Restart and install',
+    later: 'Later',
+    notes: 'What is new',
+    noNotes: 'What is new is described on the project releases page.',
+    jobsRunning_one: 'A module is running: restarting will interrupt it.',
+    jobsRunning_other: '{{count}} modules are running: restarting will interrupt them.',
+    onQuit: 'If you choose “Later”, the update will be installed when MASINT closes.'
+  },
   errors: {
     resource: 'A resource could not be loaded{{url}}.',
     unknown: 'Unknown error.'

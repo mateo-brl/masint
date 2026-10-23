@@ -205,7 +205,7 @@ void app.whenReady().then(async () => {
     captures
   })
 
-  initUpdater((s) => send('update:status', s), settings.get().autoUpdate)
+  initUpdater((s) => send('update:status', s), () => settings.get().autoUpdate)
 
   mainWindow = createWindow(repo, settings)
   mainWindow.on('closed', () => {

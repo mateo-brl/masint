@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { VIEW_ICONS, VIEW_ORDER, viewShortcut } from '../lib/commands'
 import { useApp } from '../store/app'
 import { Logo } from './Logo'
+import { useUpdatePrompt } from './UpdatePrompt'
 import { IconButton } from './ui'
 
 /** Barre verticale de gauche : accueil, vues de l'enquête (Ctrl+1 à Ctrl+7), paramètres. */
@@ -33,8 +34,17 @@ export function Rail(): React.JSX.Element {
           />
         ))}
       <div className="flex-1" />
-      {update.state === 'ready' && (
-        <IconButton icon="CloudDownload" title={t('update.ready', { version: update.version })} className="text-success" onClick={() => openSettings('about')} />
+      {(update.state === 'ready' || update.state === 'downloading' || update.state === 'available') && (
+        <IconButton
+          icon="CloudDownload"
+          title={
+            update.state === 'ready'
+              ? t('update.ready', { version: update.version })
+              : t('update.downloading', { version: update.version, progress: Math.round(update.progress ?? 0) })
+          }
+          className={update.state === 'ready' ? 'text-success' : 'text-muted'}
+          onClick={() => useUpdatePrompt.getState().show()}
+        />
       )}
       <IconButton icon="KeyRound" title={t('rail.keys')} onClick={() => openSettings('keys')} />
       <IconButton icon="Settings" title={t('rail.settings')} onClick={() => openSettings('general')} />

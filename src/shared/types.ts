@@ -450,6 +450,8 @@ export interface UpdateStatus {
   version?: string
   progress?: number
   error?: string
+  /** Notes de version en texte simple (« ## » pour un titre, « - » pour un élément de liste). */
+  notes?: string
 }
 
 /** État d'une clé roso.info (`/api/auth/status`, sans crédit). */

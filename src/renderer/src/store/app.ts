@@ -133,6 +133,12 @@ export const useApp = create<AppState>((set, get) => ({
       if (e.investigationId === useGraph.getState().investigation?.id) void useGraph.getState().refreshSuggestions()
     })
     onEvent('update:status', (update) => set({ update }))
+    // Une version a pu être trouvée ou téléchargée avant que l'interface n'écoute.
+    void api('update:get')
+      .then((update) => {
+        if (update.state !== 'idle' && get().update.state === 'idle') set({ update })
+      })
+      .catch(() => undefined)
     // L'événement signale une enquête en attente ; on la récupère aussi au démarrage
     // au cas où l'import a eu lieu avant que l'interface n'écoute.
     const openPending = async (): Promise<void> => {

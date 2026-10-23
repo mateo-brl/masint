@@ -189,6 +189,8 @@ export interface ApiMap {
   /** Enquêtes importées depuis l'explorateur et pas encore ouvertes. */
   'app:takePendingOpen': () => string[]
   'update:check': () => UpdateStatus
+  /** État courant (une version peut avoir été téléchargée avant l'ouverture de l'interface). */
+  'update:get': () => UpdateStatus
   'update:install': () => void
 }
 
