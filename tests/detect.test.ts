@@ -18,7 +18,11 @@ describe('detectEntity', () => {
     ['AS15169', 'asn'],
     ['CVE-2024-3400', 'cve'],
     ['48.8566, 2.3522', 'coordinates'],
-    ['d41d8cd98f00b204e9800998ecf8427e', 'hash']
+    ['d41d8cd98f00b204e9800998ecf8427e', 'hash'],
+    ['W521000703', 'organization'],
+    // Numéro RPPS fictif (clé de Luhn valide) ; une clé fausse reste un téléphone.
+    ['10999999997', 'id_document'],
+    ['10999999998', 'phone']
   ])('%s → %s', (input, type) => {
     expect(detectEntity(input)?.type).toBe(type)
   })

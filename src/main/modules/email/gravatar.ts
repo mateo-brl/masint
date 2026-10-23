@@ -65,7 +65,8 @@ export function parseGravatarLegacy(json: { entry?: LegacyEntry[] }, email: stri
         pronouns: e.pronouns
       }),
       image: e.thumbnailUrl ? `${e.thumbnailUrl}?s=400` : undefined,
-      linkLabel: tr({ lang }, 'profil Gravatar', 'Gravatar profile')
+      linkLabel: tr({ lang }, 'profil Gravatar', 'Gravatar profile'),
+      strength: 'same'
     })
   ]
   for (const a of e.accounts ?? []) {
@@ -76,7 +77,8 @@ export function parseGravatarLegacy(json: { entry?: LegacyEntry[] }, email: stri
       accountEntity(platform, a.name || a.domain || 'Compte', label, {
         from: 'gravatar',
         data: compact({ username: a.username, url: a.url }),
-        linkLabel: tr({ lang }, 'compte vérifié', 'verified account')
+        linkLabel: tr({ lang }, 'compte vérifié', 'verified account'),
+        strength: 'same'
       })
     )
   }
@@ -112,7 +114,8 @@ export function parseGravatarV3(json: V3Profile, email: string, lang: 'fr' | 'en
         pronouns: json.pronouns
       }),
       image: json.avatar_url ? `${json.avatar_url}?s=400` : undefined,
-      linkLabel: tr({ lang }, 'profil Gravatar', 'Gravatar profile')
+      linkLabel: tr({ lang }, 'profil Gravatar', 'Gravatar profile'),
+      strength: 'same'
     })
   ]
   for (const a of json.verified_accounts ?? []) {
@@ -123,7 +126,8 @@ export function parseGravatarV3(json: V3Profile, email: string, lang: 'fr' | 'en
       accountEntity(platform, a.service_label || 'Compte', label, {
         from: 'gravatar',
         data: compact({ url: a.url }),
-        linkLabel: tr({ lang }, 'compte vérifié', 'verified account')
+        linkLabel: tr({ lang }, 'compte vérifié', 'verified account'),
+        strength: 'same'
       })
     )
   }
@@ -167,7 +171,8 @@ export default defineModule({
         accountEntity('gravatar', 'Gravatar', hash, {
           data: { url: `https://gravatar.com/avatar/${hash}`, bio: tr(ctx, 'Avatar sans profil public', 'Avatar without public profile') },
           image: avatar,
-          linkLabel: tr(ctx, 'avatar Gravatar', 'Gravatar avatar')
+          linkLabel: tr(ctx, 'avatar Gravatar', 'Gravatar avatar'),
+          strength: 'same'
         })
       ]
     }

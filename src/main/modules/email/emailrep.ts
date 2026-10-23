@@ -42,7 +42,8 @@ export function parseEmailRep(json: EmailRepResponse, email: string, lang: 'fr' 
   for (const p of d.profiles ?? []) {
     const platform = socialPlatform(p) ?? p
     entities.push(
-      accountEntity(platform, p, email, { linkLabel: tr({ lang }, 'profil signalé (EmailRep)', 'profile reported (EmailRep)') })
+      // Profil signalé par un tiers, sans pseudo : simple mention.
+      accountEntity(platform, p, email, { linkLabel: tr({ lang }, 'profil signalé (EmailRep)', 'profile reported (EmailRep)'), strength: 'mention' })
     )
   }
   return {

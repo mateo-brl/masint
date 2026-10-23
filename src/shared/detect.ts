@@ -38,6 +38,29 @@ export function isValidIban(raw: string): boolean {
   return rem === 1
 }
 
+/** Clé de contrôle de Luhn (SIREN, SIRET, numéro RPPS). */
+export function luhnValid(digits: string): boolean {
+  let sum = 0
+  for (let i = 0; i < digits.length; i++) {
+    let d = Number(digits[digits.length - 1 - i])
+    if (i % 2 === 1) {
+      d *= 2
+      if (d > 9) d -= 9
+    }
+    sum += d
+  }
+  return sum % 10 === 0
+}
+
+/**
+ * Numéro RPPS d'un professionnel de santé : 11 chiffres commençant par 10, clé de Luhn.
+ * Aucun numéro nord-américain sans « + » ne s'écrit ainsi (un indicatif régional ne commence
+ * jamais par 0) ni aucun mobile chinois (13 à 19), d'où l'absence de confusion avec un téléphone.
+ */
+export function isRpps(q: string): boolean {
+  return /^10\d{9}$/.test(q) && luhnValid(q)
+}
+
 export function detectCryptoChain(q: string): string | null {
   if (/^(bitcoincash:)?[qp][02-9ac-hj-np-z]{41}$/.test(q)) return 'bitcoincash'
   if (/^X[1-9A-HJ-NP-Za-km-z]{33}$/.test(q)) return 'dash'
@@ -94,11 +117,17 @@ export function detectEntity(raw: string): Detection | null {
   const algo = hashAlgorithm(q)
   if (algo && algo !== 'SHA-1') return { type: 'hash', value: q.toLowerCase() }
 
+  // Numéro RNA d'une association (répertoire national des associations).
+  if (/^W\d{9}$/i.test(q)) return { type: 'organization', value: q.toUpperCase() }
+
   if (!/\s/.test(q) || /^bitcoincash:/.test(q)) {
     const chain = detectCryptoChain(q)
     if (chain && !(chain === 'solana' && /^[a-z]+$/i.test(q)))
       return { type: 'crypto_wallet', value: q, platform: chain }
   }
+
+  // Numéro RPPS (pièce d'identité professionnelle), avant le téléphone qui accepte 11 chiffres.
+  if (isRpps(q)) return { type: 'id_document', value: q }
 
   const phone = normalizePhone(q)
   if (phone) return { type: 'phone', value: phone }

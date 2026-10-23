@@ -1,0 +1,58 @@
+{
+ "results": [
+  {
+   "siren": "217500016",
+   "nom_complet": "VILLE DE PARIS",
+   "nature_juridique": "7229",
+   "siege": {
+    "adresse": "4 PL HOTEL VILLE ESP LIBERATION 75004 PARIS 04",
+    "latitude": "48.856507956",
+    "longitude": "2.3520586814"
+   },
+   "complements": {
+    "collectivite_territoriale": {
+     "code": "75C",
+     "niveau": "Ville de Paris",
+     "elus": [
+      {
+       "nom": "GRÉGOIRE",
+       "prenoms": "Emmanuel",
+       "annee_de_naissance": "1977-12",
+       "fonction": "Maire",
+       "sexe": "M"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "siren": "200054781",
+   "nom_complet": "METROPOLE DU GRAND PARIS (MGP)",
+   "nature_juridique": "7344",
+   "siege": {
+    "adresse": "BATIMENT BE OPEN 15 AVENUE PIERRE MENDES FRANCE 75013 PARIS",
+    "latitude": "48.837418805",
+    "longitude": "2.3703160016"
+   },
+   "complements": {
+    "collectivite_territoriale": {
+     "code": "200054781",
+     "niveau": "EPCI",
+     "elus": [
+      {
+       "nom": "GRÉGOIRE",
+       "prenoms": "Emmanuel",
+       "annee_de_naissance": "1977-12",
+       "fonction": null,
+       "sexe": "M"
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "total_results": 2,
+ "page": 1,
+ "per_page": 25,
+ "total_pages": 1
+}

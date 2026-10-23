@@ -1,6 +1,11 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type {
+  ActivityAction,
+  ActivityEntry,
+  ActivityTarget,
   Attachment,
+  Capture,
+  Corroboration,
   CrossRef,
   EdgeInput,
   GlobalSearchHit,
@@ -11,13 +16,17 @@ import type {
   ModuleRun,
   NodeInput,
   ModuleRunStats,
+  Observation,
   PropValue,
+  ProvenanceStep,
   SavedNode,
+  StoredAssist,
   Suggestion,
   UpsertOptions
 } from '@shared/types'
 import { canonicalKey } from '@shared/canonical'
 import { ftsQuery, UNCORRELATED_TYPES } from '@shared/correlation'
+import { activityHash, GENESIS_HASH } from '../activity'
 import type { DB } from './database'
 
 const now = (): number => Date.now()
@@ -36,6 +45,43 @@ const parse = <T>(s: string | null | undefined, fallback: T): T => {
  */
 export function dedupKey(type: string, label: string, platform?: string | null): string {
   return canonicalKey(type, label, platform)
+}
+
+/** Profondeur valide (entier positif), 0 sinon. */
+const hopOf = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.round(v)) : 0)
+
+/** Observation à enregistrer (identifiant généré si absent). */
+export type ObservationInput = Omit<Observation, 'id'> & { id?: string }
+
+interface ObservationRow {
+  id: string
+  investigation_id: string
+  node_id: string
+  edge_id: string | null
+  property: string | null
+  run_id: string
+  module_id: string
+  source_url: string | null
+  observed_at: number
+}
+
+const toObservation = (r: ObservationRow): Observation => ({
+  id: r.id,
+  investigationId: r.investigation_id,
+  nodeId: r.node_id,
+  edgeId: r.edge_id,
+  property: r.property,
+  runId: r.run_id,
+  moduleId: r.module_id,
+  sourceUrl: r.source_url,
+  observedAt: r.observed_at
+})
+
+/** Découpe une liste d'identifiants pour les requêtes `IN (...)` (limite de paramètres). */
+function chunks<T>(list: T[], size = 400): T[][] {
+  const out: T[][] = []
+  for (let i = 0; i < list.length; i += size) out.push(list.slice(i, i + size))
+  return out
 }
 
 /** Exécution archivée avec la réponse brute du service (JSON sérialisé). */
@@ -86,6 +132,7 @@ interface NodeRow {
   height: number | null
   style: string
   source: string
+  hop: number | null
   created_at: number
   updated_at: number
 }
@@ -132,6 +179,7 @@ const toNode = (r: NodeRow): GraphNode => ({
   height: r.height,
   style: parse(r.style, {}),
   source: r.source,
+  hop: r.hop ?? 0,
   createdAt: r.created_at,
   updatedAt: r.updated_at
 })
@@ -227,7 +275,7 @@ export class Repo {
   getBundle(id: string): InvestigationBundle {
     const investigation = this.getInvestigation(id)
     if (!investigation) throw new Error(`Enquête introuvable : ${id}`)
-    return { investigation, nodes: this.listNodes(id), edges: this.listEdges(id) }
+    return { investigation, nodes: this.listNodes(id), edges: this.listEdges(id), corroboration: this.corroboration(id) }
   }
 
   // -------------------------------------------------------------------------
@@ -288,13 +336,13 @@ export class Repo {
       'SELECT id FROM nodes WHERE investigation_id = ? AND dedup_key = ? AND id != ? AND deleted_at IS NULL ORDER BY created_at, rowid LIMIT 1'
     )
     const insert = this.db.prepare(
-      `INSERT INTO nodes (id, investigation_id, kind, type, label, platform, data, notes, image_id, x, y, width, height, style, source, dedup_key, created_at, updated_at)
-       VALUES (@id, @investigation_id, @kind, @type, @label, @platform, @data, @notes, @image_id, @x, @y, @width, @height, @style, @source, @dedup_key, @created_at, @updated_at)`
+      `INSERT INTO nodes (id, investigation_id, kind, type, label, platform, data, notes, image_id, x, y, width, height, style, source, hop, dedup_key, created_at, updated_at)
+       VALUES (@id, @investigation_id, @kind, @type, @label, @platform, @data, @notes, @image_id, @x, @y, @width, @height, @style, @source, @hop, @dedup_key, @created_at, @updated_at)`
     )
     const update = this.db.prepare(
       `UPDATE nodes SET kind = @kind, type = @type, label = @label, platform = @platform, data = @data, notes = @notes,
          image_id = @image_id, x = @x, y = @y, width = @width, height = @height, style = @style, source = @source,
-         dedup_key = @dedup_key, updated_at = @updated_at
+         hop = @hop, dedup_key = @dedup_key, updated_at = @updated_at
        WHERE id = @id AND investigation_id = @investigation_id`
     )
     const out: SavedNode[] = []
@@ -320,6 +368,7 @@ export class Repo {
           height: input.height !== undefined ? input.height : (existing?.height ?? null),
           style: input.style ?? existing?.style ?? {},
           source: input.source ?? existing?.source ?? 'manual',
+          hop: hopOf(input.hop ?? existing?.hop),
           createdAt: existing?.createdAt ?? t,
           updatedAt: t
         }
@@ -340,6 +389,7 @@ export class Repo {
           height: merged.height,
           style: JSON.stringify(merged.style),
           source: merged.source,
+          hop: merged.hop,
           dedup_key: key,
           created_at: merged.createdAt,
           updated_at: t
@@ -361,18 +411,32 @@ export class Repo {
 
   /** Fusionne des propriétés dans un nœud sans écraser les valeurs existantes non vides. */
   mergeNodeData(id: string, props: Record<string, PropValue>, overwrite = true): GraphNode | null {
+    return this.mergeProps(id, props, overwrite)?.node ?? null
+  }
+
+  /**
+   * Comme `mergeNodeData`, avec les clés retenues : écrites, complétées (listes) ou déjà
+   * identiques (corroboration). Une valeur différente qui n'écrase pas l'existante n'en fait
+   * pas partie : son origine ne doit pas être attribuée à ce module.
+   */
+  mergeProps(id: string, props: Record<string, PropValue>, overwrite = true): { node: GraphNode; keys: string[] } | null {
     const node = this.getNode(id)
     if (!node) return null
     const data = { ...node.data }
+    const keys: string[] = []
     for (const [k, v] of Object.entries(props)) {
-      if (v === undefined || v === null || v === '') continue
+      if (v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0)) continue
       if (Array.isArray(v) && Array.isArray(data[k])) {
         data[k] = Array.from(new Set([...(data[k] as string[]), ...(v as string[])]))
+        keys.push(k)
       } else if (overwrite || data[k] === undefined || data[k] === null || data[k] === '') {
         data[k] = v
+        keys.push(k)
+      } else if (JSON.stringify(data[k]) === JSON.stringify(v)) {
+        keys.push(k)
       }
     }
-    return this.upsertNodes(node.investigationId, [{ id, data }])[0]
+    return { node: this.upsertNodes(node.investigationId, [{ id, data }])[0], keys }
   }
 
   /**
@@ -639,6 +703,11 @@ export class Repo {
     return this.getSuggestion(id)
   }
 
+  /** Dernier résultat de recherche assistée d'une recherche manuelle (`null` l'efface). */
+  setSuggestionAssist(id: string, assist: StoredAssist | null): void {
+    this.db.prepare('UPDATE suggestions SET assist_result = ? WHERE id = ?').run(assist ? JSON.stringify(assist) : null, id)
+  }
+
   /** Remet à l'état « à vérifier » les suggestions écartées d'un nœud (nouvel examen). */
   resetSuggestions(investigationId: string, nodeId: string): void {
     this.db
@@ -745,11 +814,13 @@ export class Repo {
     const runs = this.db.prepare('UPDATE module_runs SET node_id = ? WHERE investigation_id = ? AND node_id = ?')
     // Suggestion déjà connue sur la cible (même valeur) : la plus ancienne est gardée.
     const sugg = this.db.prepare('UPDATE OR IGNORE suggestions SET node_id = ? WHERE investigation_id = ? AND node_id = ?')
+    const captures = this.db.prepare('UPDATE captures SET node_id = ? WHERE investigation_id = ? AND node_id = ?')
     this.db.transaction(() => {
       for (const id of fromIds) {
         if (id === toId) continue
         runs.run(toId, investigationId, id)
         sugg.run(toId, investigationId, id)
+        captures.run(toId, investigationId, id)
       }
     })()
   }
@@ -763,6 +834,285 @@ export class Repo {
   getRunRaw(id: string): unknown {
     const r = this.db.prepare('SELECT raw FROM module_runs WHERE id = ?').get(id) as { raw: string | null } | undefined
     return parse(r?.raw, null)
+  }
+
+  // -------------------------------------------------------------------------
+  // Observations (provenance fine)
+  //
+  // Les lectures ignorent les observations des nœuds supprimés (`deleted_at` ou ligne absente) :
+  // une suppression annulée (Ctrl+Z recrée le nœud sous le même identifiant) retrouve sa
+  // provenance. Les observations orphelines sont effacées à la réouverture de l'enquête, quand
+  // l'historique d'annulation n'existe plus (`purgeOrphanObservations`).
+
+  /**
+   * Enregistre des observations. Une même observation (nœud, lien, propriété, module) n'est
+   * gardée qu'une fois : elle prend la date, l'exécution et, si elle en a une, la page source
+   * de la plus récente.
+   */
+  addObservations(rows: ObservationInput[]): void {
+    if (!rows.length) return
+    const find = this.db.prepare(
+      'SELECT id FROM observations WHERE investigation_id = ? AND node_id = ? AND module_id = ? AND edge_id IS ? AND property IS ? LIMIT 1'
+    )
+    const update = this.db.prepare('UPDATE observations SET run_id = ?, observed_at = ?, source_url = COALESCE(?, source_url) WHERE id = ?')
+    const insert = this.db.prepare(
+      `INSERT INTO observations (id, investigation_id, node_id, edge_id, property, run_id, module_id, source_url, observed_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    this.db.transaction(() => {
+      for (const r of rows) {
+        const found = find.get(r.investigationId, r.nodeId, r.moduleId, r.edgeId, r.property) as { id: string } | undefined
+        if (found) update.run(r.runId, r.observedAt, r.sourceUrl, found.id)
+        else insert.run(r.id ?? randomUUID(), r.investigationId, r.nodeId, r.edgeId, r.property, r.runId, r.moduleId, r.sourceUrl, r.observedAt)
+      }
+    })()
+  }
+
+  /** Observations d'un nœud (entité et propriétés) ou d'un lien, de la plus ancienne à la plus récente. */
+  listObservations(investigationId: string, target: { nodeId?: string; edgeId?: string }): Observation[] {
+    const where = target.edgeId ? 'o.edge_id = ?' : 'o.node_id = ?'
+    const rows = this.db
+      .prepare(
+        `SELECT o.* FROM observations o JOIN nodes x ON x.id = o.node_id AND x.deleted_at IS NULL
+         WHERE o.investigation_id = ? AND ${where} ORDER BY o.observed_at, o.rowid`
+      )
+      .all(investigationId, target.edgeId ?? target.nodeId ?? '') as ObservationRow[]
+    return rows.map(toObservation)
+  }
+
+  /**
+   * Score de corroboration : nombre de modules distincts qui ont observé chaque nœud et chaque
+   * lien. Sans `scope`, toute l'enquête ; avec `scope`, seulement les éléments demandés (à 0
+   * s'ils n'ont aucune observation).
+   */
+  corroboration(investigationId: string, scope?: { nodeIds?: string[]; edgeIds?: string[] }): Corroboration {
+    const out: Corroboration = { nodes: {}, edges: {} }
+    type Row = { id: string; n: number }
+    const nodeSql = (filter: string): string =>
+      `SELECT o.node_id AS id, COUNT(DISTINCT o.module_id) AS n FROM observations o
+       JOIN nodes x ON x.id = o.node_id AND x.deleted_at IS NULL
+       WHERE o.investigation_id = ? ${filter} GROUP BY o.node_id`
+    const edgeSql = (filter: string): string =>
+      `SELECT o.edge_id AS id, COUNT(DISTINCT o.module_id) AS n FROM observations o
+       JOIN edges e ON e.id = o.edge_id AND e.deleted_at IS NULL
+       JOIN nodes x ON x.id = o.node_id AND x.deleted_at IS NULL
+       WHERE o.investigation_id = ? AND o.edge_id IS NOT NULL ${filter} GROUP BY o.edge_id`
+    const fill = (target: Record<string, number>, rows: Row[]): void => {
+      for (const r of rows) target[r.id] = r.n
+    }
+    if (!scope) {
+      fill(out.nodes, this.db.prepare(nodeSql('')).all(investigationId) as Row[])
+      fill(out.edges, this.db.prepare(edgeSql('')).all(investigationId) as Row[])
+      return out
+    }
+    for (const part of chunks(Array.from(new Set(scope.nodeIds ?? [])))) {
+      for (const id of part) out.nodes[id] = 0
+      fill(out.nodes, this.db.prepare(nodeSql(`AND o.node_id IN (${part.map(() => '?').join(',')})`)).all(investigationId, ...part) as Row[])
+    }
+    for (const part of chunks(Array.from(new Set(scope.edgeIds ?? [])))) {
+      for (const id of part) out.edges[id] = 0
+      fill(out.edges, this.db.prepare(edgeSql(`AND o.edge_id IN (${part.map(() => '?').join(',')})`)).all(investigationId, ...part) as Row[])
+    }
+    return out
+  }
+
+  /**
+   * Chemin d'un nœud trouvé par un module : à chaque étape, le module qui l'a trouvé et le nœud
+   * d'où il venait (autre extrémité du lien observé, sinon nœud de l'exécution). On remonte
+   * jusqu'à un nœud saisi (profondeur 0).
+   */
+  provenancePath(nodeId: string, maxSteps = 8): ProvenanceStep[] {
+    const first = this.db.prepare(
+      `SELECT module_id, edge_id, run_id FROM observations WHERE node_id = ? AND property IS NULL
+       ORDER BY (module_id = ?) DESC, observed_at, rowid LIMIT 1`
+    )
+    const runNode = this.db.prepare('SELECT node_id FROM module_runs WHERE id = ?')
+    const steps: ProvenanceStep[] = []
+    const seen = new Set<string>()
+    let cur = this.getNode(nodeId)
+    while (cur && (cur.hop ?? 0) > 0 && steps.length < maxSteps && !seen.has(cur.id)) {
+      seen.add(cur.id)
+      const row = first.get(cur.id, cur.source) as { module_id: string; edge_id: string | null; run_id: string } | undefined
+      if (!row) break
+      let parentId: string | null = null
+      const edge = row.edge_id ? this.getEdge(row.edge_id) : null
+      if (edge) parentId = edge.source === cur.id ? edge.target : edge.source
+      if (!parentId && row.run_id) parentId = (runNode.get(row.run_id) as { node_id: string } | undefined)?.node_id ?? null
+      const parent = parentId && parentId !== cur.id ? this.getNode(parentId) : null
+      steps.unshift({ moduleId: row.module_id, fromId: parent?.id ?? null, fromLabel: parent?.label ?? null, fromType: parent?.type ?? null })
+      cur = parent
+    }
+    return steps
+  }
+
+  /**
+   * Fusion : les observations des nœuds absorbés passent sur la cible, celles de leurs liens sur
+   * le lien qui les remplace (`edgeMap`, `null` pour un lien disparu). Les doublons créés par le
+   * report (même module, même lien, même propriété) sont retirés.
+   */
+  reassignObservations(investigationId: string, fromIds: string[], toId: string, edgeMap: Map<string, string | null>): void {
+    const edgeUpd = this.db.prepare('UPDATE observations SET edge_id = ? WHERE investigation_id = ? AND edge_id = ?')
+    const nodeUpd = this.db.prepare('UPDATE observations SET node_id = ? WHERE investigation_id = ? AND node_id = ?')
+    const dedup = this.db.prepare(
+      `DELETE FROM observations WHERE investigation_id = ? AND node_id = ? AND rowid NOT IN (
+         SELECT MAX(rowid) FROM observations WHERE investigation_id = ? AND node_id = ?
+         GROUP BY module_id, COALESCE(edge_id, ''), COALESCE(property, ''))`
+    )
+    this.db.transaction(() => {
+      for (const [from, to] of edgeMap) if (from !== to) edgeUpd.run(to, investigationId, from)
+      for (const id of fromIds) if (id !== toId) nodeUpd.run(toId, investigationId, id)
+      dedup.run(investigationId, toId, investigationId, toId)
+    })()
+  }
+
+  /** Observations à archiver : nœuds présents seulement, lien oublié s'il n'existe plus. */
+  listObservationsForArchive(investigationId: string): Observation[] {
+    const rows = this.db
+      .prepare(
+        `SELECT o.id, o.investigation_id, o.node_id, e.id AS edge_id, o.property, o.run_id, o.module_id, o.source_url, o.observed_at
+         FROM observations o
+         JOIN nodes x ON x.id = o.node_id AND x.investigation_id = o.investigation_id AND x.deleted_at IS NULL
+         LEFT JOIN edges e ON e.id = o.edge_id AND e.deleted_at IS NULL
+         WHERE o.investigation_id = ? ORDER BY o.observed_at, o.rowid`
+      )
+      .all(investigationId) as ObservationRow[]
+    return rows.map(toObservation)
+  }
+
+  /**
+   * Efface les observations des nœuds supprimés et oublie les liens supprimés. Appelée à
+   * l'ouverture d'une enquête : l'historique d'annulation de la session précédente n'existe plus.
+   */
+  purgeOrphanObservations(investigationId: string): number {
+    let removed = 0
+    this.db.transaction(() => {
+      removed = this.db
+        .prepare(
+          `DELETE FROM observations WHERE investigation_id = ? AND node_id NOT IN (
+             SELECT id FROM nodes WHERE investigation_id = ? AND deleted_at IS NULL)`
+        )
+        .run(investigationId, investigationId).changes
+      this.db
+        .prepare(
+          `UPDATE observations SET edge_id = NULL WHERE investigation_id = ? AND edge_id IS NOT NULL AND edge_id NOT IN (
+             SELECT id FROM edges WHERE investigation_id = ? AND deleted_at IS NULL)`
+        )
+        .run(investigationId, investigationId)
+    })()
+    return removed
+  }
+
+  /** Dernière exécution d'un module sur un nœud (observations d'une suggestion validée). */
+  lastRunId(investigationId: string, nodeId: string, moduleId: string): string | null {
+    const r = this.db
+      .prepare('SELECT id FROM module_runs WHERE investigation_id = ? AND node_id = ? AND module_id = ? ORDER BY started_at DESC, rowid DESC LIMIT 1')
+      .get(investigationId, nodeId, moduleId) as { id: string } | undefined
+    return r?.id ?? null
+  }
+
+  /**
+   * Identifiant déjà enrichi depuis `since`, dans n'importe quelle enquête : un autre nœud de
+   * même clé (hors `exceptId`) a une exécution terminée. Garde-fou de l'enchaînement.
+   */
+  recentlyEnriched(key: string, since: number, exceptId: string): boolean {
+    const r = this.db
+      .prepare(
+        `SELECT 1 FROM module_runs r JOIN nodes n ON n.id = r.node_id AND n.deleted_at IS NULL
+         WHERE n.dedup_key = ? AND n.id != ? AND r.status = 'done' AND r.finished_at >= ? LIMIT 1`
+      )
+      .get(key, exceptId, since)
+    return !!r
+  }
+
+  // -------------------------------------------------------------------------
+  // Preuves (captures de pages)
+
+  addCapture(c: Omit<Capture, 'id'> & { id?: string }): Capture {
+    const id = c.id ?? randomUUID()
+    this.db
+      .prepare(
+        `INSERT INTO captures (id, investigation_id, node_id, url, final_url, title, captured_at, screenshot_attachment, mhtml_attachment, meta_attachment, manifest_sha256)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .run(id, c.investigationId, c.nodeId, c.url, c.finalUrl, c.title, c.capturedAt, c.screenshotAttachment, c.mhtmlAttachment, c.metaAttachment, c.manifestSha256)
+    return this.getCapture(id)!
+  }
+
+  getCapture(id: string): Capture | null {
+    const r = this.db.prepare('SELECT * FROM captures WHERE id = ?').get(id) as CaptureRow | undefined
+    return r ? toCapture(r) : null
+  }
+
+  /**
+   * Captures d'une enquête (ou d'un nœud), les plus récentes d'abord. Celles d'un nœud supprimé
+   * restent en base mais ne sont ni listées, ni archivées, ni citées au rapport, comme ses
+   * exécutions ; une capture sans nœud (page ouverte hors d'une fiche) appartient à l'enquête.
+   */
+  listCaptures(investigationId: string, nodeId?: string): Capture[] {
+    const rows = this.db
+      .prepare(
+        `SELECT c.* FROM captures c LEFT JOIN nodes n ON n.id = c.node_id AND n.investigation_id = c.investigation_id AND n.deleted_at IS NULL
+         WHERE c.investigation_id = ? AND (c.node_id IS NULL OR n.id IS NOT NULL) ${nodeId ? 'AND c.node_id = ?' : ''}
+         ORDER BY c.captured_at DESC, c.rowid DESC`
+      )
+      .all(...(nodeId ? [investigationId, nodeId] : [investigationId])) as CaptureRow[]
+    return rows.map(toCapture)
+  }
+
+  // -------------------------------------------------------------------------
+  // Journal d'activité (ajout seul, chaîné ; voir ../activity.ts)
+
+  /** Ajoute une entrée au bout de la chaîne de l'enquête (rang et empreintes calculés ici). */
+  appendActivity(investigationId: string, e: { at: string; actor: string; action: ActivityAction; target: ActivityTarget }): ActivityEntry {
+    return this.db.transaction(() => {
+      const last = this.db
+        .prepare('SELECT seq, hash FROM activity WHERE investigation_id = ? ORDER BY seq DESC LIMIT 1')
+        .get(investigationId) as { seq: number; hash: string } | undefined
+      const seq = (last?.seq ?? 0) + 1
+      const prevHash = last?.hash ?? GENESIS_HASH
+      const entry: ActivityEntry = { id: randomUUID(), investigationId, seq, at: e.at, actor: e.actor, action: e.action, target: e.target, prevHash, hash: '' }
+      entry.hash = activityHash(prevHash, entry)
+      this.insertActivity(entry)
+      return entry
+    })()
+  }
+
+  /**
+   * Entrées reprises d'une archive : rang, date, auteur, objet et empreintes gardés tels quels
+   * (la chaîne importée se vérifie comme l'originale), nouvel identifiant de ligne.
+   */
+  importActivity(investigationId: string, entries: ActivityEntry[]): void {
+    this.db.transaction(() => {
+      for (const e of entries) this.insertActivity({ ...e, id: randomUUID(), investigationId })
+    })()
+  }
+
+  private insertActivity(e: ActivityEntry): void {
+    this.db
+      .prepare('INSERT INTO activity (id, investigation_id, seq, at, actor, action, target, prev_hash, hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(e.id, e.investigationId, e.seq, e.at, e.actor, e.action, JSON.stringify(e.target ?? {}), e.prevHash, e.hash)
+  }
+
+  /** Journal complet d'une enquête, dans l'ordre de la chaîne. */
+  allActivity(investigationId: string): ActivityEntry[] {
+    return (this.db.prepare('SELECT * FROM activity WHERE investigation_id = ? ORDER BY seq').all(investigationId) as ActivityRow[]).map(toActivity)
+  }
+
+  /** Page du journal, de la plus récente à la plus ancienne, éventuellement filtrée par action. */
+  listActivity(investigationId: string, opts: { offset?: number; limit?: number; actions?: string[] } = {}): { entries: ActivityEntry[]; total: number } {
+    const actions = opts.actions?.length ? opts.actions : null
+    const where = `investigation_id = ?${actions ? ` AND action IN (${actions.map(() => '?').join(', ')})` : ''}`
+    const params = [investigationId, ...(actions ?? [])]
+    const total = (this.db.prepare(`SELECT COUNT(*) AS n FROM activity WHERE ${where}`).get(...params) as { n: number }).n
+    const limit = Math.min(500, Math.max(1, Math.round(opts.limit ?? 50)))
+    const offset = Math.max(0, Math.round(opts.offset ?? 0))
+    const rows = this.db.prepare(`SELECT * FROM activity WHERE ${where} ORDER BY seq DESC LIMIT ? OFFSET ?`).all(...params, limit, offset) as ActivityRow[]
+    return { entries: rows.map(toActivity), total }
+  }
+
+  activityCounts(investigationId: string): Partial<Record<ActivityAction, number>> {
+    const rows = this.db.prepare('SELECT action, COUNT(*) AS n FROM activity WHERE investigation_id = ? GROUP BY action').all(investigationId) as Array<{ action: ActivityAction; n: number }>
+    return Object.fromEntries(rows.map((r) => [r.action, r.n]))
   }
 
   // -------------------------------------------------------------------------
@@ -804,6 +1154,58 @@ export class Repo {
   }
 }
 
+interface CaptureRow {
+  id: string
+  investigation_id: string
+  node_id: string | null
+  url: string
+  final_url: string
+  title: string
+  captured_at: string
+  screenshot_attachment: string
+  mhtml_attachment: string
+  meta_attachment: string
+  manifest_sha256: string
+}
+
+const toCapture = (r: CaptureRow): Capture => ({
+  id: r.id,
+  investigationId: r.investigation_id,
+  nodeId: r.node_id,
+  url: r.url,
+  finalUrl: r.final_url,
+  title: r.title,
+  capturedAt: r.captured_at,
+  screenshotAttachment: r.screenshot_attachment,
+  mhtmlAttachment: r.mhtml_attachment,
+  metaAttachment: r.meta_attachment,
+  manifestSha256: r.manifest_sha256
+})
+
+interface ActivityRow {
+  id: string
+  investigation_id: string
+  seq: number
+  at: string
+  actor: string
+  action: string
+  target: string
+  prev_hash: string
+  hash: string
+}
+
+const toActivity = (r: ActivityRow): ActivityEntry => ({
+  id: r.id,
+  investigationId: r.investigation_id,
+  seq: r.seq,
+  at: r.at,
+  actor: r.actor,
+  action: r.action as ActivityAction,
+  target: parse(r.target, {}),
+  prevHash: r.prev_hash,
+  hash: r.hash
+})
+
 interface SuggestionRow {
   id: string
   investigation_id: string
@@ -818,6 +1220,7 @@ interface SuggestionRow {
   url: string | null
   reason: string
   status: string
+  assist_result?: string | null
   created_at: number
   updated_at: number
 }
@@ -837,6 +1240,7 @@ function toSuggestion(r: SuggestionRow): Suggestion {
     url: r.url,
     reason: r.reason,
     status: r.status as Suggestion['status'],
+    assist: parse<StoredAssist | null>(r.assist_result, null),
     createdAt: r.created_at,
     updatedAt: r.updated_at
   }

@@ -4,7 +4,7 @@
 
 import { ModuleError, type InputEntity, type ModuleOutput, type OutEntity } from '@shared/modules'
 import { PLATFORMS, getPlatform } from '@shared/platforms'
-import type { PropValue } from '@shared/types'
+import type { LinkStrength, PropValue } from '@shared/types'
 
 export type Lang = 'fr' | 'en'
 
@@ -95,6 +95,7 @@ export function profileOutput(
     entities.push(...children.map((c) => ({ ...c, from: c.from === ACCOUNT_REF ? '$input' : c.from })))
     return { found: true, properties: data, entities, raw }
   }
+  // Compte retrouvé par son identifiant : même identité que le pseudo cherché.
   const account: OutEntity = {
     ref: ACCOUNT_REF,
     type: 'account',
@@ -102,7 +103,8 @@ export function profileOutput(
     ...(known ? { platform } : {}),
     data,
     image: profile.image,
-    linkLabel: lang === 'fr' ? `compte ${site}` : `${site} account`
+    linkLabel: lang === 'fr' ? `compte ${site}` : `${site} account`,
+    strength: 'same'
   }
   return { found: true, entities: [account, ...children.map((c) => ({ ...c, from: c.from ?? ACCOUNT_REF }))], raw }
 }
@@ -184,16 +186,23 @@ export function normalizeUrl(u: string): string | null {
 /**
  * Entités issues d'un texte libre ou d'une liste de liens : emails, comptes reconnus, autres URL.
  * `selfPlatform`/`selfUser` évitent de relier le compte à lui-même.
+ *
+ * Force des liens (enchaînement) : les liens et emails déclarés par le profil sont `declared`,
+ * ce qui est extrait du texte libre est `mention`, les comptes vérifiés par la plateforme
+ * (`sameUrls`) sont `same`. `urlStrength` remplace la force des `urls`.
  */
 export function linkedEntities(
   opts: {
     text?: string
     urls?: Array<string | null | undefined>
+    /** Comptes reliés et vérifiés par la plateforme (comptes sociaux déclarés à GitHub...). */
+    sameUrls?: Array<string | null | undefined>
     emails?: Array<string | null | undefined>
     lang: Lang
     self?: { platform: string; username: string }
     textLabel?: { fr: string; en: string }
     linkLabel?: { fr: string; en: string }
+    urlStrength?: LinkStrength
   }
 ): OutEntity[] {
   const { lang } = opts
@@ -207,17 +216,21 @@ export function linkedEntities(
     seen.add(key)
     out.push(e)
   }
-  const emails = [...(opts.emails ?? []).filter((e): e is string => !!e), ...(opts.text ? extractEmails(opts.text) : [])]
-  for (const e of emails) {
+  const emails: Array<{ email: string; strength: LinkStrength }> = [
+    ...(opts.emails ?? []).filter((e): e is string => !!e).map((email) => ({ email, strength: 'declared' as const })),
+    ...(opts.text ? extractEmails(opts.text).map((email) => ({ email, strength: 'mention' as const })) : [])
+  ]
+  for (const { email: e, strength } of emails) {
     const email = e.trim().toLowerCase()
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || /noreply|no-reply/.test(email)) continue
-    push({ type: 'email', label: email, linkLabel: lang === 'fr' ? 'email' : 'email' })
+    push({ type: 'email', label: email, linkLabel: lang === 'fr' ? 'email' : 'email', strength })
   }
-  const urls: Array<{ url: string; fromText: boolean }> = [
-    ...(opts.urls ?? []).filter((u): u is string => !!u).map((url) => ({ url, fromText: false })),
-    ...(opts.text ? extractUrls(opts.text).map((url) => ({ url, fromText: true })) : [])
+  const urls: Array<{ url: string; fromText: boolean; strength: LinkStrength }> = [
+    ...(opts.sameUrls ?? []).filter((u): u is string => !!u).map((url) => ({ url, fromText: false, strength: 'same' as const })),
+    ...(opts.urls ?? []).filter((u): u is string => !!u).map((url) => ({ url, fromText: false, strength: opts.urlStrength ?? ('declared' as const) })),
+    ...(opts.text ? extractUrls(opts.text).map((url) => ({ url, fromText: true, strength: 'mention' as const })) : [])
   ]
-  for (const { url: rawUrl, fromText } of urls) {
+  for (const { url: rawUrl, fromText, strength } of urls) {
     const url = normalizeUrl(rawUrl)
     if (!url) continue
     const label = fromText ? textLabel : linkLabel
@@ -229,10 +242,11 @@ export function linkedEntities(
         label: acc.label ?? acc.username,
         platform: acc.platform,
         data: { username: acc.username, url },
-        linkLabel: label[lang]
+        linkLabel: label[lang],
+        strength
       })
     } else {
-      push({ type: 'url', label: url.replace(/\/$/, ''), data: { url }, linkLabel: label[lang] })
+      push({ type: 'url', label: url.replace(/\/$/, ''), data: { url }, linkLabel: label[lang], strength })
     }
   }
   return out

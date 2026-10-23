@@ -3,7 +3,7 @@
 <!-- Fichier généré : ne pas modifier à la main. -->
 <!-- Régénérer avec : node build/scripts/list-modules.mjs > docs/modules-list.md -->
 
-179 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
+208 modules en 17 catégories, extraits du code source de `src/main/modules/`. Le guide pour écrire un module est dans [modules.md](modules.md).
 
 Légende des remarques : **à la demande** (lancé seulement sur demande explicite, service à crédits), **bruyant** (peut alerter la personne recherchée), **expérimental** (résultats à vérifier). Une clé suivie de « (facultative) » améliore les résultats sans être obligatoire.
 
@@ -12,19 +12,19 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | [Téléphone](#phone) | 9 |
 | [Email](#email) | 39 |
 | [Pseudo](#username) | 3 |
-| [Personne](#person) | 7 |
+| [Personne](#person) | 13 |
 | [Domaine](#domain) | 17 |
 | [Adresse IP](#ip) | 14 |
 | [Site web](#web) | 8 |
 | [Crypto](#crypto) | 14 |
-| [Finance](#finance) | 2 |
-| [Entreprise](#company) | 5 |
-| [Localisation](#location) | 3 |
+| [Finance](#finance) | 4 |
+| [Entreprise](#company) | 23 |
+| [Localisation](#location) | 5 |
 | [Image](#image) | 4 |
 | [Messagerie](#messaging) | 2 |
 | [Réseaux sociaux](#social) | 32 |
 | [Forensic / IOC](#forensic) | 8 |
-| [Divers](#misc) | 3 |
+| [Divers](#misc) | 4 |
 | [roso.info](#roso) | 9 |
 
 <a id="phone"></a>
@@ -105,11 +105,17 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
+| `person.avocats` | Avocat (annuaire du CNB) | `person` |  |  |
 | `person.bodacc` | Annonces BODACC (France) | `person` |  |  |
 | `person.fr_deces` | Décès en France (INSEE) | `person` |  |  |
 | `person.fr_dirigeants` | Mandats de dirigeant (France) | `person` |  |  |
+| `person.fr_elus` | Mandats d’élu local (France) | `person` |  |  |
+| `person.hatvp` | Déclarations à la HATVP | `person` |  | expérimental |
 | `person.jorf` | Journal officiel (France) | `person` |  |  |
+| `person.rne_elus` | Répertoire national des élus | `person` |  |  |
+| `person.rpps` | Professionnel de santé (RPPS) | `person`, `id_document` |  |  |
 | `person.search_links` | Recherches manuelles (personne) | `person` |  |  |
+| `person.transparence_sante` | Liens avec l’industrie (Transparence Santé) | `person`, `id_document` |  |  |
 | `person.usernames` | Pseudos possibles (vérifiés) | `person` |  |  |
 | `person.wikidata` | Wikidata (personnalité publique) | `person` |  | expérimental |
 
@@ -200,8 +206,10 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
+| `finance.amf_blacklist` | Listes noires de l’AMF | `domain`, `website`, `email`, `company`, `organization` |  |  |
 | `finance.iban` | Analyse de l'IBAN | `iban` |  |  |
 | `finance.openiban` | Banque et BIC (OpenIBAN) | `iban` |  |  |
+| `finance.sanctions` | Sanctions et gel des avoirs (France, UE, OFAC) | `person`, `company`, `organization`, `email`, `phone`, `domain`, `website`, `crypto_wallet` |  |  |
 
 <a id="company"></a>
 
@@ -209,9 +217,27 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
+| `administration.annuaire` | Annuaire de l'administration (Service-Public.fr) | `administration`, `organization` |  |  |
+| `company.aides` | Aides de minimis | `company` |  |  |
+| `company.ares` | Entreprise tchèque (ARES) | `company` |  |  |
+| `company.avocats` | Cabinet d'avocats (annuaire du CNB) | `company` |  |  |
+| `company.avocats_liste` | Avocats d'un cabinet (liste) | `company` |  | à la demande |
+| `company.boamp` | Avis d'attribution (BOAMP) | `company` |  |  |
+| `company.bodacc` | Annonces BODACC et BALO (entreprise) | `company`, `organization` |  |  |
+| `company.brreg` | Entreprise norvégienne (Brønnøysund) | `company` |  |  |
 | `company.companies_house` | Société britannique (Companies House) | `company` | `companies_house` | expérimental |
+| `company.cro` | Entreprise irlandaise (CRO) | `company` |  |  |
 | `company.fr_registry` | Entreprise française (annuaire officiel) | `company` |  |  |
+| `company.gleif` | LEI et liens de groupe (GLEIF) | `company`, `organization` |  |  |
+| `company.hatvp_lobbying` | Représentant d’intérêts (HATVP) | `company`, `organization` |  | expérimental |
+| `company.icpe` | Installations classées (Géorisques) | `company` |  |  |
+| `company.jo_associations` | Journal officiel des associations | `organization`, `company` |  |  |
+| `company.marches_publics` | Marchés publics (DECP) | `company` |  |  |
 | `company.opencorporates` | Registres mondiaux (OpenCorporates) | `company` | `opencorporates` | expérimental |
+| `company.prh` | Entreprise finlandaise (PRH / YTJ) | `company` |  |  |
+| `company.sitadel` | Permis de construire de l'entreprise (Sitadel) | `company` |  |  |
+| `company.ted` | Marchés européens (TED) | `company` |  |  |
+| `company.transparence_sante` | Versements aux professionnels de santé (Transparence Santé) | `company` |  |  |
 | `company.vies` | TVA intracommunautaire (VIES) | `vat` |  |  |
 | `company.wikidata` | Wikidata (organisation) | `company`, `organization` |  | expérimental |
 
@@ -221,7 +247,9 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 
 | Identifiant | Nom | Entrées | Clés API | Remarques |
 | --- | --- | --- | --- | --- |
+| `location.entreprises_adresse` | Entreprises à une adresse (SIRENE) | `address`, `coordinates` |  |  |
 | `location.geocode` | Géocodage (BAN / OpenStreetMap) | `address`, `city`, `place` |  |  |
+| `location.immobilier` | Immobilier (cadastre, DVF, DPE, permis) | `address`, `coordinates` |  |  |
 | `location.map_links` | Liens cartographiques | `address`, `city`, `place`, `coordinates` |  |  |
 | `location.reverse` | Géocodage inverse | `coordinates` |  |  |
 
@@ -308,6 +336,7 @@ Légende des remarques : **à la demande** (lancé seulement sur demande explici
 | `misc.license_plate` | Analyse de la plaque d'immatriculation | `license_plate` |  |  |
 | `misc.mac_vendor` | Constructeur de l'adresse MAC | `mac_address` |  |  |
 | `misc.snowflake` | Date cachée dans l'identifiant | `account`, `group` |  |  |
+| `vehicle.rdw` | Véhicule néerlandais (RDW) | `license_plate` |  |  |
 
 <a id="roso"></a>
 

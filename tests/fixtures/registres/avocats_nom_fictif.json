@@ -1,0 +1,65 @@
+{
+ "data": [
+  {
+   "__id": 1,
+   "NomBarreau": "PARIS",
+   "avNom": "EXEMPLE",
+   "avPrenom": "Camille",
+   "cbRaisonSociale": "CABINET FICTIF AVOCATS",
+   "cbSiretSiren": "99999999700014",
+   "cbAdresse1": "1 rue de l'Exemple",
+   "cbAdresse2": null,
+   "cbCp": "75000",
+   "cbVille": "PARIS",
+   "spLibelle1": "Droit pénal",
+   "spLibelle2": "Droit des affaires",
+   "spLibelle3": null,
+   "acDateSerment": "2012-01-11",
+   "avLang": "Anglais, Espagnol"
+  },
+  {
+   "__id": 2,
+   "NomBarreau": "LYON",
+   "avNom": "EXEMPLE",
+   "avPrenom": "Camille",
+   "cbRaisonSociale": null,
+   "cbSiretSiren": null,
+   "cbAdresse1": "2 quai Fictif",
+   "cbAdresse2": null,
+   "cbCp": "69000",
+   "cbVille": "LYON",
+   "spLibelle1": null,
+   "spLibelle2": null,
+   "spLibelle3": null,
+   "acDateSerment": "2019-06-20",
+   "avLang": "Français"
+  },
+  {
+   "__id": 3,
+   "NomBarreau": "LILLE",
+   "avNom": "EXEMPLE",
+   "avPrenom": "Camille-Anne",
+   "cbRaisonSociale": "AUTRE CABINET FICTIF",
+   "cbSiretSiren": "999999996",
+   "cbAdresse1": "3 place Imaginaire",
+   "cbAdresse2": null,
+   "cbCp": "59000",
+   "cbVille": "LILLE",
+   "spLibelle1": null,
+   "spLibelle2": null,
+   "spLibelle3": null,
+   "acDateSerment": "2001-03-01",
+   "avLang": "Français"
+  }
+ ],
+ "links": {
+  "profile": "https://tabular-api.data.gouv.fr/api/resources/b9ff8dd7-0ea9-4dad-82fc-421f21a969ff/profile/",
+  "next": null,
+  "prev": null
+ },
+ "meta": {
+  "page": 1,
+  "page_size": 50,
+  "total": 3
+ }
+}

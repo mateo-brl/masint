@@ -6,7 +6,7 @@ import { setLanguage } from '../lib/i18n'
 import { useFilters } from './filters'
 import { useGraph } from './graph'
 
-export type View = 'graph' | 'map' | 'timeline' | 'modules' | 'notes' | 'table'
+export type View = 'graph' | 'map' | 'timeline' | 'modules' | 'notes' | 'journal' | 'table'
 
 export interface ToastAction {
   label: string

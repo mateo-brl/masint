@@ -1,0 +1,202 @@
+{
+ "rollegrupper": [
+  {
+   "roller": [
+    {
+     "avregistrert": false,
+     "person": {
+      "erDoed": false,
+      "fodselsdato": "1970-01-01",
+      "navn": {
+       "fornavn": "Kari",
+       "etternavn": "Nordmann"
+      }
+     },
+     "rekkefolge": 0,
+     "type": {
+      "_links": {
+       "self": {
+        "href": "https://data.brreg.no/enhetsregisteret/api/roller/rolletyper/DAGL"
+       }
+      },
+      "beskrivelse": "Daglig leder",
+      "kode": "DAGL"
+     }
+    }
+   ],
+   "sistEndret": "2020-11-02",
+   "type": {
+    "_links": {
+     "self": {
+      "href": "https://data.brreg.no/enhetsregisteret/api/roller/rollegruppetyper/DAGL"
+     }
+    },
+    "beskrivelse": "Daglig leder",
+    "kode": "DAGL"
+   }
+  },
+  {
+   "roller": [
+    {
+     "avregistrert": false,
+     "person": {
+      "erDoed": false,
+      "fodselsdato": "1965-01-01",
+      "navn": {
+       "fornavn": "Ola",
+       "etternavn": "Nordmann"
+      }
+     },
+     "rekkefolge": 0,
+     "type": {
+      "_links": {
+       "self": {
+        "href": "https://data.brreg.no/enhetsregisteret/api/roller/rolletyper/LEDE"
+       }
+      },
+      "beskrivelse": "Styrets leder",
+      "kode": "LEDE"
+     }
+    },
+    {
+     "avregistrert": false,
+     "person": {
+      "erDoed": false,
+      "fodselsdato": "1980-01-01",
+      "navn": {
+       "fornavn": "Ola",
+       "etternavn": "Nordmann"
+      }
+     },
+     "rekkefolge": 1,
+     "type": {
+      "_links": {
+       "self": {
+        "href": "https://data.brreg.no/enhetsregisteret/api/roller/rolletyper/MEDL"
+       }
+      },
+      "beskrivelse": "Styremedlem",
+      "kode": "MEDL"
+     }
+    },
+    {
+     "avregistrert": false,
+     "person": {
+      "erDoed": false,
+      "fodselsdato": "1975-01-01",
+      "navn": {
+       "fornavn": "Per",
+       "mellomnavn": "Olav",
+       "etternavn": "Eksempel"
+      }
+     },
+     "rekkefolge": 2,
+     "type": {
+      "_links": {
+       "self": {
+        "href": "https://data.brreg.no/enhetsregisteret/api/roller/rolletyper/MEDL"
+       }
+      },
+      "beskrivelse": "Styremedlem",
+      "kode": "MEDL"
+     }
+    },
+    {
+     "avregistrert": false,
+     "person": {
+      "erDoed": false,
+      "fodselsdato": "1972-01-01",
+      "navn": {
+       "fornavn": "Anne",
+       "etternavn": "Prøve"
+      }
+     },
+     "rekkefolge": 3,
+     "type": {
+      "_links": {
+       "self": {
+        "href": "https://data.brreg.no/enhetsregisteret/api/roller/rolletyper/MEDL"
+       }
+      },
+      "beskrivelse": "Styremedlem",
+      "kode": "MEDL"
+     }
+    }
+   ],
+   "sistEndret": "2026-09-04",
+   "type": {
+    "_links": {
+     "self": {
+      "href": "https://data.brreg.no/enhetsregisteret/api/roller/rollegruppetyper/STYR"
+     }
+    },
+    "beskrivelse": "Styre",
+    "kode": "STYR"
+   }
+  },
+  {
+   "roller": [
+    {
+     "avregistrert": false,
+     "enhet": {
+      "_links": {
+       "self": {
+        "href": "https://data.brreg.no/enhetsregisteret/api/enheter/976389387"
+       }
+      },
+      "erSlettet": false,
+      "godkjenningsstatus": "Godkjent revisjonsforetak",
+      "navn": [
+       "ERNST & YOUNG AS"
+      ],
+      "organisasjonsform": {
+       "_links": {
+        "self": {
+         "href": "https://data.brreg.no/enhetsregisteret/api/organisasjonsformer/AS"
+        }
+       },
+       "beskrivelse": "Aksjeselskap",
+       "kode": "AS"
+      },
+      "organisasjonsnummer": "976389387"
+     },
+     "rekkefolge": 0,
+     "type": {
+      "_links": {
+       "self": {
+        "href": "https://data.brreg.no/enhetsregisteret/api/roller/rolletyper/REVI"
+       }
+      },
+      "beskrivelse": "Revisor",
+      "kode": "REVI"
+     }
+    },
+    {
+     "avregistrert": true,
+     "person": {
+      "erDoed": false,
+      "fodselsdato": "1960-01-01",
+      "navn": {
+       "fornavn": "Lars",
+       "etternavn": "Tidligere"
+      }
+     },
+     "type": {
+      "kode": "MEDL",
+      "beskrivelse": "Styremedlem"
+     }
+    }
+   ],
+   "sistEndret": "2019-07-12",
+   "type": {
+    "_links": {
+     "self": {
+      "href": "https://data.brreg.no/enhetsregisteret/api/roller/rollegruppetyper/REVI"
+     }
+    },
+    "beskrivelse": "Revisor",
+    "kode": "REVI"
+   }
+  }
+ ]
+}

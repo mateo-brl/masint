@@ -60,7 +60,8 @@ export function parseTwitch(u: TwitchUser, lang: Lang, previousLogin?: string): 
     children.push({
       type: 'username',
       label: u.login,
-      linkLabel: lang === 'fr' ? 'pseudo actuel (même identifiant Twitch)' : 'current username (same Twitch ID)'
+      linkLabel: lang === 'fr' ? 'pseudo actuel (même identifiant Twitch)' : 'current username (same Twitch ID)',
+      strength: 'same'
     })
   return {
     profile: {

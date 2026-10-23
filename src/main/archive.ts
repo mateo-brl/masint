@@ -7,12 +7,17 @@
 //   dans `runs/<id>.json` ;
 // - seules les pièces jointes utilisées par un nœud présent sont embarquées (la photo d'un nœud
 //   supprimé ne doit pas partir avec la copie) ; idem pour les exécutions ;
-// - `hashes.json` : empreinte SHA-256 de chaque entrée, vérifiée à l'import.
-// Les archives version 1 restent lisibles.
+// - `hashes.json` : empreinte SHA-256 de chaque entrée, vérifiée à l'import ;
+// - `captures` : preuves (captures de pages) des nœuds présents, avec leurs trois pièces jointes ;
+// - `activity.json` : journal d'activité, repris tel quel à l'import (sa chaîne d'empreintes
+//   se vérifie dans la copie comme dans l'original) ;
+// - `observations` : provenance fine (quel module a vu quel nœud, lien ou propriété).
+// Les archives version 1, ou version 2 d'avant les preuves, le journal et les observations,
+// restent lisibles.
 
 import { createHash, randomUUID } from 'node:crypto'
 import JSZip from 'jszip'
-import type { Attachment, GraphEdge, GraphNode, Investigation, ModuleRun, Suggestion } from '@shared/types'
+import type { ActivityEntry, Attachment, Capture, GraphEdge, GraphNode, Investigation, ModuleRun, Observation, Suggestion } from '@shared/types'
 import type { Repo } from './db/repo'
 
 export const ARCHIVE_FORMAT = 'masint'
@@ -20,6 +25,7 @@ export const ARCHIVE_VERSION = 2
 
 export const MANIFEST = 'manifest.json'
 export const HASHES = 'hashes.json'
+export const ACTIVITY = 'activity.json'
 
 /** Exécution archivée ; `raw` indique qu'une réponse brute accompagne l'exécution. */
 export type ArchivedRun = ModuleRun & { raw: boolean }
@@ -36,6 +42,12 @@ export interface Manifest {
   suggestions?: Suggestion[]
   /** Exécutions des modules (version 2). */
   runs?: ArchivedRun[]
+  /** Preuves (captures de pages) ; leurs fichiers sont dans `attachments`. */
+  captures?: Capture[]
+  /** Nombre d'entrées du journal d'activité (`activity.json`). */
+  activity?: number
+  /** Observations des modules (provenance, corroboration). */
+  observations?: Observation[]
 }
 
 /** Limites contre les archives piégées (bombe de décompression, milliers d'entrées). */
@@ -58,10 +70,14 @@ const sha256 = (data: Buffer | string): string => createHash('sha256').update(da
 
 export async function buildArchive(repo: Repo, investigationId: string): Promise<Buffer> {
   const bundle = repo.getBundle(investigationId)
+  // Preuves des nœuds présents (et des pages capturées hors d'une fiche).
+  const captures = repo.listCaptures(investigationId)
   // Pièces jointes réellement utilisées : les orphelines (nœud supprimé) restent sur le poste.
   const used = new Set(bundle.nodes.map((n) => n.imageId).filter((id): id is string => !!id))
+  for (const c of captures) for (const id of [c.screenshotAttachment, c.mhtmlAttachment, c.metaAttachment]) used.add(id)
   const attachments = repo.listAttachments(investigationId).filter((a) => used.has(a.id))
   const runs = repo.listRunsForArchive(investigationId)
+  const activity = repo.allActivity(investigationId)
   const manifest: Manifest = {
     format: ARCHIVE_FORMAT,
     version: ARCHIVE_VERSION,
@@ -71,7 +87,10 @@ export async function buildArchive(repo: Repo, investigationId: string): Promise
     edges: bundle.edges,
     attachments,
     suggestions: repo.listSuggestions(investigationId),
-    runs: runs.map(({ raw, ...run }) => ({ ...run, raw: raw !== null }))
+    runs: runs.map(({ raw, ...run }) => ({ ...run, raw: raw !== null })),
+    captures,
+    activity: activity.length,
+    observations: repo.listObservationsForArchive(investigationId)
   }
   const zip = new JSZip()
   const hashes: Record<string, string> = {}
@@ -85,6 +104,7 @@ export async function buildArchive(repo: Repo, investigationId: string): Promise
     if (blob) add(`attachments/${a.id}`, blob.data)
   }
   for (const r of runs) if (r.raw !== null) add(`runs/${r.id}.json`, r.raw)
+  if (activity.length) add(ACTIVITY, JSON.stringify(activity, null, 2))
   zip.file(HASHES, JSON.stringify(hashes, null, 2))
   return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE', compressionOptions: { level: 6 } })
 }
@@ -102,13 +122,14 @@ function uniqueName(repo: Repo, name: string): string {
  * Ouvre une archive reçue de l'explorateur : si ce fichier exact a déjà été importé
  * et que l'enquête existe encore, on la réutilise au lieu de créer un doublon.
  */
-export async function openArchiveOnce(repo: Repo, buf: Buffer): Promise<Investigation> {
+export async function openArchiveOnce(repo: Repo, buf: Buffer, onImported?: (inv: Investigation) => void): Promise<Investigation> {
   const hash = createHash('sha256').update(buf).digest('hex')
   const seen = repo.getSetting<Record<string, string>>('importedArchives', {})
   const existing = seen[hash] ? repo.getInvestigation(seen[hash]) : null
   if (existing) return existing
   const inv = await importArchive(repo, buf)
   repo.setSetting('importedArchives', { ...seen, [hash]: inv.id })
+  onImported?.(inv)
   return inv
 }
 
@@ -234,6 +255,24 @@ export async function importArchive(repo: Repo, buf: Buffer, limits: ArchiveLimi
     const data = await reader.read(`runs/${r.id}.json`)
     if (data) raws.set(r.id, data.toString('utf8'))
   }
+  let activity: ActivityEntry[] = []
+  const journal = manifest.activity ? await reader.read(ACTIVITY) : null
+  if (journal) {
+    try {
+      const parsed = JSON.parse(journal.toString('utf8')) as unknown
+      if (!Array.isArray(parsed)) throw new Error()
+      // Forme vérifiée avant toute écriture ; l'intégrité de la chaîne se vérifie ensuite dans le journal.
+      const seqs = new Set<number>()
+      for (const e of parsed as Array<Record<string, unknown>>) {
+        const strings = ['at', 'actor', 'action', 'prevHash', 'hash'].every((k) => typeof e?.[k] === 'string')
+        if (!strings || !Number.isInteger(e.seq) || seqs.has(e.seq as number) || !e.target || typeof e.target !== 'object') throw new Error()
+        seqs.add(e.seq as number)
+      }
+      activity = parsed as ActivityEntry[]
+    } catch {
+      throw new Error('Archive invalide : journal d’activité illisible')
+    }
+  }
 
   const inv = repo.createInvestigation({
     name: uniqueName(repo, manifest.investigation.name),
@@ -260,28 +299,67 @@ export async function importArchive(repo: Repo, buf: Buffer, limits: ArchiveLimi
       imageId: n.imageId ? (attIds.get(n.imageId) ?? null) : null
     }))
   )
+  const edgeIds = new Map<string, string>()
+  for (const e of manifest.edges) edgeIds.set(e.id, randomUUID())
   repo.upsertEdges(
     inv.id,
     manifest.edges
       .filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target))
-      .map((e) => ({ ...e, id: randomUUID(), source: nodeIds.get(e.source)!, target: nodeIds.get(e.target)! }))
+      .map((e) => ({ ...e, id: edgeIds.get(e.id)!, source: nodeIds.get(e.source)!, target: nodeIds.get(e.target)! }))
   )
+  // Preuves : nouveaux identifiants ; une capture dont un fichier manque n'est pas reprise.
+  const captureIds = new Map<string, string>()
+  for (const c of manifest.captures ?? []) {
+    const nodeId = c.nodeId ? nodeIds.get(c.nodeId) : null
+    const files = [c.screenshotAttachment, c.mhtmlAttachment, c.metaAttachment].map((id) => attIds.get(id))
+    if (nodeId === undefined || files.some((id) => !id)) continue
+    const { id: old, ...rest } = c
+    const created = repo.addCapture({ ...rest, investigationId: inv.id, nodeId, screenshotAttachment: files[0]!, mhtmlAttachment: files[1]!, metaAttachment: files[2]! })
+    captureIds.set(old, created.id)
+  }
   for (const s of manifest.suggestions ?? []) {
     const nodeId = nodeIds.get(s.nodeId)
     if (!nodeId) continue
-    const { id: _old, status, createdAt: _c, updatedAt: _u, ...rest } = s
+    const { id: _old, status, createdAt: _c, updatedAt: _u, assist, ...rest } = s
     const created = repo.addSuggestion({ ...rest, investigationId: inv.id, nodeId })
     if (created && status !== 'pending') repo.setSuggestionStatus(created.id, status)
+    if (created && assist) {
+      const captureId = assist.result.captureId ? captureIds.get(assist.result.captureId) : undefined
+      repo.setSuggestionAssist(created.id, { ...assist, result: { ...assist.result, captureId } })
+    }
   }
   // Exécutions : nouveaux identifiants, une tâche d'origine devient une tâche de la copie.
   const jobIds = new Map<string, string>()
+  const runIds = new Map<string, string>()
   for (const r of manifest.runs ?? []) {
     const nodeId = nodeIds.get(r.nodeId)
     if (!nodeId) continue
     if (!jobIds.has(r.jobId)) jobIds.set(r.jobId, randomUUID())
     const { raw: _raw, ...run } = r
-    repo.importRun({ ...run, id: randomUUID(), investigationId: inv.id, nodeId, jobId: jobIds.get(r.jobId)! }, raws.get(r.id) ?? null)
+    runIds.set(r.id, randomUUID())
+    repo.importRun({ ...run, id: runIds.get(r.id)!, investigationId: inv.id, nodeId, jobId: jobIds.get(r.jobId)! }, raws.get(r.id) ?? null)
   }
+  // Observations : nœud, lien et exécution désignés par leurs nouveaux identifiants.
+  const existingEdges = new Set(repo.listEdges(inv.id).map((e) => e.id))
+  repo.addObservations(
+    (manifest.observations ?? [])
+      .filter((o) => nodeIds.has(o.nodeId) && typeof o.moduleId === 'string')
+      .map((o) => {
+        const edgeId = o.edgeId ? (edgeIds.get(o.edgeId) ?? null) : null
+        return {
+          investigationId: inv.id,
+          nodeId: nodeIds.get(o.nodeId)!,
+          edgeId: edgeId && existingEdges.has(edgeId) ? edgeId : null,
+          property: typeof o.property === 'string' ? o.property : null,
+          runId: (o.runId && runIds.get(o.runId)) || '',
+          moduleId: o.moduleId,
+          sourceUrl: typeof o.sourceUrl === 'string' ? o.sourceUrl : null,
+          observedAt: typeof o.observedAt === 'number' ? o.observedAt : Date.now()
+        }
+      })
+  )
+  // Journal repris tel quel : les entrées d'origine gardent leurs empreintes.
+  if (activity.length) repo.importActivity(inv.id, activity)
   if (manifest.investigation.viewport) repo.updateInvestigation(inv.id, { viewport: manifest.investigation.viewport })
   return repo.getInvestigation(inv.id)!
 }

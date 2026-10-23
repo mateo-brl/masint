@@ -68,6 +68,8 @@ export interface GeopfFeature {
   geometry: { coordinates: [number, number] }
   properties: {
     label: string
+    /** Identifiant BAN au numéro près (`75104_8249_00010`) : clé des DPE de l'ADEME. */
+    id?: string
     score?: number
     type?: string
     name?: string
@@ -111,6 +113,7 @@ export function parseGeopf(f: GeopfFeature): GeoResult {
     url: null,
     distance: p.distance ?? null,
     extra: {
+      ban_id: p.type === 'housenumber' ? (p.id ?? null) : null,
       citycode: p.citycode ?? null,
       district: p.district ?? null,
       department: ctx[1] ? `${ctx[1]} (${ctx[0]})` : null,

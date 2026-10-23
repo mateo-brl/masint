@@ -19,6 +19,7 @@ const fr = {
     timeline: 'Frise chronologique',
     modules: 'Modules',
     notes: 'Notes',
+    journal: 'Journal d’activité',
     keys: 'Clés API',
     settings: 'Paramètres',
     table: 'Tableau',
@@ -116,14 +117,66 @@ const fr = {
     noisyTitle_one: 'Ce module contacte la cible',
     noisyTitle_other: 'Ces modules contactent la cible',
     noisyBody_one: '{{list}} interroge directement la cible et peut l’alerter ou laisser une trace chez elle. Le mode passif l’exclut de « Enrichir ». Le lancer quand même ?',
-    noisyBody_other: '{{list}} interrogent directement la cible et peuvent l’alerter ou laisser une trace chez elle. Le mode passif les exclut de « Enrichir ». Les lancer quand même ?'
+    noisyBody_other: '{{list}} interrogent directement la cible et peuvent l’alerter ou laisser une trace chez elle. Le mode passif les exclut de « Enrichir ». Les lancer quand même ?',
+    chain: 'Enrichir en chaîne',
+    chainTitle: 'Enrichit ce nœud, puis les nouveaux nœuds sûrs (compte vérifié, lien déclaré) jusqu’à la profondeur réglée.',
+    hops_one: '{{count}} saut',
+    hops_other: '{{count}} sauts'
   },
   jobs: {
     finished: 'terminé · {{results}} · {{errors}}',
     modules: '{{done}}/{{total}} modules',
     details: 'Détail des modules',
     moreRunning: '+{{count}} autres en cours',
-    running: 'en cours'
+    running: 'en cours',
+    chain: 'En chaîne · profondeur {{depth}}/{{max}}',
+    chainNodes_one: '{{count}} nœud trouvé',
+    chainNodes_other: '{{count}} nœuds trouvés',
+    chainEnriched_one: '{{count}} enrichi',
+    chainEnriched_other: '{{count}} enrichis',
+    chainBudget: 'budget atteint : la suite est dans « À vérifier »',
+    stop: 'Arrêter',
+    stopTitle: 'Arrêter la chaîne et les modules en cours'
+  },
+  provenance: {
+    sources: 'Sources',
+    seenBy_one: 'Vu par {{count}} source',
+    seenBy_other: 'Vu par {{count}} sources',
+    empty: 'Aucun module n’a encore observé cet élément.',
+    openSource: 'Ouvrir la page source',
+    raw: 'Réponse brute du service',
+    entity: 'trouvé',
+    props_one: '{{count}} propriété',
+    props_other: '{{count}} propriétés',
+    path: 'Chemin :',
+    via: 'via',
+    then: 'puis',
+    origin: 'Source : {{list}}',
+    manual: 'Saisie manuelle ou source inconnue',
+    singleSource: 'Une seule source : lien à confirmer'
+  },
+  rating: {
+    title: 'Cotation',
+    hint: 'Fiabilité de la source et crédibilité de l’information, à la manière de l’Amirauté. Facultative, reprise dans le rapport.',
+    reliability: 'Fiabilité de la source',
+    credibility: 'Crédibilité de l’information',
+    none: 'Non cotée',
+    r: {
+      A: 'A · complètement fiable',
+      B: 'B · habituellement fiable',
+      C: 'C · assez fiable',
+      D: 'D · pas toujours fiable',
+      E: 'E · pas fiable',
+      F: 'F · impossible à évaluer'
+    },
+    c: {
+      '1': '1 · confirmée par d’autres sources',
+      '2': '2 · probablement vraie',
+      '3': '3 · possiblement vraie',
+      '4': '4 · douteuse',
+      '5': '5 · improbable',
+      '6': '6 · impossible à évaluer'
+    }
   },
   assist: {
     run: 'Chercher',
@@ -138,7 +191,9 @@ const fr = {
     found_one: '{{count}} résultat contient la valeur',
     found_other: '{{count}} résultats contiennent la valeur',
     add: 'Ajouter',
-    addTitle: 'Ajouter ce résultat au graphe'
+    addTitle: 'Ajouter ce résultat au graphe',
+    captured: 'Page de résultats capturée (voir Preuves)',
+    savedAt: 'Recherche du {{date}}'
   },
   consistency: {
     title: 'Cohérence des indices',
@@ -413,6 +468,93 @@ const fr = {
       roso: 'roso.info'
     }
   },
+  evidence: {
+    title: 'Preuves',
+    capture: 'Capturer',
+    captureTitle: 'Ouvre la page dans une fenêtre cachée du navigateur d’enquête (même proxy ou Tor), attend son chargement et l’enregistre : image pleine page, archive MHTML et contexte, avec leurs empreintes SHA-256. La fenêtre s’affiche si un captcha ou une connexion est nécessaire.',
+    capturing: 'Capture…',
+    captured: 'Page capturée · SHA-256 {{hash}}',
+    failed: 'Capture impossible : {{error}}',
+    empty: 'Aucune capture pour ce nœud.',
+    count_one: '{{count}} capture',
+    count_other: '{{count}} captures',
+    openImage: 'Ouvrir l’image',
+    exportMhtml: 'Exporter le MHTML',
+    exportImage: 'Enregistrer l’image',
+    copyHash: 'Copier l’empreinte SHA-256 du manifeste',
+    copied: 'Empreinte copiée',
+    saved: 'Enregistré : {{path}}',
+    manifest: 'Manifeste',
+    requested: 'Adresse demandée',
+    redirected: 'redirigée vers {{url}}',
+    via: { browser: 'navigateur d’enquête', assist: 'recherche assistée', node: 'fiche' }
+  },
+  journal: {
+    kicker: 'Enquête',
+    title: 'Journal d’activité',
+    intro: 'Qui a fait quoi, et quand. Chaque entrée est scellée par l’empreinte de la précédente : toute modification ultérieure du journal se détecte.',
+    all: 'Tout',
+    groups: {
+      nodes: 'Nœuds',
+      edges: 'Liens',
+      modules: 'Modules',
+      review: 'À vérifier',
+      evidence: 'Preuves',
+      sharing: 'Exports et partages'
+    },
+    refresh: 'Actualiser',
+    verify: 'Vérifier l’intégrité',
+    verifying: 'Vérification…',
+    intact_one: 'Chaîne intacte : {{count}} entrée vérifiée.',
+    intact_other: 'Chaîne intacte : {{count}} entrées vérifiées.',
+    emptyChain: 'Journal vide : rien à vérifier.',
+    broken: 'Chaîne rompue à l’entrée n° {{seq}} ({{action}}, {{date}}) : {{reason}}',
+    reason: {
+      hash: 'son contenu ne correspond plus à son empreinte',
+      link: 'elle ne reprend pas l’empreinte de l’entrée précédente',
+      order: 'une entrée manque ou est en double avant elle'
+    },
+    goto: 'Voir l’entrée',
+    lastHash: 'Dernière empreinte',
+    empty: 'Aucune entrée.',
+    page: '{{from}} à {{to}} sur {{total}}',
+    previous: 'Plus récentes',
+    next: 'Plus anciennes',
+    col: { seq: 'N°', date: 'Date', actor: 'Enquêteur', action: 'Action', subject: 'Objet', detail: 'Détail', hash: 'Empreinte' },
+    copyHash: 'Copier l’empreinte',
+    copied: 'Empreinte copiée',
+    untitled: '(sans libellé)',
+    more: '+{{count}}',
+    modules_one: '{{count}} module',
+    modules_other: '{{count}} modules',
+    followUp: 'modules de suite',
+    chain: 'en chaîne, profondeur {{depth}}',
+    removedEdges_one: 'avec {{count}} lien',
+    removedEdges_other: 'avec {{count}} liens',
+    field: {
+      label: 'valeur',
+      type: 'type',
+      platform: 'plateforme',
+      kind: 'nature',
+      data: 'propriétés',
+      notes: 'notes',
+      imageId: 'image',
+      style: 'style',
+      source: 'origine',
+      target: 'cible',
+      sourceModule: 'module'
+    },
+    action: {
+      investigation: { create: 'Enquête créée', duplicate: 'Enquête dupliquée' },
+      node: { create: 'Nœud créé', update: 'Nœud modifié', delete: 'Nœud supprimé', merge: 'Nœuds fusionnés' },
+      edge: { create: 'Lien créé', update: 'Lien modifié', delete: 'Lien supprimé' },
+      module: { run: 'Modules lancés' },
+      suggestion: { accept: 'Résultat validé', reject: 'Résultat écarté', checked: 'Recherche faite, rien trouvé', reopen: 'Résultat rouvert' },
+      capture: { create: 'Page capturée' },
+      export: { file: 'Export', report: 'Rapport exporté' },
+      archive: { export: 'Archive exportée', import: 'Archive importée' }
+    }
+  },
   notes: {
     kicker: 'Enquête',
     title: 'Notes de l’enquête',
@@ -427,12 +569,19 @@ const fr = {
     light: 'Clair',
     autoEnrich: 'Enrichissement automatique',
     autoEnrichHint: 'Lance les modules applicables dès qu’une entité est ajoutée avec une valeur.',
+    chainDepth: 'Enchaînement',
+    chainDepthHint: 'Enrichit à leur tour les nouveaux nœuds sûrs (compte vérifié, lien déclaré) jusqu’à cette profondeur. S’applique avec l’enrichissement automatique ou « Enrichir en chaîne », sans module bruyant, à la demande ou à crédits.',
+    chainOff: 'Désactivé',
     concurrency: 'Modules en parallèle',
     concurrencyHint: 'Par nœud enrichi (1 à 32).',
     globalConcurrency: 'Modules en parallèle au total',
     globalConcurrencyHint: 'Tous nœuds confondus (1 à 64) : enrichir cent nœuds ne lance pas des centaines de modules à la fois.',
     passiveMode: 'Mode passif',
     passiveModeHint: 'Les modules qui contactent directement la cible (page web, favicon, robots.txt…) ne partent pas avec « Enrichir ». Ils restent lançables un par un, après avertissement.',
+    investigatorName: 'Nom de l’enquêteur',
+    investigatorNameHint: 'Inscrit dans le journal d’activité de chaque action. Vide : nom de session du système ({{user}}).',
+    assistCapture: 'Capturer les pages consultées',
+    assistCaptureHint: 'Recherche assistée : la page de résultats est enregistrée comme preuve (image, MHTML, contexte et empreintes) avant la fermeture de sa fenêtre, rattachée au nœud de la recherche.',
     isolate: 'Cloisonner les enquêtes',
     isolateHint: 'Chaque enquête reste dans sa finalité (RGPD) : pas de rapprochement des entités d’une enquête à l’autre, pas de recherche dans le contenu de toutes les enquêtes.',
     userAgentAuto: 'En-tête automatique',
@@ -641,7 +790,7 @@ const fr = {
   shortcuts: {
     palette: 'Palette de commandes',
     search: 'Rechercher dans la vue affichée',
-    views: 'Changer de vue (Graphe, Carte, Frise, Modules, Notes, Tableau)',
+    views: 'Changer de vue (Graphe, Carte, Frise, Modules, Notes, Tableau, Journal)',
     neighbors: 'Passer du nœud sélectionné à un voisin'
   }
 }
@@ -665,6 +814,7 @@ const en: typeof fr = {
     timeline: 'Timeline',
     modules: 'Modules',
     notes: 'Notes',
+    journal: 'Activity log',
     keys: 'API keys',
     settings: 'Settings',
     table: 'Table',
@@ -762,14 +912,66 @@ const en: typeof fr = {
     noisyTitle_one: 'This module contacts the target',
     noisyTitle_other: 'These modules contact the target',
     noisyBody_one: '{{list}} queries the target directly and may alert it or leave a trace on its side. Passive mode keeps it out of “Enrich”. Run it anyway?',
-    noisyBody_other: '{{list}} query the target directly and may alert it or leave a trace on its side. Passive mode keeps them out of “Enrich”. Run them anyway?'
+    noisyBody_other: '{{list}} query the target directly and may alert it or leave a trace on its side. Passive mode keeps them out of “Enrich”. Run them anyway?',
+    chain: 'Chain enrichment',
+    chainTitle: 'Enriches this node, then the new reliable nodes (verified account, declared link) down to the set depth.',
+    hops_one: '{{count}} hop',
+    hops_other: '{{count}} hops'
   },
   jobs: {
     finished: 'done · {{results}} · {{errors}}',
     modules: '{{done}}/{{total}} modules',
     details: 'Module details',
     moreRunning: '+{{count}} more running',
-    running: 'running'
+    running: 'running',
+    chain: 'Chained · depth {{depth}}/{{max}}',
+    chainNodes_one: '{{count}} node found',
+    chainNodes_other: '{{count}} nodes found',
+    chainEnriched_one: '{{count}} enriched',
+    chainEnriched_other: '{{count}} enriched',
+    chainBudget: 'budget reached: the rest is in “To review”',
+    stop: 'Stop',
+    stopTitle: 'Stop the chain and the running modules'
+  },
+  provenance: {
+    sources: 'Sources',
+    seenBy_one: 'Seen by {{count}} source',
+    seenBy_other: 'Seen by {{count}} sources',
+    empty: 'No module has observed this item yet.',
+    openSource: 'Open the source page',
+    raw: 'Raw service response',
+    entity: 'found',
+    props_one: '{{count}} property',
+    props_other: '{{count}} properties',
+    path: 'Path:',
+    via: 'via',
+    then: 'then',
+    origin: 'Source: {{list}}',
+    manual: 'Entered by hand or unknown source',
+    singleSource: 'Single source: link to be confirmed'
+  },
+  rating: {
+    title: 'Rating',
+    hint: 'Source reliability and information credibility, Admiralty style. Optional, shown in the report.',
+    reliability: 'Source reliability',
+    credibility: 'Information credibility',
+    none: 'Not rated',
+    r: {
+      A: 'A · completely reliable',
+      B: 'B · usually reliable',
+      C: 'C · fairly reliable',
+      D: 'D · not usually reliable',
+      E: 'E · unreliable',
+      F: 'F · cannot be judged'
+    },
+    c: {
+      '1': '1 · confirmed by other sources',
+      '2': '2 · probably true',
+      '3': '3 · possibly true',
+      '4': '4 · doubtful',
+      '5': '5 · improbable',
+      '6': '6 · cannot be judged'
+    }
   },
   assist: {
     run: 'Search',
@@ -784,7 +986,9 @@ const en: typeof fr = {
     found_one: '{{count}} result contains the value',
     found_other: '{{count}} results contain the value',
     add: 'Add',
-    addTitle: 'Add this result to the graph'
+    addTitle: 'Add this result to the graph',
+    captured: 'Results page captured (see Evidence)',
+    savedAt: 'Search of {{date}}'
   },
   consistency: {
     title: 'Evidence consistency',
@@ -1059,6 +1263,93 @@ const en: typeof fr = {
       roso: 'roso.info'
     }
   },
+  evidence: {
+    title: 'Evidence',
+    capture: 'Capture',
+    captureTitle: 'Opens the page in a hidden investigation browser window (same proxy or Tor), waits for it to load and saves it: full-page image, MHTML archive and context, with their SHA-256 hashes. The window shows up if a captcha or a login is needed.',
+    capturing: 'Capturing…',
+    captured: 'Page captured · SHA-256 {{hash}}',
+    failed: 'Capture failed: {{error}}',
+    empty: 'No capture for this node.',
+    count_one: '{{count}} capture',
+    count_other: '{{count}} captures',
+    openImage: 'Open image',
+    exportMhtml: 'Export MHTML',
+    exportImage: 'Save image',
+    copyHash: 'Copy the manifest SHA-256 hash',
+    copied: 'Hash copied',
+    saved: 'Saved: {{path}}',
+    manifest: 'Manifest',
+    requested: 'Requested address',
+    redirected: 'redirected to {{url}}',
+    via: { browser: 'investigation browser', assist: 'assisted search', node: 'node sheet' }
+  },
+  journal: {
+    kicker: 'Investigation',
+    title: 'Activity log',
+    intro: 'Who did what, and when. Each entry is sealed with the hash of the previous one: any later change to the log can be detected.',
+    all: 'All',
+    groups: {
+      nodes: 'Nodes',
+      edges: 'Links',
+      modules: 'Modules',
+      review: 'To review',
+      evidence: 'Evidence',
+      sharing: 'Exports and sharing'
+    },
+    refresh: 'Refresh',
+    verify: 'Check integrity',
+    verifying: 'Checking…',
+    intact_one: 'Chain intact: {{count}} entry checked.',
+    intact_other: 'Chain intact: {{count}} entries checked.',
+    emptyChain: 'Empty log: nothing to check.',
+    broken: 'Chain broken at entry #{{seq}} ({{action}}, {{date}}): {{reason}}',
+    reason: {
+      hash: 'its content no longer matches its hash',
+      link: 'it does not carry the hash of the previous entry',
+      order: 'an entry is missing or duplicated before it'
+    },
+    goto: 'Show entry',
+    lastHash: 'Last hash',
+    empty: 'No entries.',
+    page: '{{from}} to {{to}} of {{total}}',
+    previous: 'Newer',
+    next: 'Older',
+    col: { seq: '#', date: 'Date', actor: 'Investigator', action: 'Action', subject: 'Subject', detail: 'Detail', hash: 'Hash' },
+    copyHash: 'Copy hash',
+    copied: 'Hash copied',
+    untitled: '(untitled)',
+    more: '+{{count}}',
+    modules_one: '{{count}} module',
+    modules_other: '{{count}} modules',
+    followUp: 'follow-up modules',
+    chain: 'chained, depth {{depth}}',
+    removedEdges_one: 'with {{count}} link',
+    removedEdges_other: 'with {{count}} links',
+    field: {
+      label: 'value',
+      type: 'type',
+      platform: 'platform',
+      kind: 'kind',
+      data: 'properties',
+      notes: 'notes',
+      imageId: 'image',
+      style: 'style',
+      source: 'origin',
+      target: 'target',
+      sourceModule: 'module'
+    },
+    action: {
+      investigation: { create: 'Investigation created', duplicate: 'Investigation duplicated' },
+      node: { create: 'Node created', update: 'Node edited', delete: 'Node deleted', merge: 'Nodes merged' },
+      edge: { create: 'Link created', update: 'Link edited', delete: 'Link deleted' },
+      module: { run: 'Modules run' },
+      suggestion: { accept: 'Result accepted', reject: 'Result rejected', checked: 'Searched, nothing found', reopen: 'Result reopened' },
+      capture: { create: 'Page captured' },
+      export: { file: 'Export', report: 'Report exported' },
+      archive: { export: 'Archive exported', import: 'Archive imported' }
+    }
+  },
   notes: {
     kicker: 'Investigation',
     title: 'Investigation notes',
@@ -1073,12 +1364,19 @@ const en: typeof fr = {
     light: 'Light',
     autoEnrich: 'Automatic enrichment',
     autoEnrichHint: 'Runs applicable modules as soon as an entity with a value is added.',
+    chainDepth: 'Chaining',
+    chainDepthHint: 'Also enriches the new reliable nodes (verified account, declared link) down to this depth. Applies with automatic enrichment or “Chain enrichment”, without noisy, on-demand or credit-based modules.',
+    chainOff: 'Off',
     concurrency: 'Parallel modules',
     concurrencyHint: 'Per enriched node (1 to 32).',
     globalConcurrency: 'Parallel modules in total',
     globalConcurrencyHint: 'Across all nodes (1 to 64): enriching a hundred nodes does not start hundreds of modules at once.',
     passiveMode: 'Passive mode',
     passiveModeHint: 'Modules that contact the target directly (web page, favicon, robots.txt…) are left out of “Enrich”. They can still be run one by one, after a warning.',
+    investigatorName: 'Investigator name',
+    investigatorNameHint: 'Written in the activity log for each action. Empty: system session name ({{user}}).',
+    assistCapture: 'Capture visited pages',
+    assistCaptureHint: 'Assisted search: the results page is saved as evidence (image, MHTML, context and hashes) before its window closes, attached to the node of the search.',
     isolate: 'Isolate investigations',
     isolateHint: 'Each investigation keeps its own purpose (GDPR): no matching of entities across investigations, no search in the content of every investigation.',
     userAgentAuto: 'Automatic header',
@@ -1287,7 +1585,7 @@ const en: typeof fr = {
   shortcuts: {
     palette: 'Command palette',
     search: 'Search the current view',
-    views: 'Switch view (Graph, Map, Timeline, Modules, Notes, Table)',
+    views: 'Switch view (Graph, Map, Timeline, Modules, Notes, Table, Log)',
     neighbors: 'Move from the selected node to a neighbor'
   }
 }

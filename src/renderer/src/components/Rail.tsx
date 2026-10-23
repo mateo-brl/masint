@@ -4,7 +4,7 @@ import { useApp } from '../store/app'
 import { Logo } from './Logo'
 import { IconButton } from './ui'
 
-/** Barre verticale de gauche : accueil, vues de l'enquête (Ctrl+1 à Ctrl+6), paramètres. */
+/** Barre verticale de gauche : accueil, vues de l'enquête (Ctrl+1 à Ctrl+7), paramètres. */
 export function Rail(): React.JSX.Element {
   const { t } = useTranslation()
   const currentId = useApp((s) => s.currentId)

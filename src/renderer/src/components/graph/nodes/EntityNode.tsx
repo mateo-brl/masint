@@ -5,6 +5,7 @@ import { attachmentUrl } from '@shared/api'
 import type { JobProgress } from '@shared/types'
 import { getEntityType } from '@shared/entityTypes'
 import { getPlatform } from '@shared/platforms'
+import { CORROBORATION_BADGE_MIN } from '@shared/provenance'
 import { nodeSubtitle } from '@shared/subtitle'
 import { useLang } from '../../../lib/i18n'
 import { EntityBadge, Icon } from '../../../lib/icons'
@@ -22,7 +23,8 @@ const runningCache = new WeakMap<Record<string, JobProgress>, Set<string>>()
 function runningNodes(jobs: Record<string, JobProgress>): Set<string> {
   let ids = runningCache.get(jobs)
   if (!ids) {
-    ids = new Set(Object.values(jobs).filter((j) => !j.finished).map((j) => j.nodeId))
+    // Tâche en chaîne : les nœuds atteints qu'elle enrichit en ce moment aussi.
+    ids = new Set(Object.values(jobs).filter((j) => !j.finished).flatMap((j) => [j.nodeId, ...(j.chain?.active ?? [])]))
     runningCache.set(jobs, ids)
   }
   return ids
@@ -33,6 +35,8 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
   const { t } = useTranslation()
   const { tx } = useLang()
   const running = useApp((s) => runningNodes(s.jobs).has(n.id))
+  // Sélecteur par nœud : seul ce nœud est redessiné quand son score de corroboration change.
+  const sources = useGraph((s) => s.corroboration.nodes[n.id] ?? 0)
   const def = getEntityType(n.type)
   const platform = getPlatform(n.platform)
   const accent = n.style.color ?? platform?.color ?? def.color
@@ -104,12 +108,21 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
         icon={n.style.icon}
       />
       <div className="min-w-0 flex-1 leading-tight">
-        {seenElsewhere > 0 ? (
-          // Pastille « vu dans N autres enquêtes » à droite du type ; ligne simple sinon (moins d'éléments).
-          <div className="flex items-center gap-1">
-            <div className="min-w-0 flex-1 truncate text-[7.5px] font-semibold tracking-[0.08em]" style={{ color: 'var(--muted)' }}>
-              {kicker}
-            </div>
+        <div className="flex items-center gap-1">
+          <div className="min-w-0 flex-1 truncate text-[7.5px] font-semibold tracking-[0.08em]" style={{ color: 'var(--muted)' }}>
+            {kicker}
+          </div>
+          {sources >= CORROBORATION_BADGE_MIN && (
+            <span
+              className="shrink-0 rounded-[3px] border px-[3px] text-[7.5px] leading-[11px] font-semibold"
+              style={{ borderColor: 'var(--node-border)', color: 'var(--muted)' }}
+              title={t('provenance.seenBy', { count: sources })}
+            >
+              ×{sources}
+            </span>
+          )}
+          {/* Autres enquêtes où l'entité apparaît (corrélation). */}
+          {seenElsewhere > 0 && (
             <span
               className="flex shrink-0 items-center gap-0.5 text-[7.5px] font-semibold"
               style={{ color: 'var(--muted)' }}
@@ -119,12 +132,8 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
               <Icon name="FolderSymlink" size={8} />
               {seenElsewhere}
             </span>
-          </div>
-        ) : (
-          <div className="truncate text-[7.5px] font-semibold tracking-[0.08em]" style={{ color: 'var(--muted)' }}>
-            {kicker}
-          </div>
-        )}
+          )}
+        </div>
         <div className={`truncate text-[11.5px] font-semibold ${n.label ? 'text-fg' : 'italic text-faint'}`}>{n.label || t('node.untitled')}</div>
         {subtitle && <div className="truncate text-[8.5px] text-muted">{subtitle}</div>}
       </div>

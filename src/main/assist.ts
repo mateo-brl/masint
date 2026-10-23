@@ -131,13 +131,11 @@ function extractScript(needles: { text: string[]; digits: string[] }): string {
 
 const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
 
-export async function assistedSearch(opts: {
-  url: string
-  needles: { text: string[]; digits: string[] }
-  parent: BrowserWindow | null
-  userAgent: string
-  title: string
-}): Promise<AssistResult> {
+/** Fenêtre cachée de la partition d'enquête, durcie, avec l'en-tête navigateur des modules. */
+export function createAssistWindow(opts: { parent: BrowserWindow | null; userAgent: string; title: string }): {
+  win: BrowserWindow
+  isClosed: () => boolean
+} {
   const win = new BrowserWindow({
     show: false,
     width: 1100,
@@ -155,48 +153,77 @@ export async function assistedSearch(opts: {
     void win.loadURL(url)
     return { action: 'deny' }
   })
+  return { win, isClosed: () => closed || win.isDestroyed() }
+}
+
+/**
+ * Charge une page et attend qu'elle soit prête : chargement terminé, adresse stable depuis
+ * 1,5 s, bandeau de consentement traité. Si un captcha ou une connexion demande une action, la
+ * fenêtre s'affiche et l'attente reprend d'elle-même une fois la page libérée.
+ */
+export async function settlePage(win: BrowserWindow, isClosed: () => boolean, url: string, title: string): Promise<'ready' | 'timeout' | 'cancelled'> {
+  await win.loadURL(url).catch(() => undefined)
+  const start = Date.now()
+  let stableSince = 0
+  let lastUrl = ''
+  let asked = false
+  while (!isClosed()) {
+    if (Date.now() - start > (asked ? ACTION_TIMEOUT : LOAD_TIMEOUT)) return 'timeout'
+    const state = (await win.webContents.executeJavaScript(INSPECT).catch(() => null)) as {
+      ready: boolean
+      consent: boolean
+      captcha: boolean
+      login: boolean
+    } | null
+    if (isClosed()) break
+    if (state && (state.captcha || state.login)) {
+      // Action de l'enquêteur nécessaire : la fenêtre s'affiche, la recherche reprendra seule.
+      if (!win.isVisible()) {
+        win.setTitle(`${title} : terminez la vérification ou la connexion, la recherche reprendra seule`)
+        win.show()
+        win.focus()
+      }
+      asked = true
+      stableSince = 0
+    } else if (state?.ready && !state.consent) {
+      const current = win.webContents.getURL()
+      if (current !== lastUrl) {
+        lastUrl = current
+        stableSince = Date.now()
+      } else if (Date.now() - stableSince > 1500) {
+        return 'ready'
+      }
+    }
+    await wait(700)
+  }
+  return 'cancelled'
+}
+
+export async function assistedSearch(opts: {
+  url: string
+  needles: { text: string[]; digits: string[] }
+  parent: BrowserWindow | null
+  userAgent: string
+  title: string
+  /** Capture de la page de résultats avant la fermeture de la fenêtre ; renvoie l'identifiant de la capture. */
+  capture?: (wc: WebContents) => Promise<string | null>
+}): Promise<AssistResult> {
+  const { win, isClosed } = createAssistWindow(opts)
   const done = (r: Omit<AssistResult, 'url' | 'title'>): AssistResult => {
+    const closed = isClosed()
     const res = { ...r, url: closed ? opts.url : win.webContents.getURL(), title: closed ? '' : win.webContents.getTitle() }
     if (!closed) win.destroy()
     return res
   }
   try {
-    await win.loadURL(opts.url).catch(() => undefined)
-    const start = Date.now()
-    let stableSince = 0
-    let lastUrl = ''
-    let asked = false
-    while (!closed) {
-      if (Date.now() - start > (asked ? ACTION_TIMEOUT : LOAD_TIMEOUT)) return done({ status: 'timeout', matches: [] })
-      const state = (await win.webContents.executeJavaScript(INSPECT).catch(() => null)) as {
-        ready: boolean
-        consent: boolean
-        captcha: boolean
-        login: boolean
-      } | null
-      if (closed) break
-      if (state && (state.captcha || state.login)) {
-        // Action de l'enquêteur nécessaire : la fenêtre s'affiche, la recherche reprendra seule.
-        if (!win.isVisible()) {
-          win.setTitle(`${opts.title} : terminez la vérification ou la connexion, la recherche reprendra seule`)
-          win.show()
-          win.focus()
-        }
-        asked = true
-        stableSince = 0
-      } else if (state?.ready && !state.consent) {
-        const url = win.webContents.getURL()
-        if (url !== lastUrl) {
-          lastUrl = url
-          stableSince = Date.now()
-        } else if (Date.now() - stableSince > 1500) {
-          const matches = (await win.webContents.executeJavaScript(extractScript(opts.needles)).catch(() => [])) as AssistMatch[]
-          return done({ status: 'ok', matches: Array.isArray(matches) ? matches : [] })
-        }
-      }
-      await wait(700)
-    }
-    return { status: 'cancelled', url: opts.url, title: '', matches: [] }
+    const state = await settlePage(win, isClosed, opts.url, opts.title)
+    if (state === 'cancelled') return { status: 'cancelled', url: opts.url, title: '', matches: [] }
+    if (state === 'timeout') return done({ status: 'timeout', matches: [] })
+    const matches = (await win.webContents.executeJavaScript(extractScript(opts.needles)).catch(() => [])) as AssistMatch[]
+    // Page de résultats conservée comme preuve (réglage « Capturer les pages consultées »).
+    const captureId = opts.capture && !isClosed() ? await opts.capture(win.webContents).catch(() => null) : null
+    if (isClosed()) return { status: 'cancelled', url: opts.url, title: '', matches: [] }
+    return done({ status: 'ok', matches: Array.isArray(matches) ? matches : [], ...(captureId ? { captureId } : {}) })
   } catch (e) {
     return done({ status: 'error', matches: [], error: e instanceof Error ? e.message : String(e) })
   }
