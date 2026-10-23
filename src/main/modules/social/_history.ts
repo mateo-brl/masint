@@ -65,6 +65,8 @@ export function previousNameEntities(
       label: opts.label ? opts.label(s) : s.name,
       data: { first_seen: s.from ?? null, last_seen: s.until ?? null, source: opts.source, ...opts.data?.(s) },
       linkLabel: newer ? (fr ? 'pseudo plus récent' : 'more recent username') : fr ? 'ancien pseudo' : 'previous username',
+      // Ancien pseudo du même compte (même identifiant) : même identité, mais à confirmer.
+      strength: 'same',
       review: true,
       reviewReason: reason
     })

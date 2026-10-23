@@ -285,7 +285,9 @@ export function accountCheck(def: AccountCheckDef): OsintModule {
           ref: 'account',
           data: compact(r.data ?? {}),
           image: r.image,
-          linkLabel: tr(ctx, `compte ${def.service}`, `${def.service} account`)
+          linkLabel: tr(ctx, `compte ${def.service}`, `${def.service} account`),
+          // Inscription vérifiée avec l'adresse elle-même : même identité.
+          strength: 'same'
         }),
         ...(r.extra ?? []).map((e) => ({ from: 'account', ...e }))
       ]

@@ -37,8 +37,8 @@ export interface Command {
   run: () => void | Promise<void>
 }
 
-/** Vues dans l'ordre de la barre latérale : Ctrl+1 à Ctrl+6. */
-export const VIEW_ORDER: View[] = ['graph', 'map', 'timeline', 'modules', 'notes', 'table']
+/** Vues dans l'ordre de la barre latérale : Ctrl+1 à Ctrl+7. */
+export const VIEW_ORDER: View[] = ['graph', 'map', 'timeline', 'modules', 'notes', 'table', 'journal']
 
 export const VIEW_ICONS: Record<View, string> = {
   graph: 'Share2',
@@ -46,7 +46,8 @@ export const VIEW_ICONS: Record<View, string> = {
   timeline: 'CalendarDays',
   modules: 'Puzzle',
   notes: 'NotebookPen',
-  table: 'Sheet'
+  table: 'Sheet',
+  journal: 'ScrollText'
 }
 
 export function viewShortcut(view: View): string {

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import Database from 'better-sqlite3'
 import { canonicalKey } from '@shared/canonical'
@@ -193,11 +194,67 @@ const MIGRATIONS: Migration[] = [
   `,
   // 3 : clés de dédoublonnage canoniques (numéros en E.164, plateforme ignorée pour les emails...).
   (db) => recomputeDedupKeys(db),
-  // 4 : recherche globale (index plein texte des nœuds) et corrélation entre enquêtes (index sur
+  // Preuves : captures de pages (image pleine page, archive MHTML, contexte JSON). Les trois
+  // fichiers sont des pièces jointes de l'enquête ; le manifeste scelle leurs empreintes.
+  `
+  CREATE TABLE IF NOT EXISTS captures (
+    id TEXT PRIMARY KEY,
+    investigation_id TEXT NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
+    node_id TEXT,
+    url TEXT NOT NULL,
+    final_url TEXT NOT NULL,
+    title TEXT NOT NULL DEFAULT '',
+    captured_at TEXT NOT NULL,
+    screenshot_attachment TEXT NOT NULL,
+    mhtml_attachment TEXT NOT NULL,
+    meta_attachment TEXT NOT NULL,
+    manifest_sha256 TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_captures_node ON captures(investigation_id, node_id);
+  `,
+  // Journal d'activité : ajout seul, chaque entrée scellée par l'empreinte de la précédente.
+  // Les déclencheurs refusent toute modification et toute suppression, sauf celle de l'enquête
+  // entière (cascade : l'enquête n'existe déjà plus quand ses entrées sont supprimées).
+  `
+  CREATE TABLE IF NOT EXISTS activity (
+    id TEXT PRIMARY KEY,
+    investigation_id TEXT NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
+    seq INTEGER NOT NULL,
+    at TEXT NOT NULL,
+    actor TEXT NOT NULL,
+    action TEXT NOT NULL,
+    target TEXT NOT NULL DEFAULT '{}',
+    prev_hash TEXT NOT NULL,
+    hash TEXT NOT NULL
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_activity_seq ON activity(investigation_id, seq);
+  CREATE TRIGGER IF NOT EXISTS activity_no_update BEFORE UPDATE ON activity
+  BEGIN
+    SELECT RAISE(ABORT, 'journal d''activité en ajout seul');
+  END;
+  CREATE TRIGGER IF NOT EXISTS activity_no_delete BEFORE DELETE ON activity
+  WHEN EXISTS (SELECT 1 FROM investigations WHERE id = OLD.investigation_id)
+  BEGIN
+    SELECT RAISE(ABORT, 'journal d''activité en ajout seul');
+  END;
+  `,
+  // Dernier résultat de la recherche assistée de chaque recherche manuelle (JSON).
+  (db) => addColumn(db, 'suggestions', 'assist_result', 'TEXT'),
+  // Provenance fine (observations par module, corroboration) et profondeur des nœuds.
+  (db) => addObservations(db),
+  // Recherche globale (index plein texte des nœuds) et corrélation entre enquêtes (index sur
   // la seule clé canonique, pour retrouver une entité dans toutes les enquêtes).
   searchIndexMigration()
 ]
 
+/**
+ * Ajoute une colonne si elle manque : une migration rejouée (base remise à une version
+ * antérieure, migrations réordonnées) ne doit pas échouer.
+ */
+function addColumn(db: DB, table: string, column: string, type: string): void {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>
+  if (!columns.some((c) => c.name === column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`)
+}
 
 export function openDatabase(file: string): DB {
   const db = new Database(file)
@@ -329,6 +386,59 @@ function migrate(db: DB): void {
       db.pragma(`user_version = ${v + 1}`)
     })()
   }
+}
+
+/**
+ * Migration de la provenance : table `observations` (quel module a vu quel nœud, lien ou
+ * propriété, lors de quelle exécution) et colonne `hop` des nœuds (profondeur depuis une saisie).
+ *
+ * Reprise de l'existant, sans exécution connue (`run_id` vide) : un nœud créé par un module
+ * est observé par ce module (`source`), un lien posé par un module l'est par le sien
+ * (`source_module`). Un nœud créé par un module reçoit la profondeur 1, faute de mieux.
+ */
+export function addObservations(db: DB): void {
+  // Rejouable : une base déjà migrée (version remise en arrière) n'est pas modifiée deux fois.
+  const columns = db.prepare('PRAGMA table_info(nodes)').all() as Array<{ name: string }>
+  if (!columns.some((c) => c.name === 'hop')) {
+    addColumn(db, 'nodes', 'hop', 'INTEGER NOT NULL DEFAULT 0')
+    db.exec("UPDATE nodes SET hop = 1 WHERE kind = 'entity' AND source != 'manual'")
+  }
+  const existed = !!db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'observations'").get()
+  db.exec(`
+    -- Identifiant déjà enrichi récemment, toutes enquêtes confondues (enchaînement).
+    CREATE INDEX IF NOT EXISTS idx_nodes_key ON nodes(dedup_key);
+
+    CREATE TABLE IF NOT EXISTS observations (
+      id TEXT PRIMARY KEY,
+      investigation_id TEXT NOT NULL REFERENCES investigations(id) ON DELETE CASCADE,
+      node_id TEXT NOT NULL,
+      edge_id TEXT,
+      property TEXT,
+      run_id TEXT NOT NULL DEFAULT '',
+      module_id TEXT NOT NULL,
+      source_url TEXT,
+      observed_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_obs_node ON observations(investigation_id, node_id);
+    CREATE INDEX IF NOT EXISTS idx_obs_edge ON observations(edge_id) WHERE edge_id IS NOT NULL;
+  `)
+  if (existed) return
+  const insert = db.prepare(
+    `INSERT INTO observations (id, investigation_id, node_id, edge_id, property, run_id, module_id, source_url, observed_at)
+     VALUES (?, ?, ?, ?, NULL, '', ?, NULL, ?)`
+  )
+  const edges = db
+    .prepare("SELECT id, investigation_id, target, source_module, created_at FROM edges WHERE source_module != 'manual' AND deleted_at IS NULL")
+    .all() as Array<{ id: string; investigation_id: string; target: string; source_module: string; created_at: number }>
+  const seen = new Set<string>()
+  for (const e of edges) {
+    insert.run(randomUUID(), e.investigation_id, e.target, e.id, e.source_module, e.created_at)
+    seen.add(`${e.target}|${e.source_module}`)
+  }
+  const nodes = db
+    .prepare("SELECT id, investigation_id, source, created_at FROM nodes WHERE kind = 'entity' AND source != 'manual' AND deleted_at IS NULL")
+    .all() as Array<{ id: string; investigation_id: string; source: string; created_at: number }>
+  for (const n of nodes) if (!seen.has(`${n.id}|${n.source}`)) insert.run(randomUUID(), n.investigation_id, n.id, null, n.source, n.created_at)
 }
 
 /**

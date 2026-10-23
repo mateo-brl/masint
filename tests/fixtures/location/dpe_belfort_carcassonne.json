@@ -1,0 +1,57 @@
+{
+ "total": 8,
+ "results": [
+  {
+   "adresse_ban": "25 Rue de Belfort 11000 Carcassonne",
+   "etiquette_ges": "A",
+   "identifiant_ban": "11069_0550_00025",
+   "type_batiment": "immeuble",
+   "periode_construction": "2001-2005",
+   "numero_etage_appartement": 0,
+   "numero_dpe": "2611E0031228S",
+   "date_fin_validite_dpe": "2036-01-06",
+   "date_etablissement_dpe": "2026-01-07",
+   "etiquette_dpe": "C"
+  },
+  {
+   "annee_construction": 2001,
+   "type_batiment": "appartement",
+   "periode_construction": "2001-2005",
+   "numero_dpe": "2511E1895822V",
+   "date_fin_validite_dpe": "2035-06-09",
+   "adresse_ban": "25 Rue de Belfort 11000 Carcassonne",
+   "etiquette_ges": "A",
+   "identifiant_ban": "11069_0550_00025",
+   "numero_etage_appartement": 0,
+   "date_etablissement_dpe": "2025-06-10",
+   "surface_habitable_logement": 41.7,
+   "etiquette_dpe": "C"
+  },
+  {
+   "adresse_ban": "25 Rue de Belfort 11000 Carcassonne",
+   "etiquette_ges": "A",
+   "identifiant_ban": "11069_0550_00025",
+   "type_batiment": "appartement",
+   "periode_construction": "2001-2005",
+   "numero_etage_appartement": 0,
+   "numero_dpe": "2511E0687948D",
+   "date_fin_validite_dpe": "2035-02-27",
+   "date_etablissement_dpe": "2025-02-28",
+   "surface_habitable_logement": 46,
+   "etiquette_dpe": "C"
+  },
+  {
+   "adresse_ban": "25 Rue de Belfort 11000 Carcassonne",
+   "etiquette_ges": "B",
+   "identifiant_ban": "11069_0550_00025",
+   "type_batiment": "appartement",
+   "periode_construction": "2001-2005",
+   "numero_etage_appartement": 0,
+   "numero_dpe": "2411E4430155D",
+   "date_fin_validite_dpe": "2034-12-12",
+   "date_etablissement_dpe": "2024-12-13",
+   "surface_habitable_logement": 42.7,
+   "etiquette_dpe": "C"
+  }
+ ]
+}

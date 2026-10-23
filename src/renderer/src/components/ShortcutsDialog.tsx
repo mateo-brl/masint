@@ -6,7 +6,7 @@ import { Dialog } from './ui'
 const SHORTCUTS: Array<[string, string]> = [
   ['Ctrl+K', 'palette'],
   ['Ctrl+F', 'search'],
-  ['Ctrl+1 … Ctrl+6', 'views'],
+  ['Ctrl+1 … Ctrl+7', 'views'],
   ['Alt + ← ↑ → ↓', 'neighbors'],
   ['Ctrl+Z', 'undo'],
   ['Ctrl+Y / Ctrl+Shift+Z', 'redo'],

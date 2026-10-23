@@ -1,0 +1,32 @@
+{
+ "success": true,
+ "result": {
+  "total": 1,
+  "records": [
+   {
+    "_id": 246244,
+    "company_num": 249885,
+    "company_name": "RYANAIR HOLDINGS PUBLIC LIMITED COMPANY",
+    "company_status_code": 1151,
+    "company_status": "Normal ",
+    "company_type_code": 1154,
+    "company_type": "PLC - Public Limited Company",
+    "company_reg_date": "1996-06-05T00:00:00",
+    "last_ar_date": "2025-10-09T00:00:00",
+    "company_address_1": "RYANAIR DUBLIN OFFICE",
+    "company_address_2": "AIRSIDE BUSINESS PARK",
+    "company_address_3": "SWORDS CO. DUBLIN",
+    "company_address_4": "SWORDS,DUBLIN",
+    "comp_dissolved_date": null,
+    "nard": "2026-10-09T00:00:00",
+    "last_accounts_date": "2025-03-31T00:00:00",
+    "company_status_date": null,
+    "nace_v2_code": null,
+    "eircode": null,
+    "company_name_eff_date": "1997-05-16T00:00:00",
+    "company_type_eff_date": "2015-06-01T00:00:00",
+    "princ_object_code": "74.84"
+   }
+  ]
+ }
+}

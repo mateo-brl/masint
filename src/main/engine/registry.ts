@@ -32,10 +32,17 @@ function collect(): OsintModule[] {
 }
 
 let cache: OsintModule[] | null = null
+let override: OsintModule[] | null = null
 
 export function allModules(): OsintModule[] {
+  if (override) return override
   if (!cache) cache = collect()
   return cache
+}
+
+/** Tests du moteur : remplace le catalogue par de faux modules (`null` pour revenir aux vrais). */
+export function setModulesForTests(list: OsintModule[] | null): void {
+  override = list
 }
 
 export function getModule(id: string): OsintModule | undefined {

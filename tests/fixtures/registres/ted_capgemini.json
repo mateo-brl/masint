@@ -1,0 +1,96 @@
+{
+ "notices": [
+  {
+   "winner-identifier": [
+    "479 766 842 00724"
+   ],
+   "notice-type": "can-standard",
+   "publication-number": "640305-2026",
+   "classification-cpv": [
+    "72267000",
+    "72267000"
+   ],
+   "total-value-cur": [
+    "EUR"
+   ],
+   "buyer-name": {
+    "fra": [
+     "Ministères de l’éducation nationale, des sports, de la jeunesse, de la vie associative, de l’enseignement supérieur, de la recherche et de l’espace"
+    ]
+   },
+   "publication-date": "2026-09-17+02:00",
+   "winner-name": {
+    "fra": [
+     "CAPGEMINI TECHNOLOGY SERVICES"
+    ]
+   },
+   "total-value": 38000000,
+   "buyer-country": [
+    "FRA"
+   ],
+   "notice-title": {
+    "fra": "France \u2013 Services de maintenance et de réparation de logiciels \u2013 Prestations de tierce maintenance applicative, et prestations associées, relatives aux applications de technologie web",
+    "eng": "France \u2013 Software maintenance and repair services \u2013 Prestations de tierce maintenance applicative, et prestations associées, relatives aux applications de technologie web"
+   }
+  },
+  {
+   "winner-identifier": [
+    "Accenture NV",
+    "881805370",
+    "Unisys Belgium",
+    "COSMOTE GLOBAL SOLUTIONS N.V.",
+    "ARHS Developments S.A",
+    "Thaleria SA",
+    "IDEMIA Public Security France SAS",
+    "Phoenix Developments S.A",
+    "Engineering Ingegneria Informatica S.P.A.",
+    "Engineering International Belgium S.A.",
+    "ALTIA CONSULTORES S.A.",
+    "Quento Technologies SMSA",
+    "Capgemini Technology Services SAS"
+   ],
+   "notice-type": "can-standard",
+   "publication-number": "622371-2026",
+   "classification-cpv": [
+    "72000000",
+    "72000000"
+   ],
+   "total-value-cur": [
+    "EUR"
+   ],
+   "buyer-name": {
+    "eng": [
+     "EU-LISA"
+    ]
+   },
+   "publication-date": "2026-09-09+02:00",
+   "winner-name": {
+    "eng": [
+     "Accenture NV",
+     "ARHS Developments S.A",
+     "IDEMIA Public Security France SAS",
+     "Thaleria SA",
+     "COSMOTE GLOBAL SOLUTIONS N.V.",
+     "Engineering Ingegneria Informatica S.P.A.",
+     "Engineering International Belgium S.A.",
+     "Phoenix Developments S.A",
+     "Capgemini Technology Services SAS",
+     "Unisys Belgium NV",
+     "Quento Technologies SMSA",
+     "NOVA INFORMATION AND COMMUNICATION TECHNOLOGIES S.A.",
+     "ALTIA CONSULTORES S.A."
+    ]
+   },
+   "total-value": 53000000,
+   "buyer-country": [
+    "EST"
+   ],
+   "notice-title": {
+    "fra": "Estonie \u2013 Services de technologies de l'information, conseil, développement de logiciels, internet et appui \u2013 Competition 03",
+    "eng": "Estonia \u2013 IT services: consulting, software development, Internet and support \u2013 Competition 03"
+   }
+  }
+ ],
+ "totalNoticeCount": 76,
+ "timedOut": false
+}

@@ -1,0 +1,35 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.359097,
+     43.216589
+    ]
+   },
+   "properties": {
+    "label": "25 Rue de Belfort 11000 Carcassonne",
+    "score": 0.968660909090909,
+    "housenumber": "25",
+    "id": "11069_0550_00025",
+    "banId": "f320d46e-ff24-4471-8301-2aa6298f399c",
+    "name": "25 Rue de Belfort",
+    "postcode": "11000",
+    "citycode": "11069",
+    "x": 647889.49,
+    "y": 6235475.96,
+    "city": "Carcassonne",
+    "context": "11, Aude, Occitanie",
+    "type": "housenumber",
+    "importance": 0.65527,
+    "depcode": "11",
+    "street": "Rue de Belfort",
+    "_type": "address"
+   }
+  }
+ ],
+ "query": "25 rue de Belfort 11000 Carcassonne"
+}

@@ -1,0 +1,53 @@
+{
+ "data": [
+  {
+   "__id": 415851,
+   "Code du département": "75",
+   "Libellé du département": "Paris",
+   "Code de la collectivité à statut particulier": null,
+   "Libellé de la collectivité à statut particulier": null,
+   "Code de la commune": "75056",
+   "Libellé de la commune": "Paris",
+   "Nom de l'élu": "GRÉGOIRE",
+   "Prénom de l'élu": "Emmanuel",
+   "Code sexe": "M",
+   "Date de naissance": "1977-12-24",
+   "Code de la catégorie socio-professionnelle": 37,
+   "Libellé de la catégorie socio-professionnelle": "Cadre administratif et commercial d'entreprise",
+   "Date de début du mandat": "2026-03-22",
+   "Libellé de la fonction": "Maire",
+   "Date de début de la fonction": "2026-03-29",
+   "Code nationalité": "FR"
+  },
+  {
+   "__id": 999999,
+   "Code du département": "99",
+   "Libellé du département": "Département fictif",
+   "Code de la collectivité à statut particulier": null,
+   "Libellé de la collectivité à statut particulier": null,
+   "Code de la commune": "99999",
+   "Libellé de la commune": "Villefictive",
+   "Nom de l'élu": "GRÉGOIRE",
+   "Prénom de l'élu": "Emmanuel",
+   "Code sexe": "M",
+   "Date de naissance": "1990-01-01",
+   "Code de la catégorie socio-professionnelle": null,
+   "Libellé de la catégorie socio-professionnelle": "Autre profession",
+   "Date de début du mandat": "2026-03-15",
+   "Libellé de la fonction": null,
+   "Date de début de la fonction": null,
+   "Code nationalité": null
+  }
+ ],
+ "links": {
+  "profile": "https://tabular-api.data.gouv.fr/api/resources/d5f400de-ae3f-4966-8cb6-a85c70c6c24a/profile/",
+  "swagger": "https://tabular-api.data.gouv.fr/api/resources/d5f400de-ae3f-4966-8cb6-a85c70c6c24a/swagger/",
+  "next": null,
+  "prev": null
+ },
+ "meta": {
+  "page": 1,
+  "page_size": 50,
+  "total": 2
+ }
+}

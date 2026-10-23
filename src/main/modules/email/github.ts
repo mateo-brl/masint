@@ -30,7 +30,9 @@ export function parseGithubCommits(json: CommitSearch, lang: 'fr' | 'en'): Modul
       accountEntity('github', 'GitHub', a.login, {
         data: compact({ username: a.login, user_id: a.id ? String(a.id) : undefined, url: a.html_url }),
         image: a.avatar_url,
-        linkLabel: tr({ lang }, 'auteur de commits', 'commit author')
+        linkLabel: tr({ lang }, 'auteur de commits', 'commit author'),
+        // GitHub rattache le commit au compte dont c'est l'adresse vérifiée.
+        strength: 'same'
       })
     )
   }

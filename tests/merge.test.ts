@@ -35,4 +35,9 @@ describe('fusion de nœuds', () => {
     const data = mergeData(node('a@b.fr', { provider: 'Gmail' }), [node('a@b.fr', { provider: 'Gmail' })])
     expect(data).toEqual({ provider: 'Gmail' })
   })
+
+  it('garde la cotation de la cible, reprend celle d’un nœud absorbé sinon', () => {
+    expect(mergeData(node('a', { admiralty: 'B2' }), [node('b', { admiralty: 'E5' })]).admiralty).toBe('B2')
+    expect(mergeData(node('a', {}), [node('b', { admiralty: 'C3' })]).admiralty).toBe('C3')
+  })
 })

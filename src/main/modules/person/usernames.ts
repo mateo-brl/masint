@@ -129,6 +129,8 @@ export function usernameEntity(r: ProbeResult, lang: 'fr' | 'en'): OutEntity {
     label: r.username,
     data: { pattern: r.pattern, generated: true, found_on: sites, profile_urls: r.found.map((f) => f.url) },
     linkLabel: fr ? 'pseudo possible' : 'possible username',
+    // Pseudo généré à partir du nom : rapprochement fragile.
+    strength: 'weak',
     review: true,
     reviewReason: fr
       ? `existe sur ${sites.join(', ')} : à confirmer (un même pseudo peut appartenir à quelqu’un d’autre)`

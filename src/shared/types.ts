@@ -60,6 +60,11 @@ export interface GraphNode {
   style: NodeStyle
   /** `manual` ou identifiant du module qui a créé le nœud. */
   source: string
+  /**
+   * Profondeur : 0 pour une saisie ou un import, sinon profondeur du nœud parent + 1 (nœud
+   * trouvé par un module). Sert à borner l'enchaînement automatique.
+   */
+  hop?: number
   createdAt: number
   updatedAt: number
 }
@@ -101,6 +106,62 @@ export interface InvestigationBundle {
   investigation: Investigation
   nodes: GraphNode[]
   edges: GraphEdge[]
+  /** Score de corroboration des nœuds et des liens (voir `Corroboration`). */
+  corroboration?: Corroboration
+}
+
+// ---------------------------------------------------------------------------
+// Provenance
+
+/**
+ * Force du lien entre une entité trouvée et celle d'où elle vient, déclarée par le module
+ * (`OutEntity.strength`) :
+ * - `same` : même identité (preuve Keybase, compte vérifié, recherche par identifiant...) ;
+ * - `declared` : déclaré par la personne (lien de bio, site, page « lien en bio ») ;
+ * - `mention` : simple mention (texte libre, email de commit d'un autre auteur) ;
+ * - `weak` : rapprochement fragile (même pseudo sur un autre site, pseudo généré).
+ */
+export type LinkStrength = 'same' | 'declared' | 'mention' | 'weak'
+
+/**
+ * Observation : un module a vu ce nœud, ce lien ou cette propriété lors d'une exécution. Un
+ * second module qui retrouve la même entité ajoute la sienne : c'est la corroboration.
+ */
+export interface Observation {
+  id: string
+  investigationId: string
+  /** Nœud observé (pour une propriété : le nœud qui la porte). */
+  nodeId: string
+  /** Lien observé avec le nœud (depuis son parent), s'il existe. */
+  edgeId: string | null
+  /** Clé de propriété écrite ; `null` pour l'entité elle-même. */
+  property: string | null
+  /** Exécution d'origine (`module_runs`), vide si elle n'est pas connue. */
+  runId: string
+  moduleId: string
+  /** Page où l'information a été vue, quand le module la donne. */
+  sourceUrl: string | null
+  observedAt: number
+}
+
+/** Nombre de modules distincts qui ont observé chaque nœud et chaque lien. */
+export interface Corroboration {
+  nodes: Record<string, number>
+  edges: Record<string, number>
+}
+
+/** Étape du chemin d'un nœud : `moduleId` l'a trouvé depuis le nœud `fromId`. */
+export interface ProvenanceStep {
+  moduleId: string
+  fromId: string | null
+  fromLabel: string | null
+  fromType: string | null
+}
+
+/** Provenance d'un nœud ou d'un lien : observations et chemin depuis le nœud de départ. */
+export interface Provenance {
+  observations: Observation[]
+  path: ProvenanceStep[]
 }
 
 export type NodeInput = Partial<Omit<GraphNode, 'investigationId' | 'createdAt' | 'updatedAt'>> & {
@@ -214,8 +275,25 @@ export interface JobProgress {
   steps?: Record<string, { done: number; total: number; detail?: string }>
   /** Résultats mis de côté dans « À vérifier » pendant cette tâche. */
   review?: number
+  /** Tâche « en chaîne » : les nouveaux nœuds sont enrichis à leur tour (voir `Settings.chainDepth`). */
+  chain?: ChainProgress
   finished: boolean
   cancelled: boolean
+}
+
+export interface ChainProgress {
+  /** Profondeur maximale de la tâche. */
+  maxDepth: number
+  /** Profondeur la plus grande atteinte par un nœud enrichi. */
+  depth: number
+  /** Nouveaux nœuds ajoutés au graphe par la tâche. */
+  created: number
+  /** Nœuds enrichis par enchaînement, hors nœud de départ. */
+  enriched: number
+  /** Nœuds en cours d'enrichissement (pastille du canevas). */
+  active: string[]
+  /** Budget épuisé (nœuds, exécutions ou durée) : le surplus est parti dans « À vérifier ». */
+  budget: boolean
 }
 
 /** Résultat d'une recherche assistée (navigateur intégré). */
@@ -225,6 +303,16 @@ export interface AssistResult {
   title: string
   matches: Array<{ title: string; url: string; snippet: string }>
   error?: string
+  /** Capture de la page de résultats (réglage « Capturer les pages consultées »). */
+  captureId?: string
+}
+
+/** Dernier résultat d'une recherche assistée, gardé en base avec la recherche manuelle. */
+export interface StoredAssist {
+  result: AssistResult
+  /** Résultats déjà ajoutés au graphe, masqués de la liste. */
+  added: string[]
+  at: number
 }
 
 /** Résultat en attente de validation par l'enquêteur (voir `OutEntity.review`, `OutManualCheck`). */
@@ -246,6 +334,8 @@ export interface Suggestion {
   reason: string
   /** `checked` : recherche manuelle faite, rien trouvé. */
   status: 'pending' | 'accepted' | 'rejected' | 'checked'
+  /** Dernière recherche assistée de cette recherche manuelle. */
+  assist?: StoredAssist | null
   createdAt: number
   updatedAt: number
 }
@@ -279,6 +369,8 @@ export interface GraphChange {
   edges: GraphEdge[]
   deletedNodeIds?: string[]
   deletedEdgeIds?: string[]
+  /** Scores de corroboration mis à jour (nœuds et liens touchés seulement). */
+  corroboration?: Corroboration
 }
 
 // ---------------------------------------------------------------------------
@@ -318,6 +410,12 @@ export interface Settings {
   disabledModules: string[]
   /** Lancer automatiquement les modules applicables à la création d'un nœud. */
   autoEnrich: boolean
+  /**
+   * Enchaînement : profondeur jusqu'à laquelle les nouveaux nœuds sûrs (`same`, `declared`)
+   * sont enrichis à leur tour, de 0 (désactivé) à 3. Ne s'applique qu'avec l'enrichissement
+   * automatique ou l'action « Enrichir en chaîne ».
+   */
+  chainDepth: number
   /** Mode passif : les modules qui contactent la cible (`noisy`) ne partent pas avec « Enrichir ». */
   passiveMode: boolean
   linkOpening: LinkOpening
@@ -331,6 +429,10 @@ export interface Settings {
   /** `auto` : libellés masqués autour des nœuds très reliés, sauf pour la sélection. */
   edgeLabels: 'auto' | 'always'
   showMinimap: boolean
+  /** Nom inscrit dans le journal d'activité ; vide : nom de session du système. */
+  investigatorName: string
+  /** Recherche assistée : la page de résultats est capturée (preuve) avant la fermeture de sa fenêtre. */
+  assistCapture: boolean
   /**
    * Enquêtes cloisonnées (finalité propre à chaque enquête, RGPD) : ni corrélation entre
    * enquêtes, ni recherche globale.
@@ -407,4 +509,153 @@ export interface SitesUpdateResult {
   /** `updated` : nouvelle base installée ; `current` : déjà à jour. */
   status?: 'updated' | 'current'
   error?: string
+}
+
+// ---------------------------------------------------------------------------
+// Preuves et journal d'activité
+
+/**
+ * Capture d'une page web (preuve) : image pleine page, archive MHTML et contexte JSON, chacun
+ * en pièce jointe avec son SHA-256. `manifestSha256` scelle les trois (voir `captureManifest`).
+ */
+export interface Capture {
+  id: string
+  investigationId: string
+  /** Nœud de rattachement ; `null` pour une page ouverte hors d'une fiche. */
+  nodeId: string | null
+  /** Adresse demandée (début de la chaîne de redirections). */
+  url: string
+  /** Adresse affichée au moment de la capture. */
+  finalUrl: string
+  title: string
+  /** Date de la capture, ISO 8601 UTC. */
+  capturedAt: string
+  screenshotAttachment: string
+  mhtmlAttachment: string
+  metaAttachment: string
+  manifestSha256: string
+}
+
+/** Contexte d'ouverture d'un lien : la capture faite depuis le navigateur d'enquête s'y rattache. */
+export interface LinkContext {
+  investigationId: string
+  nodeId?: string | null
+}
+
+/** Export enregistré par le processus principal, inscrit au journal de l'enquête. */
+export interface ExportMeta {
+  investigationId: string
+  /** Format : `png`, `csv-nodes`, `report-pdf`, `report-html`... */
+  kind: string
+}
+
+export type ActivityAction =
+  | 'investigation.create'
+  | 'investigation.duplicate'
+  | 'node.create'
+  | 'node.update'
+  | 'node.delete'
+  | 'node.merge'
+  | 'edge.create'
+  | 'edge.update'
+  | 'edge.delete'
+  | 'module.run'
+  | 'suggestion.accept'
+  | 'suggestion.reject'
+  | 'suggestion.checked'
+  | 'suggestion.reopen'
+  | 'capture.create'
+  | 'export.file'
+  | 'export.report'
+  | 'archive.export'
+  | 'archive.import'
+
+/** Nœud désigné dans le journal : identifiant, type et libellé au moment de l'action. */
+export interface ActivityNodeRef {
+  id: string
+  type: string
+  label: string
+}
+
+/** Lien désigné dans le journal : libellés de ses extrémités au moment de l'action. */
+export interface ActivityEdgeRef {
+  id: string
+  from: string
+  to: string
+  label: string
+}
+
+/** Objet d'une entrée du journal (JSON court ; seuls les champs utiles à l'action sont présents). */
+export interface ActivityTarget {
+  name?: string
+  nodes?: ActivityNodeRef[]
+  edges?: ActivityEdgeRef[]
+  /** Nombre total d'éléments quand la liste est tronquée. */
+  count?: number
+  /** Champs modifiés. */
+  fields?: string[]
+  /** Nœud cible d'une fusion. */
+  into?: ActivityNodeRef
+  /** Liens supprimés avec les nœuds. */
+  removedEdges?: number
+  node?: ActivityNodeRef
+  modules?: string[]
+  job?: string
+  followUp?: boolean
+  /** Modules lancés par enchaînement : profondeur et modules qui ont mené au nœud. */
+  chain?: { depth: number; path: string[] }
+  suggestion?: string
+  value?: string
+  type?: string
+  module?: string
+  found?: { type: string; label: string }
+  capture?: string
+  url?: string
+  finalUrl?: string
+  via?: 'browser' | 'assist' | 'node'
+  kind?: string
+  file?: string
+  size?: number
+  sha256?: string
+  source?: { id: string; name: string }
+  copy?: { id: string; name: string }
+}
+
+/**
+ * Entrée du journal d'activité. `hash = sha256(prevHash + JSON canonique de { seq, at, actor,
+ * action, target })`, chaîné par enquête depuis 64 zéros.
+ */
+export interface ActivityEntry {
+  id: string
+  investigationId: string
+  /** Rang dans la chaîne de l'enquête, à partir de 1. */
+  seq: number
+  /** ISO 8601 UTC. */
+  at: string
+  actor: string
+  action: ActivityAction
+  target: ActivityTarget
+  prevHash: string
+  hash: string
+}
+
+export interface ActivityPage {
+  entries: ActivityEntry[]
+  /** Entrées qui répondent au filtre. */
+  total: number
+  /** Nombre d'entrées par action, sur tout le journal. */
+  counts: Partial<Record<ActivityAction, number>>
+}
+
+/** Vérification de la chaîne d'empreintes du journal. */
+export interface ActivityCheck {
+  ok: boolean
+  count: number
+  /** Empreinte de la dernière entrée (`null` : journal vide). */
+  lastHash: string | null
+  /**
+   * Première entrée altérée : empreinte recalculée différente (`hash`), maillon rompu avec
+   * l'entrée précédente (`link`) ou rang manquant ou en double (`order`).
+   */
+  broken?: { seq: number; id: string; at: string; action: string; reason: 'hash' | 'link' | 'order' }
 }

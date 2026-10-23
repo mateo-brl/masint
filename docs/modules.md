@@ -117,6 +117,7 @@ Une `OutEntity` décrit un nœud à créer :
 | `image` | URL d'une image (avatar, photo, logo), voir [Images](#images-image). |
 | `linkLabel` | Libellé du lien depuis le parent (« compte X », « MX », « lieu de naissance »). |
 | `ref`, `from` | Pour chaîner : donnez une `ref` à une entité, puis `from: 'cette-ref'` à une autre pour la rattacher à la première plutôt qu'à l'entité d'origine (`$input`). |
+| `strength` | Force du lien avec le parent : `same`, `declared`, `mention` ou `weak`. Elle décide de l'enchaînement automatique, voir [Force du lien](#force-du-lien--strength). |
 
 Le moteur **dédoublonne** : une entité de même type, même plateforme et même valeur (comparée
 sans casse, `www.`, `https://` ni `@`) est réutilisée au lieu d'être recréée ; ses nouvelles
@@ -178,6 +179,56 @@ dans la liste « À vérifier » de la fiche, où l'enquêteur valide ou écarte
 Avant de proposer une recherche manuelle, cherchez à l'automatiser : un lien de recherche que
 l'enquêteur doit ouvrir lui-même n'apporte presque rien. Aucun module ne crée de nœud
 `search_link`.
+
+### Force du lien : `strength`
+
+Quand l'enchaînement est actif (réglage « Enchaînement », avec l'enrichissement automatique ou
+l'action « Enrichir en chaîne »), chaque **nouveau** nœud dont le lien est `same` ou
+`declared` est enrichi à son tour, jusqu'à la profondeur réglée. La profondeur d'un nœud
+(`hop`) vaut 0 pour une saisie ou un import, sinon celle de son parent plus 1 : le parent est
+l'entité d'entrée, ou l'entité désignée par `from`. Déclarez la force de chaque entité quand
+elle ne découle pas de son type :
+
+| Valeur | Sens | Exemples |
+| --- | --- | --- |
+| `same` | Même identité, établie par le service. | Preuve Keybase, compte vérifié Gravatar, comptes sociaux déclarés à GitHub, inscription vérifiée avec l'email, compte retrouvé par son identifiant, ancien pseudo du même compte. |
+| `declared` | Déclaré par la personne elle-même. | Lien de bio, site du profil, panneaux Twitch, Linktree et pages « lien en bio », email public du profil. |
+| `mention` | Simple mention. | URL ou email extrait d'un texte libre, email de commit d'un autre auteur, organisation, domaine de l'adresse. |
+| `weak` | Rapprochement fragile. | Même pseudo sur un autre site (`username.sites`), pseudo ou adresse générés. |
+
+Sans `strength`, la force dépend du type (`defaultStrength` dans
+`src/main/engine/chain.ts`) : `declared` pour un compte, un email, un téléphone, un site ou une
+URL ; `weak` pour un pseudo ; `mention` pour le reste (personne, organisation, adresse IP,
+domaine...). L'enchaînement suit une identité, pas une infrastructure.
+
+`linkedEntities()` (`social/_lib.ts`) annote déjà ses sorties : `urls` et `emails` sont
+`declared`, ce qui est extrait de `text` est `mention`, `sameUrls` (comptes vérifiés par la
+plateforme) est `same` ; `urlStrength` remplace la force des `urls`. `profileOutput()` marque
+`same` le compte retrouvé à partir d'un pseudo.
+
+Ce que l'enchaînement ne fait jamais :
+
+- lancer un module `ondemand`, `noisy` ou à clé obligatoire (crédits, quotas) ;
+- lancer `username.sites` ou `username.sites_extended` au-delà de la profondeur 1 ;
+- lancer un module de la catégorie `web` (`category: 'web'`, `misc.url_parse` compris) sur un nœud `url` ;
+- enrichir une adresse générique (`noreply@`, `support@github.com`...), un raccourcisseur
+  d'URL, la page d'accueil d'une plateforme, un compte de plus de 100 000 abonnés (sauf le nœud
+  de départ), un identifiant enrichi depuis moins de 24 heures, ou un pseudo trop courant (moins
+  de 5 caractères, prénom courant, mot du dictionnaire).
+
+Sur un nœud atteint par enchaînement, les nouvelles entités `mention` et `weak` vont dans
+« À vérifier » avec le motif « trouvé via A puis B, profondeur N » ; les valider relance la
+chaîne. Une tâche en chaîne s'arrête à 30 nouveaux nœuds par saut, 100 exécutions de modules
+ou 10 minutes : le surplus va dans « À vérifier » avec le motif « budget atteint ».
+
+### Provenance : observations
+
+Le moteur consigne chaque élément vu par un module dans la table `observations` : l'entité, le
+lien depuis son parent et chaque propriété écrite, avec l'exécution (`module_runs`), la date et
+la page source. La page source est `source_url` de l'entité, sinon la page de l'entité à
+laquelle elle est rattachée (`from`), sinon son `url` ; pour les propriétés de l'entrée,
+`source_url` ou `url` des propriétés. Donnez `url` (ou `source_url`) quand le service en
+fournit une : elle apparaît dans la section « Sources » de la fiche.
 
 ### Images : `image`
 

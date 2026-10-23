@@ -9,7 +9,7 @@ import {
 } from '@xyflow/react'
 import { useApp } from '../../../store/app'
 import { useCanvas, useEdgeDecor, useLowZoom } from '../../../store/canvas'
-import type { FlowEdge } from '../../../store/graph'
+import { useGraph, type FlowEdge } from '../../../store/graph'
 
 /** Au-delà de ce nombre de liens sortants, les libellés ne s'affichent que pour la sélection. */
 const LABEL_MAX_SIBLINGS = 6
@@ -33,6 +33,9 @@ function MasintEdgeImpl(props: EdgeProps<FlowEdge>): React.JSX.Element {
   // entrent sur le chemin ou en sortent sont re-rendus, pour leur libellé (voir useEdgeDecor).
   const { ref: group, extraRef: labelRef, onPath } = useEdgeDecor(id, source, target)
   const edge = data?.edge
+  // Lien vu par un seul module : pointillé, à confirmer. Le style choisi à la main l'emporte.
+  const single = useGraph((s) => s.corroboration.edges[id] === 1)
+  const dashed = edge?.style.dashed ?? single
   const params = { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }
   const [path, labelX, labelY] =
     style === 'straight' ? getStraightPath(params) : style === 'smoothstep' ? getSmoothStepPath({ ...params, borderRadius: 10 }) : getBezierPath(params)
@@ -47,7 +50,7 @@ function MasintEdgeImpl(props: EdgeProps<FlowEdge>): React.JSX.Element {
         style={{
           stroke: color,
           strokeWidth: (edge?.style.width ?? 1.1) * (selected ? 1.6 : 1),
-          strokeDasharray: edge?.style.dashed ? '5 4' : undefined
+          strokeDasharray: dashed ? (edge?.style.dashed ? '5 4' : '3 3') : undefined
         }}
         className={edge?.style.animated ? 'animated' : undefined}
         // BaseEdge transmet ses autres propriétés au tracé visible : la référence s'y attache

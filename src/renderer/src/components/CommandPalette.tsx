@@ -237,7 +237,7 @@ function Highlight({ text, positions }: { text: string; positions: number[] }): 
 
 /**
  * Raccourcis valables partout : Ctrl+K (palette), Ctrl+F (recherche de la vue), Ctrl+1 à
- * Ctrl+6 (vues de l'enquête, dans l'ordre de la barre latérale).
+ * Ctrl+7 (vues de l'enquête, dans l'ordre de la barre latérale).
  */
 function useGlobalShortcuts(): void {
   useEffect(() => {

@@ -548,6 +548,7 @@ function ContextMenu({
   const { tx } = useLang()
   const modules = useApp((s) => s.modules)
   const toast = useApp((s) => s.toast)
+  const chainDepth = useApp((s) => Math.max(1, s.settings?.chainDepth ?? 0))
   const rf = useReactFlow<FlowNode, FlowEdge>()
   const [sub, setSub] = useState(false)
   const allNodes = useGraph((s) => s.nodes)
@@ -567,9 +568,10 @@ function ContextMenu({
   const left = Math.min(menu.x - box.left, box.width - 250)
   const top = Math.min(menu.y - box.top, box.height - 320)
 
-  const item = (icon: string, label: string, onClick: () => void, opts: { danger?: boolean; hint?: string; disabled?: boolean } = {}): React.JSX.Element => (
+  const item = (icon: string, label: string, onClick: () => void, opts: { danger?: boolean; hint?: string; disabled?: boolean; title?: string } = {}): React.JSX.Element => (
     <button
       disabled={opts.disabled}
+      title={opts.title}
       onClick={() => {
         onClose()
         onClick()
@@ -632,6 +634,11 @@ function ContextMenu({
       {!many && node.kind === 'entity' && (
         <>
           {item('Zap', t('enrich.all'), () => void enrichNode(node.id), { hint: 'Ctrl+E', disabled: !canEnrich(node) || server?.auto.size === 0 })}
+          {item('Waypoints', t('enrich.chain'), () => void enrichNode(node.id, undefined, { chain: true }), {
+            hint: t('enrich.hops', { count: chainDepth }),
+            title: t('enrich.chainTitle'),
+            disabled: !canEnrich(node) || server?.auto.size === 0
+          })}
           <button
             onClick={() => setSub(!sub)}
             disabled={!canEnrich(node)}
@@ -669,12 +676,14 @@ function ContextMenu({
         item('Zap', t('enrich.selection', { count: selected.length }), () => {
           void enrichNodes(selected)
         })}
-      {url && item('ExternalLink', t('canvas.openLink'), () => openLink(url))}
+      {url && item('ExternalLink', t('canvas.openLink'), () => openLink(url, { investigationId: node.investigationId, nodeId: node.id }))}
       {!many &&
         node.platform &&
         getPlatform(node.platform)?.url &&
         typeof node.data.username === 'string' &&
-        item('ExternalLink', t('canvas.openProfile'), () => openLink(getPlatform(node.platform)!.url!.replace('{u}', String(node.data.username))))}
+        item('ExternalLink', t('canvas.openProfile'), () =>
+          openLink(getPlatform(node.platform)!.url!.replace('{u}', String(node.data.username)), { investigationId: node.investigationId, nodeId: node.id })
+        )}
       {!many && item('Copy', t('canvas.copyValue'), () => void navigator.clipboard.writeText(node.label))}
       {collapsible.length > 0 &&
         item('FoldVertical', t('collapse.collapse'), () => void setCollapsed(collapsible, true), {
