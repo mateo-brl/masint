@@ -8,6 +8,7 @@ import type { PhoneNumber } from 'libphonenumber-js/max'
 import { facebookIdentifyCheck } from '../../flows/facebook'
 import { decodeEntities } from '../web/_html'
 import { parsePhone } from './_phone'
+import { tellowsUrl } from './_tellows'
 
 const q = encodeURIComponent
 const t = (lang: 'fr' | 'en', fr: string, en: string): string => (lang === 'fr' ? fr : en)
@@ -71,18 +72,26 @@ export function phoneManualChecks(p: PhoneNumber, lang: 'fr' | 'en' = 'fr'): Out
     }
   )
   if (p.country === 'FR') {
-    checks.push(
-      {
-        label: 'PagesJaunes (annuaire inversé)',
-        url: `https://www.pagesjaunes.fr/annuaireinverse/recherche?quoiqui=${nationalDigits}`,
-        hint: t(lang, 'Titulaire et adresse si la ligne est inscrite à l’annuaire.', 'Subscriber and address if the line is listed.')
-      },
-      {
-        label: 'Tellows',
-        url: `https://www.tellows.fr/num/${nationalDigits}`,
-        hint: t(lang, 'Score de 1 (fiable) à 9 (dangereux), commentaires et type d’appel.', 'Score from 1 (trusted) to 9 (dangerous), comments and call type.')
-      }
-    )
+    checks.push({
+      label: 'PagesJaunes (annuaire inversé)',
+      url: `https://www.pagesjaunes.fr/annuaireinverse/recherche?quoiqui=${nationalDigits}`,
+      hint: t(lang, 'Titulaire et adresse si la ligne est inscrite à l’annuaire.', 'Subscriber and address if the line is listed.')
+    })
+  }
+  // Fiche Tellows : lue par la recherche assistée (vrai navigateur), Cloudflare bloquant souvent
+  // la lecture directe du module `phone.tellows`.
+  const tellows = tellowsUrl(p)
+  if (tellows) {
+    checks.push({
+      label: 'Tellows',
+      url: tellows,
+      hint: t(
+        lang,
+        'Score de 1 (fiable) à 9 (dangereux), recherches, commentaires, types d’appel et noms d’appelant. La recherche assistée lit la fiche ; si Cloudflare demande une vérification, la fenêtre s’affiche.',
+        'Score from 1 (trusted) to 9 (dangerous), searches, comments, call types and caller names. The assisted search reads the record; if Cloudflare asks for a check, the window shows up.'
+      ),
+      flow: 'tellows'
+    })
   }
   if (p.country === 'US' || p.country === 'CA') {
     checks.push({
@@ -156,8 +165,8 @@ export default defineModule({
   id: 'phone.links',
   name: { fr: 'Signalements et recherches manuelles (téléphone)', en: 'Reports and manual searches (phone)' },
   description: {
-    fr: "Lit les signalements publics du numéro (doisjerepondre.fr, numéros français) : avis dominant, nombre d'évaluations, type d'appel et derniers commentaires, seulement s'il a été signalé. Propose dans « À vérifier » les recherches impossibles à automatiser : Google (toutes les écritures), WhatsApp, Facebook (retrouver le compte, lu par la recherche assistée sans envoi de code), Telegram, Truecaller, Sync.me, Epieos, et pour la France PagesJaunes et Tellows.",
-    en: 'Reads public reports about the number (doisjerepondre.fr, French numbers): overall rating, number of reviews, call type and latest comments, only when it has been reported. Lists in "To review" the searches that cannot be automated: Google (all spellings), WhatsApp, Facebook (find the account, read by the assisted search without sending any code), Telegram, Truecaller, Sync.me, Epieos, and for France PagesJaunes and Tellows.'
+    fr: "Lit les signalements publics du numéro (doisjerepondre.fr, numéros français) : avis dominant, nombre d'évaluations, type d'appel et derniers commentaires, seulement s'il a été signalé. Propose dans « À vérifier » les recherches impossibles à automatiser : Google (toutes les écritures), WhatsApp, Facebook (retrouver le compte, lu par la recherche assistée sans envoi de code), Telegram, Truecaller, Sync.me, Epieos, PagesJaunes (France) et Tellows (France et pays voisins, fiche lue par la recherche assistée).",
+    en: 'Reads public reports about the number (doisjerepondre.fr, French numbers): overall rating, number of reviews, call type and latest comments, only when it has been reported. Lists in "To review" the searches that cannot be automated: Google (all spellings), WhatsApp, Facebook (find the account, read by the assisted search without sending any code), Telegram, Truecaller, Sync.me, Epieos, PagesJaunes (France) and Tellows (France and neighbouring countries, record read by the assisted search).'
   },
   category: 'phone',
   inputTypes: ['phone'],

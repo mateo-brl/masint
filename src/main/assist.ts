@@ -8,7 +8,9 @@
 import { app, BrowserWindow, session, type ProxyConfig, type WebContents } from 'electron'
 import { browserLanguages } from '@shared/network'
 import type { AssistFlow, AssistResult, Settings } from '@shared/types'
+import { parsePhoneNumberFromString } from 'libphonenumber-js/max'
 import { FACEBOOK_IDENTIFY_URL, facebookExtract, runFacebookIdentify, type FlowPage } from './flows/facebook'
+import { tellowsExtract } from './modules/phone/_tellows'
 export { needlesFor } from '@shared/needles'
 
 /** Partition du navigateur intégré : recherche assistée et navigateur d'enquête. */
@@ -331,6 +333,9 @@ function flowPage(win: BrowserWindow, isClosed: () => boolean, title: string): F
   }
 }
 
+/** Code de la page, sans action, pour l'analyse de la fiche Tellows. */
+const TELLOWS_READ = `(() => (document.documentElement ? document.documentElement.outerHTML.slice(0, 2000000) : ''))()`
+
 const FLOW_ERRORS: Record<string, { fr: string; en: string }> = {
   facebook_form: { fr: 'Formulaire de recherche de Facebook introuvable', en: 'Facebook search form not found' },
   facebook_typing: { fr: 'Saisie impossible dans le formulaire de Facebook', en: 'Could not type into the Facebook form' }
@@ -377,6 +382,13 @@ export async function assistedFlow(opts: {
       const code = outcome.error?.split(':')[0]
       const error = code ? (FLOW_ERRORS[code]?.[opts.lang] ?? outcome.error) : undefined
       return await done({ status: outcome.status, matches: [], extracted, ...(error ? { error } : {}) })
+    }
+    // Fiche Tellows : page lue telle quelle (aucune action), analysée comme par `phone.tellows`.
+    const phone = parsePhoneNumberFromString(opts.value)
+    if (opts.flow === 'tellows' && phone) {
+      const html = await flowPage(win, isClosed, opts.title).run<string>(TELLOWS_READ)
+      if (isClosed()) return cancelled
+      return await done({ status: 'ok', matches: [], extracted: tellowsExtract(html, phone, win.webContents.getURL(), opts.lang) })
     }
     return await done({ status: 'error', matches: [], error: `flow ${opts.flow}` })
   } catch (e) {

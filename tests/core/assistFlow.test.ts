@@ -71,7 +71,7 @@ const optionsResult: AssistResult = {
 describe('recherche assistée scriptée', () => {
   it('garde le parcours avec la recherche manuelle, et le donne à une recherche déjà proposée', async () => {
     const inv = repo.createInvestigation({ name: 'Parcours' })
-    const [phone] = repo.upsertNodes(inv.id, [{ type: 'phone', label: '+33600000012' }])
+    const [phone] = repo.upsertNodes(inv.id, [{ type: 'phone', label: '+33639981234' }])
     await engine.applyOutput(phone, links, { manual: [facebookIdentifyCheck('fr')] }, fakeCtx)
     const [s] = repo.listSuggestions(inv.id, phone.id)
     expect(s).toMatchObject({ kind: 'manual', flow: 'facebook_identify', label: 'Facebook : retrouver le compte' })
@@ -79,7 +79,7 @@ describe('recherche assistée scriptée', () => {
     expect(s.data).toEqual({})
 
     // Recherche Tellows proposée avant que son parcours existe : elle le reçoit au passage suivant.
-    const url = 'https://www.tellows.fr/num/0600000012'
+    const url = 'https://www.tellows.fr/num/0639981234'
     await engine.applyOutput(phone, links, { manual: [{ label: 'Tellows', url }] }, fakeCtx)
     expect(repo.listSuggestions(inv.id, phone.id).find((x) => x.url === url)?.flow).toBeUndefined()
     await engine.applyOutput(phone, links, { manual: [{ label: 'Tellows', url, flow: 'tellows' }] }, fakeCtx)
@@ -90,7 +90,7 @@ describe('recherche assistée scriptée', () => {
 
   it('conserve le parcours dans une archive', async () => {
     const inv = repo.createInvestigation({ name: 'Archive' })
-    const [phone] = repo.upsertNodes(inv.id, [{ type: 'phone', label: '+33600000012' }])
+    const [phone] = repo.upsertNodes(inv.id, [{ type: 'phone', label: '+33639981234' }])
     await engine.applyOutput(phone, links, { manual: [facebookIdentifyCheck('fr')] }, fakeCtx)
     const copy = await importArchive(repo, await buildArchive(repo, inv.id))
     expect(repo.listSuggestions(copy.id)[0].flow).toBe('facebook_identify')
@@ -98,7 +98,7 @@ describe('recherche assistée scriptée', () => {
 
   it('nom lu par le parcours : ajouté par l’enquêteur, relié au nœud de la recherche', async () => {
     const inv = repo.createInvestigation({ name: 'Nom' })
-    const [phone] = repo.upsertNodes(inv.id, [{ type: 'phone', label: '+33600000012' }])
+    const [phone] = repo.upsertNodes(inv.id, [{ type: 'phone', label: '+33639981234' }])
     await engine.applyOutput(phone, links, { manual: [facebookIdentifyCheck('fr')] }, fakeCtx)
     const [s] = repo.listSuggestions(inv.id, phone.id)
     repo.setSuggestionAssist(s.id, { result: optionsResult, added: [], at: Date.now() })
@@ -118,7 +118,7 @@ describe('recherche assistée scriptée', () => {
 
   it('contact masqué lu par le parcours : indice du nœud, recoupement relancé, recherche traitée', async () => {
     const inv = repo.createInvestigation({ name: 'Indice' })
-    const [phone] = repo.upsertNodes(inv.id, [{ type: 'phone', label: '+33600000012', data: { masked_emails: 'a•••••@g•••••.com (Apple)' } }])
+    const [phone] = repo.upsertNodes(inv.id, [{ type: 'phone', label: '+33639981234', data: { masked_emails: 'a•••••@g•••••.com (Apple)' } }])
     await engine.applyOutput(phone, links, { manual: [facebookIdentifyCheck('fr')] }, fakeCtx)
     const [s] = repo.listSuggestions(inv.id, phone.id)
     repo.setSuggestionAssist(s.id, { result: optionsResult, added: ['name:Camille Exemple'], at: Date.now() })
