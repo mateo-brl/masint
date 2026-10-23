@@ -57,6 +57,7 @@ export const PROPERTY_LABELS: Record<string, { fr: string; en: string }> = {
   username: { fr: 'Identifiant', en: 'Username' },
   user_id: { fr: 'ID utilisateur', en: 'User ID' },
   url: { fr: 'URL', en: 'URL' },
+  default_avatar: { fr: 'Photo de profil par défaut (aucune photo)', en: 'Default profile picture (no photo)' },
   bio: { fr: 'Bio', en: 'Bio' },
   location: { fr: 'Localisation', en: 'Location' },
   followers: { fr: 'Abonnés', en: 'Followers' },

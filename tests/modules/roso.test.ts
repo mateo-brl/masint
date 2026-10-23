@@ -170,6 +170,28 @@ describe('roso.info : parsing tolérant', () => {
     expect(imageUrl('https://cdn.eyecon-app.com/p.jpg')).toMatch(/^https:\/\/roso\.info\/api\/uc\/proxy-image\?url=/)
     expect(imageUrl('javascript:alert(1)')).toBeUndefined()
   })
+  it('photo Facebook dans `url` : ni adresse du profil, ni image jointe si c’est la silhouette par défaut', () => {
+    // Profil fictif : silhouette par défaut servie par le CDN de Facebook dans le champ `url`.
+    const silhouette = 'https://scontent-cdg4-1.xx.fbcdn.net/v/t1.30497-1/84628273_176159830277856_972693363922829312_n.jpg?stp=dst-jpg_s200x200&_nc_cat=1&oh=00_x&oe=0'
+    const [account] = accountEntities({ name: 'Profil Fictif', url: silhouette }, { site: 'facebook', query: '+33600000000', ref: 'a', lang: 'fr' })
+    expect(account).toMatchObject({ type: 'account', platform: 'facebook', label: 'Profil Fictif' })
+    expect(account.data?.url).toBeUndefined()
+    expect(account.data?.default_avatar).toBe(true)
+    expect(account.image).toBeUndefined()
+
+    // Vraie photo dans `url`, adresse du profil sous une autre clé : chacune à sa place.
+    const photo = 'https://scontent-cdg4-1.xx.fbcdn.net/v/t39.30808-1/123456789_000000000000000_000000000000000000_n.jpg?_nc_cat=1'
+    const [withPhoto] = accountEntities({ name: 'Profil Fictif', url: photo, link: 'https://www.facebook.com/profil.fictif' }, { site: 'facebook', query: 'x', ref: 'a', lang: 'fr' })
+    expect(withPhoto.data?.url).toBe('https://www.facebook.com/profil.fictif')
+    expect(withPhoto.data?.default_avatar).toBeUndefined()
+    expect(withPhoto.image).toBe(photo)
+
+    // Pseudo connu : l'adresse du profil est reconstruite plutôt que de garder l'image.
+    const [withUser] = accountEntities({ username: 'profil.fictif', url: silhouette }, { site: 'facebook', query: 'x', ref: 'a', lang: 'fr' })
+    expect(withUser.data?.url).toMatch(/^https:\/\/(www\.)?facebook\.com\/profil\.fictif/)
+    expect(withUser.data?.default_avatar).toBe(true)
+  })
+
   it('normalise les dates', () => {
     expect(isoDate('2023-04-12')).toBe('2023-04-12')
     expect(isoDate(1700000000)).toBe('2023-11-14T22:13:20.000Z')
