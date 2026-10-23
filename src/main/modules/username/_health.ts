@@ -99,6 +99,16 @@ export class HealthStore {
     this.save()
     return next
   }
+
+  /** Met des sites en échec en dehors d'un contrôle complet (faux positifs vus pendant une recherche). */
+  markFailed(egress: string, ids: string[], reason: FailedSite['reason'], now = Date.now()): void {
+    if (!ids.length) return
+    const current = this.get(egress)
+    const failed = { ...current.failed }
+    for (const id of ids) failed[id] = { at: now, reason }
+    this.data.egress[egress] = { ...current, failed }
+    this.save()
+  }
 }
 
 let store: { dir: string | undefined; store: HealthStore } | null = null
@@ -189,4 +199,34 @@ export async function selfCheck(
   }
   await Promise.all(Array.from({ length: Math.min(opts.concurrency ?? 16, sites.length) }, worker))
   return results.sort((a, b) => a.name.localeCompare(b.name))
+}
+
+/**
+ * Contre-vérification des sites qui ont trouvé le pseudo : chacun est réinterrogé avec un pseudo
+ * aléatoire. S'il le « trouve » aussi, sa réponse ne distingue rien (page de blocage ou de
+ * contrôle d'âge servie pour toute adresse, page d'erreur en HTTP 200) : c'est un faux positif.
+ * Renvoie les identifiants de ces sites.
+ */
+export async function counterCheck(
+  found: Array<{ def: SiteDef }>,
+  ctx: ModuleContext,
+  opts: { concurrency?: number; timeoutMs?: number } = {}
+): Promise<Set<string>> {
+  const queue = [...found]
+  const fakes = new Set<string>()
+  let done = 0
+  const label = ctx.lang === 'fr' ? 'contre-vérification' : 'cross-check'
+  const worker = async (): Promise<void> => {
+    while (queue.length && !ctx.signal.aborted) {
+      const { def } = queue.shift()!
+      const random = randomUsernameFor(def)
+      if (random) {
+        const r = await def.check(random, ctx, opts.timeoutMs)
+        if (r.status === 'claimed') fakes.add(def.id)
+      }
+      ctx.progress(++done, found.length, `${label} · ${def.name}`)
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(opts.concurrency ?? 16, found.length) }, worker))
+  return fakes
 }

@@ -4,7 +4,7 @@ import { PLATFORMS } from '@shared/platforms'
 import { cappedList } from '../domain/_util'
 import { usernameOf } from '../social/_lib'
 import { ENTITY_RANK, scan, tierSites, tierSkipped, type ScanResult, type Tier } from './_catalog'
-import { DEFAULT_EGRESS, healthStore, healthy } from './_health'
+import { counterCheck, DEFAULT_EGRESS, healthStore, healthy } from './_health'
 import type { SiteResult } from './_sherlock'
 import { dbInfo } from './_siteDb'
 
@@ -133,7 +133,13 @@ async function run(input: InputEntity, ctx: ModuleContext, tier: Tier): Promise<
   const started = Date.now()
   const results = await scan(sites, username, ctx, SETTINGS[tier])
   if (ctx.signal.aborted) throw new ModuleError('Recherche interrompue', 'other')
-  const found = results.filter((r) => r.status === 'claimed')
+  const positives = results.filter((r) => r.status === 'claimed')
+  // Contre-vérification : un site qui « trouve » aussi un pseudo aléatoire est un faux positif. Il
+  // est écarté de ce résultat et sauté pendant 7 jours sur cette sortie réseau.
+  const fakes = await counterCheck(positives, ctx, SETTINGS[tier])
+  if (ctx.signal.aborted) throw new ModuleError('Recherche interrompue', 'other')
+  healthStore().markFailed(egress, Array.from(fakes), 'false_positive')
+  const found = positives.filter((r) => !fakes.has(r.def.id))
   // Palier Étendu : seuls les sites connus deviennent des comptes ; la longue traîne (forums) est résumée.
   const asAccount = (r: ScanResult): boolean => tier !== 'extended' || r.def.essential || (r.def.rank !== null && r.def.rank <= ENTITY_RANK)
   const accounts = found.filter(asAccount)
@@ -157,6 +163,7 @@ async function run(input: InputEntity, ctx: ModuleContext, tier: Tier): Promise<
       blocked_by_waf: count('waf'),
       errors: count('error'),
       skipped_failing: failed.map((s) => s.name),
+      false_positives_discarded: positives.filter((r) => fakes.has(r.def.id)).map((r) => r.site),
       skipped_rules: tierSkipped(tier).length,
       network: egress,
       health_checked_at: health.checkedAt ? new Date(health.checkedAt).toISOString() : null,

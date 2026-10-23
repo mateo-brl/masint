@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { FetchOptions } from '@shared/modules'
 import { catalog, hostOf, MAIGRET_BLACKLIST, maigretDef, scan, tierSites, tierSkipped, type SiteDef } from '../../src/main/modules/username/_catalog'
-import { HEALTH_TTL_MS, HealthStore, healthy, healthStore, randomUsernameFor, selfCheck, verdictOf } from '../../src/main/modules/username/_health'
+import { counterCheck, HEALTH_TTL_MS, HealthStore, healthy, healthStore, randomUsernameFor, selfCheck, verdictOf } from '../../src/main/modules/username/_health'
 import {
   checkMaigretSite,
   convertPythonRegex,
@@ -300,6 +300,43 @@ describe('modules', () => {
     expect(ctx.calls.some((c) => c.url.includes('github.com'))).toBe(false)
     expect(raw.network).toBe('test:essentiel')
   }, 60000)
+
+  it('Adultes : un site qui « trouve » aussi un pseudo aléatoire est écarté et mis en échec', async () => {
+    const nsfwModule = modules.find((m) => m.id === 'username.sites_nsfw')!
+    const username = 'masinttemoin'
+    const onHost = (url: string, host: string): boolean => {
+      const h = new URL(url).hostname
+      return h === host || h.endsWith(`.${host}`)
+    }
+    // Deux sites qui concluent sur le code HTTP de leur propre hôte : 200 trouvé, 404 absent.
+    const answers = async (def: SiteDef, status: number): Promise<string> =>
+      (await def.check(username, fakeContext([[/.*/, (url) => (onHost(url, def.host) ? { status, body: '' } : { status: 599 })]]))).status
+    const picked: SiteDef[] = []
+    for (const def of tierSites('nsfw')) {
+      if (picked.length === 2) break
+      if (def.isLegal(username) && (await answers(def, 200)) === 'claimed' && (await answers(def, 404)) === 'available') picked.push(def)
+    }
+    const [gate, real] = picked
+    const ctx = fakeContext([
+      [
+        /.*/,
+        (url) =>
+          // Page de contrôle d'âge servie en HTTP 200 pour toute adresse du site.
+          onHost(url, gate.host) || (onHost(url, real.host) && url.includes(username)) ? { status: 200, body: '' } : { status: 404, body: 'not found' }
+      ]
+    ])
+    ctx.egress = 'test:contre'
+    const out = await nsfwModule.run(entity('username', username), ctx)
+    const raw = out.raw as { false_positives_discarded: string[]; found: number }
+    expect(raw.false_positives_discarded).toContain(gate.name)
+    expect(raw.false_positives_discarded).not.toContain(real.name)
+    expect(out.entities?.some((e) => e.data?.site === real.name || e.data?.url === real.profileUrl(username))).toBe(true)
+    expect(out.entities?.some((e) => e.data?.site === gate.name)).toBe(false)
+    // Sauté pendant 7 jours sur cette sortie réseau seulement.
+    expect(healthStore().failedIds('test:contre').has(gate.id)).toBe(true)
+    expect(healthStore().failedIds('test:contre').has(real.id)).toBe(false)
+    expect(healthStore().failedIds('direct').has(gate.id)).toBe(false)
+  }, 60000)
 })
 
 describe('cache de santé', () => {
@@ -310,6 +347,29 @@ describe('cache de santé', () => {
     expect(verdictOf('available', 'available')).toBe('missed')
     expect(verdictOf('waf', 'available')).toBe('inconclusive')
     expect(verdictOf(null, 'available')).toBe('untestable')
+  })
+
+  it('contre-vérification : un site qui trouve aussi un pseudo aléatoire est écarté', async () => {
+    const site = (id: string, anyName: boolean): { def: SiteDef } => ({
+      def: {
+        id,
+        name: id,
+        isLegal: () => true,
+        // Page de blocage ou de contrôle d'âge : « trouvé » pour n'importe quel pseudo.
+        check: async (u: string) => ({ site: id, url: `https://${id}/${u}`, status: anyName || u === 'cible' ? 'claimed' : 'available' })
+      } as unknown as SiteDef
+    })
+    const fakes = await counterCheck([site('bloque.example', true), site('fiable.example', false)], makeContext())
+    expect(Array.from(fakes)).toEqual(['bloque.example'])
+  })
+
+  it('faux positif vu pendant une recherche : site mis en échec sans effacer le dernier contrôle', () => {
+    const store = new HealthStore(null)
+    store.record('direct', [{ id: 'a', verdict: 'ok' }], 1000)
+    store.markFailed('direct', ['x'], 'false_positive', 2000)
+    expect(store.get('direct').checkedAt).toBe(1000)
+    expect(Array.from(store.failedIds('direct', 3000))).toEqual(['x'])
+    expect(store.failedIds('tor', 3000).size).toBe(0)
   })
 
   it('pseudo aléatoire compatible avec le format du site', () => {
