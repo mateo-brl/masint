@@ -9,6 +9,11 @@
   background: var(--canvas);
   outline: none;
 }
+/* La carte se déplace aux flèches une fois focalisée : anneau intérieur, sinon rogné. */
+.geo-map:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
 .geo-map .leaflet-control-attribution {
   background: color-mix(in srgb, var(--panel) 82%, transparent);
   color: var(--faint);
@@ -89,8 +94,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 88%, black);
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
   font-weight: 700;
   font-size: 12px;
   box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 28%, transparent), 0 6px 18px rgb(0 0 0 / 0.35);

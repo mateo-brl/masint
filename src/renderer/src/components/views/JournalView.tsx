@@ -124,10 +124,10 @@ export function JournalView(): React.JSX.Element {
       {check && (
         <div
           className={`mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border px-3 py-2 text-[12.5px] ${
-            check.ok ? 'border-success/40 bg-success/5' : 'border-accent/50 bg-accent-soft'
+            check.ok ? 'border-success/40 bg-success/5' : 'border-danger/50 bg-danger-soft'
           }`}
         >
-          <Icon name={check.ok ? 'ShieldCheck' : 'ShieldAlert'} size={16} className={check.ok ? 'text-success' : 'text-accent'} />
+          <Icon name={check.ok ? 'ShieldCheck' : 'ShieldAlert'} size={16} className={check.ok ? 'text-success' : 'text-danger'} />
           <span className="min-w-0 flex-1">
             {check.ok
               ? check.count
@@ -170,7 +170,7 @@ export function JournalView(): React.JSX.Element {
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto rounded-2xl border border-line">
-        <div className="sticky top-0 z-10 grid grid-cols-[3rem_9.5rem_7rem_11rem_minmax(0,1fr)_minmax(0,14rem)_6.5rem] gap-3 border-b border-line bg-panel-2 px-4 py-2 text-[10.5px] font-semibold tracking-[0.06em] text-muted uppercase">
+        <div className="sticky top-0 z-10 grid grid-cols-[3rem_9.5rem_7rem_11rem_minmax(0,1fr)_minmax(0,14rem)_6.5rem] gap-3 border-b border-line bg-panel-2 px-4 py-2 text-[11.5px] font-semibold text-muted">
           <span>{t('journal.col.seq')}</span>
           <span>{t('journal.col.date')}</span>
           <span>{t('journal.col.actor')}</span>
@@ -221,7 +221,7 @@ function Row({
     <div
       data-seq={e.seq}
       className={`grid grid-cols-[3rem_9.5rem_7rem_11rem_minmax(0,1fr)_minmax(0,14rem)_6.5rem] items-start gap-3 border-b border-line px-4 py-2 text-[12px] last:border-0 ${
-        broken ? 'bg-accent-soft' : 'bg-panel'
+        broken ? 'bg-danger-soft' : 'bg-panel'
       }`}
     >
       <span className="font-mono text-[11px] text-faint">{e.seq}</span>

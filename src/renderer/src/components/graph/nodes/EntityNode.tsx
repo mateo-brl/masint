@@ -41,7 +41,7 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
   const platform = getPlatform(n.platform)
   const accent = n.style.color ?? platform?.color ?? def.color
   const width = SIZES[n.style.size ?? 'md']
-  const kicker = (platform && def.keepTypeIcon ? `${tx(def.label)} · ${platform.name}` : (platform?.name ?? tx(def.label))).toUpperCase()
+  const kicker = platform && def.keepTypeIcon ? `${tx(def.label)} · ${platform.name}` : (platform?.name ?? tx(def.label))
   const subtitle = n.style.hideSubtitle ? '' : nodeSubtitle(n)
   // Chaque nœud ne lit que ses propres valeurs : il n'est re-rendu que si elles changent.
   const childCount = useCanvas((s) => s.outDegree.get(n.id) ?? 0)
@@ -85,12 +85,12 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
           icon={n.style.icon}
         />
         <div className="min-w-0 flex-1 leading-tight">
-          <div className="text-[7.5px]">&nbsp;</div>
+          <div className="text-[10px]">&nbsp;</div>
           <div className="relative text-[11.5px]">
             &nbsp;
             <span className="absolute left-0 h-[6px] w-4/5 rounded-full" style={{ top: 'calc(50% - 3px)', background: `${accent}99` }} />
           </div>
-          {subtitle && <div className="text-[8.5px]">&nbsp;</div>}
+          {subtitle && <div className="text-[10px]">&nbsp;</div>}
         </div>
         <Handle type="source" position={Position.Bottom} />
       </div>
@@ -109,12 +109,13 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
       />
       <div className="min-w-0 flex-1 leading-tight">
         <div className="flex items-center gap-1">
-          <div className="min-w-0 flex-1 truncate text-[7.5px] font-semibold tracking-[0.08em]" style={{ color: 'var(--muted)' }}>
+          {/* 10 px au moins : en dessous, illisible au zoom 1 (plus petit, le nœud passe en mode réduit). */}
+          <div className="min-w-0 flex-1 truncate text-[10px] font-medium" style={{ color: 'var(--muted)' }}>
             {kicker}
           </div>
           {sources >= CORROBORATION_BADGE_MIN && (
             <span
-              className="shrink-0 rounded-[3px] border px-[3px] text-[7.5px] leading-[11px] font-semibold"
+              className="shrink-0 rounded-[3px] border px-[3px] text-[10px] leading-[13px] font-semibold"
               style={{ borderColor: 'var(--node-border)', color: 'var(--muted)' }}
               title={t('provenance.seenBy', { count: sources })}
             >
@@ -124,23 +125,23 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
           {/* Autres enquêtes où l'entité apparaît (corrélation). */}
           {seenElsewhere > 0 && (
             <span
-              className="flex shrink-0 items-center gap-0.5 text-[7.5px] font-semibold"
+              className="flex shrink-0 items-center gap-0.5 text-[10px] font-semibold"
               style={{ color: 'var(--muted)' }}
               title={t('correlation.seenIn', { count: seenElsewhere })}
               aria-label={t('correlation.seenIn', { count: seenElsewhere })}
             >
-              <Icon name="FolderSymlink" size={8} />
+              <Icon name="FolderSymlink" size={10} />
               {seenElsewhere}
             </span>
           )}
         </div>
         <div className={`truncate text-[11.5px] font-semibold ${n.label ? 'text-fg' : 'italic text-faint'}`}>{n.label || t('node.untitled')}</div>
-        {subtitle && <div className="truncate text-[8.5px] text-muted">{subtitle}</div>}
+        {subtitle && <div className="truncate text-[10px] text-muted">{subtitle}</div>}
       </div>
       {running && <span className="absolute -top-1 -left-1 h-2.5 w-2.5 animate-pulse rounded-full" style={{ background: 'var(--warning)' }} />}
       {childCount > 0 && (
         <span
-          className="absolute -top-1.5 -right-1.5 flex h-[15px] min-w-[15px] items-center justify-center rounded-full px-1 text-[8.5px] font-bold text-white"
+          className="absolute -top-2 -right-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-on-accent"
           style={{ background: 'var(--accent)' }}
         >
           {childCount}
@@ -148,7 +149,7 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
       )}
       {hiddenCount > 0 && (
         <button
-          className="nodrag absolute -bottom-2.5 left-3 z-10 flex h-[17px] items-center gap-0.5 rounded-full border px-1.5 text-[9px] font-semibold text-fg hover:border-accent hover:text-accent"
+          className="nodrag absolute -bottom-2.5 left-3 z-10 flex h-[18px] items-center gap-0.5 rounded-full border px-1.5 text-[10px] font-semibold text-fg hover:border-accent hover:text-accent"
           style={{ background: 'var(--panel)', borderColor: 'var(--node-border)' }}
           title={t('collapse.expand')}
           onClick={(e) => {
@@ -161,7 +162,7 @@ function EntityNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
       )}
       {reviewCount > 0 && (
         <span
-          className="absolute -right-1.5 -bottom-1.5 flex h-[15px] min-w-[15px] items-center justify-center rounded-full px-1 text-[8.5px] font-bold text-black"
+          className="absolute -right-2 -bottom-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-on-warning"
           style={{ background: 'var(--warning)' }}
           title={t('review.count', { count: reviewCount })}
         >

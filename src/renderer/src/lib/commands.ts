@@ -158,7 +158,7 @@ export function buildCommands(t: TFunction): Command[] {
   })
   add({ id: 'settings', title: t('rail.settings'), section: 'app', icon: 'Settings', run: () => app.openSettings('general') })
   add({ id: 'keys', title: t('rail.keys'), section: 'app', icon: 'KeyRound', run: () => app.openSettings('keys') })
-  const light = app.settings?.theme === 'light'
+  const light = app.theme === 'light'
   add({ id: 'theme', title: light ? t('palette.cmd.darkTheme') : t('style.lightTheme'), section: 'app', icon: light ? 'Moon' : 'Sun', run: () => app.updateSettings({ theme: light ? 'dark' : 'light' }) })
   if (open)
     add({

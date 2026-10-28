@@ -2,9 +2,10 @@ import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } fr
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '../../lib/icons'
-import { useApp } from '../../store/app'
+import { useApp, type Toast } from '../../store/app'
 
-type BtnVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
+/** `danger-solid` : uniquement pour confirmer une action destructive (rouge = danger). */
+type BtnVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-solid'
 
 export function Button({
   variant = 'secondary',
@@ -18,13 +19,15 @@ export function Button({
   icon?: string
   size?: 'sm' | 'md'
 } & React.ButtonHTMLAttributes<HTMLButtonElement>): React.JSX.Element {
-  const base = 'inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition disabled:opacity-40 disabled:pointer-events-none'
+  const base =
+    'inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none'
   const sizes = size === 'sm' ? 'h-7 px-2.5 text-xs' : 'h-8 px-3 text-[13px]'
   const variants: Record<BtnVariant, string> = {
-    primary: 'bg-accent text-white hover:bg-accent-strong',
+    primary: 'bg-accent text-on-accent hover:bg-accent-strong',
     secondary: 'bg-panel-2 border border-line text-fg hover:bg-panel-3',
     ghost: 'text-muted hover:text-fg hover:bg-panel-3',
-    danger: 'bg-panel-2 border border-line text-accent hover:bg-accent-soft'
+    danger: 'bg-panel-2 border border-line text-danger hover:bg-danger-soft',
+    'danger-solid': 'bg-danger-solid text-white hover:bg-danger-solid-hover'
   }
   return (
     <button className={`${base} ${sizes} ${variants[variant]} ${className}`} {...props}>
@@ -46,7 +49,7 @@ export function IconButton({
     <button
       title={title}
       aria-label={title}
-      className={`inline-flex h-8 w-8 items-center justify-center rounded-lg transition ${
+      className={`inline-flex h-8 w-8 items-center justify-center rounded-lg transition active:scale-[0.97] ${
         active ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-panel-3 hover:text-fg'
       } ${className}`}
       {...props}
@@ -66,6 +69,21 @@ const modalStack: Array<RefObject<HTMLElement | null>> = []
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 /**
+ * Deux derniers éléments focalisés. Un champ `autoFocus` prend le focus pendant le rendu,
+ * avant l'effet de la fenêtre : l'élément d'origine est alors l'avant-dernier.
+ */
+const focusTrail: Element[] = []
+if (typeof document !== 'undefined')
+  document.addEventListener(
+    'focusin',
+    (e) => {
+      focusTrail.push(e.target as Element)
+      if (focusTrail.length > 2) focusTrail.shift()
+    },
+    true
+  )
+
+/**
  * Comportement d'une fenêtre modale : Échap la ferme (la plus récente seulement, si plusieurs
  * sont empilées), Tab reste à l'intérieur, le focus y entre à l'ouverture et revient à
  * l'élément d'origine à la fermeture.
@@ -75,13 +93,14 @@ export function useModal(ref: RefObject<HTMLElement | null>, open: boolean, onCl
   close.current = onClose
   useEffect(() => {
     if (!open) return
-    const previous = document.activeElement as HTMLElement | null
+    const inside = (x: Element | null): boolean => !!x && !!ref.current?.contains(x)
+    const previous = (inside(document.activeElement) ? focusTrail.find((x) => !inside(x)) : document.activeElement) as HTMLElement | null
     modalStack.push(ref)
     // Focus d'entrée, sauf si un champ s'en est déjà chargé (autoFocus).
     const raf = requestAnimationFrame(() => {
       const el = ref.current
       if (!el || el.contains(document.activeElement)) return
-      const first = el.querySelector<HTMLElement>(`[data-autofocus], ${FOCUSABLE}`)
+      const first = el.querySelector<HTMLElement>('[data-autofocus]') ?? el.querySelector<HTMLElement>(FOCUSABLE)
       ;(first ?? el).focus()
     })
     const onKey = (e: KeyboardEvent): void => {
@@ -142,14 +161,14 @@ export function Dialog({
   useModal(box, open, onClose)
   if (!open) return null
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6" onMouseDown={onClose}>
+    <div className="enter-fade fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6" onMouseDown={onClose}>
       <div
         ref={box}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="glass flex max-h-full flex-col rounded-2xl outline-none"
+        className="popover enter-pop flex max-h-full flex-col rounded-2xl outline-none"
         style={{ width, maxWidth: '100%' }}
         onMouseDown={(e) => e.stopPropagation()}
       >
@@ -224,26 +243,57 @@ export function Dropdown({
   const [anchor, setAnchor] = useState<DOMRect | null>(null)
   const ref = useRef<HTMLDivElement>(null)
   const menu = useRef<HTMLDivElement>(null)
+  // Ouvert au clavier : le focus entre dans le menu. Un clic souris le laisse sur le déclencheur.
+  const viaKeyboard = useRef(false)
+  const triggerEl = (): HTMLElement | null => ref.current?.querySelector<HTMLElement>('button, [tabindex]') ?? null
+  const entries = (): HTMLElement[] => Array.from(menu.current?.querySelectorAll<HTMLElement>('[role="menuitem"]:not(:disabled)') ?? [])
+
+  // État du menu sur le bouton fourni par l'appelant, pour les lecteurs d'écran.
+  useEffect(() => {
+    const el = triggerEl()
+    el?.setAttribute('aria-haspopup', 'menu')
+    el?.setAttribute('aria-expanded', String(open))
+  })
+
   useEffect(() => {
     if (!open) return
+    const raf = viaKeyboard.current ? requestAnimationFrame(() => entries()[0]?.focus()) : 0
     const onDown = (e: MouseEvent): void => {
       const target = e.target as Node
       if (!ref.current?.contains(target) && !menu.current?.contains(target)) setOpen(false)
     }
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') setOpen(false)
+      const inside = !!menu.current?.contains(document.activeElement)
+      if (e.key === 'Escape') {
+        if (inside) triggerEl()?.focus()
+        setOpen(false)
+      } else if (e.key === 'Tab' && inside) {
+        // Tab reprend après le déclencheur, dans l'ordre de la page.
+        triggerEl()?.focus()
+        setOpen(false)
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Home' || e.key === 'End') {
+        const all = entries()
+        if (!all.length) return
+        e.preventDefault()
+        const i = all.indexOf(document.activeElement as HTMLElement)
+        const next = e.key === 'Home' ? 0 : e.key === 'End' ? all.length - 1 : e.key === 'ArrowDown' ? (i + 1) % all.length : i <= 0 ? all.length - 1 : i - 1
+        all[next].focus()
+      }
     }
     const onResize = (): void => setOpen(false)
     window.addEventListener('mousedown', onDown)
     window.addEventListener('keydown', onKey)
     window.addEventListener('resize', onResize)
     return () => {
+      cancelAnimationFrame(raf)
       window.removeEventListener('mousedown', onDown)
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('resize', onResize)
     }
   }, [open])
-  const toggle = (): void => {
+  const toggle = (e: React.MouseEvent): void => {
+    // Un clic venu du clavier (Entrée, Espace) n'a pas de compteur de clics.
+    viaKeyboard.current = e.detail === 0
     if (!open && ref.current) setAnchor(ref.current.getBoundingClientRect())
     setOpen(!open)
   }
@@ -264,20 +314,30 @@ export function Dropdown({
       {open &&
         anchor &&
         createPortal(
-          <div ref={menu} className="glass fixed z-[70] overflow-y-auto rounded-xl p-1" style={style}>
+          <div
+            ref={menu}
+            role="menu"
+            className="popover enter-menu fixed z-[70] overflow-y-auto rounded-xl p-1"
+            // Le menu s'ouvre depuis son déclencheur.
+            style={{ ...style, transformOrigin: `${align === 'right' ? 'right' : align === 'center' ? 'center' : 'left'} ${up ? 'bottom' : 'top'}` }}
+          >
             {list.map((it, i) =>
               it.separator ? (
-                <div key={i} className="my-1 border-t border-line" />
+                <div key={i} role="separator" className="my-1 border-t border-line" />
               ) : (
                 <button
                   key={i}
+                  role="menuitem"
+                  tabIndex={-1}
                   disabled={it.disabled}
                   onClick={() => {
+                    // Focus rendu au déclencheur : une modale ouverte par l'action y reviendra en se fermant.
+                    if (menu.current?.contains(document.activeElement)) triggerEl()?.focus()
                     setOpen(false)
                     it.onClick?.()
                   }}
-                  className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[12.5px] transition disabled:opacity-40 ${
-                    it.danger ? 'text-accent hover:bg-accent-soft' : 'text-fg hover:bg-panel-3'
+                  className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[12.5px] transition focus-visible:-outline-offset-2 disabled:opacity-40 ${
+                    it.danger ? 'text-danger hover:bg-danger-soft' : 'text-fg hover:bg-panel-3'
                   }`}
                 >
                   {it.icon && <Icon name={it.icon} size={14} className="shrink-0 text-muted" aria-hidden />}
@@ -294,43 +354,107 @@ export function Dropdown({
 }
 
 export function Toasts(): React.JSX.Element {
+  const { t } = useTranslation()
   const toasts = useApp((s) => s.toasts)
-  const dismiss = useApp((s) => s.dismissToast)
+  // Région toujours présente : les lecteurs d'écran annoncent ce qui y apparaît.
   return (
-    <div className="pointer-events-none fixed right-5 bottom-20 z-[60] flex flex-col items-end gap-2">
-      {toasts.map((t) => (
-        <div
-          key={t.id}
-          onClick={() => dismiss(t.id)}
-          className="glass pointer-events-auto flex max-w-sm items-start gap-2 rounded-xl px-3.5 py-2.5 text-[12.5px]"
-        >
-          <Icon
-            name={t.kind === 'error' ? 'CircleX' : t.kind === 'success' ? 'CircleCheck' : 'Info'}
-            size={15}
-            className={t.kind === 'error' ? 'text-accent' : t.kind === 'success' ? 'text-success' : 'text-muted'}
-          />
-          <div className="flex min-w-0 flex-col gap-2">
-            <span className="break-words">{t.text}</span>
-            {t.actions && (
-              <div className="flex flex-wrap gap-1.5">
-                {t.actions.map((a) => (
-                  <Button
-                    key={a.label}
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      dismiss(t.id)
-                      a.onClick()
-                    }}
-                  >
-                    {a.label}
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+    <div
+      role="region"
+      aria-label={t('common.notifications')}
+      aria-live="polite"
+      className="pointer-events-none fixed right-5 bottom-20 z-[60] flex flex-col items-end gap-2"
+    >
+      {toasts.map((toast) => (
+        <ToastItem key={toast.id} toast={toast} />
       ))}
+    </div>
+  )
+}
+
+/**
+ * Un message. Son minutage s'arrête tant que la souris ou le focus est dessus, ou que la
+ * fenêtre est cachée. Sans durée (message avec actions), il reste jusqu'à ce qu'on le ferme.
+ */
+function ToastItem({ toast }: { toast: Toast }): React.JSX.Element {
+  const { t } = useTranslation()
+  const dismiss = useApp((s) => s.dismissToast)
+  const [leaving, setLeaving] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const [focused, setFocused] = useState(false)
+  const [hidden, setHidden] = useState(() => document.hidden)
+  const remaining = useRef(toast.duration)
+
+  useEffect(() => {
+    const onVisibility = (): void => setHidden(document.hidden)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [])
+
+  const paused = hovered || focused || hidden
+  useEffect(() => {
+    if (leaving || paused || remaining.current === undefined) return
+    const started = Date.now()
+    const timer = setTimeout(() => setLeaving(true), remaining.current)
+    return () => {
+      clearTimeout(timer)
+      if (remaining.current !== undefined) remaining.current = Math.max(0, remaining.current - (Date.now() - started))
+    }
+  }, [leaving, paused])
+
+  // Retrait après la transition de sortie (voir .toast[data-leaving]).
+  useEffect(() => {
+    if (!leaving) return
+    const timer = setTimeout(() => dismiss(toast.id), 120)
+    return () => clearTimeout(timer)
+  }, [leaving, dismiss, toast.id])
+
+  return (
+    <div
+      data-leaving={leaving || undefined}
+      onClick={() => setLeaving(true)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && setFocused(false)}
+      className="popover toast pointer-events-auto flex max-w-sm items-start gap-2 rounded-xl py-2.5 pr-2 pl-3.5 text-[12.5px]"
+    >
+      <Icon
+        name={toast.kind === 'error' ? 'CircleX' : toast.kind === 'success' ? 'CircleCheck' : 'Info'}
+        size={15}
+        className={`shrink-0 ${toast.kind === 'error' ? 'text-danger' : toast.kind === 'success' ? 'text-success' : 'text-muted'}`}
+        aria-hidden
+      />
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <span className="break-words">{toast.text}</span>
+        {toast.actions && (
+          <div className="flex flex-wrap gap-1.5">
+            {toast.actions.map((a) => (
+              <Button
+                key={a.label}
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setLeaving(true)
+                  a.onClick()
+                }}
+              >
+                {a.label}
+              </Button>
+            ))}
+          </div>
+        )}
+      </div>
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          setLeaving(true)
+        }}
+        aria-label={t('common.close')}
+        title={t('common.close')}
+        className="shrink-0 rounded-md p-0.5 text-muted hover:bg-panel-3 hover:text-fg"
+      >
+        <Icon name="X" size={13} />
+      </button>
     </div>
   )
 }
@@ -356,9 +480,11 @@ export function Switch({
       onClick={() => onChange(!checked)}
       className={`relative h-5 w-9 shrink-0 rounded-full transition disabled:opacity-40 ${checked ? 'bg-accent' : 'bg-panel-3 border border-line'}`}
     >
+      {/* Déplacé par translate (compositeur) plutôt que par `left` (mise en page). */}
       <span
-        className="absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full bg-white transition-all"
-        style={{ left: checked ? 18 : 3 }}
+        className={`absolute top-1/2 left-[3px] h-3.5 w-3.5 -translate-y-1/2 rounded-full transition-[translate,background-color] duration-150 ease-[var(--ease-out)] ${
+          checked ? 'translate-x-[15px] bg-on-accent' : 'bg-muted'
+        }`}
       />
     </button>
   )
@@ -411,7 +537,7 @@ export function ConfirmHost({ okLabel, cancelLabel }: { okLabel: string; cancelL
           <Button variant="ghost" onClick={() => close(false)}>
             {cancelLabel}
           </Button>
-          <Button variant={state?.danger ? 'primary' : 'secondary'} onClick={() => close(true)} autoFocus>
+          <Button variant={state?.danger ? 'danger-solid' : 'primary'} onClick={() => close(true)} autoFocus>
             {okLabel}
           </Button>
         </>

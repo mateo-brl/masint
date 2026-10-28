@@ -65,7 +65,7 @@ export function AnalysisPanel(): React.JSX.Element {
       data-panel="analysis"
       aria-label={t('analysis.title')}
       // Sous la barre du haut, à droite du catalogue s'il est ouvert.
-      className="glass absolute top-[72px] bottom-20 z-20 flex w-[300px] flex-col overflow-hidden rounded-2xl"
+      className="surface absolute top-[72px] bottom-20 z-20 flex w-[300px] flex-col overflow-hidden rounded-2xl"
       style={{ left: catalogOpen ? 300 : 16 }}
     >
       <div className="flex items-center gap-2 px-4 pt-4 pb-3">

@@ -19,6 +19,25 @@ export interface Toast {
   text: string
   /** Boutons du message (« Aller au nœud », « Fusionner »...). */
   actions?: ToastAction[]
+  /** Durée d'affichage en ms. Absente : le message reste jusqu'à ce qu'on le ferme. */
+  duration?: number
+}
+
+/** Toasts gardés à l'écran : au-delà, le plus ancien laisse sa place. */
+const MAX_TOASTS = 4
+
+const darkQuery = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null
+
+/** Thème réellement affiché : « system » suit le réglage clair/sombre du système. */
+export function resolveTheme(theme: Settings['theme'] | undefined): 'dark' | 'light' {
+  if (theme === 'dark' || theme === 'light') return theme
+  return darkQuery?.matches === false ? 'light' : 'dark'
+}
+
+function applyTheme(theme: Settings['theme'] | undefined): 'dark' | 'light' {
+  const shown = resolveTheme(theme)
+  document.documentElement.dataset.theme = shown
+  return shown
 }
 
 /** Fichier ou texte à ouvrir dans la fenêtre d'import (nouvelle enquête depuis un fichier). */
@@ -30,6 +49,8 @@ export interface ImportSeed {
 interface AppState {
   ready: boolean
   settings: Settings | null
+  /** Thème affiché, « system » résolu. */
+  theme: 'dark' | 'light'
   modules: ModuleInfo[]
   secrets: SecretStatus[]
   jobs: Record<string, JobProgress>
@@ -76,6 +97,7 @@ let toastSeq = 0
 export const useApp = create<AppState>((set, get) => ({
   ready: false,
   settings: null,
+  theme: resolveTheme('system'),
   modules: [],
   secrets: [],
   jobs: {},
@@ -103,9 +125,13 @@ export const useApp = create<AppState>((set, get) => ({
       api('secrets:list')
     ])
     setLanguage(settings.lang)
-    document.documentElement.dataset.theme = settings.theme
+    // Thème « system » : suit le basculement clair/sombre du système en cours de route.
+    darkQuery?.addEventListener('change', () => {
+      if (get().settings?.theme === 'system') set({ theme: applyTheme('system') })
+    })
     set({
       settings,
+      theme: applyTheme(settings.theme),
       modules,
       investigations,
       secrets,
@@ -167,8 +193,7 @@ export const useApp = create<AppState>((set, get) => ({
   async updateSettings(patch) {
     const settings = await api('settings:set', patch)
     if (patch.lang) setLanguage(patch.lang)
-    if (patch.theme) document.documentElement.dataset.theme = patch.theme
-    set({ settings })
+    set(patch.theme ? { settings, theme: applyTheme(patch.theme) } : { settings })
     if (patch.disabledModules) await get().refreshModules()
   },
 
@@ -215,9 +240,10 @@ export const useApp = create<AppState>((set, get) => ({
 
   toast(kind, text, actions) {
     const id = ++toastSeq
-    set({ toasts: [...get().toasts, { id, kind, text, ...(actions?.length ? { actions } : {}) }] })
-    // Un message avec des boutons reste plus longtemps : le temps de lire et de choisir.
-    setTimeout(() => get().dismissToast(id), actions?.length ? 10000 : kind === 'error' ? 7000 : 3500)
+    // Un message avec des boutons reste jusqu'à ce qu'on le ferme : au clavier, il faut le
+    // temps de l'atteindre. Le minutage des autres est tenu par le toast (pause au survol).
+    const toast: Toast = actions?.length ? { id, kind, text, actions } : { id, kind, text, duration: kind === 'error' ? 7000 : 3500 }
+    set({ toasts: [...get().toasts, toast].slice(-MAX_TOASTS) })
   },
 
   dismissToast(id) {

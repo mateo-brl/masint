@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { basename, join } from 'node:path'
-import { app, BrowserWindow, Menu, protocol, safeStorage, screen, session } from 'electron'
+import { app, BrowserWindow, Menu, nativeTheme, protocol, safeStorage, screen, session } from 'electron'
 import { ATTACHMENT_PROTOCOL } from '@shared/api'
 import { chromiumLocale } from '@shared/network'
 import type { EventChannel, EventMap } from '@shared/api'
@@ -103,7 +103,8 @@ function createWindow(repo: Repo, settings: SettingsService): BrowserWindow {
     minWidth: 1100,
     minHeight: 700,
     show: false,
-    backgroundColor: '#050505',
+    // Fond du thème affiché : pas d'éclair sombre avant le premier rendu en thème clair.
+    backgroundColor: (settings.get().theme === 'system' ? nativeTheme.shouldUseDarkColors : settings.get().theme !== 'light') ? '#050505' : '#f4f4f5',
     autoHideMenuBar: true,
     title: 'MASINT',
     icon: join(__dirname, '../../resources/icon.png'),

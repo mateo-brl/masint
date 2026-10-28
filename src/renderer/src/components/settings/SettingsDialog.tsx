@@ -86,6 +86,7 @@ function GeneralTab(): React.JSX.Element | null {
       </Row>
       <Row label={t('settings.theme')}>
         <select value={settings.theme} onChange={(e) => void update({ theme: e.target.value as Settings['theme'] })} className="field !w-40">
+          <option value="system">{t('settings.system')}</option>
           <option value="dark">{t('settings.dark')}</option>
           <option value="light">{t('settings.light')}</option>
         </select>
@@ -255,7 +256,7 @@ function SitesSection(): React.JSX.Element {
           {t('settings.sites.update')}
         </Button>
       </div>
-      {updateMsg && <div className={`text-[11.5px] ${updateMsg.ok ? 'text-success' : 'text-accent'}`}>{updateMsg.text}</div>}
+      {updateMsg && <div className={`text-[11.5px] ${updateMsg.ok ? 'text-success' : 'text-danger'}`}>{updateMsg.text}</div>}
       {status?.tiers.map((x) => (
         <div key={x.tier} className="text-[12px]">
           <span className="text-fg">{t(`settings.sites.tier.${x.tier}`)}</span>
@@ -295,7 +296,7 @@ function SitesSection(): React.JSX.Element {
           </span>
         )}
       </div>
-      {checkError && <div className="text-[11.5px] text-accent">{checkError}</div>}
+      {checkError && <div className="text-[11.5px] text-danger">{checkError}</div>}
       <p className="text-[11.5px] text-faint">{t('settings.sites.checkHint')}</p>
     </div>
   )
@@ -393,7 +394,7 @@ function NetworkTab(): React.JSX.Element | null {
               {t('settings.testOk', { ip: result.ip, country: result.country ?? '?' })} {result.isTor ? `· ${t('settings.viaTor')}` : ''}
             </span>
           ) : (
-            <span className="text-[12.5px] text-accent">{result.error}</span>
+            <span className="text-[12.5px] text-danger">{result.error}</span>
           ))}
       </div>
       <p className="text-[11.5px] text-faint">{t('settings.proxyNote')}</p>
@@ -418,7 +419,7 @@ function RosoStatusLine({ status }: { status: RosoStatus }): React.JSX.Element {
   const { t } = useTranslation()
   if (!status.ok)
     return (
-      <div className="mt-2 flex items-start gap-1.5 text-[11.5px] text-accent">
+      <div className="mt-2 flex items-start gap-1.5 text-[11.5px] text-danger">
         <Icon name="CircleX" size={13} className="mt-px shrink-0" />
         <span className="break-words">{status.error}</span>
       </div>

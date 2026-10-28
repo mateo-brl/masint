@@ -56,13 +56,13 @@ export function UpdatePrompt(): React.JSX.Element {
         {!ready && (
           <div className="flex items-center gap-2 text-muted">
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-panel-3">
-              <div className="h-full bg-accent transition-[width]" style={{ width: `${Math.round(update.progress ?? 0)}%` }} />
+              <div className="h-full w-full origin-left bg-accent transition-transform" style={{ transform: `scaleX(${(update.progress ?? 0) / 100})` }} />
             </div>
             <span className="tabular-nums">{Math.round(update.progress ?? 0)} %</span>
           </div>
         )}
         {update.notes ? <ReleaseNotes text={update.notes} /> : <p className="text-muted">{t('update.noNotes')}</p>}
-        {ready && running > 0 && <p className="text-[12px] text-accent">{t('update.jobsRunning', { count: running })}</p>}
+        {ready && running > 0 && <p className="text-[12px] text-warning">{t('update.jobsRunning', { count: running })}</p>}
         <p className="text-[12px] text-muted">{t('update.onQuit')}</p>
       </div>
     </Dialog>

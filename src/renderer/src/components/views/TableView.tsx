@@ -295,7 +295,7 @@ export function TableView(): React.JSX.Element {
                       }
                     }}
                     title={t('table.rowHint')}
-                    className={`absolute inset-x-0 grid cursor-default items-center gap-2 border-b border-line/60 px-3 text-[12.5px] outline-none focus-visible:bg-panel-3 ${
+                    className={`absolute inset-x-0 grid cursor-default items-center gap-2 border-b border-line/60 px-3 text-[12.5px] focus-visible:bg-panel-3 focus-visible:-outline-offset-2 ${
                       on ? 'bg-accent-soft' : 'hover:bg-panel-2'
                     }`}
                     style={{ top: index * ROW_H, height: ROW_H, gridTemplateColumns: COLUMNS }}

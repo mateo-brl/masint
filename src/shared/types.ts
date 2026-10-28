@@ -451,7 +451,8 @@ export type LinkOpening = 'auto' | 'internal' | 'external'
 
 export interface Settings {
   lang: Lang
-  theme: 'dark' | 'light'
+  /** « system » suit le réglage clair/sombre du système, y compris pendant l'exécution. */
+  theme: 'dark' | 'light' | 'system'
   proxy: ProxySettings
   /** En-tête navigateur des requêtes et du navigateur intégré (calculé d'après le système si vide). */
   userAgent: string

@@ -192,7 +192,7 @@ function RunLog(): React.JSX.Element {
             <div key={r.id} className="flex items-center gap-3 border-b border-line bg-panel px-4 py-2 text-[12px] last:border-0">
               <span
                 className={`h-2 w-2 shrink-0 rounded-full ${
-                  r.status === 'error' ? 'bg-accent' : r.status === 'done' ? (r.resultCount || r.found ? 'bg-success' : 'bg-faint') : 'bg-warning'
+                  r.status === 'error' ? 'bg-danger' : r.status === 'done' ? (r.resultCount || r.found ? 'bg-success' : 'bg-faint') : 'bg-warning'
                 }`}
               />
               <span className="w-48 shrink-0 truncate font-medium">{m ? tx(m.name) : r.moduleId}</span>

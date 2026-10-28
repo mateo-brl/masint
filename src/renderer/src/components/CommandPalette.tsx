@@ -139,7 +139,7 @@ function Palette({ onClose }: { onClose: () => void }): React.JSX.Element {
         aria-modal="true"
         aria-label={t('palette.title')}
         tabIndex={-1}
-        className="glass flex max-h-[70vh] w-[640px] max-w-full flex-col overflow-hidden rounded-2xl outline-none"
+        className="popover flex max-h-[70vh] w-[640px] max-w-full flex-col overflow-hidden rounded-2xl outline-none"
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 border-b border-line px-4">

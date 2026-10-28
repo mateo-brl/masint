@@ -25,6 +25,7 @@ export function BottomBar(): React.JSX.Element {
   const addNodes = useGraph((s) => s.addNodes)
   const investigation = useGraph((s) => s.investigation)
   const settings = useApp((s) => s.settings)
+  const theme = useApp((s) => s.theme)
   const updateSettings = useApp((s) => s.updateSettings)
   const toggleCatalog = useApp((s) => s.toggleCatalog)
 
@@ -63,7 +64,7 @@ export function BottomBar(): React.JSX.Element {
   }
 
   return (
-    <div className="glass absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-0.5 rounded-2xl px-2 py-1.5">
+    <div className="surface absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-0.5 rounded-2xl px-2 py-1.5">
       <Dropdown
         up
         align="left"
@@ -97,7 +98,7 @@ export function BottomBar(): React.JSX.Element {
       <div className="relative flex items-center">
         <BarButton icon="Pencil" label={t('bottombar.draw')} active={tool === 'draw'} onClick={() => setTool(tool === 'draw' ? 'select' : 'draw')} />
         {tool === 'draw' && (
-          <div className="glass absolute bottom-full left-1/2 mb-3 flex -translate-x-1/2 items-center gap-2 rounded-xl px-3 py-2">
+          <div className="popover absolute bottom-full left-1/2 mb-3 flex -translate-x-1/2 items-center gap-2 rounded-xl px-3 py-2">
             {DRAW_COLORS.map((c) => (
               <button
                 key={c}
@@ -153,10 +154,10 @@ export function BottomBar(): React.JSX.Element {
           {
             label: (
               <span className="flex items-center justify-between">
-                {t('style.lightTheme')} <Switch checked={settings?.theme === 'light'} onChange={() => undefined} />
+                {t('style.lightTheme')} <Switch checked={theme === 'light'} onChange={() => undefined} />
               </span>
             ),
-            onClick: () => void updateSettings({ theme: settings?.theme === 'light' ? 'dark' : 'light' })
+            onClick: () => void updateSettings({ theme: theme === 'light' ? 'dark' : 'light' })
           }
         ]}
       />
@@ -188,7 +189,7 @@ function BarButton({
       onClick={onClick}
       className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12.5px] transition ${
         active ? 'bg-accent-soft text-accent' : 'hover:bg-panel-3'
-      } ${strong ? 'font-semibold uppercase tracking-wide' : 'font-medium'}`}
+      } ${strong ? 'font-semibold' : 'font-medium'}`}
     >
       <Icon name={icon} size={14} className={active ? '' : 'text-muted'} />
       {label}

@@ -4,7 +4,6 @@ import { ConfirmHost, Spinner, Toasts } from './components/ui'
 import { Rail } from './components/Rail'
 import { Home } from './components/home/Home'
 import { Workspace } from './components/Workspace'
-import { LangSwitch } from './components/LangSwitch'
 import { ShortcutsDialog } from './components/ShortcutsDialog'
 import { CommandPalette } from './components/CommandPalette'
 import { SettingsDialog } from './components/settings/SettingsDialog'
@@ -32,7 +31,6 @@ export default function App(): React.JSX.Element {
     <div className="flex h-full">
       <Rail />
       <main className="relative min-w-0 flex-1">{currentId ? <Workspace key={currentId} /> : <Home />}</main>
-      <LangSwitch />
       <ShortcutsDialog />
       <CommandPalette />
       <SettingsDialog />

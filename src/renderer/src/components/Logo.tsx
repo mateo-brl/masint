@@ -1,7 +1,15 @@
-/** Logo MASINT : un « M » formé de nœuds reliés (même dessin que l'icône de l'application). */
-export function Logo({ size = 32 }: { size?: number }): React.JSX.Element {
+/**
+ * Logo MASINT : un « M » formé de nœuds reliés (même dessin que l'icône de l'application).
+ * `decorative` quand le nom est écrit à côté : sinon les lecteurs d'écran le lisent deux fois.
+ */
+export function Logo({ size = 32, decorative = false }: { size?: number; decorative?: boolean }): React.JSX.Element {
   return (
-    <svg width={size} height={size} viewBox="0 0 1024 1024" aria-label="MASINT">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 1024 1024"
+      {...(decorative ? { 'aria-hidden': true } : { role: 'img', 'aria-label': 'MASINT' })}
+    >
       <rect x="32" y="32" width="960" height="960" rx="192" fill="#16161a" stroke="#2a2a2f" strokeWidth="16" />
       <path
         d="M264 760 L264 264 L512 600 L760 264 L760 760"

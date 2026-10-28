@@ -4,7 +4,9 @@
 @import 'leaflet/dist/leaflet.css';
 @import 'tailwindcss';
 
-/* Jetons de thème : toutes les couleurs de l'interface passent par ces variables. */
+/* Jetons de thème : toutes les couleurs de l'interface passent par ces variables.
+   La couleur ne sert qu'aux signaux (DESIGN.md) : rouge = danger, ambre = en cours,
+   vert = réussi. Sélection, vue active et action principale restent neutres (--accent). */
 :root,
 [data-theme='dark'] {
   --app: #050505;
@@ -17,16 +19,26 @@
   --border-strong: #303036;
   --text: #ededef;
   --muted: #8d8d93;
-  /* Texte discret : contraste d'au moins 4,5:1 sur les panneaux (4,9:1 sur --panel). */
-  --faint: #808087;
-  --accent: #e5484d;
-  --accent-strong: #dc2626;
-  --accent-soft: #e5484d22;
+  /* Texte discret : au moins 4,5:1 sur tous les panneaux (4,75:1 sur --panel-3). */
+  --faint: #86868d;
+  --accent: #ededef;
+  --accent-strong: #ffffff;
+  --accent-soft: #ededef1f;
+  --on-accent: #0a0a0b;
+  /* Texte rouge éclairci : 5,7:1 sur --panel-3 et 6:1 sur --danger-soft. */
+  --danger: #f06a6e;
+  --danger-solid: #dc2626;
+  --danger-solid-hover: #b91c1c;
+  --danger-soft: #e5484d14;
   --success: #30a46c;
   --warning: #f5a524;
+  --on-warning: #000000;
   --edge: #6b6b72;
   --node: #121215;
   --node-border: #2a2a2f;
+  --focus: #ededef;
+  --shadow-surface: 0 1px 2px rgb(0 0 0 / 0.4), 0 6px 20px rgb(0 0 0 / 0.25);
+  --shadow-popover: 0 12px 36px rgb(0 0 0 / 0.5);
   color-scheme: dark;
 }
 
@@ -40,17 +52,27 @@
   --border: #e4e4e7;
   --border-strong: #d4d4d8;
   --text: #18181b;
-  --muted: #63636b;
-  /* Texte discret : contraste d'au moins 4,5:1 sur les panneaux (5,3:1 sur --panel). */
-  --faint: #6b6b73;
-  --accent: #dc2626;
-  --accent-strong: #b91c1c;
-  --accent-soft: #dc262618;
+  --muted: #5a5a62;
+  /* Texte discret : au moins 4,5:1 sur tous les panneaux (4,7:1 sur --panel-3). */
+  --faint: #66666e;
+  --accent: #18181b;
+  --accent-strong: #3f3f46;
+  --accent-soft: #18181b14;
+  --on-accent: #ffffff;
+  --danger: #b91c1c;
+  --danger-solid: #dc2626;
+  --danger-solid-hover: #b91c1c;
+  --danger-soft: #b91c1c14;
   --success: #15803d;
   --warning: #b45309;
-  --edge: #9a9aa2;
+  --on-warning: #ffffff;
+  /* Arêtes : 3,6:1 sur le canevas, le minimum pour un trait qui porte le contenu. */
+  --edge: #82828a;
   --node: #ffffff;
   --node-border: #dcdce0;
+  --focus: #18181b;
+  --shadow-surface: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 14px rgb(0 0 0 / 0.06);
+  --shadow-popover: 0 10px 30px rgb(0 0 0 / 0.14);
   color-scheme: light;
 }
 
@@ -68,12 +90,29 @@
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
   --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --color-danger-solid: var(--danger-solid);
+  --color-danger-solid-hover: var(--danger-solid-hover);
+  --color-danger-soft: var(--danger-soft);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-on-warning: var(--on-warning);
   --color-node: var(--node);
   --color-node-line: var(--node-border);
+  --color-focus: var(--focus);
   --font-sans: 'Inter Variable', 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Anneau de focus clavier commun. En couche « base » : un `outline-none` posé exprès
+   sur un conteneur (modale focalisée par script) garde la main. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
 }
 
 html,
@@ -101,7 +140,7 @@ select,
 }
 
 ::selection {
-  background: var(--accent-soft);
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 * {
@@ -109,12 +148,18 @@ select,
   scrollbar-color: var(--border-strong) transparent;
 }
 
-/* Panneaux flottants */
-.glass {
-  background: color-mix(in srgb, var(--panel) 94%, transparent);
+/* Surfaces posées sur le canevas (barres, panneaux) : pleines et sans flou. Un
+   backdrop-filter se recalcule à chaque image quand le graphe défile dessous. */
+.surface {
+  background: var(--panel);
   border: 1px solid var(--border);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 10px 40px rgb(0 0 0 / 0.35);
+  box-shadow: var(--shadow-surface);
+}
+/* Un cran au-dessus : modales, menus, toasts, infobulles. */
+.popover {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-popover);
 }
 
 .field {
@@ -127,18 +172,19 @@ select,
   outline: none;
   font-size: 13px;
 }
-.field:focus {
-  border-color: var(--border-strong);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+/* Anneau intérieur : jamais rogné par un panneau qui défile. */
+.field:focus-visible {
+  border-color: var(--focus);
+  outline: 1px solid var(--focus);
+  outline-offset: -1px;
 }
 .field::placeholder {
   color: var(--faint);
 }
 
 .label-xs {
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 11.5px;
+  font-weight: 500;
   color: var(--muted);
 }
 
@@ -226,4 +272,66 @@ div.masint-on-path {
 }
 .spin {
   animation: spin 0.9s linear infinite;
+}
+
+/* Entrées courtes des gestes occasionnels (DESIGN.md, Mouvement). La palette de commandes
+   et les menus contextuels n'en ont pas : ils s'ouvrent des dizaines de fois par jour. */
+.enter-fade {
+  transition: opacity 150ms var(--ease-out);
+}
+.enter-pop {
+  transition:
+    opacity 180ms var(--ease-out),
+    transform 180ms var(--ease-out);
+}
+.enter-menu {
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 150ms var(--ease-out);
+}
+@starting-style {
+  .enter-fade {
+    opacity: 0;
+  }
+  .enter-pop {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  .enter-menu {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+.toast {
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out);
+}
+@starting-style {
+  .toast {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+/* Sortie plus rapide que l'entrée. */
+.toast[data-leaving] {
+  opacity: 0;
+  transform: translateY(4px);
+  transition-duration: 120ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none;
+  }
+  .spin {
+    animation-duration: 2.4s;
+  }
+  .enter-pop,
+  .enter-menu,
+  .toast,
+  .toast[data-leaving] {
+    transform: none;
+    transition-property: opacity;
+  }
 }

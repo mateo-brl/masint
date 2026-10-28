@@ -125,7 +125,7 @@ function ReportForm(): React.JSX.Element {
                 <span className="truncate">{t(`report.dialog.steps.${step}`)}</span>
               </>
             ) : (
-              !anySection && <span className="text-accent">{t('report.dialog.nothingSelected')}</span>
+              !anySection && <span className="text-warning">{t('report.dialog.nothingSelected')}</span>
             )}
           </div>
           <Button variant="ghost" onClick={close} disabled={busy}>

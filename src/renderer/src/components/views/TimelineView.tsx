@@ -550,7 +550,7 @@ function HoverCard({ hover, lang }: { hover: Hover; lang: Lang }): React.JSX.Ele
   const below = hover.rect.bottom + 230 < window.innerHeight
   return (
     <div
-      className="glass pointer-events-none fixed z-50 w-[280px] -translate-x-1/2 rounded-xl p-2"
+      className="popover pointer-events-none fixed z-50 w-[280px] -translate-x-1/2 rounded-xl p-2"
       style={below ? { left, top: hover.rect.bottom + 8 } : { left, bottom: window.innerHeight - hover.rect.top + 8 }}
     >
       {shown.map((e) => (

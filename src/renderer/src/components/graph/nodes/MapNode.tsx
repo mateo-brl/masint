@@ -16,7 +16,7 @@ const round6 = (n: number): number => Math.round(n * 1e6) / 1e6
 function MapNodeImpl({ id, data, selected }: NodeProps<FlowNode>): React.JSX.Element {
   const n = data.node
   const { t } = useTranslation()
-  const theme = useApp((s) => s.settings?.theme)
+  const theme = useApp((s) => s.theme)
   const lat = num(n.data.lat, 48.8566)
   const lon = num(n.data.lon, 2.3522)
   const zoom = num(n.data.zoom, 11)

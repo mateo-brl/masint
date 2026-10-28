@@ -119,7 +119,7 @@ export function FilterPanel({ onClose }: { onClose: () => void }): React.JSX.Ele
     <section
       aria-label={t('filters.title')}
       data-panel="filters"
-      className="glass flex max-h-[min(560px,calc(100vh-200px))] w-[min(600px,calc(100vw-140px))] flex-col gap-3 overflow-y-auto rounded-2xl p-4"
+      className="popover flex max-h-[min(560px,calc(100vh-200px))] w-[min(600px,calc(100vw-140px))] flex-col gap-3 overflow-y-auto rounded-2xl p-4"
     >
       <div className="flex items-center gap-3">
         <Icon name="Funnel" size={15} className="text-muted" />
@@ -219,7 +219,7 @@ export function FilterPanel({ onClose }: { onClose: () => void }): React.JSX.Ele
                 </button>
                 <button
                   onClick={() => deleteLayer(l.id)}
-                  className="rounded-full p-1 text-faint hover:text-accent"
+                  className="rounded-full p-1 text-faint hover:text-danger"
                   title={t('filters.deleteLayer', { name: l.name })}
                   aria-label={t('filters.deleteLayer', { name: l.name })}
                 >

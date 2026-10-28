@@ -45,7 +45,7 @@ export function CatalogPanel(): React.JSX.Element {
   )
 
   return (
-    <aside data-panel="catalog" className="glass absolute top-4 bottom-4 left-4 z-20 flex w-[272px] flex-col rounded-2xl">
+    <aside data-panel="catalog" className="surface absolute top-4 bottom-4 left-4 z-20 flex w-[272px] flex-col rounded-2xl">
       <div className="flex items-center gap-2 px-4 pt-4 pb-3">
         <Icon name="Layers" size={15} className="text-muted" />
         <span className="font-semibold">{t('catalog.title')}</span>

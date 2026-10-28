@@ -19,7 +19,7 @@ const isAutoUserAgent = (ua: string | undefined): boolean => !ua?.trim() || ua =
 
 export const DEFAULT_SETTINGS: Settings = {
   lang: 'fr',
-  theme: 'dark',
+  theme: 'system',
   proxy: { mode: 'none', url: '', torPort: 9050, perModule: {} },
   userAgent: DEFAULT_USER_AGENT,
   concurrency: 8,

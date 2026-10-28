@@ -67,7 +67,7 @@ export function TopBar(): React.JSX.Element {
 
   return (
     <div className="absolute top-4 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-2">
-      <div className="glass flex items-center gap-1 rounded-2xl px-2 py-1.5">
+      <div className="surface flex items-center gap-1 rounded-2xl px-2 py-1.5">
         <button
           onClick={() => toggleCatalog()}
           className="rounded-lg p-1.5 text-muted hover:bg-panel-3 hover:text-fg"
@@ -175,7 +175,7 @@ export function TopBar(): React.JSX.Element {
         </button>
       </div>
       {layingOut && (
-        <div className="glass flex items-center gap-2 rounded-2xl px-3 py-1.5 text-[12px] text-muted">
+        <div className="surface flex items-center gap-2 rounded-2xl px-3 py-1.5 text-[12px] text-muted">
           <Spinner size={13} />
           {t('layout.running')}
         </div>
@@ -247,7 +247,7 @@ function GraphSearch({ onClose }: { onClose: () => void }): React.JSX.Element {
     void rf.setCenter(n.position.x + 98, n.position.y + 20, { zoom: 1.3, duration: 400 })
   }
   return (
-    <div className="glass w-96 rounded-xl p-1.5">
+    <div className="popover w-96 rounded-xl p-1.5">
       <input
         autoFocus
         aria-label={t('topbar.search')}
@@ -317,7 +317,7 @@ function JobPill({ job: j }: { job: JobProgress }): React.JSX.Element {
     return `${name(id)} · ${s.done}/${s.total}${s.detail ? ` · ${s.detail}` : ''}`
   }
   return (
-    <div className="glass w-[min(560px,calc(100vw-120px))] rounded-2xl px-3 py-2 text-[12px]">
+    <div className="surface w-[min(560px,calc(100vw-120px))] rounded-2xl px-3 py-2 text-[12px]">
       <div className="flex items-center gap-2.5">
         {j.finished ? <Icon name="CircleCheck" size={14} className="shrink-0 text-success" /> : <Spinner size={13} />}
         {node && <EntityBadge type={node.type} platform={node.platform} size={18} />}
@@ -329,7 +329,7 @@ function JobPill({ job: j }: { job: JobProgress }): React.JSX.Element {
         <span className="shrink-0 text-muted">
           {t('runs.nResults', { count: j.results })}
           {(j.review ?? 0) > 0 && <span className="text-warning"> · {t('review.count', { count: j.review })}</span>}
-          {j.errors > 0 && <span className="text-accent"> · {t('runs.nErrors', { count: j.errors })}</span>}
+          {j.errors > 0 && <span className="text-danger"> · {t('runs.nErrors', { count: j.errors })}</span>}
         </span>
         <button
           onClick={() => setOpen(!open)}
@@ -344,7 +344,7 @@ function JobPill({ job: j }: { job: JobProgress }): React.JSX.Element {
           (j.chain ? (
             <button
               onClick={() => void api('modules:cancel', j.jobId)}
-              className="shrink-0 rounded-full border border-line px-2 py-0.5 text-[11px] text-muted hover:border-accent hover:text-accent"
+              className="shrink-0 rounded-full border border-line px-2 py-0.5 text-[11px] text-muted hover:border-danger hover:text-danger"
               title={t('jobs.stopTitle')}
             >
               {t('jobs.stop')}
@@ -361,7 +361,8 @@ function JobPill({ job: j }: { job: JobProgress }): React.JSX.Element {
           ))}
       </div>
       <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-panel-3">
-        <div className="h-full bg-accent transition-all" style={{ width: `${pct}%` }} />
+        {/* Mise à l'échelle plutôt que largeur : pas de recalcul de mise en page à chaque avancée. */}
+        <div className="h-full w-full origin-left bg-accent transition-transform" style={{ transform: `scaleX(${pct / 100})` }} />
       </div>
       {j.chain && (
         <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-[11.5px] text-muted">
@@ -408,7 +409,7 @@ function JobDetails({ job: j, name, step }: { job: JobProgress; name: (id: strin
           <Icon
             name={r.status === 'running' ? 'LoaderCircle' : r.status === 'error' ? 'CircleX' : r.found || r.resultCount > 0 ? 'CircleCheck' : 'CircleMinus'}
             size={12}
-            className={`mt-px shrink-0 ${r.status === 'running' ? 'spin text-warning' : r.status === 'error' ? 'text-accent' : r.found || r.resultCount > 0 ? 'text-success' : 'text-faint'}`}
+            className={`mt-px shrink-0 ${r.status === 'running' ? 'spin text-warning' : r.status === 'error' ? 'text-danger' : r.found || r.resultCount > 0 ? 'text-success' : 'text-faint'}`}
           />
           <span className="min-w-0 flex-1 truncate">
             {r.status === 'running' ? step(r.moduleId) : name(r.moduleId)}

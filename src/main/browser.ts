@@ -10,7 +10,7 @@
 // au processus principal par la console, qu'il écoute.
 
 import { join } from 'node:path'
-import { BaseWindow, shell, WebContentsView, type WebContents } from 'electron'
+import { BaseWindow, nativeTheme, shell, WebContentsView, type WebContents } from 'electron'
 import { opensInternally, proxyActive } from '@shared/network'
 import type { Settings } from '@shared/types'
 import { assistSession, hardenWebContents } from './assist'
@@ -60,6 +60,11 @@ function routeOf(s: Settings): 'tor' | 'proxy' | 'direct' {
   return proxyActive(s.proxy) ? 'proxy' : 'direct'
 }
 
+/** Thème sombre affiché ? « system » suit le réglage du système. */
+function isDark(s: Settings): boolean {
+  return s.theme === 'system' ? nativeTheme.shouldUseDarkColors : s.theme !== 'light'
+}
+
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
 }
@@ -79,7 +84,7 @@ const svg = (body: string): string =>
 /** Page de la barre d'outils (adresse de type `data:`, aucun accès au réseau). */
 export function toolbarHtml(s: Settings, opts: { capture?: boolean } = {}): string {
   const t = TEXT[s.lang] ?? TEXT.fr
-  const dark = s.theme !== 'light'
+  const dark = isDark(s)
   const route = routeOf(s)
   const c = dark
     ? { bg: '#0e0e10', border: '#232327', text: '#ededef', muted: '#8d8d93', hover: '#1b1b1f', field: '#141417', ok: '#30a46c', warn: '#f5a524' }
@@ -152,7 +157,7 @@ export function openInvestigationBrowser(url: string, settings: Settings, captur
     title: `MASINT · ${url}`,
     icon: join(__dirname, '../../resources/icon.png'),
     autoHideMenuBar: true,
-    backgroundColor: settings.theme === 'light' ? '#ffffff' : '#0e0e10'
+    backgroundColor: isDark(settings) ? '#0e0e10' : '#ffffff'
   })
   windows.add(win)
 

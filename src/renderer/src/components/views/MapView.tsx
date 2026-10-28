@@ -87,8 +87,8 @@ export function MapView(): React.JSX.Element {
   const { t } = useTranslation()
   const nodes = useGraph((s) => s.nodes)
   const edges = useGraph((s) => s.edges)
-  const theme = useApp((s) => s.settings?.theme)
-  const themeKey = theme ?? 'dark'
+  const theme = useApp((s) => s.theme)
+  const themeKey = theme
   const [prefs, setPrefs] = useState<Record<string, BasemapId>>({})
   const stored = useMemo(() => loadBasemapPref(theme), [theme])
   const pref = prefs[themeKey] ?? stored
@@ -182,7 +182,7 @@ export function MapView(): React.JSX.Element {
           <button
             onClick={() => setListOpen(true)}
             title={t('map.showList')}
-            className="glass absolute top-4 left-4 z-10 flex items-center gap-2 rounded-xl px-3 py-2 text-[12.5px] font-medium hover:bg-panel-3"
+            className="surface absolute top-4 left-4 z-10 flex items-center gap-2 rounded-xl px-3 py-2 text-[12.5px] font-medium hover:bg-panel-3"
           >
             <Icon name="PanelLeftOpen" size={15} className="text-muted" />
             {t('map.located', { count: points.length })}
@@ -191,7 +191,7 @@ export function MapView(): React.JSX.Element {
 
       {points.length === 0 && <EmptyState />}
 
-      <div className="glass absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-0.5 rounded-2xl px-1.5 py-1.5">
+      <div className="surface absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-0.5 rounded-2xl px-1.5 py-1.5">
         {BASEMAPS.map((b) => (
           <button
             key={b.id}
@@ -439,7 +439,7 @@ function LocatedList({
   }, [points, q, tx])
 
   return (
-    <aside className="glass absolute top-4 bottom-20 left-4 z-10 flex w-[300px] flex-col overflow-hidden rounded-2xl">
+    <aside className="surface absolute top-4 bottom-20 left-4 z-10 flex w-[300px] flex-col overflow-hidden rounded-2xl">
       <div className="flex items-start justify-between px-4 pt-4 pb-3">
         <div>
           <div className="label-xs">{t('map.kicker')}</div>
@@ -498,7 +498,7 @@ function EmptyState(): React.JSX.Element {
   const setView = useApp((s) => s.setView)
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-6">
-      <div className="glass pointer-events-auto flex max-w-md flex-col items-center gap-2 rounded-2xl px-8 py-7 text-center">
+      <div className="surface pointer-events-auto flex max-w-md flex-col items-center gap-2 rounded-2xl px-8 py-7 text-center">
         <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-xl border border-line bg-panel-2 text-muted">
           <Icon name="MapPinOff" size={20} />
         </div>

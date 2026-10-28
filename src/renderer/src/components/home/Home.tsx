@@ -79,22 +79,18 @@ export function Home(): React.JSX.Element {
   const list = investigations.filter((i) => !filter || `${i.name} ${i.description}`.toLowerCase().includes(filter.toLowerCase()))
 
   return (
-    <div
-      className="h-full overflow-auto bg-canvas"
-      style={{ backgroundImage: 'radial-gradient(var(--canvas-dot) 1px, transparent 1px)', backgroundSize: '22px 22px' }}
-    >
+    <div className="h-full overflow-auto bg-canvas">
       <div className="mx-auto max-w-5xl px-8 pt-16 pb-16">
         <div className="mb-10 text-center">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1 text-[11px] text-muted">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" /> {t('home.tagline')}
-          </div>
           <h1 className="flex items-center justify-center gap-3 text-[34px] font-semibold tracking-tight">
-            <Logo size={44} /> MASINT
+            <Logo size={44} decorative /> MASINT
           </h1>
+          <p className="mt-2 text-[14px] font-medium">{t('home.tagline')}</p>
           <p className="mt-1 text-muted">{t('home.subtitle')}</p>
         </div>
 
-        <div className="glass mx-auto max-w-2xl rounded-2xl p-2">
+        {/* Le champ n'a pas de cadre propre : l'anneau de focus est porté par la boîte. */}
+        <div className="surface mx-auto max-w-2xl rounded-2xl p-2 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-focus">
           <form
             onSubmit={(e) => {
               e.preventDefault()
@@ -110,7 +106,7 @@ export function Home(): React.JSX.Element {
               placeholder={t('home.searchPlaceholder')}
               className="h-11 min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-faint"
             />
-            <Button variant="primary" type="submit" disabled={!detection} icon="ArrowRight">
+            <Button variant="primary" type="submit" disabled={!detection}>
               {t('home.start')}
             </Button>
           </form>
@@ -205,20 +201,17 @@ function InvestigationCard({ inv, onEdit }: { inv: Investigation; onEdit: () => 
   const toast = useApp((s) => s.toast)
   const date = new Date(inv.updatedAt).toLocaleString(i18n.language, { dateStyle: 'medium', timeStyle: 'short' })
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={() => void open(inv.id)}
-      onKeyDown={(e) => e.key === 'Enter' && void open(inv.id)}
-      className="group relative cursor-pointer rounded-2xl border border-line bg-panel p-4 transition hover:border-line-strong"
-    >
-      <div className="flex items-start gap-3">
+    <div className="group relative rounded-2xl border border-line bg-panel p-4 transition hover:border-line-strong">
+      {/* Toute la carte ouvre l'enquête (Entrée ou Espace). Le menu « … » est un bouton voisin,
+          posé au-dessus, et non un bouton imbriqué dans un autre. */}
+      <button onClick={() => void open(inv.id)} aria-label={inv.name} className="absolute inset-0 cursor-pointer rounded-2xl" />
+      <div className="pointer-events-none relative flex items-start gap-3">
         <div className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: inv.color }} />
         <div className="min-w-0 flex-1">
           <div className="truncate font-semibold">{inv.name}</div>
           <div className="mt-0.5 line-clamp-2 min-h-[18px] text-[12px] text-muted">{inv.description || t('home.noDescription')}</div>
         </div>
-        <div onClick={(e) => e.stopPropagation()}>
+        <div className="pointer-events-auto">
           <Dropdown
             align="right"
             trigger={() => (
@@ -260,7 +253,7 @@ function InvestigationCard({ inv, onEdit }: { inv: Investigation; onEdit: () => 
           />
         </div>
       </div>
-      <div className="mt-4 flex items-center gap-3 text-[11.5px] text-faint">
+      <div className="pointer-events-none relative mt-4 flex items-center gap-3 text-[11.5px] text-faint">
         <span className="flex items-center gap-1">
           <Icon name="Circle" size={11} /> {inv.nodeCount ?? 0}
         </span>
@@ -337,8 +330,9 @@ function InvestigationDialog({ value, onClose }: { value: Investigation | 'new';
                 onClick={() => setColor(c)}
                 aria-label={t('home.colorChoice', { color: c })}
                 aria-pressed={color === c}
-                className="h-6 w-6 rounded-full transition"
-                style={{ background: c, outline: color === c ? `2px solid ${c}` : 'none', outlineOffset: 2 }}
+                // Pastille choisie : anneau en ombre portée, l'outline reste libre pour le focus clavier.
+                className="h-6 w-6 rounded-full transition focus-visible:outline-offset-4"
+                style={{ background: c, boxShadow: color === c ? `0 0 0 2px var(--panel), 0 0 0 4px ${c}` : undefined }}
               />
             ))}
           </div>

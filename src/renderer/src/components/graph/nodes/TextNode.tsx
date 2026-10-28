@@ -73,7 +73,7 @@ function TextNodeImpl({ id, data, selected }: NodeProps<FlowNode>): React.JSX.El
   return (
     <>
       <NodeToolbar position={Position.Top} offset={10} isVisible={selected && !editing ? undefined : false}>
-        <div className="glass flex items-center gap-0.5 rounded-xl p-1">
+        <div className="popover flex items-center gap-0.5 rounded-xl p-1">
           <ToolButton title={t('canvas2.fontSmaller')} onClick={() => stepFont(-1)}>
             <Icon name="AArrowDown" size={15} />
           </ToolButton>
@@ -91,8 +91,9 @@ function TextNodeImpl({ id, data, selected }: NodeProps<FlowNode>): React.JSX.El
               title={t('canvas2.postit')}
               aria-label={`${t('canvas2.postit')} ${c}`}
               onClick={() => setStyle({ bg: c })}
-              className="mx-0.5 h-[18px] w-[18px] rounded-[4px]"
-              style={{ background: c, outline: n.style.bg === c ? '2px solid var(--accent)' : '1px solid rgb(0 0 0 / .15)', outlineOffset: n.style.bg === c ? 2 : -1 }}
+              // Choix et contour en ombres portées : l'outline reste libre pour le focus clavier.
+              className="mx-0.5 h-[18px] w-[18px] rounded-[4px] focus-visible:outline-offset-4"
+              style={{ background: c, boxShadow: n.style.bg === c ? '0 0 0 2px var(--panel), 0 0 0 4px var(--accent)' : 'inset 0 0 0 1px rgb(0 0 0 / .15)' }}
             />
           ))}
         </div>

@@ -84,6 +84,7 @@ export function GraphCanvas(): React.JSX.Element {
   const investigation = useGraph((s) => s.investigation)
   const updateInvestigation = useGraph((s) => s.updateInvestigation)
   const settings = useApp((s) => s.settings)
+  const theme = useApp((s) => s.theme)
   const expanded = useView((s) => s.expanded)
   const bundleState = useView((s) => s.bundles)
   const [menu, setMenu] = useState<Menu>(null)
@@ -461,7 +462,7 @@ export function GraphCanvas(): React.JSX.Element {
         elementsSelectable={tool === 'select'}
         nodesDraggable={tool === 'select'}
         proOptions={proOptions}
-        colorMode={settings?.theme === 'light' ? 'light' : 'dark'}
+        colorMode={theme}
         // Grand graphe : les éléments hors champ ne sont pas rendus (sauf pendant une capture).
         onlyRenderVisibleElements={!capturing && nodes.length > VISIBLE_ONLY_MIN}
       >
@@ -512,7 +513,10 @@ function QuickAdd({ at, onClose }: { at: { x: number; y: number; flow: { x: numb
     await addEntityAt(d.type, at.flow, { label: d.value, platform: d.platform ?? null })
   }
   return (
-    <div className="glass absolute z-30 w-80 rounded-xl p-1.5" style={{ left: at.x - 10, top: at.y - 10 }}>
+    <div
+      className="popover absolute z-30 w-80 rounded-xl p-1.5 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-focus"
+      style={{ left: at.x - 10, top: at.y - 10 }}
+    >
       <div className="flex items-center gap-2 px-1">
         {d ? <EntityBadge type={d.type} platform={d.platform} size={20} /> : <Icon name="Plus" size={16} className="text-muted" />}
         <input
@@ -577,7 +581,7 @@ function ContextMenu({
         onClick()
       }}
       className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[12.5px] disabled:opacity-40 ${
-        opts.danger ? 'text-accent hover:bg-accent-soft' : 'hover:bg-panel-3'
+        opts.danger ? 'text-danger hover:bg-danger-soft' : 'hover:bg-panel-3'
       }`}
     >
       <Icon name={icon} size={14} className="text-muted" />
@@ -588,7 +592,7 @@ function ContextMenu({
 
   if (menu.kind === 'pane') {
     return (
-      <div data-context-menu className="glass absolute z-40 w-56 rounded-xl p-1" style={{ left, top }}>
+      <div data-context-menu className="popover absolute z-40 w-56 rounded-xl p-1" style={{ left, top }}>
         {item('Plus', t('canvas.addHere'), () => onQuickAdd({ x: menu.x - box.left, y: menu.y - box.top, flow: menu.flow }))}
         {item('ClipboardPaste', t('canvas.pasteHere'), async () => {
           const text = await navigator.clipboard.readText().catch(() => '')
@@ -604,7 +608,7 @@ function ContextMenu({
 
   if (menu.kind === 'bundle') {
     return (
-      <div data-context-menu className="glass absolute z-40 w-56 rounded-xl p-1" style={{ left, top }}>
+      <div data-context-menu className="popover absolute z-40 w-56 rounded-xl p-1" style={{ left, top }}>
         {item('UnfoldVertical', t('bundle.expand'), () => void useView.getState().expandBundle(menu.bundleId))}
       </div>
     )
@@ -630,7 +634,7 @@ function ContextMenu({
   const many = selected.length > 1
 
   return (
-    <div data-context-menu className="glass absolute z-40 w-64 rounded-xl p-1" style={{ left, top }}>
+    <div data-context-menu className="popover absolute z-40 w-64 rounded-xl p-1" style={{ left, top }}>
       {!many && node.kind === 'entity' && (
         <>
           {item('Zap', t('enrich.all'), () => void enrichNode(node.id), { hint: 'Ctrl+E', disabled: !canEnrich(node) || server?.auto.size === 0 })}

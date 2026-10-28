@@ -49,7 +49,7 @@ export function PropertiesPanel(): React.JSX.Element | null {
   if (!content) return null
 
   return (
-    <aside data-panel="properties" className="glass absolute top-4 right-4 bottom-20 z-20 flex w-[318px] flex-col overflow-hidden rounded-2xl">
+    <aside data-panel="properties" className="surface absolute top-4 right-4 bottom-20 z-20 flex w-[318px] flex-col overflow-hidden rounded-2xl">
       {content}
     </aside>
   )
@@ -104,7 +104,7 @@ function PanelHeader({ title, kicker, onDelete }: { title: string; kicker: strin
         {onDelete && (
           <button
             onClick={onDelete}
-            className="rounded-md p-1 text-muted hover:bg-accent-soft hover:text-accent"
+            className="rounded-md p-1 text-muted hover:bg-danger-soft hover:text-danger"
             title={t('props.deleteNode')}
             aria-label={t('props.deleteNode')}
           >
@@ -549,7 +549,7 @@ function PropertyRow({
         <span className="min-w-0 flex-1 truncate text-[11px] text-muted" title={origin ? `${label}\n${origin}` : label}>{label}</span>
         <button
           onClick={onDelete}
-          className="text-faint opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100 hover:text-accent focus-visible:opacity-100"
+          className="text-faint opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100 hover:text-danger focus-visible:opacity-100"
           aria-label={t('common.delete')}
           title={t('common.delete')}
         >
@@ -810,7 +810,7 @@ function EnrichBlock({ node }: { node: GraphNode }): React.JSX.Element {
                 <div className="text-[11.5px] text-muted">{tx(m.description)}</div>
                 {!accepts(m.id) && <div className="mt-0.5 text-[11.5px] text-warning">{t('enrich.notApplicable')}</div>}
                 {!m.configured && (
-                  <button className="mt-0.5 text-[11.5px] text-accent hover:underline" onClick={() => openSettings('keys')}>
+                  <button className="mt-0.5 text-[11.5px] text-warning hover:underline" onClick={() => openSettings('keys')}>
                     {t('modules.needsKey')}
                   </button>
                 )}
@@ -964,7 +964,7 @@ function RunsList({ node }: { node: GraphNode }): React.JSX.Element | null {
               <span className="min-w-0 flex-1 truncate">{name(r.moduleId)}</span>
               {r.status === 'error' && r.error && (
                 // Le message complet, sous le nom : une infobulle serait coupée par le bord du panneau.
-                <span className="order-last w-full pl-[21px] text-[11px] leading-snug [overflow-wrap:anywhere] text-accent">{r.error}</span>
+                <span className="order-last w-full pl-[21px] text-[11px] leading-snug [overflow-wrap:anywhere] text-danger">{r.error}</span>
               )}
               <span className="shrink-0 text-[11px] text-faint">
                 {r.status === 'error'
@@ -994,7 +994,7 @@ function RunsList({ node }: { node: GraphNode }): React.JSX.Element | null {
 
 function RunIcon({ run }: { run: ModuleRun }): React.JSX.Element {
   if (run.status === 'running' || run.status === 'queued') return <Spinner size={13} />
-  if (run.status === 'error') return <Icon name="CircleX" size={13} className="text-accent" />
+  if (run.status === 'error') return <Icon name="CircleX" size={13} className="text-danger" />
   if (run.status === 'cancelled') return <Icon name="CircleSlash" size={13} className="text-faint" />
   if (run.found || run.resultCount > 0) return <Icon name="CircleCheck" size={13} className="text-success" />
   return <Icon name="CircleMinus" size={13} className="text-faint" />
@@ -1271,8 +1271,9 @@ function StyleTab({ node }: { node: GraphNode }): React.JSX.Element {
                   onClick={() => set({ bg: c || undefined })}
                   aria-label={`${t('style.background')} ${c || '-'}`}
                   aria-pressed={(node.style.bg ?? '') === c}
-                  className="h-6 w-6 rounded-md border border-line-strong"
-                  style={{ background: c || 'var(--node)', outline: (node.style.bg ?? '') === c ? '2px solid var(--accent)' : 'none', outlineOffset: 2 }}
+                  // Choix marqué par une ombre portée : l'outline reste libre pour le focus clavier.
+                  className="h-6 w-6 rounded-md border border-line-strong focus-visible:outline-offset-4"
+                  style={{ background: c || 'var(--node)', boxShadow: (node.style.bg ?? '') === c ? '0 0 0 2px var(--panel), 0 0 0 4px var(--accent)' : undefined }}
                 />
               ))}
             </div>
@@ -1298,8 +1299,8 @@ function StyleTab({ node }: { node: GraphNode }): React.JSX.Element {
                   onClick={() => set({ bg: c || undefined })}
                   aria-label={`${t('style.background')} ${c || '-'}`}
                   aria-pressed={(node.style.bg ?? '') === c}
-                  className="h-6 w-6 rounded-md border border-line-strong"
-                  style={{ background: c || 'transparent', outline: (node.style.bg ?? '') === c ? '2px solid var(--accent)' : 'none', outlineOffset: 2 }}
+                  className="h-6 w-6 rounded-md border border-line-strong focus-visible:outline-offset-4"
+                  style={{ background: c || 'transparent', boxShadow: (node.style.bg ?? '') === c ? '0 0 0 2px var(--panel), 0 0 0 4px var(--accent)' : undefined }}
                 />
               ))}
             </div>

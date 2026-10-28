@@ -78,7 +78,7 @@ function EntityRow({ s }: { s: Suggestion }): React.JSX.Element {
     <div className="flex items-start gap-2 rounded-lg border border-line bg-panel-2 px-2 py-1.5">
       <EntityBadge type={s.type} platform={s.platform} size={22} />
       <div className="min-w-0 flex-1 leading-tight">
-        <div className="text-[9px] font-semibold tracking-[0.06em] text-muted uppercase">{tx(getEntityType(s.type).label)}</div>
+        <div className="text-[10.5px] font-medium text-muted">{tx(getEntityType(s.type).label)}</div>
         <div className="truncate text-[12.5px] font-medium" title={s.label}>
           {s.label}
         </div>
@@ -336,7 +336,7 @@ function RowButton({
       aria-label={title}
       onClick={onClick}
       className={`flex h-6 items-center justify-center gap-1 rounded-md text-[11px] font-medium transition ${label ? 'px-1.5' : 'w-6'} ${
-        strong ? 'bg-accent-soft text-accent hover:bg-accent hover:text-white' : 'text-muted hover:bg-panel-3 hover:text-fg'
+        strong ? 'bg-accent-soft text-accent hover:bg-accent hover:text-on-accent' : 'text-muted hover:bg-panel-3 hover:text-fg'
       }`}
     >
       {icon && <Icon name={icon} size={12} />}

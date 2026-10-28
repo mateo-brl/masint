@@ -52,16 +52,16 @@ function BundleNodeImpl({ data, selected }: NodeProps<FlowNode>): React.JSX.Elem
       <Handle type="target" position={Position.Top} />
       <EntityBadge type={bundle.type} platform={bundle.platform} size={26} />
       <div className="min-w-0 flex-1 leading-tight">
-        <div className="truncate text-[7.5px] font-semibold tracking-[0.08em] uppercase" style={{ color: 'var(--muted)' }}>
+        <div className="truncate text-[10px] font-medium" style={{ color: 'var(--muted)' }}>
           {bundle.linkLabel || tx(def.label)}
         </div>
         <div className="truncate text-[11.5px] font-semibold">
           {t('bundle.count', { count: bundle.members.length, type: tx(def.label) })}
         </div>
-        <div className="truncate text-[8.5px] text-muted">{preview}…</div>
+        <div className="truncate text-[10px] text-muted">{preview}…</div>
       </div>
       <button
-        className="nodrag flex h-6 items-center gap-1 rounded-md bg-panel-3 px-1.5 text-[10px] font-medium text-fg hover:bg-accent hover:text-white"
+        className="nodrag flex h-6 items-center gap-1 rounded-md bg-panel-3 px-1.5 text-[10px] font-medium text-fg hover:bg-accent hover:text-on-accent"
         onClick={(e) => {
           e.stopPropagation()
           void useView.getState().expandBundle(bundle.id)
