@@ -34,7 +34,7 @@ jobs:
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Déterminer le tag à partir de package.json
         id: tag
@@ -76,13 +76,16 @@ jobs:
           - name: Windows
             os: windows-latest
             targets: --win nsis --x64
+          # Image fixe : better-sqlite3 est compilé sur la machine de build, et la
+          # glibc de cette image fixe la version minimale exigée chez l'utilisateur
+          # (GLIBC_2.38 en 0.1.5 et 0.1.6). ubuntu-latest change de version sans prévenir.
           - name: Linux
-            os: ubuntu-latest
+            os: ubuntu-24.04
             targets: --linux AppImage deb --x64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
