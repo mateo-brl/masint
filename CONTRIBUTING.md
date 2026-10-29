@@ -21,8 +21,8 @@ npm install
 npm run dev
 ```
 
-Node.js 22 est requis. Voir la section *Développement* du [README](README.md) pour la liste
-des commandes.
+Node.js 22 est requis. La liste des commandes est dans
+[docs/developpement.md](docs/developpement.md).
 
 ## Écrire un module
 
